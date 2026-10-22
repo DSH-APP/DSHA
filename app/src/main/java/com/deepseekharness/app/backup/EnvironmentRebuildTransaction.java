@@ -277,7 +277,7 @@ public final class EnvironmentRebuildTransaction {
 
   public static EnvironmentRebuildTransaction pending(BackupFileSystem fs, File files)
       throws IOException {
-    verifyHistory(fs, files, false);
+    verifyHistory(fs, files);
     File home = fs.child(files, HOME);
     if (fs.stat(home).type.equals("MISSING")) return null;
     List<String> entries = fs.list(home);
@@ -311,8 +311,7 @@ public final class EnvironmentRebuildTransaction {
         && new EnvironmentRebuildTransaction(fs, files, entry, null).terminal();
   }
 
-  private static void verifyHistory(BackupFileSystem fs, File files, boolean persistProof)
-      throws IOException {
+  private static void verifyHistory(BackupFileSystem fs, File files) throws IOException {
     File home = new File(files, HOME),
         history = new File(home, COMPLETED),
         proof = new File(files, HISTORY_PROOF);
@@ -334,12 +333,12 @@ public final class EnvironmentRebuildTransaction {
       if (!fs.stat(new File(home, id)).type.equals("MISSING"))
         throw new IOException("ENVIRONMENT_TRANSACTION_DUPLICATE");
     }
-    if (persistProof) CompletedHistory.write(fs, proof, "filesKey", filesKey, historyKey);
+    CompletedHistory.write(fs, proof, "filesKey", filesKey, historyKey);
   }
 
   public static void archiveCompleted(BackupFileSystem fs, File files) throws IOException {
     File home = new File(files, HOME);
-    verifyHistory(fs, files, true);
+    verifyHistory(fs, files);
     if (fs.stat(home).type.equals("MISSING")) return;
     File history = new File(home, COMPLETED);
     for (String id : fs.list(home)) {
@@ -365,7 +364,7 @@ public final class EnvironmentRebuildTransaction {
                   BackupArchive.sha()
                       .digest(fs.small(fs.child(destination, "intent.json"), 4096)))))
         throw new IOException("ENVIRONMENT_ARCHIVE_IDENTITY");
-      verifyHistory(fs, files, true);
+      verifyHistory(fs, files);
     }
   }
 

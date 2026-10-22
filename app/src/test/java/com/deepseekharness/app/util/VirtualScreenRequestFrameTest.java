@@ -45,6 +45,23 @@ public final class VirtualScreenRequestFrameTest {
     }
   }
 
+  @Test
+  public void callerCoreIdentityIsPreservedAndMalformedIdentityIsRejected() throws Exception {
+    String core = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+    VscreenBridgeRequest request =
+        VscreenBridgeRequest.query("/app/vscreen/tree", "coreInstance=" + core);
+    assertTrue(request.requiresExistingCore());
+    assertEquals(core, request.parameters.getOrDefault("coreInstance", ""));
+    assertFalse(VscreenBridgeRequest.query("/app/vscreen/status", "").requiresExistingCore());
+    for (String invalid : new String[] {"", "current", core.toUpperCase(), core + "x"}) {
+      HttpProtocol.Failure failure =
+          assertThrows(
+              HttpProtocol.Failure.class,
+              () -> VscreenBridgeRequest.query("/app/vscreen/tree", "coreInstance=" + invalid));
+      assertEquals("INVALID_coreInstance", failure.getMessage());
+    }
+  }
+
   private static final class Recorder implements VscreenBridgeRequest.Actions<Long> {
     public Long create(String orientation) {
       return -2L;

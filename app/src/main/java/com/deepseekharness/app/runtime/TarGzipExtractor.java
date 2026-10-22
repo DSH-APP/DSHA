@@ -35,11 +35,13 @@ public final class TarGzipExtractor {
       InputStream in, File dest, int strip, Predicate<String> selected, BackupFileSystem fs)
       throws IOException {
     if (strip < 0 || strip > 64) throw new IOException("TAR_STRIP");
+    GuestScriptBudget.checkpoint();
     ArchiveFileBoundary files = new ArchiveFileBoundary(fs, dest);
     Set<String> projected = new HashSet<>();
     LegacyTarReader.readTrustedAssets(
-        in,
+        GuestScriptBudget.guard(in),
         (m, data) -> {
+          GuestScriptBudget.checkpoint();
           String path = m.path;
           for (int i = 0; i < strip; i++) {
             int slash = path.indexOf('/');
@@ -70,5 +72,6 @@ public final class TarGzipExtractor {
         },
         new BackupControl(null));
     files.finish();
+    GuestScriptBudget.checkpoint();
   }
 }

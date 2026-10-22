@@ -28,7 +28,7 @@ async function moduleFile() {
 const recipe = JSON.parse(
     fs.readFileSync(path.join(root, 'app/src/main/assets/frontend-static-cache-patch.json'), 'utf8'));
 assert.equal(recipe.module, '@deepseek-ai/dsh-host-frontend-static/lib/index.js');
-assert.equal(recipe.dshVersion, '0.2.0-rc.2');
+assert.equal(recipe.dshVersion, '0.2.1-rc.2');
 const file = await moduleFile();
 const original = fs.readFileSync(file, 'utf8');
 

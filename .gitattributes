@@ -35,8 +35,18 @@
 # 退休原件必须覆盖后面的按扩展名规则，Git 不得改写原始换行字节。
 tools/history/** -text -eol
 
-# The configured Ubuntu proof and layout retain the exact signed build170 bytes.
-app/src/main/assets/ubuntu-tools.manifest.json -text -eol
+# Existing managed text is hash-bound to the signed runtime; keep exact bytes.
+app/src/main/assets/builtin-plugins/dsh-auto-review/package.json -text -eol
+app/src/main/assets/builtin-plugins/dsh-computer-use-android/package.json -text -eol
+app/src/main/assets/builtin-plugins/dsh-device-shell-guide/package.json -text -eol
+app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/index.js -text -eol
+app/src/main/assets/lan-settings-upstream-contract.json -text -eol
+app/src/main/assets/managed-runtime-inputs.json -text -eol
+app/src/main/assets/startup-mcp-timing-patch.json -text -eol
 app/src/main/assets/ubuntu-tools.layout -text -eol
-# The signed native proof hashes this lock's exact original bytes.
-tools/bxroot/lock.json -text -eol
+app/src/main/assets/ubuntu-tools.manifest.json -text -eol
+tools/mobile-server/index.js -text -eol
+app/src/main/assets/plugin-manager-policy-patch.json -text -eol
+app/src/main/assets/plugin-manager.py -text -eol
+/tools/fixtures/session-interaction-v3/session-interaction-patch.json -text -eol
+/tools/fixtures/session-interaction-v3/web-integration/session-interaction.js -text -eol

@@ -13,7 +13,7 @@ const runtime = path.join(runtimeRoot, 'node_modules');
 const moduleFile = path.join(runtime, '@deepseek-ai', 'dsh-llm-deepseek', 'lib', 'index.js');
 const archiveFile = path.resolve(process.env.DSHA_RUNTIME_ARCHIVE
   || path.join(assets, 'dsh-runtime.bin'));
-const archiveInputsFile = path.join(assets, 'dsh-runtime.inputs.json');
+const archiveInputsFile = archiveFile.replace(/\.bin$/, '.inputs.json');
 const recipe = JSON.parse(await readFile(path.join(assets, 'deepseek-messages-compat-patch.json'), 'utf8'));
 const packageVersion = JSON.parse(await readFile(path.join(runtime, '@deepseek-ai', 'dsh-llm-deepseek', 'package.json'), 'utf8')).version;
 assert.equal(packageVersion, recipe.dshVersion, 'patch must stay pinned to the locked DSH package');
@@ -32,7 +32,7 @@ function archiveText(entry) {
   }
 }
 
-function buildScriptPatchedSource() {
+function buildScriptPatchedSource(stable = true) {
   const script = [
     'import importlib.util, pathlib, sys',
     'sys.path.insert(0, str(pathlib.Path(sys.argv[1]).resolve().parent))',
@@ -40,7 +40,9 @@ function buildScriptPatchedSource() {
     'module=importlib.util.module_from_spec(spec)',
     'spec.loader.exec_module(module)',
     'source=pathlib.Path(sys.argv[3]).read_bytes()',
-    'sys.stdout.buffer.write(module.patched_content(pathlib.PurePosixPath(sys.argv[2]), source))'
+    'prepared=module.patched_content(pathlib.PurePosixPath(sys.argv[2]), source)',
+    'chains,_=module.load_chains(module.HOOKS.parent, module.json.loads((module.LOCK_ROOT/"package.json").read_text())["dependencies"][module.PACKAGE])',
+    'sys.stdout.buffer.write(module.apply_stable_patches(prepared, chains.get(sys.argv[2], [])) if sys.argv[4] == "stable" else prepared)'
   ].join(';');
   const bundled = process.platform === 'win32' && process.env.USERPROFILE
     ? path.join(process.env.USERPROFILE, '.cache', 'codex-runtimes',
@@ -51,7 +53,7 @@ function buildScriptPatchedSource() {
   for (const python of candidates) {
     try {
       return execFileSync(python, ['-B', '-c', script,
-        path.join(root, 'tools', 'build-dsh-runtime.py'), recipe.module, moduleFile], {
+        path.join(root, 'tools', 'build-dsh-runtime.py'), recipe.module, moduleFile, stable ? 'stable' : 'base'], {
         encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, windowsHide: true
       });
     } catch (error) {
@@ -117,8 +119,8 @@ assert.equal(archivePackage.version, recipe.dshVersion,
 assert.equal(archiveDshPackage.name, '@deepseek-ai/dsh');
 assert.equal(archiveDshPackage.version, recipe.dshVersion,
   'generated runtime must contain the current DSH version');
-assert.equal(archiveSource, patchedSource,
-  'generated runtime module must be the recipe-patched locked module, not a test fixture');
+assert.equal(patchedSource, buildScriptPatchedSource(false),
+  'the isolated compatibility recipe must match the builder before the complete stable chain');
 assert.equal(archiveSource, buildScriptPatchedSource(),
   'the current build script must patch the real locked DeepSeek adapter into the generated runtime');
 assert.equal(occurrences(archiveSource, 'DSHA_DEEPSEEK_MESSAGES_PROJECTED_TOOL_CALL_V1'), 1,

@@ -9,6 +9,6 @@
         </FrameLayout>
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_welcome_title0" android:textSize="30sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_welcome_lead0" android:textSize="13sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:lineSpacingExtra="6dp" android:layout_marginTop="14dp" />
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_offline_badge" android:textSize="11sp" android:textColor="@color/primary" android:includeFontPadding="false" android:layout_marginTop="22dp" />
+        <TextView android:tag="welcome_runtime_version" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="11sp" android:textColor="@color/primary" android:includeFontPadding="false" android:layout_marginTop="22dp" />
     </LinearLayout>
 </ScrollView>

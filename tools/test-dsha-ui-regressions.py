@@ -8,6 +8,7 @@ Run without Android:
   python3 tools/test-dsha-ui-regressions.py
 """
 from pathlib import Path
+import importlib.util
 import json
 import re
 import unittest
@@ -140,11 +141,27 @@ class NotificationClickable(unittest.TestCase):
         # 标记必须在它之前登记，否则参数带不进去。
         main = read('app/src/main/java/com/deepseekharness/app/ui/MainActivity.java')
         register = re.search(r'consumeOpenWeb\(\s*getIntent\(\s*\)\s*\)\s*;', main)
-        select = re.search(r'nav\.setSelectedItemId\(\s*getIntent\(\s*\)\.getBooleanExtra\(\s*"open_plugins"', main)
+        select = re.search(
+            r'nav\.setSelectedItemId\(\s*'
+            r'(?:!controller\.hasUnresolvedWebSession\(\s*\)\s*&&\s*)?'
+            r'getIntent\(\s*\)\.getBooleanExtra\(\s*"open_plugins"', main)
         self.assertIsNotNone(register, 'open_web 标记必须在 onCreate 登记')
         self.assertIsNotNone(select, '初始导航仍须按 open_plugins 选择')
         self.assertLess(register.start(), select.start(),
                         "consumeOpenWeb 必须在 setSelectedItemId 之前调用，否则 open_web 参数丢失")
+
+    def test_open_web_ordering_guard_rejects_late_registration(self):
+        from unittest.mock import patch
+        main = read('app/src/main/java/com/deepseekharness/app/ui/MainActivity.java')
+        registration = '    consumeOpenWeb(getIntent());\n'
+        selection_end = ': R.id.nav_launch);'
+        self.assertEqual(main.count(registration), 1)
+        self.assertEqual(main.count(selection_end), 1)
+        late = main.replace(registration, '', 1).replace(
+            selection_end, selection_end + '\n' + registration.rstrip(), 1)
+        with patch(__name__ + '.read', return_value=late):
+            with self.assertRaisesRegex(AssertionError, 'consumeOpenWeb 必须在 setSelectedItemId 之前'):
+                self.test_open_web_registered_before_nav_selection()
 
     def test_system_language_is_pinned_early(self):
         # 真机（vivo/Android 16）实测：Locale.setDefault 会污染 Resources.getSystem()，
@@ -233,60 +250,41 @@ class BackupLocalCredentialProtection(unittest.TestCase):
     """备份包不得携带本机设备凭据（它落在公共目录，任何应用可读）。"""
 
     def setUp(self):
-        self.policy = read('app/src/main/java/com/deepseekharness/app/backup/DataRootPolicy.java')
-        self.paths = read('app/src/main/java/com/deepseekharness/app/util/CredentialPaths.java')
-        self.table = json.loads(read('app/src/main/assets/credential-paths.json'))
-        self.projection = read('app/src/main/java/com/deepseekharness/app/backup/CredentialProjection.java')
+        self.engine = read('app/src/main/assets/backup-engine.py')
 
     def test_local_device_files_excluded(self):
+        spec=importlib.util.spec_from_file_location('current_backup_engine',ROOT/'app/src/main/assets/backup-engine.py')
+        engine=importlib.util.module_from_spec(spec);spec.loader.exec_module(engine)
         for name in ('.bridge_token','.anonymous-user-id','.bridge_status.interrupted'):
-            rules=self.table['externalMachine']
-            self.assertTrue(name in rules['exact'] or any(name.startswith(prefix) for prefix in rules['prefixes']))
-        self.assertIn('CredentialPathRules.MACHINE_EXACT',self.paths)
-        self.assertIn('CredentialPaths.backupMachine(name)',self.policy)
+            self.assertTrue(engine.machine_name(name),name)
+        self.assertFalse(engine.machine_name('personal-project.env'))
+        self.assertIn('machine_name(name)',self.engine)
 
     def test_credentials_trimmed_by_field_not_wholesale(self):
         # 整文件排除会让用户换机后 API key 全丢，必须字段级剔除
-        self.assertIn('"client-connection/"', self.projection, "本机会话密钥的记录前缀")
-        self.assertIn('CredentialProjection',read('app/src/main/java/com/deepseekharness/app/backup/NativeDataLocations.java'))
-        self.assertIn('CredentialProjection',read('app/src/main/java/com/deepseekharness/app/backup/NativeRestoreTargets.java'))
+        self.assertIn('def trim_local_records', self.engine)
+        self.assertIn('def copy_credentials', self.engine)
+        self.assertIn('"client-connection/"', self.engine, "本机会话密钥的记录前缀")
+        self.assertIn('pruned_credentials = copy_credentials(', self.engine)
 
     def test_local_record_prefix_covers_browser_session(self):
         # dsh 的实际记录键是 client-connection/browser-session
-        self.assertIn('MACHINE_RECORD = "client-connection/"', self.projection)
+        self.assertIn('CREDENTIAL_RECORDS = ("client-connection/",)', self.engine)
 
     def test_restore_rotates_local_token(self):
         # resetTokenAfterRestore 曾是死代码：老备份恢复后桥会拒绝所有请求
         src = read('app/src/main/java/com/deepseekharness/app/BackupManager.java')
-        self.assertNotIn('backup-engine.py',src)
-        method=src.split('private static void commitHostRestore(',1)[1].split('public static ',1)[0]
-        committed=method.index('transaction.commit(control)')
-        rotation=re.search(r'HttpShellService\.resetTokenAfterRestore\(\s*controller\.context\(\)\s*\)',method)
-        self.assertIsNotNone(rotation)
-        self.assertGreater(rotation.start(),committed)
-        restore=src.split('public static String restoreWithinDataTask(',1)[1].split('public static ',1)[0]
-        self.assertIn('commitHostRestore(',restore)
-        prepared=src.split('public static String restorePrepared(',1)[1].split('public static ',1)[0]
-        self.assertIn('restoreWithinDataTask(',prepared)
-
-
-class PrivateWebLogWiring(unittest.TestCase):
-    """The real output pipe and all writers share the tested private sink."""
-
-    def test_guest_pipe_never_writes_or_truncates_a_workspace_log_path(self):
-        lifecycle=read('app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java')
-        preparation=read('app/src/main/java/com/deepseekharness/app/core/StartupEnvironmentActions.java')
-        diagnostics=read('app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java')
-        launch=read('app/src/main/java/com/deepseekharness/app/util/WebLaunchCommand.java')
-        self.assertIn('HostWebLog.create(',lifecycle)
-        self.assertIn('appendHostLog(outputLog, lines)',lifecycle)
-        self.assertIn('HostWebLog runtimeLog',diagnostics)
-        self.assertIn('HostWebLog.saveFailure(',diagnostics)
-        for source in (lifecycle,preparation,diagnostics,launch):
-            self.assertNotIn('dsh-web.log',source)
-        self.assertNotIn('Compat.append(',lifecycle)
-        self.assertNotIn('Compat.write(',preparation)
-        self.assertNotIn('Compat.write(',diagnostics)
+        for name in ('restoreWithinDataTask', 'restorePrepared'):
+            method = src.split('public static String ' + name + '(', 1)[1]
+            method = method.split('public static ', 1)[0]
+            committed = method.index('if (!result.optBoolean("committed"))')
+            rotation = re.search(r'HttpShellService\.resetTokenAfterRestore\(\s*'
+                                 r'controller\.context\(\)\s*\)', method)
+            self.assertIsNotNone(rotation, name + "提交后必须轮换当前应用的本机凭据")
+            self.assertGreater(rotation.start(), committed,
+                               name + "不能在未确认恢复提交前轮换凭据")
+            self.assertLess(rotation.start(), method.index('return restoreMessage('),
+                            name + "不能先报告成功再轮换凭据")
 
 
 class CatalogCoverage(unittest.TestCase):

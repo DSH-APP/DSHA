@@ -37,6 +37,38 @@ import java.util.ArrayList;
 public final class GeckoPreviewActivity extends PictureInPictureActivity
     implements WebFullscreenUi.Host {
   private Runnable closeOriginRestorePreview;
+
+  @Override
+  public Object imeBridgeIdentity() {
+    return browserResumed
+            && !isFinishing()
+            && !isDestroyed()
+            && retained != null
+            && retained.ready
+            && pagePort != null
+            && retained.themeGate != null
+            && !conversationHidden()
+            && retained.themeGate.owns(pagePort)
+            && retained.page.isCurrent(controller.getReadyWebPageIdentity())
+            && WebPreviewPolicy.sameService(baseUrl, retained.documentUrl)
+        ? retained.themeGate
+        : null;
+  }
+
+  @Override
+  public boolean sendImeFrame(Object expected, org.json.JSONObject frame) {
+    if (expected == null || expected != imeBridgeIdentity()) return false;
+    try {
+      pagePort.postMessage(
+          new org.json.JSONObject()
+              .put("type", "ime-frame")
+              .put("request", WebPageScripts.imeFrame(retained.themeGate, frame)));
+      return true;
+    } catch (org.json.JSONException | RuntimeException unavailable) {
+      return false;
+    }
+  }
+
   private GeckoSession session;
   private GeckoView browser;
   private FrameLayout container;
@@ -57,11 +89,14 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
   private String savedHistory;
   private PreviewPageSession.Identity savedIdentity;
   private PreviewPageSession.Identity pendingIdentity;
+  private PreviewPageSession.Identity obsoleteHostIdentity;
+  private boolean emptyHostRetirementPending;
   private HarnessController controller;
   private PreviewAuth previewAuth;
   private BrowserMicrophone microphone;
   private GeckoMicrophoneDelegate microphoneDelegate;
   private boolean browserResumed;
+  private boolean runtimeSuspended;
   private final Runnable readyWebListener =
       () ->
           runOnUiThread(
@@ -212,6 +247,10 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
     downloads = new WebDownloads(this, saved);
     savedHistory = saved == null ? null : saved.getString("gecko-state");
     savedIdentity = restoreIdentity(saved);
+    emptyHostRetirementPending =
+        saved != null
+            && saved.getBoolean("gecko-retire-empty-host", false)
+            && retained.session == null;
     setContentView(R.layout.activity_web_preview);
     WebFullscreenUi.install(this);
     container = findViewById(R.id.web_container);
@@ -227,18 +266,14 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
     findViewById(R.id.web_error_browser).setOnClickListener(v -> external(authUrl));
     findViewById(R.id.web_error_logs)
         .setOnClickListener(v -> startActivity(DiagnosticActivity.downloadLogs(this)));
-    findViewById(R.id.web_error_recovery)
-        .setOnClickListener(
-            v -> {
-              startActivity(
-                  new Intent(this, MainActivity.class)
-                      .putExtra("open_launch", true)
-                      .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
-              finish();
-            });
+    findViewById(R.id.web_error_recovery).setOnClickListener(v -> leavePreview());
     findViewById(R.id.web_retry)
         .setOnClickListener(
             v -> {
+              if (runtimeSuspended) {
+                controller.requestWebSessionRecheck(() -> syncSession(false));
+                return;
+              }
               savedHistory = null;
               refreshSession();
             });
@@ -252,6 +287,14 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
               }
             });
     registerPicker(retained.chooser.pending());
+    if (controller.getReadyWebPageIdentity() == null
+        && (controller.needsWebSessionRestore()
+            || controller.isRestoringWebSession()
+            || controller.hasUnresolvedWebSession())) {
+      suspendRuntimePage(false);
+      controller.restoreRunningWebSession(() -> syncSession(false));
+      return;
+    }
     if (!BrowserConversationRoute.current(getIntent(), controller.getReadyWebPageIdentity())) {
       rejectConversationRoute();
       return;
@@ -273,17 +316,90 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
   private void syncSession(boolean retry) {
     if (retained == null || previewAuth == null || isFinishing() || isDestroyed()) return;
     PreviewPageSession.Identity current = controller.getReadyWebPageIdentity();
-    if (retained.page.identity() != null && !retained.page.isCurrent(current)) {
+    if (obsoleteHostIdentity != null && obsoleteHostIdentity.equals(current)) {
+      obsoleteHostIdentity = null;
+      emptyHostRetirementPending = false;
+    }
+    PreviewPageSession.Identity previous = retained.page.identity();
+    if (previous == null) previous = obsoleteHostIdentity;
+    if (previous == null && session == null && retained.session == null) previous = savedIdentity;
+    if (current == null && controller.isWebSessionRetained(previous)) {
+      suspendRuntimePage(controller.isWebSessionExited(previous));
+      return;
+    }
+    if (runtimeSuspended
+        && current != null
+        && (retained.page.identity() == null || retained.page.isCurrent(current))) {
+      runtimeSuspended = false;
+      errorPanel.setVisibility(View.GONE);
+      findViewById(R.id.web_error_browser).setEnabled(true);
+      if (session != null) session.setActive(true);
+    }
+    if (current == null
+        && runtimeSuspended
+        && (controller.needsWebSessionRestore()
+            || controller.isRestoringWebSession()
+            || controller.hasUnresolvedWebSession())) return;
+    if (previous != null && !previous.equals(current)) {
+      obsoleteHostIdentity = previous;
+      emptyHostRetirementPending = true;
       previewAuth.cancel();
       pendingIdentity = null;
       savedHistory = null;
       savedIdentity = null;
       if (session == null && retained.session != null) session = retained.session;
       closeSession();
-      if (current == null || conversationHidden()) {
-        hideConversation();
-        return;
+    }
+    if (current == null
+        && (controller.isStopping() || controller.isUserStopped())
+        && session == null
+        && retained.session == null
+        && retained.page.identity() == null) emptyHostRetirementPending = true;
+    if (emptyHostRetirementPending) {
+      if (session != null
+          || retained.session != null
+          || retained.page.identity() != null
+          || pendingIdentity != null
+          || previewAuth.busy()) return;
+      if (!com.deepseekharness.app.util.BrowserTaskPolicy.endedHost(
+          obsoleteHostIdentity,
+          current,
+          true,
+          controller.isStopping(),
+          controller.isUserStopped(),
+          controller.getWebGeneration())) return;
+      boolean forward =
+          current != null
+              && !conversationHidden()
+              && (browserResumed
+                  || "FULL".equals(getIntent().getStringExtra(BrowserConversationRoute.MODE)));
+      Intent next =
+          forward
+              ? new Intent(this, getClass())
+                  .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                  .putExtra(BrowserConversationRoute.MODE, "FULL")
+                  .putExtra("url", current.authUrl())
+                  .putExtra(BrowserConversationRoute.GENERATION, current.generation())
+                  .putExtra(BrowserConversationRoute.INSTANCE, current.instanceId())
+              : null;
+      if (next != null
+          && getIntent().getLongExtra(BrowserConversationRoute.GENERATION, -1)
+              == current.generation()
+          && current
+              .instanceId()
+              .equals(getIntent().getStringExtra(BrowserConversationRoute.INSTANCE)))
+        for (String key :
+            new String[] {BrowserConversationRoute.SESSION, BrowserConversationRoute.REQUEST})
+          if (getIntent().hasExtra(key)) next.putExtra(key, getIntent().getStringExtra(key));
+      try {
+        if (BrowserTasks.finishEmptyHost(this)
+            && next != null
+            && current.equals(controller.getReadyWebPageIdentity())) startActivity(next);
+      } catch (RuntimeException unavailable) {
+        android.util.Log.w(
+            "DSHA", "BROWSER_HOST_HANDOFF_FAILED: " + unavailable.getClass().getSimpleName());
       }
+      return;
     }
     if (current == null) {
       previewAuth.cancel();
@@ -297,6 +413,10 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
       return;
     }
     if (conversationHidden()) return;
+    if (!BrowserConversationRoute.current(getIntent(), current)) {
+      rejectConversationRoute();
+      return;
+    }
     if (!retry && retained.session != null && retained.page.isCurrent(current)) {
       authUrl = current.authUrl();
       baseUrl = WebPreviewPolicy.loopbackBaseUrl(authUrl);
@@ -354,6 +474,39 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
     } catch (IllegalArgumentException invalid) {
       return null;
     }
+  }
+
+  /** 保留Gecko会话但不恢复权限；页面/文件/麦克风门禁仍核对严格ready身份。 */
+  private void suspendRuntimePage(boolean exited) {
+    if (!runtimeSuspended) {
+      runtimeSuspended = true;
+      cancelConversationRequests();
+      cancelFilePrompt();
+      if (microphoneDelegate != null) microphoneDelegate.cancelPending();
+      retained.needsStreamResume = true;
+      backPending = false;
+      backSequence++;
+      downloads.model.cancel();
+    }
+    if (session != null) session.setActive(false);
+    progress.setVisibility(View.GONE);
+    findViewById(R.id.web_error_browser).setEnabled(false);
+    ((TextView) findViewById(R.id.web_error_title))
+        .setText(
+            com.deepseekharness.app.util.UiText.choose(
+                exited ? "Web 服务已退出" : "正在验证 Web 状态",
+                exited ? "Web service exited" : "Verifying Web session"));
+    ((TextView) findViewById(R.id.web_error_detail))
+        .setText(
+            com.deepseekharness.app.util.UiText.choose(
+                exited
+                    ? "本次服务进程已确认退出，对话记录已保留。请返回启动页查看日志并手动启动。"
+                    : "暂时无法确认后台服务身份，当前页面已保留。验证通过后恢复，不会重新发送对话。可点重试验证，或返回启动页查看状态。",
+                exited
+                    ? "The service process has exited. Conversation records are retained. Return to the start page to inspect logs and start it manually."
+                    : "The background service identity is not yet confirmed. This page is retained and will resume after verification. Messages will not be resent. Retry verification or check the start page."));
+    errorPanel.setVisibility(View.VISIBLE);
+    refreshPictureInPicture();
   }
 
   private boolean pageCurrent(GeckoSession source, PreviewPageSession.Identity identity) {
@@ -453,7 +606,9 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
               if (!pageCurrent(s, pageIdentity)) return GeckoResult.fromValue(AllowOrDeny.DENY);
               if (WebPreviewPolicy.pageDownload(baseUrl, request.uri))
                 return GeckoResult.fromValue(AllowOrDeny.ALLOW);
-              if (request.hasUserGesture) external(request.uri);
+              if (request.hasUserGesture
+                  || com.deepseekharness.app.util.DeepSeekOAuthNavigation.allowed(
+                      baseUrl, retained.documentUrl, request.uri)) external(request.uri);
               return GeckoResult.fromValue(AllowOrDeny.DENY);
             }
 
@@ -478,6 +633,7 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
             @Override
             public void onPageStart(GeckoSession s, String url) {
               if (!pageCurrent(s, pageIdentity)) return;
+              WebFullscreenUi.cancelIme(GeckoPreviewActivity.this);
               if (pagePort != null) {
                 pagePort.setDelegate(null);
                 pagePort.disconnect();
@@ -947,6 +1103,7 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
                       @Override
                       public void onDisconnect(WebExtension.Port source) {
                         if (pagePort == source) {
+                          WebFullscreenUi.cancelIme(GeckoPreviewActivity.this);
                           pagePort = null;
                           if (retained.port == source) retained.port = null;
                         }
@@ -1051,6 +1208,7 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
 
   @Override
   protected void onPause() {
+    WebFullscreenUi.cancelIme(this);
     browserResumed = false;
     com.deepseekharness.app.core.PluginRepository.get(this).invalidateInstalledState();
     super.onPause();
@@ -1105,6 +1263,15 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
   protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
     setIntent(intent);
+    var displayIdentity = retained == null ? null : retained.page.identity();
+    if (controller.getReadyWebPageIdentity() == null
+        && controller.isWebSessionRetained(displayIdentity)
+        && BrowserConversationRoute.current(intent, displayIdentity)) {
+      cancelConversationRequests();
+      receivePresentationIntent();
+      syncSession(false);
+      return;
+    }
     if (!BrowserConversationRoute.current(intent, controller.getReadyWebPageIdentity())) {
       rejectConversationRoute();
       return;
@@ -1158,6 +1325,7 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
           new org.json.JSONObject()
               .put("type", "presentation-init")
               .put("binding", WebPageScripts.presentationBinding(retained.themeGate)));
+      WebFullscreenUi.refreshIme(this);
       String token = getIntent().getStringExtra(BrowserConversationRoute.REQUEST);
       String id = getIntent().getStringExtra(BrowserConversationRoute.SESSION);
       if (token != null
@@ -1191,7 +1359,10 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
         value.optLong("sequence", -1),
         source.sender.isTopLevel(),
         retained.documentUrl)) return;
-    if ("theme-color".equals(value.optString("type"))) {
+    if ("ime-ack".equals(value.optString("type"))) {
+      WebFullscreenUi.acknowledgeIme(
+          this, retained.themeGate, value.optLong("frameId", -1), value.optBoolean("supported"));
+    } else if ("theme-color".equals(value.optString("type"))) {
       Integer color =
           com.deepseekharness.app.util.BrowserThemeColor.parse(
               value.optString("color"), getColor(R.color.surface));
@@ -1277,6 +1448,8 @@ public final class GeckoPreviewActivity extends PictureInPictureActivity
 
   @Override
   protected void onSaveInstanceState(Bundle out) {
+    if (emptyHostRetirementPending && session == null && retained.session == null)
+      out.putBoolean("gecko-retire-empty-host", true);
     if (downloads != null) downloads.model.saveState(out);
     PreviewPageSession.Identity identity = retained.page.identity();
     if (identity != null && retained.history != null) {

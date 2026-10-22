@@ -21,7 +21,7 @@
 
 > 🤖 下一个 AI / 开发者请先读 **[AGENTS.md](AGENTS.md)**（项目结构、启动契约、踩过的坑），不要先全库扫描。
 
-> 当前仓库已同步 build173 源码：bxroot 迁移、移动 UI 3.1.0、外置工作区保护、导出和画中画恢复修复，见[源码更新说明](docs/source-updates/build173.md)。本轮仅更新源码和 Star History；下方已发布 APK 下载仍为 build170。兼容版设备验收继续暂缓。
+> 正式版 **[v0.2.1-rc.2 · build190](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.1-rc.2)**：虚拟屏、全局授权、新旧共存及移动 UI 更新。[中文文档索引](docs/documentation-index.md) · [English](docs/en/index.md)。
 
 ## ❤️ 赞助商
 
@@ -47,7 +47,7 @@ DeepSeek Harness（`@deepseek-ai/dsh`）是 DeepSeek 官方的 agent harness，�
 它是为 glibc Linux 写的，直接在安卓上跑会撞上一堆事：原生模块编译不过、`link(2)` 被
 SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 
-**DSHA 把这些全部封在一个 APK 里。** 装 APK、填 API key（或跳过）、点启动 —— 不需要 Termux、
+**DSHA 把这些全部封在一个 APK 里。** 装 APK、准备环境、打开 Web UI —— 不需要 Termux、
 不需要 ROOT、不需要敲一行命令。里面是一个完整的 Ubuntu 环境：`apt` 能用、
 交互式 PTY 能用、需要编译的原生模块能装，跟你在服务器上用是同一套东西。
 
@@ -58,26 +58,29 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 
 ## 下载
 
-当前正式版 **v0.2.0-rc2 · build170**（[发布说明](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.0-rc2) ·
-[完整更新记录](CHANGELOG.md)），两个版本共享 `com.dsh.client` 包名与数据，**不能并排安装**：
+当前正式版 **[v0.2.1-rc.2 · build190](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.1-rc.2)** · Standard 标准版，Android 11+ / arm64 · **278.66 MiB**。
 
-| 版本 | 适用设备 | 内核 | 下载 | 大小 |
-|---|---|---|---|---:|
-| **Standard 标准版** | Android 11+ / arm64 | 系统 WebView；支持实验性虚拟屏 | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.2.0-rc2/dsha-0.2.0-rc2.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.2.0-rc2/dsha-0.2.0-rc2.apk.sha256) | 273.10 MiB |
-| **Low 兼容版** | Android 6+ / arm64 | 内置 GeckoView 143；暂不支持虚拟屏 | [APK](https://github.com/DSH-APP/DSHA/releases/download/v0.2.0-rc2/dsha-0.2.0-rc2low.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.2.0-rc2/dsha-0.2.0-rc2low.apk.sha256) | 345.27 MiB |
+[下载 APK](https://github.com/DSH-APP/DSHA/releases/download/v0.2.1-rc.2/dsha-0.2.1-rc.2.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.2.1-rc.2/dsha-0.2.1-rc.2.apk.sha256) · [完整源码与固定离线构建输入](https://github.com/DSH-APP/DSHA/releases/download/v0.2.1-rc.2/DSHA-0.2.1-rc.2-20261022.2100-source.zip) · [发布说明](docs/releases/v0.2.1-rc.2-notes.md)
 
-- **升级**：用同签名 APK 覆盖安装即可（证书指纹 `e7e3a3…a53f5`，验装方法见[安全模型](docs/security-model.md)）。相同 Ubuntu 基础版本只更新受管组件，不重建整个环境。
-- **本次下载**：APK 与对应 SHA-256 以上表 GitHub Release 为准；[校验方法](docs/download-verification.md)。应用内更新另读取官网 [`dsha.cc`](https://dsha.cc) 的发布清单。
-- **历史版本**：[Releases](https://github.com/DSH-APP/DSHA/releases)。
+- **新旧共存**：新版包名 `dsh.android.client`，可与旧版 `com.dsh.client` 并排安装；数据和授权独立，需要迁移时使用备份导出/恢复。同时运行两套服务仍可能遇到设备端口冲突。
+- **虚拟屏与全局授权**：实验性虚拟屏通过已授权的 ADB / Root / Shizuku 通道操作；确认策略支持全部手动、按应用和全部允许，仅控制 DSHA 确认，不代替系统授权或系统沙箱。
+- **环境与交互更新**：内置 DSH **0.2.1-rc.2**、移动 UI **3.2.1**，默认 **proot**、可选 **proroot**；修复插件启动/管理、局域网与登录、键盘衔接和后台恢复等路径，会话单击切换。画中画**默认关闭**，由用户主动开启。
+- **备份与数据保护**：一键备份/导出，保留用户数据；移除危险的彻底重装，外置工作区内容保留。
 
-本次为 **GitHub 正式版 / Latest**，不标记预发布；版本码 **170**，Ubuntu 基础环境编号仍为 **10**。[对应源码](https://github.com/DSH-APP/DSHA/tree/v0.2.0-rc2)。
+完整版本名 `0.2.1-rc.2-20261022.2100-dsh0.2.1-rc.2` / code190，E7E3 正式签名、非调试。保留 APK 原版本字符串，本次发布为 **GitHub 正式版 / Latest**。本次提供 Standard APK；旧 Low 发布保留，不新增 Low APK。
 
-### 本版更新与旧版对比
+### 开始使用
 
-- DSH 升级至 **0.2.0-rc.2**，移动 UI 更新至 **3.0.5**，修复手机焦点、弹窗与插件卡片交互。
-- 文件直接进入系统文档选择器，支持多选；修复图片草稿保存与恢复、ADB 首次离线依赖准备和聊天 shell 的 `/tmp` 问题。
-- 网页增加原生分享与保存，补充虚拟屏开启说明、LAN 失效链接指引；作品导出、存储指南和技能统一放入“数据与备份”。
-- 插件检查后自动启用，允许依赖安装脚本；新用户导出统一为无需密码的 `.tar.gz`，历史加密备份仍可读取。
+1. 安装标准版 APK，首次启动准备内置离线环境。
+2. 解压完成进入主页，Web 在后台启动；就绪后进入 Web UI，在网页中配置模型。
+3. 从旧包迁移请先导出备份，再在新包恢复；以后同包覆盖更新前，请先正常停止 DSH。
+
+精确 APK 已在 Android 13 对两种运行时、旧会话、插件状态及立即息屏启动做有限检查；页面延迟仍有波动，不承诺所有机型普遍提速或完整 Doze/功耗验收。详见[验证范围与已知限制](docs/releases/v0.2.1-rc.2-notes.md)。[下载校验](docs/download-verification.md)；官网与应用内更新清单独立于本次 GitHub 发布。
+
+<details>
+<summary>历史版本介绍（原文保留）</summary>
+
+下表属于上一 build170 版本的比较说明；v1.1.10 及更早的 Release 正文和历史标签继续保留。
 
 | 以前发布的版本 | 本版主要增加 |
 |---|---|
@@ -85,15 +88,7 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 | [v0.1.5-rc2 / 129](https://github.com/DSH-APP/DSHA/releases/tag/v0.1.5-rc2) | 还累积加入自动备份、独立应急、按需录音、PiP、Standard 实验性虚拟屏及受管更新改进。 |
 | [v1.1.10 及更早版本](https://github.com/DSH-APP/DSHA/releases/tag/v1.1.10) | 已转为双 APK、受管 Ubuntu/DSH 更新与宿主备份恢复；完整直接升级矩阵尚未重新验证，原版说明保留在历史标签。 |
 
-两版各 **45 项关联单测与 Release Lint** 通过；Android13 真机验证正式包覆盖、两种网页内核附件/图片草稿、15 个离线 ADB 依赖准备及最终启动。完整无线配对、原 vivo Android16、Android6/7、16KiB 真机和原生 SAF 最终保存未在本轮覆盖。[正式版完整说明](docs/releases/v0.2.0-rc2-notes.md) · [build170 验收](docs/releases/v0.2.21-build170-20261009.md)。
-
-### 开始使用
-
-1. 装 APK（仅 arm64；Android 11+ 选 Standard，更老的系统选 Low）
-2. 首次启动解压并准备内置离线环境；耗时取决于机型，历史完整冷安装为 42.412 秒，尚未达到 30 秒目标
-3. 「配置」页填 DeepSeek API key →「启动」页点启动 → 自动打开 Web UI
-
-就这样。想跑得更细可以走「分步安装」，每步都能单独重装、单独更新。
+</details>
 
 ---
 
@@ -103,7 +98,7 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 |---|---|
 | 🚫 **零命令行门槛** | 内置离线 Ubuntu rootfs，APK 装完就能用。不装 Termux、不配 pkg、不敲命令 |
 | 🐧 **完整 glibc 环境** | 不是裁剪版：`apt` / PTY / 原生模块 / Python / git 都在。上游插件不用改就能跑 |
-| ⚙️ **bxroot / proot** | bxroot 优先，proot 兼容；实际 Android 性能与兼容性须按新版本设备证据判断 |
+| ⚙️ **双运行时选择** | 默认proot、可选proroot；实际性能取决于设备、I/O、缓存和插件，不以历史异条件样本给引擎排名 |
 | 🔌 **手机就是 agent 的手** | 无障碍 + ADB 免 Shizuku 直连 + 独立虚拟屏：读屏、点按、装应用、跑自动化，全部内置 |
 | 💾 **导出后迁移数据** | “数据与备份”导出无需密码的 `.tar.gz`；数据位置可在存储指南查看，本机副本不保证卸载后存续 |
 | 🩺 **坏了能自己说清哪坏了** | 组件级自检 + 按需修补 + 启动诊断 + 独立应急 DSH；Web 起不来时直接点名是哪个插件 |
@@ -128,9 +123,9 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 
 | 能力 | 说明 |
 |---|---|
-| bxroot / proot 双运行时 | 首次升级优先 bxroot；配置可显式选择 proot，实际兼容结果依机型 |
-| 性能证据 | 旧 proroot 的历史测速不能代表 bxroot；本轮未进行 Android 性能验收 |
-| 有限兼容回退 | bxroot 明确启动引擎失败、无插件故障或业务提交，确认后代树与 launcher 退出后仅重试一次 proot；未知结果不重放 |
+| proroot / proot 双运行时 | 默认稳定的 proot；可在“配置”选择 proroot，实际兼容结果依机型 |
+| 性能证据 | 有同台有限样本，设备、缓存和插件状态影响明显；见[性能记录](docs/performance-startup-20261022.md)，不作为普遍引擎排名 |
+| 有限兼容回退 | proroot 在鉴权前明确退出且无插件故障时，确认 guest 退出后仅重试一次 proot；慢启动不触发回退 |
 | Node.js 24 + pnpm 10 | 与上游一致的运行环境，随包锁版本 |
 | 分包更新 | Ubuntu 与 dsh 运行时在 APK 内分包；冷安装两份都解压，局部更新只读 dsh 包 |
 | 受管更新试运行 | 新环境先在隔离区真实启动、验证端口 / 鉴权 / 会话读写 / 插件加载，全过后才切换提交，失败自动回切 |
@@ -183,9 +178,9 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 | 能力 | 说明 |
 |---|---|
 | 双内核 | Standard 用系统 WebView；Low 内置 GeckoView 143，不受系统 WebView 版本拖累 |
-| 移动端适配 | 内置 [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) **3.1.0**（MIT），固定源码与保留差异均受摘要核验 |
-| 画中画 | 对话窗口支持 PiP 小窗悬浮 |
-| 高刷与省电 | 按用户刷新率上限请求高刷（实测 120 Hz 零掉帧）；空闲自动交还系统省电 |
+| 移动端适配 | 内置 [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) **3.2.1**（MIT），保留手机快捷键和窄屏适配，修复焦点、弹窗及插件卡片 |
+| 画中画 | 默认关闭，用户主动开启后使用 PiP 小窗；正常返回与后台恢复保留同代网页实例 |
+| 高刷与省电 | 按用户上限请求刷新率，空闲交还系统；实际帧率依设备和系统，不把请求成功当作性能证明 |
 | 深浅色与多语言 | 深色 / 浅色 / 跟随系统；简体中文 / English，默认跟随系统语言 |
 | 局域网访问 | 电脑 / 平板浏览器直接用手机上的 dsh。token 鉴权 fail-closed，命中后回设 `SameSite=Strict` Cookie，不让 token 随外链泄漏 |
 | 老浏览器兼容 | 自动注入 `AbortSignal.any/timeout` 与 `crypto.randomUUID` polyfill（局域网 HTTP 下必需） |
@@ -196,7 +191,7 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 
 | 能力 | 说明 |
 |---|---|
-| 插件市场 | 安装 / 更新 / 启停 / 删除 / 搜索 / 排序，全在 App 内；配合官网 [dsha.cc](https://dsha.cc) 插件目录与社区插件 |
+| 插件管理 | 安装 / 更新 / 启停 / 删除 / 搜索 / 排序，全在 App 内；配合官网 [dsha.cc](https://dsha.cc) 插件目录与社区插件 |
 | 多样安装方式 | GitHub 简写 / tree / blob / archive / Release 链接、HTTPS 压缩包直链、本地导入（按内容识别格式）、终端 `dsha-plugin install` |
 | 多下载源 | 自动择源，支持 npm 官方源与 npmmirror，更新检查多路并发、锁定版本复用缓存、失败有限回退 |
 | 依赖与事务 | 随包 pnpm 10.34.5，允许未锁定依赖解析、生命周期脚本和 pnpmfile；记录实际锁与目录摘要，拒绝归档越界并保留回切原件 |
@@ -228,7 +223,7 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 | 什么权限都不给也能用 | 最小配置（不给 ADB、不给文件权限、不开局域网）下 DSHA 照常跑 dsh；每项能力默认关闭、随时撤销 |
 | API key | Android Keystore + AES/GCM，密钥不出 Keystore；失败不清空旧密文 |
 | 设备命令 | 白名单始终开启，Root / Shizuku / ADB 三通道同一套策略，应用停止前逐个核验归属，防 PID 复用误伤 |
-| 桥凭据护栏 | `/app/export`、`/app/readfile` 拒绝凭据区路径，规范化 + canonical path 双重判定，堵住「软链接指凭据」的绕法 |
+| 桥凭据护栏 | `/app/export`、`/app/readfile` 拒绝凭据区路径，有规范化与 canonical path 检查；已知 Root 递归 READ 子链接缺口见安全文档，不视为完整隔离 |
 | 无遥测 | 不上传任何日志或使用数据；更新、插件下载、模型调用之外不发起网络请求 |
 | 诚实披露 | 已知弱点（无内核级沙箱、历史明文备份、签名密钥待轮换等）在文档里直接列出 |
 
@@ -242,10 +237,10 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 
 | | **容器派**（DSHA 走这条） | **Termux bootstrap 派** |
 |---|---|---|
-| 做法 | bxroot/proot + 完整 glibc rootfs | 用 Termux 的包在 Android bionic 上裸跑 |
+| 做法 | proot/proroot + 完整 glibc rootfs | 用 Termux 的包在 Android bionic 上裸跑 |
 | 装机 | 装 APK 就完事 | 装 Termux → 敲命令 → 装工具链 |
 | 环境 | 完整 Ubuntu，`apt` 与原生模块随便用 | 需要为 bionic 逐个打补丁 / 重编 |
-| 开销 | bxroot 的 Android 性能尚未重新验收 | 无容器层，理论最快 |
+| 开销 | 存在系统调用与文件 I/O 转译开销，实际耗时依设备与场景 | 无容器层，理论最快 |
 | 沙箱 | 两边都受限 | 两边都受限 |
 
 ---
@@ -258,7 +253,7 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 |---|---|---|
 | 架构 | ⚠️ 仅 arm64-v8a | 32 位与 x86 设备不支持 |
 | 系统 | ✅ Standard 11+ / Low 6+ | 老系统部分能力受系统限制（无线配对需 11+ 等，见 [android-low](docs/android-low.md)） |
-| 包体 | ⚠️ 273.10 / 345.27 MiB | 内置完整 Ubuntu 环境的代价，换来的是免下载、免命令行 |
+| 包体 | ⚠️ 本次 Standard 278.66 MiB | 内置完整 Ubuntu 环境的代价，换来的是免下载、免命令行 |
 | bash 工具 | ✅ 可用 | 完整 Ubuntu 的 bash，agent 跑 shell 命令没有限制 |
 | bash 的**沙箱隔离** | ⚠️ 不可用 | bubblewrap 要 unprivileged user namespace，Android sepolicy 不给 —— 容器派和 Termux 派都一样绕不过。约束靠 dsh 的权限档位：默认 `danger-full-access`，可在配置页改成 `workspace-write` 或 `read-only`。请自行判断风险 |
 | 卓易通 / 鸿蒙 anco | ❓ 未验证 | 理论可行，尚无真机回归 |
@@ -279,7 +274,7 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 │  ├ LAN 代理 :3081 · ADB / Shizuku / Root 设备通道    │
 │  └ 悬浮条（TYPE_APPLICATION_OVERLAY）                │
 ├─────────────────────────────────────────────────────┤
-│ bxroot（优先）/ proot（兼容，依机型核验）           │
+│ proot（默认）/ proroot（可选，依机型核验）           │
 ├─────────────────────────────────────────────────────┤
 │ Ubuntu 24.04 arm64 · Node.js 24 · pnpm 10           │
 │  └ @deepseek-ai/dsh  →  Web UI :auto                │
@@ -352,7 +347,7 @@ python tools/verify-stability.py             # 稳定性验收门禁
 ## 致谢
 
 - [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) —— 本体
-- [bxroot](https://github.com/qiannianhuanxiang/bxroot) / [proot](https://github.com/termux/proot) —— 免 ROOT 容器（见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)）
+- [proroot](https://github.com/coderredlab/proroot) / [proot](https://github.com/termux/proot) —— 免 ROOT 容器（见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)）
 - [Termux terminal-view / terminal-emulator](https://github.com/termux/termux-app)（Apache-2.0）—— PTY 终端
 - [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) —— 内置移动端适配
 - [Shizuku](https://shizuku.rikka.app/) —— 备用设备命令通道

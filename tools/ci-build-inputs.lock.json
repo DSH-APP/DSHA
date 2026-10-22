@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "purpose": "Fixed original build input absent from runtime-descriptor.inputs; other binaries retain their descriptor or existing ADB/recovery lock pins.",
+  "archives": [
+    {
+      "asset": "python-support.bin",
+      "bytes": 904360,
+      "sha256": "9f8299ea3fa7a1cf84c23087ae80f584599a828585f3175f92da575955a63464",
+      "basis": {
+        "kind": "signed-apk-and-source-byte-identity",
+        "apkSha256": "55d0ea99065e6ccf1dbddf02c4afb3b27ac0b745887a8f3b9f20520f4d05b699",
+        "apkMember": "assets/python-support.bin",
+        "source": "app/src/main/assets/python-support.bin",
+        "scope": "The signed 55 APK member and retained original source input have identical size and SHA-256. This pins binary build bytes, not vendor source provenance."
+      }
+    }
+  ]
+}

@@ -39,8 +39,10 @@ final class RootfsInstaller {
 
   /** 标准版统一用 glibc Python；不再把另一套 Termux Python 重复写入 rootfs。 */
   static void python(Context ctx, File requested) throws IOException {
+    GuestScriptBudget.checkpoint();
     File stage = RuntimeAssetFiles.root(ctx, requested);
     synchronized (PYTHON_LOCK) {
+      GuestScriptBudget.checkpoint();
       File py = new File(stage, "usr/bin/python3.12");
       File enc = new File(stage, "usr/lib/python3.12/encodings/__init__.py");
       if (!py.isFile() || py.length() == 0 || !enc.isFile()) {
@@ -50,6 +52,7 @@ final class RootfsInstaller {
       }
       if (!py.isFile() || !enc.isFile())
         throw new IOException(com.deepseekharness.app.util.UiText.text("Ubuntu Python 运行环境不完整"));
+      GuestScriptBudget.checkpoint();
       // 标准库的 C 扩展还依赖 SQLite/readline；仅有 Python 主程序并不代表它们可用。
       File sqlite = new File(stage, "usr/lib/aarch64-linux-gnu/libsqlite3.so.0");
       File readline = new File(stage, "usr/lib/aarch64-linux-gnu/libreadline.so.8");
@@ -63,6 +66,7 @@ final class RootfsInstaller {
       }
       if (!sqlite.isFile() || !readline.isFile())
         throw new IOException(com.deepseekharness.app.util.UiText.text("Python 动态库不完整"));
+      GuestScriptBudget.checkpoint();
       py.setExecutable(true, false);
       File command = new File(stage, "usr/bin/python3");
       if (!command.getCanonicalFile().equals(py.getCanonicalFile())) {
@@ -85,19 +89,33 @@ final class RootfsInstaller {
 
   /** 放在独立目录，不覆盖用户通过 npm 安装或升级的全局包管理器。 */
   static void pnpm(Context ctx, File requested) throws IOException {
+    GuestScriptBudget.checkpoint();
     File stage = RuntimeAssetFiles.root(ctx, requested);
     synchronized (PNPM_LOCK) {
+      GuestScriptBudget.checkpoint();
+      var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
+      fs.parents(stage, "usr/local/lib/dsha-pnpm/bin/pnpm.cjs");
+      fs.parents(stage, "usr/local/lib/dsha-pnpm/dist/pnpm.cjs");
+      fs.parents(stage, "root/.dsha-pnpm-version");
       File entry = new File(stage, "usr/local/lib/dsha-pnpm/bin/pnpm.cjs");
       File marker = new File(stage, "root/.dsha-pnpm-version");
+      File distribution = new File(stage, "usr/local/lib/dsha-pnpm/dist/pnpm.cjs");
+      File metadata = new File(stage, "usr/local/lib/dsha-pnpm/package.json");
       if (!entry.isFile()
+          || Compat.isSymbolicLink(entry)
+          || !distribution.isFile()
+          || Compat.isSymbolicLink(distribution)
+          || !pnpmMetadataCurrent(fs, metadata)
           || !marker.isFile()
+          || Compat.isSymbolicLink(marker)
+          || marker.length() > 128
           || !com.deepseekharness.app.BuildConfig.BUNDLED_PNPM_VERSION.equals(
               new String(Compat.readAllBytes(marker), java.nio.charset.StandardCharsets.UTF_8)
                   .trim())) {
         try (InputStream input = ctx.getAssets().open("pnpm-runtime.bin")) {
           TarGzipExtractor.extractAuto(input, stage, 0);
         }
-        if (!entry.isFile())
+        if (!entry.isFile() || !distribution.isFile() || !pnpmMetadataCurrent(fs, metadata))
           throw new IOException(com.deepseekharness.app.util.UiText.text("离线 pnpm 入口缺失"));
         RuntimeAssetFiles.write(
             ctx,
@@ -107,20 +125,34 @@ final class RootfsInstaller {
             false);
       }
       File wrapper = new File(stage, "root/dsh-bin/pnpm");
-      if (!wrapper.isFile() || wrapper.length() == 0) {
-        File directory = wrapper.getParentFile();
-        if (!directory.isDirectory() && !directory.mkdirs())
-          throw new IOException(com.deepseekharness.app.util.UiText.text("无法创建 pnpm 命令目录"));
-        if ((wrapper.exists() || Compat.isSymbolicLink(wrapper)) && !wrapper.delete())
-          throw new IOException(com.deepseekharness.app.util.UiText.text("无法更新 pnpm 命令入口"));
-        RuntimeAssetFiles.write(
-            ctx,
-            wrapper,
-            ("#!/bin/sh\n"
-                    + "exec /usr/local/bin/node /usr/local/lib/dsha-pnpm/bin/pnpm.cjs \"$@\"\n")
-                .getBytes(java.nio.charset.StandardCharsets.UTF_8),
-            true);
-      }
+      // A nonempty stale wrapper or a lost executable bit is not a prepared command.
+      // The NOFOLLOW atomic publisher repairs regular files and rejects link targets.
+      // link2symlink cannot preserve Node's package-relative imports from pnpm's
+      // content store. Use copies by default, while explicit env/CLI choices win.
+      RuntimeAssetFiles.write(
+          ctx,
+          wrapper,
+          ("#!/bin/sh\n"
+                  + "export npm_config_package_import_method=\"${npm_config_package_import_method-"
+                  + "${NPM_CONFIG_PACKAGE_IMPORT_METHOD-copy}}\"\n"
+                  + "exec /usr/local/bin/node /usr/local/lib/dsha-pnpm/bin/pnpm.cjs \"$@\"\n")
+              .getBytes(java.nio.charset.StandardCharsets.UTF_8),
+          true);
+    }
+  }
+
+  private static boolean pnpmMetadataCurrent(
+      com.deepseekharness.app.backup.BackupFileSystem fs, File metadata) {
+    try {
+      if (!fs.stat(metadata).type.equals("FILE")) return false;
+      var value =
+          new org.json.JSONObject(
+              new String(fs.small(metadata, 65536), java.nio.charset.StandardCharsets.UTF_8));
+      return "pnpm".equals(value.optString("name"))
+          && com.deepseekharness.app.BuildConfig.BUNDLED_PNPM_VERSION.equals(
+              value.optString("version"));
+    } catch (IOException | org.json.JSONException invalid) {
+      return false;
     }
   }
 

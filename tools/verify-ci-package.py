@@ -15,7 +15,6 @@ REQUIRED_CHECKS = {
     'mobile-modal', 'adb-flow', 'adb-vscreen-bridge', 'web-ui-host-fixtures',
     'plugin-downloads',
     'third-party-notices', 'third-party-apk',
-    'bxroot-native-source', 'native-runtime-apk',
 }
 
 

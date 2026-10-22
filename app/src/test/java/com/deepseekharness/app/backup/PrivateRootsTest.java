@@ -11,10 +11,6 @@ public class PrivateRootsTest {
     assertTrue(PrivateRoots.top("diagnostic-events.1.txt"));
     assertTrue(PrivateRoots.top("startup-history"));
     assertTrue(PrivateRoots.top("recovery-maintenance-tools"));
-    assertTrue(PrivateRoots.top("runtime-capability-work"));
-    assertTrue(PrivateRoots.top("runtime-capability-receipts"));
-    assertTrue(PrivateRoots.top("bounded-guest-completed"));
-    assertFalse(PrivateRoots.top("runtime-capability-receipts-notes"));
     assertFalse(PrivateRoots.top("recovery-maintenance-tools-notes"));
     assertTrue(PrivateRoots.top("host-backup-completed-v1.json"));
     assertTrue(PrivateRoots.top(".dsha-plugin-task-user.json"));

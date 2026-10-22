@@ -18,6 +18,8 @@ const reporter=new TaskReporter(ctx,async(operation,payload)=>{
   if(operation==='ack'&&payload.action==='lost-ack') throw Error('ack lost');
   return true;
 },Date.now,webRegistration);
+for(let i=0;i<600;i++) await reporter.tick();
+assert.equal(traffic.length,0,'a reporter without a live task or pending fact must not reserve a native context or poll stop controls');
 reporter.event(session,{type:'turn/end',data:{turn:6,reason:{kind:'completed'}}});
 reporter.event(session,{type:'irrelevant/event',data:{turn:7}});
 assert.equal(reporter.rows.size,0,'historical end and unrelated events cannot invent live tasks');
@@ -44,6 +46,9 @@ open=null;agent.status='idle';reporter.event(session,{type:'turn/end',data:{turn
 await reporter.flush();
 const records=traffic.filter(t=>t.operation==='event');assert.equal(records.length,count+1);
 assert.equal(records.at(-1).payload.phase,'ended');assert.equal(records.at(-1).payload.reason,'max-tokens');
+const endedTraffic=traffic.length;
+for(let i=0;i<600;i++) await reporter.tick();
+assert.equal(traffic.length,endedTraffic,'a delivered terminal fact stops claim polling while retaining task history');
 await reporter.control({generation:2,instance:'old',session:session.id,turn:8,action:'old-generation'});assert.equal(cancel,1);
 let replacementCancels=0;
 const replacement={...agent,status:'running',cancel(){replacementCancels++}};
@@ -54,6 +59,43 @@ const replacementOwner=reporter.rows.get(session.id).owner;assert.notEqual(repla
 await reporter.control({generation:3,instance:'actual-runtime',session:session.id,turn:1,owner,action:'old-owner'});assert.equal(replacementCancels,0);
 await reporter.control({generation:3,instance:'actual-runtime',session:session.id,turn:1,owner:replacementOwner,action:'new-owner'});assert.equal(replacementCancels,1);
 reporter.dispose();await reporter.tick();assert.equal(cancel,1);
+// An interrupted terminal transfer is still retried even when no live row remains.
+// Idle optimization must not suppress the actual end fact or fabricate completion.
+const terminalSession={id:'terminal-retry',surface:{contentGeneration:1}};
+const terminalAgent={session:terminalSession,status:'running'};
+let terminalOpen=1,terminalTurn=1,failTerminal=true;
+const terminalTraffic=[];
+const terminalCtx={webServer:{port:41821},agents:{get:()=>terminalAgent,roots:()=>[terminalAgent]},
+  sessionProjections:{stateOf:()=>({lastTurn:terminalTurn,openTurnStartSeq:terminalOpen})}};
+const terminalReporter=new TaskReporter(terminalCtx,async(operation,payload)=>{
+  terminalTraffic.push({operation,payload});
+  if(operation==='context') return {generation:3,instance:'actual-runtime',port:41821};
+  if(operation==='claim') return {};
+  if(operation==='event'&&payload.phase==='ended'&&failTerminal) throw Error('synthetic terminal transport failure');
+  return true;
+},Date.now,webRegistration);
+terminalReporter.event(terminalSession,{type:'turn/start',data:{turn:1}});
+await terminalReporter.tick();
+terminalAgent.status='idle';terminalOpen=null;
+terminalReporter.event(terminalSession,{type:'turn/end',data:{turn:1,reason:{kind:'aborted'}}});
+await terminalReporter.flush();assert.equal(terminalReporter.pending.size,1);
+failTerminal=false;
+const terminalRetryStart=terminalTraffic.length;
+await terminalReporter.tick();
+assert.deepEqual(terminalTraffic.slice(terminalRetryStart).map(row=>row.operation),['event']);
+assert.equal(terminalTraffic.at(-1).payload.phase,'ended');
+assert.equal(terminalTraffic.at(-1).payload.reason,'aborted');
+assert.equal(terminalReporter.pending.size,0);
+const terminalIdleStart=terminalTraffic.length;
+for(let i=0;i<600;i++) await terminalReporter.tick();
+assert.equal(terminalTraffic.length,terminalIdleStart,'successfully delivered aborted task has no idle bridge traffic');
+terminalAgent.status='running';terminalOpen=2;terminalTurn=2;
+terminalReporter.event(terminalSession,{type:'turn/start',data:{turn:2}});
+await terminalReporter.tick();
+assert.equal(terminalTraffic.at(-1).operation,'claim','a real task after an idle period restores active stop polling');
+terminalReporter.dispose();
+const disposedTraffic=terminalTraffic.length;
+await terminalReporter.tick();assert.equal(terminalTraffic.length,disposedTraffic);
 // Distinct Session and Agent instances deliberately reuse every numeric/text identity.
 // Old event delivery must neither end the new owner nor alter its progress/stop action.
 const previousSession={id:'reused-session',surface:{contentGeneration:0}};
@@ -121,7 +163,8 @@ mismatchedContextReporter.dispose();
 // Import the actual canonical rc2 scrubber used by bash/MCP/PTY launchers.
 const raw=testRuntime('raw');
 const subprocessSource=path.join(raw,'node_modules/@deepseek-ai/dsh-subprocess/lib/index.js');
-assert.equal(JSON.parse(readFileSync(path.join(raw,'node_modules/@deepseek-ai/dsh-subprocess/package.json'),'utf8')).version,'0.2.0-rc.2');
+assert.equal(JSON.parse(readFileSync(path.join(raw,'node_modules/@deepseek-ai/dsh-subprocess/package.json'),'utf8')).version,
+  JSON.parse(readFileSync('tools/dsh-runtime/package.json','utf8')).dependencies['@deepseek-ai/dsh']);
 const {scrubbedParentEnv}=await import(pathToFileURL(subprocessSource).href);
 for(const [key,value]of Object.entries(webRegistration)) process.env[key]=value;
 const filtered=scrubbedParentEnv();

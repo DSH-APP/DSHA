@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-plugin-manager/lib/index.js",
+  "sourceSha256": "1b8bf9eb266d7b3b7f899175e3f435c89ed8baa8aabc677212759f8c6cd23132",
+  "patches": [
+    {
+      "before": "import { pluginEntryId, readPluginInventory } from \"@deepseek-ai/dsh-host-plugin-inventory\";",
+      "after": "import { pluginEntryId, readPluginEntries } from \"@deepseek-ai/dsh-host-plugin-inventory\";"
+    },
+    {
+      "before": "\t\t\treturn (await readPluginInventory(this.ctx)).entries.map((entry) => {",
+      "after": "\t\t\t// DSHA_PLUGIN_LIST_ENTRIES_ONLY_V1: this method never consumes preset\n\t\t\t// compositions. Read the same live entries without an unrelated audit.\n\t\t\treturn readPluginEntries(this.ctx).map((entry) => {"
+    }
+  ]
+}

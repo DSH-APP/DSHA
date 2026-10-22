@@ -44,15 +44,10 @@ for (const language of ['zh', 'en']) {
 const source = fs.readFileSync(path.join(assets, 'web-integration/startup.js'), 'utf8');
 const reports = [], listeners = {};
 let mutation, currentDefinition, boot = null, composer = null;
-const document = { querySelector(selector) { return selector === '[data-dsh-boot]' ? boot : composer; }, getElementById(){return {children:[{}]};} };
-// 启动期扫描现在是「每个宏任务一次」：mutation 回调只排队，测试必须显式冲刷
-// 这个队列才能观察扫描结果（也才能覆盖进度条的定时器路径）。
-const scheduled = [];
-const flushTimers = () => { for (let index = 0; index < 64 && scheduled.length; index++) scheduled.shift()(); };
+const document = { querySelector(selector) { return selector === '[data-dsh-boot]' ? boot : composer; }, getElementById(){return {children:[{}],querySelector(){return null;}};} };
 const context = {document,location:{origin:'http://127.0.0.1:3087',pathname:'/'},__DSHA_PAGE_BINDING__:{nonce:'a'.repeat(32)},console:{info(line){reports.push(JSON.parse(line.slice(12)));}},
   CustomEvent:class {constructor(type,options){this.type=type;this.detail=options.detail;}},
   MutationObserver:class {constructor(callback){mutation=callback;} observe(){} disconnect(){this.stopped=true;}},
-  setTimeout(callback){scheduled.push(callback);return scheduled.length;}, clearTimeout(){},
   addEventListener(type,callback){listeners[type]=callback;}, dispatchEvent(){}};
 context.window = context; context.top = context;
 vm.runInNewContext(source, context);
@@ -67,18 +62,24 @@ assert(reports.some(e => e.id==='plugin-reject' && e.type==='issue'));
 context.__ModuleLoader__.load({id:'plugin-import',factory(){throw new Error('factory failed');}});
 assert.throws(()=>currentDefinition.factory(), /factory failed/);
 assert(reports.some(e => e.id==='plugin-import' && e.message.includes('factory failed')));
-boot={textContent:'HARNESS Failed to load plugins plugin-reject'}; mutation(); flushTimers();
+boot={textContent:'HARNESS Failed to load plugins plugin-reject'}; mutation();
 assert(reports.some(e=>e.fatal));
-boot=null; composer={}; mutation(); flushTimers();
+boot=null; composer={}; mutation();
 assert(reports.some(e=>e.type==='ready'));
 listeners.unhandledrejection({reason:new Error('later error')});
 assert.equal(reports.at(-1).fatal,false);
 assert(reports.every(e=>e.nonce==='a'.repeat(32)&&e.documentId===context.__dshaStartupDocumentId&&e.page==='http://127.0.0.1:3087/'));
 assert(reports.every((e,index)=>index===0||e.sequence>reports[index-1].sequence));
 // A legacy WebView can inject only after the official failed boot screen exists.
-const lateReports=[];const late={...context,__dshaStartupObserved:false,document:{querySelector(s){return s==='[data-dsh-boot]'?{textContent:'Failed to load plugins historical-failure'}:null;},getElementById(){return {children:[]};}},console:{info(line){lateReports.push(JSON.parse(line.slice(12)));}}};late.window=late;late.top=late;
+const lateReports=[];const late={...context,__dshaStartupObserved:false,document:{querySelector(s){return s==='[data-dsh-boot]'?{textContent:'Failed to load plugins historical-failure'}:null;},getElementById(){return {children:[],querySelector(){return null;}};}},console:{info(line){lateReports.push(JSON.parse(line.slice(12)));}}};late.window=late;late.top=late;
 vm.runInNewContext(source,late);assert(lateReports.some(e=>e.fatal&&e.message.includes('historical-failure')));
 // A retained old runtime may already have installed the old unbound observer.
 const oldReports=[];const old={...late,__dshaStartupObserved:true,__dshaStartupObservationNonce:undefined,console:{info(line){oldReports.push(JSON.parse(line.slice(12)));}}};old.window=old;old.top=old;
 vm.runInNewContext(source,old);assert(oldReports.some(e=>e.fatal&&e.nonce==='a'.repeat(32)));
+// 完成时注入未见 boot，rc2 首次说明/空会话已经挂载 shell 但没有 composer。
+for(const shell of [false,true]){
+ const seen=[];const mounted={...context,__dshaStartupObserved:false,document:{querySelector(){return null;},getElementById(){return {children:[{}],querySelector(){return shell?{}:null;}};}},console:{info(line){seen.push(JSON.parse(line.slice(12)));}}};mounted.window=mounted;mounted.top=mounted;
+ vm.runInNewContext(source,mounted);
+ assert.equal(seen.some(e=>e.type==='ready'),shell,'arbitrary nonempty root is insufficient; mounted rc2 shell is ready');
+}
 console.log('PASS startup observer: named missing import, thrown module, one execution, browser factory/apply/rejection, boot failure, ready');

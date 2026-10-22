@@ -57,6 +57,7 @@ public final class BrowserOriginRestoreActivity extends AppCompatActivity {
         UiText.choose("正在核对旧端口与保留候选…", "Checking the previous port and retained candidates…"));
     new Thread(
             () -> {
+              String stage = "PREVIEW_CLOSE";
               try {
                 BrowserOriginRestore.awaitClosed(
                     ticket,
@@ -65,6 +66,7 @@ public final class BrowserOriginRestoreActivity extends AppCompatActivity {
                             && !isDestroyed()
                             && identity.equals(
                                 HarnessController.get(this).getReadyWebPageIdentity()));
+                stage = "CANDIDATE_OPEN";
                 server =
                     new BrowserOriginRestoreServer(
                         this,
@@ -111,39 +113,64 @@ public final class BrowserOriginRestoreActivity extends AppCompatActivity {
                             configuration("capture"));
                       } catch (Exception failure) {
                         if (server != null) server.close();
+                        String code = recordFailure("SOURCE_PAGE_OPEN", failure);
                         status.setText(
-                            UiText.choose(
-                                "恢复页面无法打开，候选已保留。",
-                                "The recovery page could not open. Candidates were retained."));
+                            UiText.format(
+                                "%s\n%s · %s",
+                                UiText.choose(
+                                    "恢复页面无法打开，候选已保留。",
+                                    "The recovery page could not open. Candidates were retained."),
+                                "SOURCE_PAGE_OPEN",
+                                code));
                       }
                     });
               } catch (java.net.BindException occupied) {
+                String code = recordFailure(stage, occupied);
+                String phase = stage;
                 runOnUiThread(
                     () ->
                         status.setText(
-                            UiText.choose(
-                                "旧端口正被占用，草稿仍保留。请待端口释放后从“恢复旧端口草稿”重试。",
-                                "The previous port is occupied. Drafts were retained. Retry after the port is released.")));
+                            UiText.format(
+                                "%s\n%s · %s",
+                                UiText.choose(
+                                    "旧端口正被占用，草稿仍保留。请待端口释放后从“恢复旧端口草稿”重试。",
+                                    "The previous port is occupied. Drafts were retained. Retry after the port is released."),
+                                phase,
+                                code)));
               } catch (Exception failure) {
+                String code = recordFailure(stage, failure);
+                String phase = stage;
                 runOnUiThread(
                     () ->
                         status.setText(
-                            "RESTORE_PREVIEW_CLOSE_UNCONFIRMED".equals(failure.getMessage())
-                                ? UiText.choose(
-                                    "未确认旧网页已关闭，恢复尚未开始。请关闭其它对话页后重试。",
-                                    "Previous pages have not confirmed closure. Restore has not started. Close other conversation pages and retry.")
-                                : failure.getMessage() != null
-                                        && failure.getMessage().startsWith("RESTORE_BUDGET")
+                            ("RESTORE_PREVIEW_CLOSE_UNCONFIRMED".equals(code)
                                     ? UiText.choose(
-                                        "恢复候选达到保留上限，旧草稿仍保留。请保留原图并联系维护者检查候选。",
-                                        "Retained recovery candidates reached their limit. Old drafts remain. Keep original images and contact the maintainer to inspect candidates.")
-                                    : UiText.choose(
-                                        "恢复未开始，旧数据仍保留。请返回后重试。",
-                                        "Restore did not start. Source data was retained. Return and retry.")));
+                                        "未确认旧网页已关闭，恢复尚未开始。请关闭其它对话页后重试。",
+                                        "Previous pages have not confirmed closure. Restore has not started. Close other conversation pages and retry.")
+                                    : code.startsWith("RESTORE_BUDGET")
+                                        ? UiText.choose(
+                                            "恢复候选达到保留上限，旧草稿仍保留。请保留原图并联系维护者检查候选。",
+                                            "Retained recovery candidates reached their limit. Old drafts remain. Keep original images and contact the maintainer to inspect candidates.")
+                                        : UiText.choose(
+                                            "恢复未开始，旧数据仍保留。请返回后重试。",
+                                            "Restore did not start. Source data was retained. Return and retry."))
+                                + "\n"
+                                + phase
+                                + " · "
+                                + code));
               }
             },
             "dsha-origin-restore-prepare")
         .start();
+  }
+
+  private String recordFailure(String stage, Throwable failure) {
+    String code = BrowserOriginRestoreServer.failureCode(failure);
+    String detail = "stage=" + stage + " code=" + code;
+    com.deepseekharness.app.core.DiagnosticLog.record(
+        this, "BROWSER_ORIGIN_RESTORE_FAILED", detail);
+    android.util.Log.w("DSHA", "BROWSER_ORIGIN_RESTORE_FAILED " + detail);
+    return code;
   }
 
   private String configuration(String mode) throws org.json.JSONException {
@@ -169,8 +196,13 @@ public final class BrowserOriginRestoreActivity extends AppCompatActivity {
       // Official rc2 exchanges launch tokens only on '/'. The dedicated document receives no token.
       surface.load(authUrl, configuration("restore"));
     } catch (Exception failure) {
+      String code = recordFailure("TARGET_PAGE_OPEN", failure);
       status.setText(
-          UiText.choose("候选已保存，恢复尚未完成。", "Candidates were saved; restore is incomplete."));
+          UiText.format(
+              "%s\n%s · %s",
+              UiText.choose("候选已保存，恢复尚未完成。", "Candidates were saved; restore is incomplete."),
+              "TARGET_PAGE_OPEN",
+              code));
     }
   }
 

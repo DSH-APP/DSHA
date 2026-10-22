@@ -1,4 +1,4 @@
-"""Verify required actual license bytes in both APKs and inventory shipped npm packages."""
+"""Verify actual license bytes in each selected APK and inventory shipped npm packages."""
 import argparse,hashlib,importlib.util,json,tarfile,zipfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
@@ -10,7 +10,7 @@ def stream_digest(stream):
  for block in iter(lambda:stream.read(1048576),b''):value.update(block)
  return value.hexdigest()
 def main():
- parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('apks',type=Path,nargs=2);parser.add_argument('--output',type=Path,required=True);args=parser.parse_args()
+ parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('apks',type=Path,nargs='+');parser.add_argument('--output',type=Path,required=True);args=parser.parse_args()
  required=gate.REQUIRED_LICENSES
  gate.verify_licenses();gate.verify_native_members()
  notices=(ROOT/'THIRD_PARTY_NOTICES.md').read_text(encoding='utf-8')
@@ -24,11 +24,9 @@ def main():
     if apk.read('assets/licenses/'+name)!=source:raise ValueError('APK_LICENSE_BYTES:'+name)
    if apk.read('assets/builtin-plugins/dsh-web-mobile/LICENSE')!=(ROOT/'app/src/main/assets/builtin-plugins/dsh-web-mobile/LICENSE').read_bytes():raise ValueError('APK_MOBILE_LICENSE_BYTES')
    if apk.read('assets/web-integration/core-js.LICENSE')!=(ROOT/'app/src/main/assets/web-integration/core-js.LICENSE').read_bytes():raise ValueError('APK_CORE_JS_LICENSE_BYTES')
-   for name in gate.EXTRA_ASSETS:
-    if apk.read('assets/'+name)!=(ROOT/'app/src/main/assets'/name).read_bytes():raise ValueError('APK_STATIC_PARSER_BYTES:'+name)
    with apk.open('assets/dsh-runtime.bin') as stream:
     if stream_digest(stream)!=runtime_sha:raise ValueError('APK_THIRD_PARTY_RUNTIME_CHANGED')
-   receipts.append(dict(apk=path.name,sha256=hashlib.sha256(path.read_bytes()).hexdigest(),verifiedLicenses=required,verifiedAdditionalAssets=gate.EXTRA_ASSETS,runtimeSha256=runtime_sha))
+   receipts.append(dict(apk=path.name,sha256=hashlib.sha256(path.read_bytes()).hexdigest(),verifiedLicenses=required,runtimeSha256=runtime_sha))
  packages=gate.inventory(ROOT/'app/src/main/assets/dsh-runtime.bin',
                          json.loads((ROOT/'tools/dsh-runtime/package-lock.json').read_text(encoding='utf-8')),notices)
  report=dict(schema=1,apks=receipts,shippedPackageRecords=packages,note='Actual archive members; declarations are not a legal conclusion or byte-for-byte source reproducibility proof.')

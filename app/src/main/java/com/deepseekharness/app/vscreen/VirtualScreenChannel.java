@@ -9,4 +9,15 @@ public interface VirtualScreenChannel {
   boolean available(Context context);
 
   String start(Context context, String command);
+
+  /** Legacy text can carry a valid handshake, but can never prove that launch was not sent. */
+  default com.deepseekharness.app.device.DeviceTransportResult startTyped(
+      Context context, String command) {
+    return com.deepseekharness.app.device.DeviceTransportResult.unknown(
+        id(),
+        "VSCREEN_LEGACY_START_UNCONFIRMED",
+        start(context, command),
+        false,
+        com.deepseekharness.app.device.DeviceTransportIdentity.unknown());
+  }
 }

@@ -175,14 +175,34 @@ final class ColdToolsInstaller {
   }
 
   private static java.util.List<com.deepseekharness.app.util.ColdInstallPlan.Mode> modes(
-      ProotBootstrap boot, boolean configured) throws IOException {
+      ProotBootstrap boot, boolean configured) {
     var settings = boot.hostPorts().settings();
-    ContainerRuntime selected = boot.packageRuntime();
+    ContainerRuntime.Proroot candidate =
+        new ContainerRuntime.Proroot(
+            boot.ctx, ContainerRuntime.Proroot.defaultDir(boot.ctx), settings.staticLoader);
+    boolean available = android.os.Build.VERSION.SDK_INT >= 26 && candidate.available();
+    boolean isolated = IsolatedInstallProcess.supported(boot.ctx);
+    // 自动选择只用于已经完成 dpkg 的签名覆盖层及独立首次候选；旧环境/重建保持用户选择。
+    boolean automatic =
+        configured && boot.coldCandidate != null && boot.hostPorts().preferFastColdMode();
+    boolean preferProroot = !boot.forceProot && (settings.proroot || automatic);
+    boot.hostPorts()
+        .record(
+            "CAPABILITY",
+            "proroot="
+                + available
+                + " isolation="
+                + isolated
+                + " preferProroot="
+                + preferProroot
+                + " automaticCold="
+                + automatic
+                + " supervisor="
+                + IsolatedInstallProcess.sessionLauncher(boot.ctx)
+                + "\n"
+                + (available ? "" : candidate.unavailableReason()));
     return com.deepseekharness.app.util.ColdInstallPlan.modes(
-        "bxroot".equals(selected.id()),
-        "bxroot".equals(selected.id()),
-        IsolatedInstallProcess.supported(boot.ctx),
-        settings.disableProotSeccomp);
+        preferProroot, available, isolated, settings.disableProotSeccomp);
   }
 
   private static String packageFingerprint(
@@ -211,64 +231,27 @@ final class ColdToolsInstaller {
       BoundedGuestSessions.Operation coldRecord = null;
       try {
         ContainerRuntime rt =
-            "bxroot".equals(mode.runtime)
-                ? new BxrootRuntime(boot.ctx)
-                : EngineSpec.select(
-                        boot.ctx,
-                        new RuntimeHostPorts.Settings(
-                            boot.hostPorts().settings().dnsMode, "proot", false, mode.noSeccomp),
-                        false)
-                    .runtime;
+            "proroot".equals(mode.runtime)
+                ? new ContainerRuntime.Proroot(
+                    boot.ctx,
+                    ContainerRuntime.Proroot.defaultDir(boot.ctx),
+                    mode.staticLoader(boot.hostPorts().settings().staticLoader))
+                : new ContainerRuntime.Proot(boot.ctx, boot.findNativeLib("libproot.so"));
         boolean isolated = IsolatedInstallProcess.supported(boot.ctx);
         coldRecord = isolated ? BoundedGuestSessions.begin(boot.ctx.getFilesDir()) : null;
         if (boot.coldCandidate != null)
           boot.coldCandidate.beforeLaunch(coldRecord == null ? null : coldRecord.id());
-        var launch =
-            boot.launch(rt).isolated(isolated).record(coldRecord).coldTrace(true).coldMode(mode);
-
-        process = boot.startRootfs(command, launch.build());
-        if (!mode.runtime.equals(OwnedGuestProof.modeOf(process)))
-          throw new IOException("COLD_FROZEN_ENGINE_CHANGED_NO_REPLAY");
-        String diagnosticId = java.util.UUID.randomUUID().toString();
-        long began = android.os.SystemClock.elapsedRealtime();
-        var result =
-            com.deepseekharness.app.util.BoundedProcessRunner.collect(
-                process,
-                timeout,
-                256 * 1024,
-                Compat::destroy,
-                null,
-                current -> {
-                  var snapshot =
-                      current instanceof IsolatedInstallProcess owner
-                          ? owner.diagnosticSnapshot()
-                          : java.util.Map.<String, Object>of("identity", "UNSUPERVISED");
-                  saveDiagnostic(boot, diagnosticId, "timeout.json", snapshot);
-                });
-        saveDiagnostic(
-            boot,
-            diagnosticId,
-            "result.json",
-            java.util.Map.of(
-                "schema",
-                1L,
-                "mode",
-                mode.name(),
-                "elapsedMillis",
-                android.os.SystemClock.elapsedRealtime() - began,
-                "exit",
-                result.exitCode,
-                "timedOut",
-                result.timedOut,
-                "totalBytes",
-                result.totalBytes,
-                "head",
-                SensitiveData.redact(
-                    result.output.substring(0, Math.min(result.output.length(), 4000))),
-                "tail",
-                SensitiveData.redact(
-                    result.tail.substring(Math.max(0, result.tail.length() - 4000)))));
-        return result;
+        process =
+            boot.startRootfs(
+                command,
+                boot.launch(rt)
+                    .isolated(isolated)
+                    .record(coldRecord)
+                    .coldTrace(true)
+                    .coldMode(mode)
+                    .build());
+        return com.deepseekharness.app.util.BoundedProcessRunner.collect(
+            process, timeout, 256 * 1024, Compat::destroy);
       } finally {
         if (process == null && coldRecord != null) coldRecord.uncertain();
         try {
@@ -280,19 +263,6 @@ final class ColdToolsInstaller {
           } else work.close();
         }
       }
-    }
-  }
-
-  private static void saveDiagnostic(
-      ProotBootstrap boot, String id, String name, java.util.Map<String, Object> values) {
-    try {
-      var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
-      File files = boot.ctx.getFilesDir().getCanonicalFile();
-      fs.parents(files, "cold-runtime-diagnostics/" + id + "/" + name);
-      File directory = fs.child(files, "cold-runtime-diagnostics/" + id);
-      fs.atomic(directory, name, com.deepseekharness.app.backup.BackupJson.write(values, 65536));
-    } catch (IOException | RuntimeException failure) {
-      boot.hostPorts().record("PROBE_DIAGNOSTIC_UNAVAILABLE", failure.getClass().getSimpleName());
     }
   }
 }

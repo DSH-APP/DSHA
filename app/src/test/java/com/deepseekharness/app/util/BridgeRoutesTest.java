@@ -14,10 +14,28 @@ public final class BridgeRoutesTest {
     assertEquals(BridgeRoutes.Route.EXPORT, BridgeRoutes.match("/app/export"));
     assertEquals(BridgeRoutes.Route.SENSORS, BridgeRoutes.match("/app/sensors"));
     assertEquals(BridgeRoutes.Route.SENSOR, BridgeRoutes.match("/app/sensor"));
+    assertEquals(BridgeRoutes.Route.TASK_CONTEXT, BridgeRoutes.match("/app/tasks/context"));
+    assertEquals(BridgeRoutes.Route.TASK_EVENT, BridgeRoutes.match("/app/tasks/event"));
+    assertEquals(BridgeRoutes.Route.TASK_CLAIM, BridgeRoutes.match("/app/tasks/claim"));
+    assertEquals(BridgeRoutes.Route.TASK_ACK, BridgeRoutes.match("/app/tasks/ack"));
+    assertEquals(BridgeRoutes.Route.CONSENT_POLICY, BridgeRoutes.match("/app/native-policy"));
+    assertEquals(BridgeRoutes.Route.CONSENT_POLICY, BridgeRoutes.match("/device/consent"));
     for (String invalid :
         new String[] {
-          "/app/readfile/secret", "/app/readfileXXX", "/app/share2", "/app/export/child",
-          "/app/sensorsXXX", "/app/sensor/child", "/app/overlay/reply", "/exec/child"
+          "/app/readfile/secret",
+          "/app/readfileXXX",
+          "/app/share2",
+          "/app/export/child",
+          "/app/sensorsXXX",
+          "/app/sensor/child",
+          "/app/overlay/reply",
+          "/exec/child",
+          "/app/tasks/event/child",
+          "/app/tasks/context-extra",
+          "/app/tasks%2fevent",
+          "/app/task/event",
+          "/app/native-policy/child",
+          "/device/consent/child"
         }) {
       assertEquals(invalid, BridgeRoutes.Route.UNKNOWN, BridgeRoutes.match(invalid));
     }

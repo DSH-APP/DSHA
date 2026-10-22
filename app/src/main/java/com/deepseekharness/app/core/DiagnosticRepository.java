@@ -292,15 +292,6 @@ public final class DiagnosticRepository extends AndroidViewModel {
         t("网页内核", "Browser engine"),
         BuildConfig.LOW_ANDROID ? "WebView / Gecko 143" : "System WebView",
         browser.toString());
-    String installProbe = InstallProbeDiagnostics.read(getApplication());
-    if (!installProbe.isEmpty())
-      add(
-          rows,
-          "install-probe",
-          DiagnosticReport.Health.INFO,
-          t("最近安装与维护探针", "Latest install and maintenance probe"),
-          t("查看本次任务、预算与实际结果", "Review the task, budgets and observed results"),
-          installProbe);
     String cold = ColdInstallDiagnostics.read(getApplication());
     if (!cold.isEmpty())
       add(

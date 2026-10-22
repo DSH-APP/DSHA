@@ -27,7 +27,7 @@ public class StartupDiagnosticsTest {
 
     public void close() throws Exception {
       try {
-        diagnostics.closeHistoryForFixture(2000);
+        diagnostics.drainForFactoryReset(2000);
       } finally {
         io.shutdownNow();
         fs.removeOwned(files.getParentFile(), files.getName());

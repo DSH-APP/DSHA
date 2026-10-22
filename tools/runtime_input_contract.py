@@ -1,19 +1,10 @@
 """The signed manifest is shared by installation, runtime identity and Gradle inputs."""
 import json
-import re
 from pathlib import Path, PurePosixPath
 
 MANIFEST = 'app/src/main/assets/managed-runtime-inputs.json'
 ASSETS = 'app/src/main/assets'
 JAVA = 'app/src/main/java/com/deepseekharness/app'
-
-
-def bridge_protocol(root):
-    source = (Path(root) / JAVA / 'HttpShellService.java').read_text(encoding='utf-8')
-    values = re.findall(r'^\s*private static final int BRIDGE_PROTOCOL\s*=\s*([1-9][0-9]*);', source, re.M)
-    if len(values) != 1:
-        raise ValueError('RUNTIME_BRIDGE_PROTOCOL_SOURCE')
-    return int(values[0])
 
 
 def relative(value):

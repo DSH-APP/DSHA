@@ -30,7 +30,8 @@ final class RuntimeLauncher {
         ports.record("DNS_PREPARE", error.getClass().getSimpleName());
       }
       List<String> argv = spec.runtime.baseArgv(rootfs, spec.hardlinks, spec.dataDomain);
-      bindPreloads(argv);
+      File preloads = context == null ? null : RuntimeLauncherAssets.prepare(context);
+      bindPreloads(argv, preloads);
       for (var bind : spec.binds) {
         argv.add("-b");
         argv.add(bind.host() + ":" + bind.guest());
@@ -40,7 +41,7 @@ final class RuntimeLauncher {
       argv.add(command);
       ProcessBuilder builder = new ProcessBuilder(argv).redirectErrorStream(true);
       if (!spec.isolated && !spec.pipedInput) Compat.redirectStdinDevNull(builder);
-      environment(builder, spec);
+      environment(builder, spec, preloads);
       if (spec.coldTrace)
         ports.record(
             "EXEC",
@@ -59,7 +60,12 @@ final class RuntimeLauncher {
   }
 
   void environment(ProcessBuilder builder, LaunchSpec spec) throws IOException {
-    spec.runtime.applyEnv(builder, base, lib, tmp, rootfs);
+    environment(builder, spec, null);
+  }
+
+  private void environment(ProcessBuilder builder, LaunchSpec spec, File preparedPreloads)
+      throws IOException {
+    spec.runtime.applyEnv(builder, base, lib, tmp);
     if ("proot".equals(spec.runtime.id()) && !spec.hardlinks) {
       File l2s = new File(rootfs, ".l2s");
       if (!l2s.isDirectory() && !l2s.mkdirs())
@@ -74,7 +80,9 @@ final class RuntimeLauncher {
     builder.environment().put("DEBIAN_FRONTEND", "noninteractive");
     RuntimeTools.applyEnvironment(rootfs, builder.environment(), ports.settings());
     if (context != null) {
-      RuntimeLauncherAssets.prepare(context);
+      // builder() already checked the exact overlay it bound. Independent terminal/recovery
+      // callers still prepare here; no mutable filesystem proof survives a builder invocation.
+      if (preparedPreloads == null) RuntimeLauncherAssets.prepare(context);
       String bridge = "--require=" + RuntimeLauncherAssets.GUEST + "/bridge-token-compat.cjs";
       String previous = builder.environment().getOrDefault("NODE_OPTIONS", "");
       if (!java.util.Arrays.asList(previous.split("\\s+")).contains(bridge))
@@ -86,108 +94,42 @@ final class RuntimeLauncher {
       com.deepseekharness.app.util.ColdInstallPlan.applyEnvironment(
           builder.environment(), spec.coldMode);
     builder.environment().putAll(spec.environment);
-    if ("bxroot".equals(spec.runtime.id())) {
-      spec.runtime.applyEnv(builder, base, lib, tmp, rootfs);
+    // Classification evidence comes from this APK, never a guest-writable JSON
+    // or caller-supplied environment. Native backup independently reads the APK.
+    builder.environment().remove("DSHA_MANAGED_PACKAGE_PROOFS_SHA256");
+    if (context != null)
       builder
           .environment()
-          .keySet()
-          .removeIf(key -> key.startsWith("PROROOT_") || key.startsWith("PROOT_"));
-      builder.environment().put("DSHA_BXROOT_STRICT_EXEC", "1");
-      builder.environment().put("BXROOT_AUTO_HOST", "1");
-      builder.environment().put("BXROOT_HOST_PATH", "");
-      builder.environment().put("BXROOT_REENTRY", "0");
-      builder.environment().remove("BXROOT_NO_ULX");
-      builder.environment().remove("BXROOT_STUB_LOADER_EXEC");
-    } else if ("proot".equals(spec.runtime.id())) {
-      builder
-          .environment()
-          .keySet()
-          .removeIf(key -> key.startsWith("PROROOT_") || key.startsWith("BXROOT_"));
-      builder.environment().remove("DSHA_BXROOT_STRICT_EXEC");
-      builder.environment().remove("LD_PRELOAD");
-      spec.runtime.applyEnv(builder, base, lib, tmp, rootfs);
-      if (!spec.hardlinks)
-        builder.environment().put("PROOT_L2S_DIR", new File(rootfs, ".l2s").getAbsolutePath());
-      if (spec.coldMode != null)
-        com.deepseekharness.app.util.ColdInstallPlan.applyEnvironment(
-            builder.environment(), spec.coldMode);
+          .put("DSHA_MANAGED_PACKAGE_PROOFS_SHA256", managedPackageProofAssetSha256(context));
+  }
+
+  static String managedPackageProofAssetSha256(Context context) throws IOException {
+    java.security.MessageDigest digest = com.deepseekharness.app.backup.BackupArchive.sha();
+    try (java.io.InputStream input = context.getAssets().open("managed-package-proofs.json")) {
+      byte[] buffer = new byte[8192];
+      int count, total = 0;
+      while ((count = input.read(buffer)) != -1) {
+        total += count;
+        if (total > 2 * 1024 * 1024) throw new IOException("PACKAGE_PROOFS_LIMIT");
+        digest.update(buffer, 0, count);
+      }
     }
-    builder.environment().put("DSHA_RUNTIME_ENGINE", spec.runtime.id());
-    // 固定清理契约不接受调用方环境覆盖。
-    builder
-        .environment()
-        .put("DSHA_CACHE_DIR", com.deepseekharness.app.util.ScratchPaths.GUEST_DIRECTORY);
+    return com.deepseekharness.app.backup.BackupArchive.hex(digest.digest());
   }
 
   Process start(String command, LaunchSpec spec) throws IOException {
-    ProcessBuilder builder;
-    try {
-      spec = capable(spec);
-      builder = builder(command, spec);
-    } catch (IOException | RuntimeException | Error failure) {
-      // 尚未调用 spawn；仅此准备阶段可以发布本轮“未派发”证明。
-      if (spec.record != null)
-        try {
-          spec.record.completedBeforeDispatch();
-        } catch (IOException closing) {
-          spec.record.uncertain();
-          failure.addSuppressed(closing);
-        }
-      throw failure;
-    }
-    // START may reach the guest before the Java start call returns or throws.
-    ports.businessDispatched();
-    return IsolatedInstallProcess.start(builder, tmp, context, spec.record);
-  }
-
-  ContainerRuntime preflight(ContainerRuntime runtime, boolean packages) throws IOException {
-    return capable(LaunchSpec.runtime(runtime).dataDomain(null).hardlinks(false).build(), packages)
-        .runtime;
-  }
-
-  private LaunchSpec capable(LaunchSpec spec) throws IOException {
-    return capable(spec, false);
-  }
-
-  private LaunchSpec capable(LaunchSpec spec, boolean packages) throws IOException {
-    if (!"bxroot".equals(spec.runtime.id())) return spec;
-    String fingerprint = RuntimeEngineQualification.fingerprint(context, rootfs, packages);
-    String key = fingerprint + (packages ? ":bxroot:packages" : ":bxroot");
-    if (ports.rootProbed(key)) return spec;
-    // 只读探针独立数据域，不加载 profile、用户命令或个人数据绑定。
-    if (RuntimeEngineQualification.check(
-        context,
-        rootfs,
-        tmp,
-        packages,
-        fingerprint,
-        (command, scratch) ->
-            RuntimeEngineQualification.probeBuilder(
-                context, spec.runtime, rootfs, scratch, command))) {
-      ports.rootProbedAdd(key);
-      return spec;
-    }
-    return copyWithRuntime(spec, ports.capabilityFallback(context));
-  }
-
-  private static LaunchSpec copyWithRuntime(LaunchSpec value, ContainerRuntime runtime) {
-    var copy =
-        LaunchSpec.runtime(runtime)
-            .dataDomain(value.dataDomain)
-            .hardlinks(value.hardlinks)
-            .isolated(value.isolated)
-            .record(value.record)
-            .pipedInput(value.pipedInput)
-            .environment(value.environment)
-            .coldTrace(value.coldTrace)
-            .coldMode(value.coldMode);
-    for (var bind : value.binds) copy.bind(bind.host(), bind.guest());
-    return copy.build();
+    ProcessBuilder builder = builder(command, spec);
+    return spec.isolated
+        ? IsolatedInstallProcess.start(builder, tmp, context, spec.record)
+        : builder.start();
   }
 
   void bindPreloads(List<String> argv) throws IOException {
-    if (context == null) return;
-    File host = RuntimeLauncherAssets.prepare(context);
+    bindPreloads(argv, context == null ? null : RuntimeLauncherAssets.prepare(context));
+  }
+
+  private void bindPreloads(List<String> argv, File host) {
+    if (host == null) return;
     argv.add("-b");
     argv.add(host.getAbsolutePath() + ":" + RuntimeLauncherAssets.GUEST);
   }

@@ -88,10 +88,12 @@ window.__dshaNativePresentation = window.__dshaNativePresentation || (function (
     install(next) {
       if (window.top !== window || !next || !/^[a-f0-9]{32}$/.test(next.nonce)
           || !Number.isSafeInteger(next.generation) || next.generation <= 0 || typeof next.instance !== 'string') return;
-      if (binding && binding.nonce === next.nonce) { schedule(); return; }
+      if (binding && binding.nonce === next.nonce && binding.generation === next.generation
+          && binding.instance === next.instance) { schedule(); return; }
       if (observer) observer.disconnect();
       if (frame) cancelAnimationFrame(frame);
       cancelRoute(); binding = next; sequence = 0; lastColor = ''; lastComputed = '';
+      window.__dshaIme?.bind(next);
       document.documentElement.setAttribute('data-dsha-native-nonce', next.nonce);
       observer = new MutationObserver(schedule);
       observer.observe(document.documentElement,{attributes:true,attributeFilter:['class','style','data-ds-dark-theme']});
@@ -99,7 +101,8 @@ window.__dshaNativePresentation = window.__dshaNativePresentation || (function (
       if (document.head) observer.observe(document.head,{childList:true,subtree:true,attributes:true,attributeFilter:['content']});
       schedule();
     },
-    cancel: cancelRoute,
+    cancel() { cancelRoute(); window.__dshaIme?.cancel(); },
+    ime(request) { window.__dshaIme?.receive(request, result => send('ime-ack', result)); },
     route(request) {
       if (!binding || !request || request.nonce !== binding.nonce
           || request.generation !== binding.generation || request.instance !== binding.instance

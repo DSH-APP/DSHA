@@ -77,6 +77,47 @@ public class NativePluginGraphTest {
   }
 
   @Test
+  public void runtimeLocationAndOfficialScopeDoNotExcludeUserOverridesOrUnregisteredInstalls()
+      throws Exception {
+    File root = temporary.newFolder(),
+        dsh = new File(root, "root/.dsh"),
+        global = new File(root, "usr/local/lib/node_modules"),
+        modules = new File(global, "@deepseek-ai/dsh/node_modules");
+    String name = "@deepseek-ai/dsh-ai-created";
+    File plugin = new File(modules, name);
+    write(new File(dsh, "profiles/web/package.json"), "{\"dependencies\":{}}");
+    write(
+        new File(plugin, "package.json"),
+        "{\"name\":\""
+            + name
+            + "\",\"version\":\"1.0.0\",\"dsh\":{\"bundle\":{\"patch\":\"cordis.patch.yml\"}}}");
+    write(new File(plugin, "cordis.patch.yml"), "[]\n");
+    String proof = ManagedPackageProof.digest(fs, plugin, new BackupControl(null));
+    var resolver = new GuestDataResolver(fs, root, null, List.of());
+    var managed = new NativePluginGraph(fs, resolver, dsh, global, root, Map.of(name, proof));
+    managed.collect(new BackupControl(null));
+    assertTrue(managed.sources.isEmpty());
+    write(
+        new File(plugin, "user-private-draft.js"),
+        "preserve user modification in the runtime tree");
+    assertThrows(IOException.class, () -> managed.verify(new BackupControl(null)));
+    var modified = new NativePluginGraph(fs, resolver, dsh, global, root, Map.of(name, proof));
+    modified.collect(new BackupControl(null));
+    assertEquals(1, modified.sources.size());
+    Map<?, ?> node =
+        (Map<?, ?>) ((Map<?, ?>) modified.description().get("nodes")).values().iterator().next();
+    assertEquals(false, node.get("managed"));
+    assertEquals(true, node.get("managedOverride"));
+    List<String> captured = new ArrayList<>();
+    modified.sources.get(0).walk(item -> captured.add(item.path), new BackupControl(null));
+    assertTrue(captured.contains("user-private-draft.js"));
+    var unknown = new NativePluginGraph(fs, resolver, dsh, global, root, Map.of());
+    unknown.collect(new BackupControl(null));
+    assertEquals(1, unknown.sources.size());
+    unknown.verify(new BackupControl(null));
+  }
+
+  @Test
   public void undeclaredDependenciesKeepTheirBindingAndMetadataChangesInvalidateSnapshot()
       throws Exception {
     File root = temporary.newFolder(),

@@ -19,6 +19,10 @@ final class VirtualScreenPreviewView extends AppCompatImageView {
     default boolean streamAvailable() {
       return true;
     }
+
+    default boolean admit(JSONObject displayed, String stroke) {
+      return true;
+    }
   }
 
   private final Matrix matrix = new Matrix(), inverse = new Matrix();
@@ -28,6 +32,7 @@ final class VirtualScreenPreviewView extends AppCompatImageView {
   private int screenW, screenH;
   private String generation = "";
   private long seq = -1, downAt;
+  private JSONObject displayed;
   private boolean touching, transformed, pan;
   private long lastStream;
   private final com.deepseekharness.app.util.TouchGestureDispatch gesture =
@@ -62,12 +67,13 @@ final class VirtualScreenPreviewView extends AppCompatImageView {
 
   void cancelStream() {
     gesture.cancel();
+    touching = false;
   }
 
-  void frame(Bitmap next, JSONObject value) {
+  boolean frame(Bitmap next, JSONObject value) {
     if (touching) {
       next.recycle();
-      return;
+      return false;
     }
     if (screenW != value.optInt("width") || screenH != value.optInt("height")) {
       zoom = 1;
@@ -77,11 +83,33 @@ final class VirtualScreenPreviewView extends AppCompatImageView {
     screenH = value.optInt("height");
     seq = value.optLong("frameSeq", -1);
     generation = value.optString("generation");
+    displayed = value;
     Bitmap old = bitmap;
     bitmap = next;
     setImageBitmap(next);
     fit();
     if (old != null && old != next) old.recycle();
+    return true;
+  }
+
+  /** A capture gap invalidates input immediately without flashing a live display black. */
+  boolean unavailable(String code, String activeGeneration) {
+    boolean frameGap =
+        switch (code) {
+          case "STALE_FRAME", "FRAME_NOT_READY", "FRAME_ENCODE_FAILED" -> true;
+          default -> false;
+        };
+    boolean retain =
+        frameGap
+            && bitmap != null
+            && activeGeneration != null
+            && !activeGeneration.isEmpty()
+            && activeGeneration.equals(generation);
+    cancelStream();
+    seq = -1;
+    displayed = null;
+    if (!retain) clear();
+    return retain;
   }
 
   void clear() {
@@ -90,6 +118,7 @@ final class VirtualScreenPreviewView extends AppCompatImageView {
     if (bitmap != null) bitmap.recycle();
     bitmap = null;
     seq = -1;
+    displayed = null;
   }
 
   @Override
@@ -139,6 +168,10 @@ final class VirtualScreenPreviewView extends AppCompatImageView {
         final Touch target = listener;
         final String frameGeneration = generation, stroke = java.util.UUID.randomUUID().toString();
         final long frameSeq = seq;
+        float[] start = point(downX, downY);
+        boolean enabled = target != null && !pan && seq > 0 && start != null;
+        boolean admitted = enabled && target.admit(displayed, stroke);
+        touching = admitted;
         gesture.down(
             target == null
                 ? null
@@ -153,8 +186,8 @@ final class VirtualScreenPreviewView extends AppCompatImageView {
                   }
                 },
             target != null && target.streamAvailable(),
-            !pan && seq > 0,
-            point(downX, downY));
+            admitted,
+            start);
         getParent().requestDisallowInterceptTouchEvent(true);
         return true;
       case MotionEvent.ACTION_POINTER_DOWN:

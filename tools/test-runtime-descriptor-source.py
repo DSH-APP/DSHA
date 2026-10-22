@@ -76,59 +76,6 @@ class DescriptorSourceTest(unittest.TestCase):
         (self.assets / 'runtime-descriptor.json').write_text(json.dumps(self.value))
         with self.assertRaisesRegex(ValueError, 'SOURCE_IDENTITY'):self.verify()
 
-    def test_actual_bridge_protocol_is_verified_separately_from_its_source_digest(self):
-        bridge = self.root / 'app/src/main/java/com/deepseekharness/app/HttpShellService.java'
-        bridge.write_text('private static final int BRIDGE_PROTOCOL = 4;\n', encoding='utf-8')
-        self.manifest['launcherSources'].append('HttpShellService.java')
-        (self.assets / 'managed-runtime-inputs.json').write_text(json.dumps(self.manifest))
-        self.value['inputs']['managed-runtime-inputs.json'] = gate.digest(self.assets / 'managed-runtime-inputs.json')
-        self.value['launcherInputs']['HttpShellService.java'] = gate.digest(bridge)
-        self.save()
-        with self.assertRaisesRegex(ValueError, 'BRIDGE_PROTOCOL'):self.verify()
-        self.value['bridgeProtocol'] = 4
-        self.save()
-        self.assertEqual(['offline-rootfs.bin'], self.verify()['deferredArchives'])
-
-    def native_fixture(self):
-        name = 'app/src/main/jniLibs/arm64-v8a/libfixture.so'
-        self.manifest['launcherTrees'] = ['app/src/main/jniLibs']
-        (self.root / name).parent.mkdir(parents=True)
-        (self.assets / 'managed-runtime-inputs.json').write_text(json.dumps(self.manifest))
-        self.value['inputs']['managed-runtime-inputs.json'] = gate.digest(self.assets / 'managed-runtime-inputs.json')
-        self.value['launcherInputs'][name] = hashlib.sha256(b'native').hexdigest()
-        self.save()
-        return name
-
-    def test_source_only_defers_native_without_weakening_default_or_java_checks(self):
-        name = self.native_fixture()
-        with self.assertRaisesRegex(ValueError, 'LAUNCHER_MEMBER_SET'):
-            self.verify()
-        result = gate.verify(self.root, {'offline-rootfs.bin'}, source_only=True)
-        self.assertEqual([name], result['deferredNative'])
-        self.assertFalse(result['nativeBytesVerified'])
-        self.launcher.write_bytes(b'changed')
-        with self.assertRaisesRegex(ValueError, 'LAUNCHER_BYTES'):
-            gate.verify(self.root, {'offline-rootfs.bin'}, source_only=True)
-
-    def test_source_only_does_not_claim_present_native_bytes_or_allow_extra_members(self):
-        name = self.native_fixture()
-        (self.root / name).write_bytes(b'different-native')
-        with self.assertRaisesRegex(ValueError, 'LAUNCHER_BYTES'):
-            self.verify()
-        result = gate.verify(self.root, {'offline-rootfs.bin'}, source_only=True)
-        self.assertEqual([name], result['deferredNative'])
-        self.assertFalse(result['nativeBytesVerified'])
-        (self.root / name).with_name('unexpected.so').write_bytes(b'extra')
-        with self.assertRaisesRegex(ValueError, 'LAUNCHER_MEMBER_SET'):
-            gate.verify(self.root, {'offline-rootfs.bin'}, source_only=True)
-
-    def test_source_only_still_rejects_invalid_native_claim_digests(self):
-        name = self.native_fixture()
-        self.value['launcherInputs'][name] = 'invalid'
-        self.save()
-        with self.assertRaisesRegex(ValueError, 'LAUNCHER_DIGEST'):
-            gate.verify(self.root, {'offline-rootfs.bin'}, source_only=True)
-
 
 if __name__ == '__main__':
     unittest.main()

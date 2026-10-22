@@ -20,18 +20,6 @@ public final class InstallProcess {
       Consumer<String> output,
       Consumer<Process> destroy)
       throws Exception {
-    return read(process, timeoutMs, cancellable, cancelled, output, destroy, () -> {});
-  }
-
-  public static int read(
-      Process process,
-      long timeoutMs,
-      boolean cancellable,
-      BooleanSupplier cancelled,
-      Consumer<String> output,
-      Consumer<Process> destroy,
-      Runnable beforeCleanup)
-      throws Exception {
     InputStream input = process.getInputStream();
     Lines lines = new Lines(output);
     byte[] buffer = new byte[4096];
@@ -66,11 +54,6 @@ public final class InstallProcess {
       }
     } catch (Exception | Error error) {
       original = error;
-      try {
-        beforeCleanup.run();
-      } catch (RuntimeException | Error diagnostic) {
-        if (error != diagnostic) error.addSuppressed(diagnostic);
-      }
       throw error;
     } finally {
       Throwable termination = null;

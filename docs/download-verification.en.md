@@ -1,5 +1,7 @@
 # Verify an APK download and its signing certificate
 
+> Maintained English entry: [Download verification](en/download-verification.md). See the [complete English index](en/index.md) and [current delivery scope](en/release-introduction.md). Historical examples below retain their original identity.
+
 A release's `.apk.sha256` contains the SHA-256 of **the entire APK file**. A signature checker displays the SHA-256 of **the signing certificate**. These are different hashes. Standard and Low APK files have different hashes and share the historical release certificate.
 
 The screenshot in [#97](https://github.com/DSH-APP/DSHA/issues/97) shows this certificate fingerprint:

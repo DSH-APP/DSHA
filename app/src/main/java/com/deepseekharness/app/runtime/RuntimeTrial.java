@@ -67,19 +67,11 @@ public final class RuntimeTrial {
       // verifyOnce 的 finally 已核验 guest 全部退出并解除本轮工作锁；未确认退出会以另一异常阻止此处。
       if (!error.closed
           || !WebRuntimeFallback.shouldRetry(
-              error.runtimeMode,
-              false,
-              error.hadAuth,
-              false,
-              !control.isCancelled(),
-              error.code,
-              error.neverExecuted,
-              error.closed,
-              !error.neverExecuted)
+              requested, false, error.hadAuth, false, !control.isCancelled(), error.code)
           || RuntimeWorkPort.hasOtherTasks()) throw error;
       control.report("TRIAL_COMPATIBILITY_RETRY", 0, 0);
       Map<String, Object> proof = verifyOnce(context, proot, control, "proot", browserProbe);
-      proof.put("fallbackFrom", error.runtimeMode);
+      proof.put("fallbackFrom", requested);
       proof.put("fallbackExitCode", (long) error.code);
       return proof;
     }
@@ -173,7 +165,6 @@ public final class RuntimeTrial {
     Map<String, Object> proof = null;
     Output captured = null;
     Throwable primaryFailure = null;
-    String actualRuntimeMode = "UNKNOWN";
     long hostStarted = System.nanoTime();
     Map<String, Long> hostTimings = new LinkedHashMap<>();
     try {
@@ -195,26 +186,16 @@ public final class RuntimeTrial {
               + ShellQuote.arg(builtinEntries())
               + "; "
               + TrialSupport.identityPrefix()
-              + "set -e; export BXROOT_SIGSYS_LOG=1; curl --version; git --version; id -Gn; "
-              + "printf 'DSHA_TRIAL_PRECHECK_STAGE python-begin\\n'; "
-              + "python3 -B -c 'print(\"DSHA_TRIAL_PRECHECK_STAGE python-entry\", flush=True); "
-              + "import ssl; print(\"DSHA_TRIAL_PRECHECK_STAGE python-import-ssl\", flush=True); "
-              + "import sqlite3; print(\"DSHA_TRIAL_PRECHECK_STAGE python-import-sqlite3\", flush=True); "
-              + "import readline; print(\"DSHA_TRIAL_PRECHECK_STAGE python-import-readline\", flush=True); "
-              + "import tarfile; print(\"DSHA_TRIAL_PRECHECK_STAGE python-import-tarfile\", flush=True); "
-              + "import zipfile; print(\"DSHA_TRIAL_PRECHECK_STAGE python-import-zipfile\", flush=True); "
-              + "ssl.create_default_context(); "
-              + "print(\"DSHA_TRIAL_PRECHECK_STAGE python-ssl-context-ready\", flush=True); "
-              + "assert sqlite3.sqlite_version'; "
-              + "printf 'DSHA_TRIAL_PRECHECK_STAGE node-begin\\n'; "
+              + "set -e; curl --version; git --version; id -Gn; "
+              + "python3 -B -c 'import ssl,sqlite3,readline,tarfile,zipfile; ssl.create_default_context(); assert sqlite3.sqlite_version'; "
               + "export NODE_OPTIONS="
               + ShellQuote.arg("--import=" + guest + "/runtime-entry.mjs ")
               + "\"${NODE_OPTIONS-}\"; "
               + "exec /usr/local/bin/node /usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js --profile "
               + profile
               + " --no-open --host 127.0.0.1 --port 0";
+      TrialSupport.write(fs, operation, "launched", id.getBytes(StandardCharsets.US_ASCII));
       process = proot.execRootfsForTrial(command, root, guest, runtimeMode);
-      actualRuntimeMode = TrialSupport.runtimeMode(process);
       Process active = process;
       Output output = new Output(process);
       captured = output;
@@ -307,8 +288,7 @@ public final class RuntimeTrial {
       proof.put("nonce", nonce);
       proof.put("port", (long) port);
       proof.put("confirmedAt", System.currentTimeMillis());
-      proof.put("runtimeMode", actualRuntimeMode);
-      proof.put("requestedRuntimeMode", runtimeMode);
+      proof.put("runtimeMode", runtimeMode);
       proof.put("nodeStageMillis", new LinkedHashMap<>(output.nativeTimings));
       proof.put("pnpmValidation", "locked-package-entry-syntax");
       for (String name :
@@ -328,8 +308,7 @@ public final class RuntimeTrial {
       Map<String, Object> detail = new LinkedHashMap<>();
       detail.put("runtimeId", expected.id());
       detail.put("error", BackupErrorCode.from(failure));
-      detail.put("runtimeMode", actualRuntimeMode);
-      detail.put("requestedRuntimeMode", runtimeMode);
+      detail.put("runtimeMode", runtimeMode);
       detail.put("failedAt", System.currentTimeMillis());
       detail.put("output", captured == null ? "" : captured.diagnostics());
       detail.put(
@@ -359,7 +338,6 @@ public final class RuntimeTrial {
               work,
               new TrialSupport.Cleanup() {
                 public void stop() throws IOException {
-                  if (tracked == null) return;
                   markHost(hostTimings, "managerStopStart", hostStarted);
                   String stopped = manager.stop();
                   markHost(hostTimings, "managerStopEnd", hostStarted);
@@ -371,13 +349,7 @@ public final class RuntimeTrial {
                 }
 
                 public boolean confirmed(Process launcher) throws IOException {
-                  boolean confirmed =
-                      launcher == null
-                          ? TrialSupport.untrackedExitConfirmed(
-                              fs,
-                              operation,
-                              sessionId -> OwnedRuntimeSession.recordedExit(files, sessionId))
-                          : manager.confirmTrackedTrialStopped(launcher);
+                  boolean confirmed = manager.confirmTrackedTrialStopped(launcher);
                   markHost(hostTimings, "guestExitCheckEnd", hostStarted);
                   return confirmed;
                 }
@@ -439,16 +411,12 @@ public final class RuntimeTrial {
   private static final class TrialExit extends IOException {
     final int code;
     final boolean hadAuth;
-    final boolean neverExecuted;
-    final String runtimeMode;
     boolean closed;
 
-    TrialExit(int code, boolean hadAuth, String detail, boolean neverExecuted, String runtimeMode) {
+    TrialExit(int code, boolean hadAuth, String detail) {
       super("TRIAL_PROCESS_EXITED: exit=" + code + "\n" + detail);
       this.code = code;
       this.hadAuth = hadAuth;
-      this.neverExecuted = neverExecuted;
-      this.runtimeMode = runtimeMode;
     }
   }
 
@@ -492,12 +460,7 @@ public final class RuntimeTrial {
     }
 
     IOException exited() {
-      return new TrialExit(
-          process.exitValue(),
-          auth != null,
-          diagnostics(),
-          process instanceof OwnedGuestProof owned && owned.commandWasNeverExecuted(),
-          OwnedGuestProof.modeOf(process));
+      return new TrialExit(process.exitValue(), auth != null, diagnostics());
     }
 
     void drain() throws IOException {
@@ -599,12 +562,6 @@ public final class RuntimeTrial {
         fs,
         home,
         payload -> {
-          String sessionId = TrialSupport.boundSession(fs, payload.getParentFile());
-          if (!sessionId.isEmpty()) {
-            if (!OwnedRuntimeSession.recordedExit(context.getFilesDir(), sessionId))
-              throw new IOException("TRIAL_PROCESS_UNCONFIRMED");
-            return;
-          }
           WebProcessManager manager = new WebProcessManager(proot, payload);
           TrialImportStop.Io importIo = legacyImportIo(manager);
           TrialImportStop.stop(fs, payload.getParentFile(), payload, importIo);

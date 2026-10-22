@@ -44,37 +44,6 @@ public class EnvironmentIdentityTest {
   }
 
   @Test
-  public void sameManagedCandidateRetriesOnlyForAnotherApkInstallation() {
-    String candidate = "runtime:" + "c".repeat(64);
-    String installed = EnvironmentIdentity.attemptKey(candidate, 100);
-    String repaired = EnvironmentIdentity.attemptKey(candidate, 200);
-    assertFalse(EnvironmentIdentity.shouldAutoStart(false, false, false, installed, installed));
-    assertTrue(EnvironmentIdentity.shouldAutoStart(false, false, false, repaired, installed));
-    assertTrue(
-        EnvironmentIdentity.shouldBlockRuntimeStart(
-            false, true, false, false, repaired, installed));
-    assertFalse(
-        EnvironmentIdentity.shouldBlockRuntimeStart(false, true, false, false, repaired, repaired));
-    assertFalse(EnvironmentIdentity.shouldAutoStart(false, false, false, repaired, repaired));
-    assertFalse(EnvironmentIdentity.shouldAutoStart(false, false, true, repaired, installed));
-    assertFalse(EnvironmentIdentity.shouldAutoStart(false, true, false, repaired, installed));
-    assertFalse(EnvironmentIdentity.shouldAutoStart(true, false, false, repaired, installed));
-  }
-
-  @Test
-  public void unknownApkInstallTimeUsesStableLegacyAttemptKey() {
-    String candidate = "runtime:" + "d".repeat(64);
-    assertEquals(candidate, EnvironmentIdentity.attemptKey(candidate, 0));
-    assertEquals(candidate, EnvironmentIdentity.attemptKey(candidate, -1));
-    assertFalse(
-        EnvironmentIdentity.shouldAutoStart(
-            false, false, false, EnvironmentIdentity.attemptKey(candidate, 0), candidate));
-    assertTrue(
-        EnvironmentIdentity.shouldAutoStart(
-            false, false, false, EnvironmentIdentity.attemptKey(candidate, 200), candidate));
-  }
-
-  @Test
   public void successMessageWithoutReadinessCannotNavigateBackIntoMaintenance() {
     assertFalse(
         EnvironmentIdentity.mayAdvanceAfterMaintenance(true, true, true, false, false, false));

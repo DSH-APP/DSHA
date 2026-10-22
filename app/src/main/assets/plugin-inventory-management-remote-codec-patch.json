@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-host-plugin-inventory/lib/typert.remote-client.js",
+  "sourceSha256": "b945b0cb7c1861b7ce1e56166c585266bb74e2dfa201c1b892c2938e22ae6dff",
+  "patches": [
+    {
+      "before": "  methods: {\n    'pluginInventory/list': {",
+      "after": "  methods: {\n// DSHA_PLUGIN_MANAGEMENT_REMOTE_CODEC_V1\n'pluginInventory/management': {\n service: 'pluginInventory',\n description: 'Read only the current management Service capability. This does not prove activation or mutation completion; list retains full diagnostics.',\n invocation: { kind: 'direct' },\n parameters: [],\n result: { mode: 'strict', typeSymbol: '@deepseek-ai/dsh-host-plugin-inventory#ManagementCapability', create: () => z.object({ managementAvailable: z.boolean().readonly() }), description: 'Live presence of the current pluginManager Service.' },\n},\n    'pluginInventory/list': {"
+    }
+  ]
+}

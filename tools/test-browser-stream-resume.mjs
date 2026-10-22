@@ -8,8 +8,8 @@ import {randomUUID,webcrypto} from 'node:crypto';
 import {testRuntime} from './test-runtime-fixture.mjs';
 
 const runtime = testRuntime('raw');
-const connectionSource = readFileSync(runtime+'/node_modules/@deepseek-ai/dsh-client-connection/lib/client.js','utf8');
-const gatewaySource = readFileSync(runtime+'/node_modules/@deepseek-ai/dsh-api-gateway/lib/client.js','utf8');
+const connectionSource = readFileSync(runtime+'/node_modules/@deepseek-ai/dsh-client-connection/lib/client.browser.js','utf8');
+const gatewaySource = readFileSync(runtime+'/node_modules/@deepseek-ai/dsh-api-gateway/lib/client.browser.js','utf8');
 const integrationSource = readFileSync('app/src/main/assets/app-integration/client.js','utf8');
 const wait = ms => new Promise(resolve => setTimeout(resolve,ms));
 async function until(check) {
@@ -154,7 +154,7 @@ test('Gecko native-port foreground message reaches the actual page Connection re
     await until(()=>f.observations.includes('Gecko resumed output'));
     assert.equal(f.sockets.length,2);assert.equal(f.rpcCalls(),0);assert.deepEqual(sent,[]);
     const extension=JSON.parse(readFileSync('app/src/main/assets/web-integration/manifest.json','utf8'));
-    assert.equal(extension.version,'1.9');
+    assert.equal(extension.version,'1.10');
   } finally {await f.close();}
 });
 

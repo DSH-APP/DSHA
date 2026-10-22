@@ -99,8 +99,10 @@ let frameControllerInstalled = false
  * Phone chrome: KEEP the system status bar (no fullscreen) and make it
  * blend into the page. On narrow screens:
  * - The viewport meta is OWNED by the plugin while armed (viewport-meta.ts):
- *   width=device-width, initial-scale=1, viewport-fit=cover, re-asserted on
- *   every host rewrite, node replacement, or late injection, so
+ *   width=device-width, initial-scale=1, viewport-fit=cover,
+ *   interactive-widget=resizes-content (keyboard shrinks the layout viewport
+ *   on Chromium instead of panning the page), re-asserted on every host
+ *   rewrite, node replacement, or late injection, so
  *   env(safe-area-inset-top) stays the real status-bar / notch height
  *   instead of silently going stale when the host touches the meta. No zoom
  *   tokens here: iOS 10+ ignores them for user pinch but other engines

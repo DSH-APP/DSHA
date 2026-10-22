@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-client-ui-settings/lib/client.js",
+  "sourceSha256": "0555eec2df1ca392a1167e637f287ac9963dbd2b0a230089c2a41be079c490e3",
+  "requiredAnchors": [
+    "Shared entry values and ordered writes over the Host configuration mirror.",
+    "const response = await this.ctx.remote.settings.mutate(this.spec.namespace, ownedOps, revision);",
+    "const response = await this.ctx.remote.settings.describe();",
+    "const inject = [\"remote\", \"remote.settings\"];"
+  ],
+  "forbiddenAnchors": [
+    "const persistence = ctx.remote.$host.isLoopback ? \"host\" : \"memory\";",
+    "const persistence = \"host\"; // DSHA patch: LAN 代理场景强制 host 持久化"
+  ],
+  "reason": "Upstream Host describe mirror and revision-fenced settings.mutate persist writes for local and LAN clients; the former loopback-only client memory store no longer exists."
+}

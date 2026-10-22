@@ -21,14 +21,28 @@ final class WebProcessSession {
     BridgeLease acquire();
   }
 
+  interface SessionRecords {
+    com.deepseekharness.app.runtime.StoredWebSession.Record read() throws IOException;
+  }
+
   private final HarnessSessionState state;
   private final WebProcessManager manager;
   private final Bridges bridges;
+  private Runnable stopEvidence = () -> {};
 
   WebProcessSession(HarnessSessionState state, WebProcessManager manager, Bridges bridges) {
     this.state = state;
     this.manager = manager;
     this.bridges = bridges;
+  }
+
+  WebProcessSession(
+      HarnessSessionState state,
+      WebProcessManager manager,
+      Bridges bridges,
+      SessionRecords records) {
+    this(state, manager, bridges);
+    installStopEvidence(records);
   }
 
   WebProcessSession(Context context, HarnessSessionState state, WebProcessManager manager) {
@@ -47,10 +61,33 @@ final class WebProcessSession {
             }
           };
         });
+    installStopEvidence(() -> new com.deepseekharness.app.runtime.StoredWebSession(context).read());
+  }
+
+  private void installStopEvidence(SessionRecords records) {
+    stopEvidence =
+        () -> {
+          synchronized (state.webStopProofLock) {
+            if (state.webStopProofLoaded) return;
+            try {
+              var record = records.read();
+              if (record != null) state.retainedWebStopProof = record.proof();
+              else if (manager.hasRecordedSession()) state.unreadableWebStopProof = true;
+            } catch (Exception unknown) {
+              state.unreadableWebStopProof = true;
+            } finally {
+              state.webStopProofLoaded = true;
+            }
+          }
+        };
   }
 
   boolean running() {
     return manager.isRunning();
+  }
+
+  void loadStopEvidence() {
+    stopEvidence.run();
   }
 
   boolean confirmStopped() throws IOException {
@@ -58,8 +95,15 @@ final class WebProcessSession {
   }
 
   boolean hasLiveLaunchers() {
-    boolean alive = false;
+    boolean alive = retainedLauncherPending();
     for (WebRun run : state.runs.values()) {
+      if (run.recovered != null) {
+        try {
+          if (!manager.recoveredLauncherExited(run.recovered.proof())) alive = true;
+        } catch (IOException unknown) {
+          alive = true;
+        }
+      }
       Process process = run.launcher;
       if (process == null) prune(run);
       else if (Compat.isAlive(process)) alive = true;
@@ -72,17 +116,19 @@ final class WebProcessSession {
   }
 
   java.util.List<com.deepseekharness.app.util.WebStopDiagnostic> stopOwnedLauncherFacts() {
+    loadStopEvidence();
     boolean pending = false;
     for (WebRun run : state.runs.values()) {
       Process process = run.launcher;
       if (process == null || !Compat.isAlive(process)) {
         if (run.launcher == process) run.launcher = null;
         prune(run);
-      } else if (stopOwnedLauncher(process, 4_000)) {
+      } else if (Compat.requestGracefulStop(process, 4_000)) {
         if (run.launcher == process) run.launcher = null;
         prune(run);
       } else pending = true;
     }
+    pending |= hasLiveLaunchers();
     return pending
         ? java.util.List.of(
             com.deepseekharness.app.util.WebStopDiagnostic.of(
@@ -90,16 +136,20 @@ final class WebProcessSession {
         : java.util.List.of();
   }
 
-  private static boolean stopOwnedLauncher(Process process, long timeoutMs) {
-    if (process instanceof com.deepseekharness.app.runtime.OwnedGuestProof owned)
-      return owned.stopAndConfirm(timeoutMs)
-          && owned.confirmedTreeExit()
-          && !Compat.isAlive(process);
-    return Compat.requestGracefulStop(process, timeoutMs);
-  }
-
   String stopOwnedLaunchers() {
     return WebStopText.renderAll(stopOwnedLauncherFacts());
+  }
+
+  private boolean retainedLauncherPending() {
+    // 所有停止、维护和新启旧实例退休入口共用，不能被先到达的Stop跳过恢复读取。
+    stopEvidence.run();
+    try {
+      if (state.retainedWebStopProof != null
+          && !manager.recoveredLauncherExited(state.retainedWebStopProof)) return true;
+      return state.unreadableWebStopProof && !manager.confirmNoUntrackedWebLaunchers();
+    } catch (IOException unknown) {
+      return true;
+    }
   }
 
   void acquireBridge(WebRun run) {
@@ -139,6 +189,7 @@ final class WebProcessSession {
   private void prune(WebRun run) {
     if (run != state.currentRun
         && run.bridge == null
+        && run.recovered == null
         && (run.launcher == null || !Compat.isAlive(run.launcher)))
       state.runs.remove(run.generation, run);
   }

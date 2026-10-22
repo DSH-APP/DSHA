@@ -10,8 +10,7 @@ import shutil
 import tarfile
 from pathlib import Path
 from generated_asset_directory import prune as prune_generated
-from recovery_runtime_overlay import build as build_browser_overlay, TARGETS as BROWSER_TARGETS, INPUT_ASSETS
-from native_runtime_proof import recovery_launcher_hashes
+from recovery_runtime_overlay import build as build_browser_overlay, TARGETS as BROWSER_TARGETS, INPUT_ASSETS, CAPSULE_DEPENDENCIES
 
 ROOT = Path(__file__).resolve().parents[1]
 HOME = ROOT / 'tools/recovery-runtime'
@@ -36,6 +35,23 @@ def safe_name(value):
     if name.startswith('/') or '\\' in name or posixpath.normpath(name) != name or '..' in name.split('/'):
         raise ValueError('RECOVERY_ARCHIVE_PATH: ' + value)
     return name
+
+
+def capsule_dependencies(assets, by_path, links):
+    dependencies = []
+    link_paths = {row['path'] for row in links}
+    for asset, path in CAPSULE_DEPENDENCIES.items():
+        source = assets / asset
+        if not source.is_file() or source.is_symlink() or not 0 < source.stat().st_size <= 1024 * 1024:
+            raise ValueError('RECOVERY_CAPSULE_DEPENDENCY_SOURCE: ' + asset)
+        if path in by_path or path in link_paths:
+            raise ValueError('RECOVERY_CAPSULE_DEPENDENCY_COLLISION: ' + path)
+        row = dict(path=path, asset=asset, sha256=digest(source), bytes=source.stat().st_size)
+        dependencies.append(row)
+    # Publish the complete verified set only after every dependency was accepted.
+    for row in dependencies:
+        by_path[row['path']] = {key: row[key] for key in ('path', 'sha256', 'bytes')}
+    return dependencies
 
 
 def describe(archives):
@@ -133,18 +149,26 @@ def prepare(output, shared_assets):
         by_path[path] = dict(path=path, sha256=final_sha, bytes=len(patched[name]))
         overlays.append(dict(path=path, asset=asset, originalSha256=hashlib.sha256(original[name]).hexdigest(),
                              sha256=final_sha, bytes=len(patched[name])))
+    dependencies = capsule_dependencies(ROOT / 'app/src/main/assets', by_path, links)
     files = sorted(by_path.values(), key=lambda row: row['path'])
     agent = ROOT / 'app/src/main/assets/recovery-agent.js'
     if not agent.is_file():
         raise ValueError('RECOVERY_AGENT_MISSING')
-    launchers = recovery_launcher_hashes(ROOT)
+    launchers = {}
+    for flavor, folder, names in [
+        ('standard', 'main', ['libproot.so', 'libprootloader.so', 'libtalloc.so', 'libandroidshmem.so']),
+        ('low', 'low', ['libproot_legacy.so', 'libprootloader_legacy.so'])
+    ]:
+        launchers[flavor] = {name: digest(ROOT / ('app/src/' + folder + '/jniLibs/arm64-v8a') / name) for name in names}
+    launchers['low']['libtalloc.so'] = launchers['standard']['libtalloc.so']
+    launchers['low']['libandroidshmem.so'] = launchers['standard']['libandroidshmem.so']
     profiles = {name: digest(ROOT / 'app/src/main/assets' / name)
                 for name in ['recovery-profile-package.json', 'recovery-profile.patch.yml']}
     overlay_inputs = {name: digest(ROOT / 'app/src/main/assets' / name) for name in INPUT_ASSETS}
     contract = dict(schema=1, dshVersion=lock['dshVersion'], baseVersion=lock['baseVersion'],
                     archives=[dict(asset=row['asset'], sha256=row['sha256']) for row in lock['archives']],
                     expandedBytes=sum(row['bytes'] for row in files), files=files, links=links,
-                    overlays=overlays, overlayInputs=overlay_inputs,
+                    overlays=overlays, overlayInputs=overlay_inputs, capsuleDependencies=dependencies,
                     agentSha256=digest(agent), profileHashes=profiles, launcherHashes=launchers)
     identity = hashlib.sha256(json.dumps(contract, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
     write_source_text(output / 'recovery-runtime.json',json.dumps(dict(id=identity, **contract), ensure_ascii=False, separators=(',', ':')) + '\n',encoding='utf8')

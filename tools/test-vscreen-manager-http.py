@@ -154,7 +154,7 @@ def run_release_source_tests(current, work, cache, sdk, junit, hamcrest, host_js
     cp = [str(sdk), str(resource), str(junit), str(hamcrest)] + locked
     cp += [str(path) for path in cache.glob('caches/9.3.1/transforms/**/classes.jar') if 'instrumented' not in path.parts]
     cp += [str(path) for path in cache.glob('caches/modules-2/files-2.1/**/*.jar')
-           if 'sources' not in path.name and 'javadoc' not in path.name
+           if not path.name.endswith(('-sources.jar', '-javadoc.jar'))
            and not any(group in path.parts and name in path.parts for group, name in coordinates)]
     sources = [str(path) for folder in ('main', 'standard')
                for path in (ROOT / ('app/src/' + folder + '/java')).rglob('*.java')]
@@ -222,7 +222,7 @@ def main():
         classes = work / "http-fixture"
         current._javac([str(fixture)], classes, [str(jar), str(work / "main"), str(android)])
         command = [str(jdk / "bin" / ("java.exe" if os.name == "nt" else "java")),
-                   "-Dfile.encoding=UTF-8", "--add-modules", "jdk.httpserver", "-cp",
+                   "-Dfile.encoding=UTF-8", "-cp",
                    os.pathsep.join(map(str, [classes, jar, work / "main", android])),
                    "com.deepseekharness.app.vscreen.ManagerHttpFixture"]
         subprocess.run(command, cwd=ROOT, check=True, timeout=60)

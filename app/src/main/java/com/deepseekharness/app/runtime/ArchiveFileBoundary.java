@@ -33,6 +33,7 @@ final class ArchiveFileBoundary {
   }
 
   File target(String path, boolean parents) throws IOException {
+    GuestScriptBudget.checkpoint();
     verify();
     BackupLimits.path(path);
     if (fs instanceof TrustedAssetFileSystem trusted) return trusted.target(path, parents);
@@ -61,6 +62,7 @@ final class ArchiveFileBoundary {
   }
 
   void file(LegacyTarReader.Member m, InputStream data) throws IOException {
+    data = GuestScriptBudget.guard(data);
     if (fs instanceof TrustedAssetFileSystem trusted) {
       try (var entry = trusted.fileEntry(m.path)) {
         writeFile(m, data);
@@ -189,6 +191,7 @@ final class ArchiveFileBoundary {
 
   void finish() throws IOException {
     for (var link : links.values()) {
+      GuestScriptBudget.checkpoint();
       control.check();
       resolve(link.path, link.target, link.type.equals("HARDLINK"));
     }

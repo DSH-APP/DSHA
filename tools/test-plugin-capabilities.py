@@ -1,8 +1,27 @@
 import importlib.util,json,tempfile,unittest,hashlib,subprocess
+import contextlib,io,os
+from unittest.mock import patch
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];ASSETS=ROOT/'app/src/main/assets'
 spec=importlib.util.spec_from_file_location('capabilities',ASSETS/'plugin-capabilities.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 class CapabilityTest(unittest.TestCase):
+    def test_manager_detail_reads_the_installed_candidate_without_changing_or_running_it(self):
+        with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ,{'DSHA_TEST_ROOT':temp,'DSH_HOME':'/root/.dsh','DSHA_PLUGIN_TASK':'1'*32}):
+            root=Path(temp);package=root/'root/.dsh/profiles/web/node_modules/test-plugin';package.mkdir(parents=True)
+            manifest=package.parents[1]/'package.json'
+            manifest.write_text(json.dumps({'dependencies':{'test-plugin':'^1.0.0'},'dsh':{'profile':{'bundles':[]}}}),encoding='utf8')
+            pkg={'name':'test-plugin','version':'1.0.0','main':'index.js','scripts':{'install':'must-not-run'},'dsh':{'bundle':{'patch':'cordis.patch.yml'}}}
+            (package/'package.json').write_text(json.dumps(pkg),encoding='utf8')
+            (package/'cordis.patch.yml').write_text('[]\n',encoding='utf8')
+            (package/'index.js').write_text("throw Error('must not execute'); export const inject=['tools'];",encoding='utf8')
+            before={str(file.relative_to(package)):file.read_bytes() for file in package.rglob('*') if file.is_file()};profile=manifest.read_bytes()
+            spec=importlib.util.spec_from_file_location('plugin_capability_manager',ASSETS/'plugin-manager.py');manager=importlib.util.module_from_spec(spec);spec.loader.exec_module(manager)
+            with patch('sys.argv',['plugin-manager.py','capabilities','test-plugin']),patch.object(manager,'result') as result,contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(0,manager.main())
+            report=result.call_args.kwargs['capabilities']
+            self.assertTrue(any(item['kind']=='server-inject' and item['value']=='tools' for item in report['findings']))
+            self.assertEqual(before,{str(file.relative_to(package)):file.read_bytes() for file in package.rglob('*') if file.is_file()})
+            self.assertEqual(profile,manifest.read_bytes())
     def test_pinned_parser_bytes_and_license(self):
         lock=json.loads((ROOT/'tools/plugin-capabilities/parser-lock.json').read_text())
         self.assertEqual('8.15.0',lock['version'])

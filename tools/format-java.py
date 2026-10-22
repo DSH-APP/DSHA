@@ -59,7 +59,7 @@ def checked_path(name, root=ROOT, protected=()):
         len(parts) >= 8 and parts[:2] == ("app", "src")
         and parts[3:7] == ("java", "com", "deepseekharness", "app")
     )
-    own_tool = spelling.startswith("tools/java-format/") or spelling.startswith("tools/fixtures/")
+    own_tool = spelling.startswith("tools/java-format/")
     forbidden = {"history", "upstream", "vendor", "third_party", "third-party", "generated"}
     if (not (own_app or own_tool or fixture) or forbidden.intersection(parts)
             or spelling.casefold() in {item.casefold() for item in protected}

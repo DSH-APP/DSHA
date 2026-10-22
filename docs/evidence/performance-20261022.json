@@ -1,0 +1,227 @@
+{
+  "schema": 1,
+  "date": "2026-10-22",
+  "status": "SCOPED_SOFTWARE_AND_DEVICE_CHECKS_COMPLETE",
+  "versionName": "0.2.1-rc.2-20261022.0243-dsh0.2.1-rc.2",
+  "versionCode": 190,
+  "package": "dsh.android.client",
+  "flavor": "standard",
+  "debuggable": false,
+  "certificateSHA256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+  "apkSHA256": "d77bf985a5f9ec49be0667625894bcd16c5f3a23df2210a837527af8a172a947",
+  "apkBytes": 292159963,
+  "baselineSource": "140c7ba277fc2a91a9b8fd8cb5a24bc35a5c41c5",
+  "baselineAPK": {
+    "sha256": "ca0562e5df373eed4a4546540d05a8c06aafbce5cac15c877b53915fb0444d19",
+    "bytes": 314315600
+  },
+  "deviceScope": "One Android13/API33 phone; USB charging; sequential baseline then candidate; caches not flushed; no device identifier or credentials distributed",
+  "measurements": {
+    "isolatedCompleteColdSeconds": {
+      "baseline": 65.128,
+      "candidate": 42.772,
+      "includes": "full content hash/publication, real renderer, storage/session write-reopen and guest/launcher exit; actual proot"
+    },
+    "extractionStageSeconds": {
+      "baseline": 23.913,
+      "candidate": 13.177
+    },
+    "fileCommitCumulativeSeconds": {
+      "baseline": 39.316,
+      "candidate": 24.465
+    },
+    "productionWarmAuthSeconds": {
+      "prootBaseline": [
+        18.2
+      ],
+      "prootCandidate": [
+        12.8,
+        12.5,
+        12.3
+      ],
+      "prorootBaseline": [
+        9.0
+      ],
+      "prorootCandidate": [
+        6.8,
+        5.2,
+        5.4
+      ],
+      "limits": "Official native authentication event, not UI/model response. Different sample counts/order/cache states preclude strict causal attribution."
+    },
+    "additionalProotObservationSeconds": 10.4,
+    "isolatedInstrumentedCoreProrootSeconds": {
+      "baseline": 5.065144,
+      "candidate": 2.704814,
+      "loaderAwaitBaseline": 4.48257,
+      "loaderAwaitCandidate": 2.156653,
+      "limits": "base/web only, three hooks, auth plus five-second observation; observer cost not subtracted; not full production startup"
+    }
+  },
+  "dependencyChanges": {
+    "rootZodBefore": "4.6.7",
+    "rootZodAfter": "4.4.3",
+    "nestedCopiesUnified": 57,
+    "fewerFiles": 19322,
+    "fewerExpandedBytes": 155077846,
+    "fewerCompressedDSHBytes": 21246550,
+    "nonZodArchiveMembersComparedUnchanged": true,
+    "dshArchiveSHA256": "85b108dd8017dcfdc8bbfb7c87773ea78b00ada320fb64ae4105de959e6250b5"
+  },
+  "software": {
+    "method": "segmented with original failures retained and corrected fixture rerun",
+    "classesPerFlavor": 184,
+    "testsPerFlavor": 1143,
+    "failuresPerFlavor": 0,
+    "errorsPerFlavor": 0,
+    "standardSkipped": 3,
+    "lowSkipped": 76,
+    "lintErrorFatal": 0,
+    "standardLintWarnings": 249,
+    "lowLintWarnings": 162,
+    "hostGates": {
+      "fresh": 28,
+      "exactByteProofReuse": 4
+    },
+    "apkGates": [
+      "identity",
+      "manifest",
+      "signature",
+      "full-assets",
+      "recovery",
+      "licenses"
+    ]
+  },
+  "deviceChecks": {
+    "sameSignatureStoppedUpgrade": true,
+    "installedAPKReadbackMatches": true,
+    "productionProotAndProrootWebReady": true,
+    "homeLauncherReturns": 3,
+    "sameAppUIDProcessSetOnReturns": true,
+    "normalStopNoAppUIDChildren": true,
+    "emergency": "new independent root/tools/HTTP/blank workspace/Continue/reload READY then normal STOPPED with closed record",
+    "upgradeTrial": "Requested proroot exited126; verified safe fallback to proot passed. Not proroot trial success.",
+    "selectedManagedDataComparison": {
+      "regularFilesBefore": 49,
+      "regularFilesAfter": 49,
+      "unchanged": 42,
+      "classifiedChanged": 7,
+      "removed": 0,
+      "added": 0,
+      "limits": "fresh new-package managed helper/cache selection only; not whole old-package personal data"
+    }
+  },
+  "resourceObservations": {
+    "candidate-foreground-idle": {
+      "durationSeconds": 25.0,
+      "sampleCount": 6,
+      "processCounts": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "stableUIDProcessSet": true,
+      "sameBirthMatchedProcessCount": 5,
+      "deltasForSameBirthProcesses": {
+        "cpuTicks": 253,
+        "read_bytes": 40960,
+        "write_bytes": 831488,
+        "rchar": 569865,
+        "wchar": 337502,
+        "syscr": 1518,
+        "syscw": 1463
+      },
+      "sumVmRSSKiBRange": [
+        776524,
+        802256
+      ],
+      "sumThreadCountRange": [
+        107,
+        107
+      ],
+      "nativeMainProcessPSSKiBFirstLast": [
+        223699,
+        194182
+      ],
+      "batteryTemperatureTenthsCRange": [
+        359,
+        360
+      ],
+      "batteryLevelRange": [
+        27,
+        27
+      ]
+    },
+    "candidate-background-idle": {
+      "durationSeconds": 25.015,
+      "sampleCount": 6,
+      "processCounts": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "stableUIDProcessSet": true,
+      "sameBirthMatchedProcessCount": 5,
+      "deltasForSameBirthProcesses": {
+        "cpuTicks": 228,
+        "read_bytes": 8192,
+        "write_bytes": 958464,
+        "rchar": 340415,
+        "wchar": 408149,
+        "syscr": 1452,
+        "syscw": 1396
+      },
+      "sumVmRSSKiBRange": [
+        786904,
+        788056
+      ],
+      "sumThreadCountRange": [
+        106,
+        106
+      ],
+      "nativeMainProcessPSSKiBFirstLast": [
+        190506,
+        190369
+      ],
+      "batteryTemperatureTenthsCRange": [
+        359,
+        360
+      ],
+      "batteryLevelRange": [
+        27,
+        27
+      ]
+    },
+    "limits": [
+      "Only current APK; no baseline resource A/B",
+      "Six samples per phase, about 25 seconds, no model/tool request",
+      "App UID only; separate browser renderer UID omitted",
+      "RSS sums can double count shared mappings; native PSS is not whole process tree",
+      "Raw cpu ticks retained; no assumed CLK_TCK conversion",
+      "USB charging, battery temperature not CPU die/room temperature; uncontrolled other applications",
+      "No power/temperature improvement, leak-free or endurance conclusion"
+    ]
+  },
+  "knownGaps": [
+    "Recursive READ nested child-symlink protection remains unfixed and explicitly documented",
+    "Fixed3090 device bridge coexistence conflict prevented full device-tool/virtual-screen acceptance",
+    "No real model conversation or confirmed emergency repair write",
+    "No controlled power/CPU-temperature baseline; no heat or battery improvement claim",
+    "Complete interruption, cache invalidation, upgrade, third-party plugin and endurance matrices not completed",
+    "Low software-only; original delivered Low172 APK bytes retained"
+  ],
+  "publication": {
+    "onlyRepository": "ym2025szz/DSHA-prerelase",
+    "private": true,
+    "publicDSHAPaused": true,
+    "releaseTag": "v0.2.1-rc.2-20261022.0243",
+    "remoteAvailability": "External delivery receipt and actual Release determine availability"
+  },
+  "privacy": "No raw phone logs, screenshots, preferences, tokens, cookies, keys or personal data included"
+}

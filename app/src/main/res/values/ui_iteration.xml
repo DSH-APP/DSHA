@@ -7,8 +7,6 @@
     <string name="ui2_stop">□  停止</string>
     <string name="ui2_port">实际 Web 端口</string>
     <string name="ui2_environment">运行环境</string>
-    <string name="ui2_models">模型配置</string>
-    <string name="ui2_models_sub">服务商、接口与模型目录</string>
     <string name="ui2_address">访问地址</string>
     <string name="ui2_address_sub">查看本机与局域网地址</string>
     <string name="ui2_logs">启动日志</string>
@@ -43,7 +41,7 @@
 
     <string name="ui2_welcome_title0">你的 AI 工作台，\n就在手机里。</string>
     <string name="ui2_welcome_lead0">写代码、处理文件、使用工具。\n把完整的工作环境，随身带走。</string>
-    <string name="ui2_offline_badge">离线部署  ·  无需 ROOT  ·  0.2.0-rc2</string>
+    <string name="ui2_offline_badge">离线部署  ·  无需 ROOT  ·  %1$s</string>
     <string name="ui2_welcome_title1">从一个想法，\n到实际完成。</string>
     <string name="ui2_welcome_lead1">对话、文件与工具，在同一个工作空间。</string>
     <string name="ui2_w1_0">对话与任务</string>
@@ -56,8 +54,8 @@
     <string name="ui2_welcome_lead2">开始使用不需要授予设备控制权限。</string>
     <string name="ui2_w2_0">对话与文件</string>
     <string name="ui2_ws2_0">保存在本机，可手动导出。</string>
-    <string name="ui2_w2_1">API Key</string>
-    <string name="ui2_ws2_1">保留本机凭据保护；备份默认排除。</string>
+    <string name="ui2_w2_1">模型与凭据</string>
+    <string name="ui2_ws2_1">模型与 API Key 在 Web UI 中配置；原有本机凭据保留。</string>
     <string name="ui2_w2_2">设备操作</string>
     <string name="ui2_ws2_2">Root、Shizuku、ADB 与短信单独授权。</string>
     <string name="ui2_online_notice">使用在线模型时，消息及你选择的附件会发送到所配置的模型服务。</string>
@@ -65,7 +63,7 @@
     <string name="ui2_skip">跳过介绍</string>
     <string name="ui2_updates_sub">稳定版与预览版更新</string>
     <string name="ui2_install_environment">安装与环境</string>
-    <string name="ui2_runtime_config">接口与运行配置</string>
+    <string name="ui2_runtime_config">运行配置</string>
     <string name="ui2_resolve">解析安装</string>
     <string name="ui2_data_title">数据与备份</string>
     <string name="ui2_data_sub">导出、恢复与文件共享。</string>
@@ -111,14 +109,10 @@
     <string name="ui2_environment_recovery">环境修复与恢复</string>
     <string name="ui2_environment_recovery_sub">查看启动依赖与中断维护</string>
     <string name="ui2_installation_log">检查与安装日志</string>
-    <string name="ui2_legacy_hint">也可直接在模型配置中保存服务商凭据。</string>
-    <string name="ui2_config_sub">修改后保存。端口与运行方式在下次启动生效。</string>
-    <string name="ui2_models_full">服务商 · API Key · 地址 · 协议 · 模型目录</string>
+    <string name="ui2_config_sub">模型和 API Key 在 Web UI 中配置。这里的端口与运行方式在下次启动生效。</string>
     <string name="ui2_network_runtime">运行与网络</string>
-    <string name="ui2_port_auto">自动分配 Web 端口</string>
-    <string name="ui2_restore_port_drafts">恢复旧端口草稿</string>
-    <string name="ui2_port_preferred">手动 Web 端口</string>
-    <string name="ui2_port_hint">自动模式首次由系统分配，随后复用可用端口；占用时重新分配。关闭自动模式可指定端口。</string>
+    <string name="ui2_port_preferred">首选 Web 端口</string>
+    <string name="ui2_port_hint">端口占用时保留首选设置，自动使用可用端口。</string>
     <string name="ui2_dns">DNS 解析策略</string>
     <string name="ui2_display">显示与启动</string>
     <string name="ui2_floating">悬浮条</string>

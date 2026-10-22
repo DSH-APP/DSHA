@@ -1,7 +1,7 @@
 {
-  "dshVersion": "0.2.0-rc.2",
+  "dshVersion": "0.2.1-rc.2",
   "module": "@deepseek-ai/dsh-llm/lib/types/assembler.js",
-  "packageVersion": "0.2.0-rc.2",
+  "packageVersion": "0.2.1-rc.2",
   "canonicalSourceSha256": "35a4754ab854055942b9142934c595c3e6358a717947daa2d8d89847aef988f7",
   "patches": [
     {

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "kind": "actual-preserved-recipe-and-helper",
+  "description": "Byte-for-byte copy of the saved production V3 inputs before the 2026-10-22 UI latency changes; not a reconstructed old implementation.",
+  "sourceSnapshot": "build190-ui-latency-20261022/plugin-chain/before-source/app/src/main/assets",
+  "module": "@deepseek-ai/dsh-client-ui-workspace/lib/client.js",
+  "dshVersion": "0.2.1-rc.2",
+  "canonicalSha256": "52765aacb6c7f96327da5d8709d8cbb30dd2957d4744a42da04c18e07fe264e5",
+  "historicalManagedModuleSha256": "3cf9260587e730f4624dc2777e78e10fe9032522eb226df3a0197bcf3d2a3232",
+  "independentManagedSnapshot": "app/build/test-runtimes/0.2.1-rc.2-win32-x64-c67d0d3b6423/managed-df2d725deb59",
+  "files": {
+    "session-interaction-patch.json": "37f53270df43f737ec7c1d38d55cbf7e30e0cd8f21418ca8831b1582da590b37",
+    "web-integration/session-interaction.js": "df67935e0ab81e23b494119cb7b4c97e2263cd6d01a6cf9069ca6004e6e3a790"
+  },
+  "actualV2FixtureAvailable": false,
+  "v2NegativeControl": "The test replaces only V3's marker with V2 in memory. It is synthetic marker coverage, not evidence of the actual historical V2 implementation."
+}

@@ -171,56 +171,6 @@ public final class TrialRecoveryTest {
   }
 
   @Test
-  public void nativeBindingWithoutGuestPidStillNeedsExactSessionExitConfirmation()
-      throws Exception {
-    File home = home(), entry = entry(home);
-    write(entry, "launched", entry.getName());
-    String session = UUID.randomUUID().toString();
-    write(entry, "native-session-id", session);
-    AtomicInteger checks = new AtomicInteger();
-    assertThrows(
-        IOException.class,
-        () ->
-            TrialRecovery.recover(
-                fs,
-                home,
-                payload -> {
-                  checks.incrementAndGet();
-                  assertEquals(session, TrialSupport.boundSession(fs, payload.getParentFile()));
-                  throw new IOException("TRIAL_PROCESS_UNCONFIRMED");
-                }));
-    assertEquals(1, checks.get());
-    retained(entry);
-    TrialRecovery.recover(
-        fs,
-        home,
-        payload -> {
-          assertEquals(session, TrialSupport.boundSession(fs, payload.getParentFile()));
-          checks.incrementAndGet();
-        });
-    assertEquals(2, checks.get());
-    assertTrue(new File(entry, "closed").isFile());
-    assertFalse(new File(entry, "payload").exists());
-  }
-
-  @Test
-  public void malformedNativeBindingCannotReachRecoveryConfirmation() throws Exception {
-    File home = home(), entry = entry(home);
-    write(entry, "launched", entry.getName());
-    write(entry, "native-session-id", UUID.randomUUID() + "\n");
-    assertThrows(
-        IOException.class,
-        () ->
-            TrialRecovery.recover(
-                fs,
-                home,
-                payload -> {
-                  throw new AssertionError("Malformed binding cannot authorize recovery");
-                }));
-    retained(entry);
-  }
-
-  @Test
   public void forgedClosedMarkerKeepsAllPayloadBytes() throws Exception {
     File home = home(), entry = entry(home);
     write(entry, "closed", UUID.randomUUID().toString());

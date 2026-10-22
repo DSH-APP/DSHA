@@ -34,12 +34,13 @@ export async function browserFixture(runtime=process.env.DSHA_TEST_RUNTIME||JSON
     res.setHeader('Content-Type',file.endsWith('.css')?'text/css':'text/javascript');res.end(fs.readFileSync(file));
   });
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-  let playwright;
+  let playwright, browser;
+  try {
   try { playwright=require(process.env.DSHA_PLAYWRIGHT||'playwright'); }
   catch { playwright=require(path.join(process.env.USERPROFILE||'', '.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright')); }
   const engine=process.env.DSHA_BROWSER || 'chromium';
   if (!['chromium','firefox'].includes(engine)) throw Error('Unsupported fixture browser: '+engine);
-  const browser=await playwright[engine].launch({headless:true,...engine==='firefox'?{firefoxUserPrefs:{'ui.primaryPointerCapabilities':1,'ui.allPointerCapabilities':1}}:{}});
+  browser=await playwright[engine].launch({headless:true,...engine==='firefox'?{firefoxUserPrefs:{'ui.primaryPointerCapabilities':1,'ui.allPointerCapabilities':1}}:{}});
   const page=await browser.newPage({viewport:{width:360,height:800},deviceScaleFactor:1,hasTouch:true});
   const errors=[];page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
@@ -56,4 +57,13 @@ export async function browserFixture(runtime=process.env.DSHA_TEST_RUNTIME||JSON
       const css=path.resolve(runtime,'node_modules/@deepseek-ai',name,'lib/client.css');
       if(fs.existsSync(css))await page.addStyleTag({content:fs.readFileSync(css,'utf8')});
     }};
+  } catch (error) {
+    const cleanupErrors=[];
+    try { if (browser) await browser.close(); } catch (cleanupError) { cleanupErrors.push(cleanupError); }
+    try { await new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve())); }
+    catch (cleanupError) { cleanupErrors.push(cleanupError); }
+    if (cleanupErrors.length) throw new AggregateError([error,...cleanupErrors],
+      'BROWSER_FIXTURE_INITIALIZATION_AND_CLEANUP_FAILED',{cause:error});
+    throw error;
+  }
 }

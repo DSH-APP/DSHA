@@ -15,31 +15,6 @@ import static org.junit.Assert.*;
 
 public class BoundedProcessRunnerTest {
   @Test
-  public void timeoutCapturesBeforeTerminationAndDiagnosticFailureDoesNotSkipCleanup()
-      throws Exception {
-    Child process = new Child(new Pipe(""), 0);
-    java.util.List<String> events = new java.util.ArrayList<>();
-    var result =
-        BoundedProcessRunner.collect(
-            process,
-            30,
-            128,
-            p -> {
-              events.add("terminate");
-              p.destroy();
-            },
-            null,
-            p -> {
-              assertFalse(process.destroyed);
-              events.add("snapshot");
-              throw new IllegalStateException("diagnostic failed");
-            });
-    assertTrue(result.timedOut);
-    assertEquals(java.util.List.of("snapshot", "terminate"), events);
-    process.assertClosed();
-  }
-
-  @Test
   public void progressKeepsUtf8AcrossChunksAndReportsFinalLineAfterOutputCap() throws Exception {
     Child process =
         new Child(

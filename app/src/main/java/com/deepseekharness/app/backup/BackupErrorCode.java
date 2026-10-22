@@ -13,8 +13,6 @@ public final class BackupErrorCode {
         at != null && visited.add(at) && visited.size() <= 16;
         at = at.getCause()) {
       String message = at.getMessage();
-      if (BackupPathFailure.safeMessage(message)) return message;
-      if ("FILESYSTEM_20".equals(message)) return "SOURCE_NOT_DIRECTORY";
       if (message != null && message.matches("[A-Z_0-9]{2,100}")) return message;
       if (at instanceof InterruptedIOException) return "CANCELLED";
       if ("android.os.OperationCanceledException".equals(at.getClass().getName()))
@@ -30,7 +28,6 @@ public final class BackupErrorCode {
       if (message != null) {
         if (message.trim().equalsIgnoreCase("Permission denied")) return "PERMISSION_DENIED";
         if (message.matches("(?s).*\\bENOSPC\\b.*")) return "NO_SPACE";
-        if (message.matches("(?s).*\\bENOTDIR\\b.*")) return "SOURCE_NOT_DIRECTORY";
         if (message.matches("(?s).*\\b(?:EACCES|EPERM)\\b.*")) return "PERMISSION_DENIED";
         if (message.startsWith("MANIFEST_FIELD_")) return "MANIFEST_FORMAT";
       }
@@ -39,8 +36,8 @@ public final class BackupErrorCode {
   }
 
   static String errno(int value) {
-    return value == 20
-        ? "SOURCE_NOT_DIRECTORY"
-        : value == 28 ? "NO_SPACE" : value == 13 || value == 1 ? "PERMISSION_DENIED" : "IO_FAILURE";
+    return value == 28
+        ? "NO_SPACE"
+        : value == 13 || value == 1 ? "PERMISSION_DENIED" : "IO_FAILURE";
   }
 }

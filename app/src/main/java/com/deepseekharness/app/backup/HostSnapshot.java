@@ -33,20 +33,6 @@ public final class HostSnapshot {
       BackupControl control,
       FinalCheck additional)
       throws IOException {
-    return create(fs, roots, ownedTask, archive, provenance, rescue, control, additional, null);
-  }
-
-  static Map<String, Object> create(
-      BackupFileSystem fs,
-      List<BackupSource> roots,
-      File ownedTask,
-      File archive,
-      Map<String, Object> provenance,
-      boolean rescue,
-      BackupControl control,
-      FinalCheck additional,
-      java.util.function.Consumer<OwnedBackupArtifact> ownership)
-      throws IOException {
     if (roots.isEmpty()) throw new IOException("NO_SELECTED_DATA");
     if (roots.size() > 512) throw new IOException("ROOTS_LIMIT");
     Map<String, BackupSource> sources = new LinkedHashMap<>();
@@ -63,203 +49,165 @@ public final class HostSnapshot {
     boolean[] partial = {false};
     long[] readBytes = {0};
     int[] files = {0};
-    OwnedBackupArtifact[] capturedArtifact = {null};
-    OwnedBackupArtifact outputArtifact = null, indexArtifact = null;
-    boolean complete = false;
-    IOException failure = null;
-    try {
-      outputArtifact = OwnedBackupArtifact.create(fs, archive);
-      if (ownership != null) ownership.accept(outputArtifact);
-      Map<String, Object> result;
-      try (OutputStream output = outputArtifact.stream) {
-        BackupArchive.Writer writer = new BackupArchive.Writer(output, control);
-        indexArtifact = OwnedBackupArtifact.create(fs, index);
-        try (DataOutputStream checks = new DataOutputStream(indexArtifact.stream)) {
-          for (BackupSource root : roots) {
-            root.walk(
-                item -> {
-                  control.check();
-                  if (++files[0] > BackupLimits.ENTRIES) throw new IOException("ENTRY_LIMIT");
-                  if (item.kind.equals("MISSING") || item.kind.equals("UNREADABLE")) {
-                    if (!rescue)
-                      throw new IOException(
-                          item.reason.isEmpty() ? item.kind + "_SOURCE" : item.reason);
-                    partial[0] = true;
-                    writer.add(record(root, item, 0, ""), null);
-                    return;
-                  }
-                  String sha = "";
-                  long size = 0;
-                  if (item.kind.equals("FILE")) {
-                    java.security.MessageDigest captureDigest = BackupArchive.sha();
-                    IOException sourceError = null;
-                    InputStream input = null;
-                    capturedArtifact[0] = OwnedBackupArtifact.create(fs, capture);
-                    try (OutputStream captured = capturedArtifact[0].stream) {
-                      try {
-                        input = root.open(item);
-                      } catch (InterruptedIOException cancelled) {
-                        throw cancelled;
-                      } catch (IOException error) {
-                        sourceError = error;
-                      }
-                      if (input != null) {
-                        byte[] buffer = new byte[65536];
-                        while (sourceError == null) {
-                          int n;
-                          try {
-                            control.check();
-                            n = input.read(buffer);
-                          } catch (InterruptedIOException e) {
-                            throw e;
-                          } catch (IOException e) {
-                            sourceError = e;
-                            break;
-                          }
-                          if (n < 0) break;
-                          size = BackupLimits.add(size, n, BackupLimits.BYTES);
-                          readBytes[0] = BackupLimits.add(readBytes[0], n, BackupLimits.BYTES);
-                          captured.write(buffer, 0, n);
-                          captureDigest.update(buffer, 0, n);
-                          control.report("CAPTURING", files[0], readBytes[0]);
-                        }
+    try (OutputStream output = fs.create(archive)) {
+      BackupArchive.Writer writer = new BackupArchive.Writer(output, control);
+      try (DataOutputStream checks = new DataOutputStream(fs.create(index))) {
+        for (BackupSource root : roots) {
+          root.walk(
+              item -> {
+                control.check();
+                if (++files[0] > BackupLimits.ENTRIES) throw new IOException("ENTRY_LIMIT");
+                if (item.kind.equals("MISSING") || item.kind.equals("UNREADABLE")) {
+                  if (!rescue)
+                    throw new IOException(
+                        item.reason.isEmpty() ? item.kind + "_SOURCE" : item.reason);
+                  partial[0] = true;
+                  writer.add(record(root, item, 0, ""), null);
+                  return;
+                }
+                String sha = "";
+                long size = 0;
+                if (item.kind.equals("FILE")) {
+                  java.security.MessageDigest captureDigest = BackupArchive.sha();
+                  IOException sourceError = null;
+                  InputStream input = null;
+                  try (OutputStream captured = fs.create(capture)) {
+                    try {
+                      input = root.open(item);
+                    } catch (InterruptedIOException cancelled) {
+                      throw cancelled;
+                    } catch (IOException error) {
+                      sourceError = error;
+                    }
+                    if (input != null) {
+                      byte[] buffer = new byte[65536];
+                      while (sourceError == null) {
+                        int n;
                         try {
-                          input.close();
-                        } catch (InterruptedIOException cancelled) {
-                          throw cancelled;
+                          control.check();
+                          n = input.read(buffer);
+                        } catch (InterruptedIOException e) {
+                          throw e;
                         } catch (IOException e) {
                           sourceError = e;
+                          break;
                         }
-                        input = null;
+                        if (n < 0) break;
+                        size = BackupLimits.add(size, n, BackupLimits.BYTES);
+                        readBytes[0] = BackupLimits.add(readBytes[0], n, BackupLimits.BYTES);
+                        captured.write(buffer, 0, n);
+                        captureDigest.update(buffer, 0, n);
+                        control.report("CAPTURING", files[0], readBytes[0]);
                       }
-                    } finally {
-                      if (input != null) input.close();
+                      try {
+                        input.close();
+                      } catch (InterruptedIOException cancelled) {
+                        throw cancelled;
+                      } catch (IOException e) {
+                        sourceError = e;
+                      }
+                      input = null;
                     }
-                    if (sourceError != null) {
-                      capturedArtifact[0].remove();
-                      capturedArtifact[0] = null;
-                      if (!rescue)
-                        throw new IOException(
-                            BackupPathFailure.source(sourceError, root.id(), item.path),
-                            sourceError);
-                      partial[0] = true;
-                      writer.add(
-                          record(
-                              root,
-                              new BackupSource.Item(
-                                  item.path, "UNREADABLE", 0, item.token, "", "SOURCE_READ_FAILED"),
-                              0,
-                              ""),
-                          null);
-                      return;
-                    }
-                    sha = BackupArchive.hex(captureDigest.digest());
-                    try (InputStream captured = fs.read(capture, fs.stat(capture))) {
-                      writer.add(record(root, item, size, sha), captured);
-                    } finally {
-                      capturedArtifact[0].remove();
-                      capturedArtifact[0] = null;
-                    }
-                  } else writer.add(record(root, item, 0, ""), null);
-                  Map<String, Object> check = new LinkedHashMap<>();
-                  check.put("root", root.id());
-                  check.put("path", item.path);
-                  check.put("kind", item.kind);
-                  check.put("token", item.token);
-                  check.put("target", item.target);
-                  check.put("sha256", sha);
-                  check.put("size", item.size);
-                  byte[] line = BackupJson.write(check, BackupLimits.RECORD);
-                  checks.writeInt(line.length);
-                  checks.write(line);
-                },
-                control);
-          }
+                  } finally {
+                    if (input != null) input.close();
+                  }
+                  if (sourceError != null) {
+                    fs.delete(capture);
+                    if (!rescue) throw sourceError;
+                    partial[0] = true;
+                    writer.add(
+                        record(
+                            root,
+                            new BackupSource.Item(
+                                item.path, "UNREADABLE", 0, item.token, "", "SOURCE_READ_FAILED"),
+                            0,
+                            ""),
+                        null);
+                    return;
+                  }
+                  sha = BackupArchive.hex(captureDigest.digest());
+                  try (InputStream captured = fs.read(capture, fs.stat(capture))) {
+                    writer.add(record(root, item, size, sha), captured);
+                  } finally {
+                    fs.delete(capture);
+                  }
+                } else writer.add(record(root, item, 0, ""), null);
+                Map<String, Object> check = new LinkedHashMap<>();
+                check.put("root", root.id());
+                check.put("path", item.path);
+                check.put("kind", item.kind);
+                check.put("token", item.token);
+                check.put("target", item.target);
+                check.put("sha256", sha);
+                check.put("size", item.size);
+                byte[] line = BackupJson.write(check, BackupLimits.RECORD);
+                checks.writeInt(line.length);
+                checks.write(line);
+              },
+              control);
         }
-        Map<String, Long> changed = new LinkedHashMap<>();
-        try (DataInputStream input = new DataInputStream(fs.read(index, fs.stat(index)))) {
-          int first;
-          while ((first = input.read()) != -1) {
-            int length =
-                (first << 24)
-                    | (input.readUnsignedByte() << 16)
-                    | (input.readUnsignedByte() << 8)
-                    | input.readUnsignedByte();
-            if (length < 2 || length > BackupLimits.RECORD) throw new IOException("CHECK_INDEX");
-            byte[] row = new byte[length];
-            input.readFully(row);
-            Map<String, Object> values = BackupJson.read(row, BackupLimits.RECORD);
-            BackupSource root = sources.get(BackupJson.string(values, "root"));
-            if (root == null) throw new IOException("CHECK_INDEX");
-            BackupSource.Item item =
-                new BackupSource.Item(
-                    BackupJson.string(values, "path"),
-                    BackupJson.string(values, "kind"),
-                    BackupJson.number(values, "size"),
-                    BackupJson.string(values, "token"),
-                    BackupJson.string(values, "target"),
-                    "");
-            try {
-              root.verify(item, BackupJson.string(values, "sha256"), control);
-            } catch (InterruptedIOException cancelled) {
-              throw cancelled;
-            } catch (IOException error) {
-              if (!rescue)
-                throw new IOException(BackupPathFailure.source(error, root.id(), item.path), error);
-              partial[0] = true;
-              changed.put(root.id(), changed.getOrDefault(root.id(), 0L) + 1);
-            }
-          }
-        }
-        if (additional != null)
+      }
+      Map<String, Long> changed = new LinkedHashMap<>();
+      try (DataInputStream input = new DataInputStream(fs.read(index, fs.stat(index)))) {
+        int first;
+        while ((first = input.read()) != -1) {
+          int length =
+              (first << 24)
+                  | (input.readUnsignedByte() << 16)
+                  | (input.readUnsignedByte() << 8)
+                  | input.readUnsignedByte();
+          if (length < 2 || length > BackupLimits.RECORD) throw new IOException("CHECK_INDEX");
+          byte[] row = new byte[length];
+          input.readFully(row);
+          Map<String, Object> values = BackupJson.read(row, BackupLimits.RECORD);
+          BackupSource root = sources.get(BackupJson.string(values, "root"));
+          if (root == null) throw new IOException("CHECK_INDEX");
+          BackupSource.Item item =
+              new BackupSource.Item(
+                  BackupJson.string(values, "path"),
+                  BackupJson.string(values, "kind"),
+                  BackupJson.number(values, "size"),
+                  BackupJson.string(values, "token"),
+                  BackupJson.string(values, "target"),
+                  "");
           try {
-            additional.verify(control);
+            root.verify(item, BackupJson.string(values, "sha256"), control);
           } catch (InterruptedIOException cancelled) {
             throw cancelled;
           } catch (IOException error) {
             if (!rescue) throw error;
             partial[0] = true;
-            changed.put("additional-source-verification", 1L);
+            changed.put(root.id(), changed.getOrDefault(root.id(), 0L) + 1);
           }
-        Map<String, Object> manifest = new LinkedHashMap<>(provenance);
-        List<Map<String, Object>> descriptions = new ArrayList<>();
-        for (BackupSource root : roots) descriptions.add(root.description());
-        manifest.put("roots", descriptions);
-        manifest.put("changedSources", changed);
-        manifest.put(
-            "integrity",
-            partial[0]
-                ? "PARTIAL"
-                : rescue
-                    ? "BEST_EFFORT"
-                    : roots.stream().anyMatch(BackupSource::external)
-                        ? "EXTERNAL_CHECKED"
-                        : "QUIESCENT");
-        result = writer.finish(manifest);
-      }
-      complete = true;
-      return result;
-    } catch (IOException error) {
-      failure = error;
-      throw error;
-    } finally {
-      IOException cleanup = null;
-      for (OwnedBackupArtifact artifact :
-          new OwnedBackupArtifact[] {
-            capturedArtifact[0], indexArtifact, complete ? null : outputArtifact
-          }) {
-        if (artifact == null) continue;
-        try {
-          artifact.remove();
-        } catch (IOException error) {
-          if (cleanup == null) cleanup = error;
-          else cleanup.addSuppressed(error);
         }
       }
-      if (cleanup != null) {
-        if (failure != null) failure.addSuppressed(cleanup);
-        else throw cleanup;
-      }
+      if (additional != null)
+        try {
+          additional.verify(control);
+        } catch (InterruptedIOException cancelled) {
+          throw cancelled;
+        } catch (IOException error) {
+          if (!rescue) throw error;
+          partial[0] = true;
+          changed.put("additional-source-verification", 1L);
+        }
+      Map<String, Object> manifest = new LinkedHashMap<>(provenance);
+      List<Map<String, Object>> descriptions = new ArrayList<>();
+      for (BackupSource root : roots) descriptions.add(root.description());
+      manifest.put("roots", descriptions);
+      manifest.put("changedSources", changed);
+      manifest.put(
+          "integrity",
+          partial[0]
+              ? "PARTIAL"
+              : rescue
+                  ? "BEST_EFFORT"
+                  : roots.stream().anyMatch(BackupSource::external)
+                      ? "EXTERNAL_CHECKED"
+                      : "QUIESCENT");
+      return writer.finish(manifest);
+    } finally {
+      if (!fs.stat(capture).type.equals("MISSING")) fs.delete(capture);
     }
   }
 

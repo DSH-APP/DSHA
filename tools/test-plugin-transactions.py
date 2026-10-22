@@ -223,17 +223,18 @@ class TransactionTest(unittest.TestCase):
         with manager(self.root) as module:
             transaction = module.transactions()
             original_boundary = transaction.boundary
-            original_replace = os.replace
+            delete_objects = transaction.object_state.__globals__['DeleteObjects']
+            original_move = delete_objects.move
             def interrupt(name):
                 if name == 'delete-source-moved':
                     raise OSError('injected commit failure')
                 original_boundary(name)
-            def fail_restore(source, target):
+            def fail_restore(instance, source, target, wanted):
                 if Path(source).name == 'delete-source':
                     raise OSError('injected rollback failure')
-                return original_replace(source, target)
+                return original_move(instance, source, target, wanted)
             transaction.boundary = interrupt
-            with patch.object(os, 'replace', side_effect=fail_restore):
+            with patch.object(delete_objects, 'move', new=fail_restore):
                 with self.assertRaisesRegex(OSError, 'injected rollback failure'):
                     module.cmd_delete('test-plugin')
             work = Path(transaction.pending()[0])

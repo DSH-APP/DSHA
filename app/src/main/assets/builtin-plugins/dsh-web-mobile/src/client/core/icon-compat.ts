@@ -41,9 +41,6 @@ const pickIcon = (names: readonly string[]): HostIcon => {
 /** 输入区文件入口（回形针）。 */
 export const IconPaperclip: HostIcon = pickIcon(['IconPaperclipOutlineRegular', 'IconPaperclipOutline16'])
 
-/** 抽屉页脚的会话日志导出。 */
-export const IconDownload: HostIcon = pickIcon(['IconDownloadOutlineRegular', 'IconDownloadOutline16'])
-
 /** 会话头部的目录抽屉开关。 */
 export const IconPanelLeft: HostIcon = pickIcon(['IconPanelLeftOutlineRegular', 'IconPanelLeftOutline16'])
 

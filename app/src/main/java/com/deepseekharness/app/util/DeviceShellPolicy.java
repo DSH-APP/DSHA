@@ -257,11 +257,63 @@ public final class DeviceShellPolicy {
         || !args.get(3).equals("com.deepseekharness.app.vscreen.VirtualScreenCore")
         || !args.get(4).equals("--launch")
         || !args.get(5).equals("--port")
-        || !args.get(6).matches("8[0-9]{3}")
+        || !args.get(6).equals("0")
         || !args.get(7).equals("--package")
         || !args.get(8).equals(expectedPackage))
       return deny(com.deepseekharness.app.util.UiText.text("虚拟屏启动参数无法核验"));
     return plan(Kind.VIRTUAL_SCREEN, args, Collections.emptyList());
+  }
+
+  /** 只读退出核验只能绑定调用方持有的出生身份，不能通过此入口发信号。 */
+  public static Plan inspectVirtualScreenProbe(
+      String command, String installedApkPath, String expectedPackage) {
+    final List<String> args;
+    try {
+      args = split(command);
+    } catch (IllegalArgumentException error) {
+      return deny(error.getMessage());
+    }
+    if (args.size() != 9
+        || !"app_process".equals(executable(args.get(0)))
+        || !canonicalApkPath(installedApkPath)
+        || !SelfPackageIdentity.validName(expectedPackage)
+        || !args.get(1).equals("-Djava.class.path=" + installedApkPath)
+        || !args.get(2).equals("/system/bin")
+        || !args.get(3).equals("com.deepseekharness.app.vscreen.VirtualScreenCore")
+        || !args.get(4).equals("--probe-exit")
+        || !args.get(5).equals("--identity")
+        || !validVirtualScreenIdentity(args.get(6))
+        || !args.get(7).equals("--package")
+        || !args.get(8).equals(expectedPackage)) return deny("VSCREEN_PROBE_IDENTITY_UNVERIFIED");
+    args.set(0, "app_process");
+    return plan(Kind.VIRTUAL_SCREEN, args, Collections.emptyList());
+  }
+
+  public static Plan inspectManagedVirtualScreen(
+      String command, String installedApkPath, String expectedPackage) {
+    Plan start = inspectVirtualScreenLaunch(command, installedApkPath, expectedPackage);
+    return start.allowed()
+        ? start
+        : inspectVirtualScreenProbe(command, installedApkPath, expectedPackage);
+  }
+
+  private static boolean validVirtualScreenIdentity(String value) {
+    if (value == null || value.length() > 160) return false;
+    String[] fields = value.split(":", -1);
+    if (fields.length != 5) return false;
+    try {
+      if (!fields[0].matches("[1-9][0-9]{0,9}")
+          || Long.parseLong(fields[0]) <= 1
+          || Long.parseLong(fields[0]) > Integer.MAX_VALUE
+          || !fields[1].matches("[1-9][0-9]{0,18}")
+          || Long.parseLong(fields[1]) <= 0
+          || !fields[2].matches("0|[1-9][0-9]{0,9}")
+          || Long.parseLong(fields[2]) > Integer.MAX_VALUE) return false;
+      String uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+      return fields[3].matches(uuid) && fields[4].matches(uuid);
+    } catch (NumberFormatException invalid) {
+      return false;
+    }
   }
 
   /** Android package-manager path syntax, kept pure so all transports share the same rule. */

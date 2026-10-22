@@ -31,8 +31,6 @@ final class HostConfigService {
             settings(),
             null,
             BackupTask.currentControl(null));
-    if (NativeConfigurationReset.retainedEnvironment(new AndroidBackupFileSystem(), saved))
-      return UiText.format("私有设置已重置；外置或无法确认的工作目录 .env 保留，对话及原生凭据保留。重置前配置原件：\n%s", saved);
     return UiText.format("配置已重置，对话及原生凭据保留。重置前配置原件：\n%s", saved);
   }
 

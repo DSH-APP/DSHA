@@ -29,7 +29,6 @@ public final class InstallProbe {
     public final int step;
     public final InstallStage stage;
     public final String key, label, command;
-    public final long budgetMs;
 
     Check(int step, String key, String label, String command) {
       this.stage = InstallStage.fromId(step);
@@ -37,12 +36,6 @@ public final class InstallProbe {
       this.key = key;
       this.label = label;
       this.command = command;
-      budgetMs =
-          switch (key) {
-            case "pnpm" -> 90_000;
-            case "python", "dsh" -> 30_000;
-            default -> 20_000;
-          };
     }
   }
 
@@ -110,55 +103,22 @@ public final class InstallProbe {
   }
 
   public static String script(List<Check> checks) {
-    return plan(checks).script;
-  }
-
-  public static final class Plan {
-    public final List<Check> checks;
-    public final String taskId, script;
-    public final long outerTimeoutMs;
-
-    private Plan(List<Check> checks) {
-      this.checks = List.copyOf(checks);
-      taskId = java.util.UUID.randomUUID().toString();
-      long total = 30_000;
-      for (Check check : checks) total = Math.addExact(total, Math.addExact(check.budgetMs, 5_000));
-      outerTimeoutMs = total;
-      script = buildScript(checks, taskId);
-    }
-  }
-
-  public static Plan plan(List<Check> checks) {
-    return new Plan(checks);
-  }
-
-  private static String buildScript(List<Check> checks, String taskId) {
     StringBuilder script =
         new StringBuilder(
             "export PYTHONDONTWRITEBYTECODE=1 CI=1 NO_UPDATE_NOTIFIER=1 PNPM_DISABLE_SELF_UPDATE_CHECK=1\n");
     for (Check check : checks) {
-      script
-          .append("printf '%s\\n' 'DSHA_CHECK_BEGIN:")
-          .append(check.key)
-          .append(':')
-          .append(taskId)
-          .append(':')
-          .append(check.budgetMs)
-          .append("'\n");
+      script.append("printf '%s\\n' 'DSHA_CHECK_BEGIN:").append(check.key).append("'\n");
       // 子检查上限避免一个坏命令吞掉其余步骤；容器总超时由 InstallProcess 兜底。
       script
-          .append("if command -v timeout >/dev/null 2>&1; then timeout --kill-after=5s ")
-          .append(check.budgetMs / 1000)
-          .append("s /bin/bash -c ")
+          .append("if command -v timeout >/dev/null 2>&1; then timeout 20s /bin/bash -c ")
           .append(ShellQuote.arg(check.command))
-          .append("; else echo DSHA_TIMEOUT_TOOL_UNAVAILABLE; (exit 127)")
+          .append("; else /bin/bash -c ")
+          .append(ShellQuote.arg(check.command))
           .append("; fi\n");
       script
           .append("code=$?; printf '\\nDSHA_CHECK_RESULT:")
           .append(check.key)
-          .append(":%s:")
-          .append(taskId)
-          .append("\\n' \"$code\"\n");
+          .append(":%s\\n' \"$code\"\n");
     }
     return script.append("exit 0\n").toString();
   }
@@ -167,95 +127,33 @@ public final class InstallProbe {
   public static final class Results {
     private final List<Check> checks;
     private final Map<String, Integer> codes = new LinkedHashMap<>();
-    private final Map<String, Long> started = new LinkedHashMap<>(),
-        elapsed = new LinkedHashMap<>();
-    private final String taskId;
-    private final java.util.function.LongSupplier clock;
-    private String current = "";
 
     public Results(List<Check> checks) {
       this.checks = checks;
-      taskId = "";
-      clock = System::nanoTime;
     }
 
-    public Results(Plan plan) {
-      this(plan, System::nanoTime);
-    }
-
-    public Results(Plan plan, java.util.function.LongSupplier clock) {
-      checks = plan.checks;
-      taskId = plan.taskId;
-      this.clock = clock;
-    }
-
-    public synchronized Check beginning(String line) {
+    public Check beginning(String line) {
       if (!line.startsWith("DSHA_CHECK_BEGIN:")) return null;
-      String[] parts = line.split(":", -1);
-      if (taskId.isEmpty() ? parts.length != 2 : parts.length != 4 || !taskId.equals(parts[2]))
-        return null;
-      for (Check check : checks)
-        if (check.key.equals(parts[1])) {
-          if (!taskId.isEmpty() && !String.valueOf(check.budgetMs).equals(parts[3])) return null;
-          if (started.containsKey(check.key)) codes.put(check.key, -1);
-          else started.put(check.key, clock.getAsLong());
-          current = check.key;
-          return check;
-        }
+      String key = line.substring("DSHA_CHECK_BEGIN:".length());
+      for (Check check : checks) if (check.key.equals(key)) return check;
       return null;
     }
 
     public synchronized boolean accept(String line) {
       if (!line.startsWith("DSHA_CHECK_RESULT:")) return false;
       String[] parts = line.split(":", -1);
-      if (taskId.isEmpty() ? parts.length != 3 : parts.length != 4 || !taskId.equals(parts[3]))
-        return false;
+      if (parts.length != 3) return false;
       for (Check check : checks) {
         if (!check.key.equals(parts[1])) continue;
         try {
           int code = Integer.parseInt(parts[2]);
-          codes.put(
-              check.key,
-              codes.containsKey(check.key)
-                      || code < 0
-                      || code > 255
-                      || !taskId.isEmpty()
-                          && (!started.containsKey(check.key) || !current.equals(check.key))
-                  ? -1
-                  : code);
-          Long begin = started.get(check.key);
-          if (begin != null)
-            elapsed.put(check.key, Math.max(0, (clock.getAsLong() - begin) / 1_000_000));
-          current = "";
+          codes.put(check.key, codes.containsKey(check.key) || code < 0 || code > 255 ? -1 : code);
         } catch (NumberFormatException error) {
           codes.put(check.key, -1);
         }
         return true;
       }
       return false;
-    }
-
-    /** Host-observed monotonic timing, not a claim about exact guest execution time. */
-    public synchronized String diagnostic() {
-      StringBuilder value =
-          new StringBuilder("DSHA_PROBE task=").append(taskId).append(" current=").append(current);
-      for (Check check : checks) {
-        Long begin = started.get(check.key);
-        long duration =
-            elapsed.getOrDefault(
-                check.key,
-                begin == null ? 0 : Math.max(0, (clock.getAsLong() - begin) / 1_000_000));
-        value
-            .append("\nkey=")
-            .append(check.key)
-            .append(" budgetMs=")
-            .append(check.budgetMs)
-            .append(" hostObservedMs=")
-            .append(duration)
-            .append(" exit=")
-            .append(codes.getOrDefault(check.key, -1));
-      }
-      return value.toString();
     }
 
     public synchronized boolean ok(String key) {

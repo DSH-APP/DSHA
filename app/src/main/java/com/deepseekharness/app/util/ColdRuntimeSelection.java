@@ -10,8 +10,6 @@ public final class ColdRuntimeSelection {
   public static final List<String> KEYS =
       List.of(
           Constants.KEY_CONTAINER_RUNTIME,
-          "runtime_engine_migration",
-          "runtime_engine_legacy",
           "proroot_static_loader",
           "proot_disable_seccomp",
           "cold_runtime_root",

@@ -248,12 +248,27 @@ export function createStatsLineTask(): ReconcilerTask {
   // 被 React 换掉的那个环（见 ringIdentitySettled）。
   const isRingCandidate = (child: Element, stats: Element): boolean =>
     !child.contains(stats) && /\d\s*%/.test(child.textContent ?? '')
+  // 环坐在统计条**所在的同一行**（dock）里，但中间隔着几层包装并不固定：0.1.7–0.2.0 的
+  // 统计条是 bOPqQW_root，外面还套着 slot 包装层（固定两级上溯刚好落到 dock）；0.2.1 把
+  // 统计条拆成两个 slot 条目、没有共同 _root，标记落在 slot 包装本身，固定两级就越过 dock
+  // 指到 composer 根，环永远找不到（实测 0.2.1-rc.1：dock 里 ring 明明在，measureRing 返回 null）。
+  // 所以按「谁的 children 里有环候选」向上找，包装层几层都不影响。
+  // 必须封顶在 composerStack：不封顶会一路扫到 body，而会话正文里带「50%」的块正好是
+  // isRingCandidate 的形状（不含 stats、文本有百分比），宿主结构再变一次就会把消息区
+  // 当成环、把 composer 根当成 dock 去叠绝对定位。
+  const locateRing = (stats: Element): { dock: Element; ring: Element } | null => {
+    const stack = stats.closest('[class*="_composerStack"]')
+    for (let node = stats.parentElement; node !== null; node = node.parentElement) {
+      const ring = [...node.children].find((child) => isRingCandidate(child, stats))
+      if (ring !== undefined) return { dock: node, ring }
+      if (node === stack) break
+    }
+    return null
+  }
   const measureRing = (stats: Element): RingFold | null => {
-    const holder = stats.parentElement
-    const dock = holder === null ? null : holder.parentElement
-    if (dock === null) return null
-    const ring = [...dock.children].find((child) => isRingCandidate(child, stats))
-    if (ring === undefined) return null
+    const located = locateRing(stats)
+    if (located === null) return null
+    const { dock, ring } = located
     const row = document.querySelector('[data-composer-card] [class*="_row"] [class*="_trailing"]')
     if (row === null) return null
     let reserve = row.querySelector(':scope > [data-mobile-nav="stats-ring-reserve"]')
@@ -367,11 +382,10 @@ export function createStatsLineTask(): ReconcilerTask {
    * 漏洞也堵上（那时旧版同样看不出来，只是没人碰过）。
    */
   const ringIdentitySettled = (stats: Element): boolean => {
-    const holder = stats.parentElement
-    const dock = holder === null ? null : holder.parentElement
+    const located = locateRing(stats)
     // 认不出 dock（宿主结构变了）：宁可不 skip。
-    if (dock === null) return false
-    return [...dock.children].find((child) => isRingCandidate(child, stats)) === foldedRing
+    if (located === null) return false
+    return located.ring === foldedRing
   }
   const mark = (): void => {
     // Keyboard open/close and viewport rotations relayout the composer without
@@ -486,38 +500,47 @@ export function createStatsLineTask(): ReconcilerTask {
     // still skipped by the containment test below.
     const stack = document.querySelector('[class*="_composerStack"]')
     if (stack === null) return
-    for (const root of stack.querySelectorAll('[class*="_root"]')) {
-      // The status row lives inside the composer stack. The query is already
-      // scoped to the stack, so every candidate is inside it by construction —
-      // message-area blocks that mention turns/steps never enter this loop. (A
-      // `stack.contains(root)` guard stood here and its comment claimed to skip
-      // those blocks; it was unreachable.)
-      // The todo plan strip also lives in the composer stack and its root
-      // ends in _root. Its items may legitimately contain "步"/"steps" in
-      // their text, so never mistake it (or any interactive dock panel)
-      // for the stats strip.
-      if (root.matches('[data-testid="todo-panel"]')) continue
-      // Dock panels are skipped by never marking a candidate whose buttons are
-      // actionable controls. 0.1.5 renders the status row ITSELF as two
-      // popover buttons (bOPqQW_pill, aria-haspopup="dialog"), so an
-      // "any button" guard excluded the one row this task exists to mark
-      // (measured: bOPqQW_root rejected solely by hasButton, marker count 0).
-      // Every popover button counts as a status widget: the composer's real
-      // controls (model bar, context meter) carry no metrics text and are
-      // filtered by the text test above, and a panel with an actionable button
-      // still fails here.
-      const buttons = root.querySelectorAll('button')
-      if (buttons.length > 0 && ![...buttons].every((button) => button.getAttribute('aria-haspopup') !== null)) continue
-      const text = root.textContent ?? ''
-      if (!/(turns|steps|\bLLM\b|轮|步)/.test(text)) continue
-      // Composer card must never be mistaken for the status strip; exclude
-      // its input region across both composer DOMs (textarea / Lexical
-      // contentEditable marked data-composer-input).
-      if (root.querySelector('textarea, [data-composer-input]') !== null) continue
-      root.setAttribute('data-mobile-nav', 'stats')
-      moveTps(root)
-      moveRing(root)
-      return
+    // 候选集分两档，**先旧代后新代**：0.1.5–0.2.0 的统计条是 `bOPqQW_root`，`_root` 档命中，
+    // 标记落在统计条自身（历代验收过的几何）。0.2.1 把 StatsPills 拆成 activity/usage 两个
+    // slot 条目，渲染进同一个 slot 包装（`[data-slot]`，无 class），composerStack 内再没有共同
+    // 的 `_root`——只认 `_root` 时四个候选（输入卡 / Full access / 模型名 / 环）全被下面的判据
+    // 筛掉，标记永远打不上，整条 stats 与环的 CSS 集体哑火。
+    // 两档分开查而不是合成一条选择器：`querySelectorAll` 按文档序返回，而 slot 包装在旧代里是
+    // 统计条的**祖先**，合成一条会让标记从 `bOPqQW_root` 挪到外层包装，改掉旧代几何。
+    for (const selector of ['[class*="_root"]', '[data-slot]']) {
+      for (const root of stack.querySelectorAll(selector)) {
+        // The status row lives inside the composer stack. The query is already
+        // scoped to the stack, so every candidate is inside it by construction —
+        // message-area blocks that mention turns/steps never enter this loop. (A
+        // `stack.contains(root)` guard stood here and its comment claimed to skip
+        // those blocks; it was unreachable.)
+        // The todo plan strip also lives in the composer stack and its root
+        // ends in _root. Its items may legitimately contain "步"/"steps" in
+        // their text, so never mistake it (or any interactive dock panel)
+        // for the stats strip.
+        if (root.matches('[data-testid="todo-panel"]')) continue
+        // Dock panels are skipped by never marking a candidate whose buttons are
+        // actionable controls. 0.1.5 renders the status row ITSELF as two
+        // popover buttons (bOPqQW_pill, aria-haspopup="dialog"), so an
+        // "any button" guard excluded the one row this task exists to mark
+        // (measured: bOPqQW_root rejected solely by hasButton, marker count 0).
+        // Every popover button counts as a status widget: the composer's real
+        // controls (model bar, context meter) carry no metrics text and are
+        // filtered by the text test above, and a panel with an actionable button
+        // still fails here.
+        const buttons = root.querySelectorAll('button')
+        if (buttons.length > 0 && ![...buttons].every((button) => button.getAttribute('aria-haspopup') !== null)) continue
+        const text = root.textContent ?? ''
+        if (!/(turns|steps|\bLLM\b|轮|步)/.test(text)) continue
+        // Composer card must never be mistaken for the status strip; exclude
+        // its input region across both composer DOMs (textarea / Lexical
+        // contentEditable marked data-composer-input).
+        if (root.querySelector('textarea, [data-composer-input]') !== null) continue
+        root.setAttribute('data-mobile-nav', 'stats')
+        moveTps(root)
+        moveRing(root)
+        return
+      }
     }
   }
   // Scope decision: TPS readout updates are text mutations in the composer

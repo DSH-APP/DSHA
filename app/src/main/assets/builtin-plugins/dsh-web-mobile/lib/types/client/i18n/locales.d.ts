@@ -14,6 +14,7 @@ export declare const zh: {
     readonly open: "打开目录";
     readonly close: "收起目录";
     readonly backdrop: "点击关闭目录";
+    readonly back: "返回";
     readonly backToConversation: "返回会话";
     readonly sessionLog: "导出会话日志";
     readonly files: "文件浏览";

@@ -44,15 +44,49 @@ export function applyMobileClientPatches(bytes) {
       throw new Error('补丁模块范围缺失或不唯一: ' + startAnchor);
     source = source.slice(0, start) + after + source.slice(end);
   };
-  // 3.1.0 已吸收分享、WeakMap滚动/手势、焦点归属、聊天流过滤和#173胶囊修复。
-  replaceRange('function syncStableViewportHeight() {', '/** iOS-only: mark documentElement',
-    readFileSync(path.join(project, 'tools/mobile-viewport-sync.js'), 'utf8').trimEnd() + '\n');
+  // 3.2.1 沿用已吸收的可见视口变量、写入去重与销毁清理；最新 main 已撤回
+  // 后续按帧合并试验。保留原 viewport-meta 与 interactive-widget=resizes-content。
   // 按实际鼠标/touch/pen事件分流；不能把用户点击伪造成键盘 detail=0。
   replaceRange('            // DSHA detail=0 follows the host\'s keyboard/programmatic open path.',
     '            // A touch row-tap owns the close (pointerup or the navigation observer);',
-    '            // DSHA_SESSION_INPUT_V3：保留原始点击，实际打开仍由 dsha-session-open 关闭抽屉。\n');
+    '            // DSHA_SESSION_INPUT_V4：保留原始点击，实际打开仍由 dsha-session-open 关闭抽屉。\n');
   replaceRange('  /* 手机档收掉搜索行', '  /* 这一层的遮罩',
     '  /* DSHA 保留手机搜索；上游定向首轮焦点守卫不删除宿主 React 节点。 */\n');
+  // Documentation-only: V4 opens valid touch/pen/mouse clicks through the host;
+  // keep the owned-row exemption and close on the actual open event, not pointerup.
+  replace('        // DSHA_SESSION_INTERACTION_V1：宿主把「单击=选中、双击=打开」拆成了两步\n'
+    + '        // （data-dsha-session-select 标记 + dsha-session-open 事件）。上游的\n'
+    + '        // 「点行即关抽屉」会在第一次单击就把抽屉收掉，双击永远到不了。\n'
+    + '        // 这些行改由 dsha-session-open 事件关闭（见下方 document 监听）。',
+    '        // DSHA_SESSION_INTERACTION_V4：有效的 touch/pen/mouse 单击由宿主打开会话。\n'
+    + '        // data-dsha-session-select 标记的行等待真实 dsha-session-open 事件关闭抽屉。\n'
+    + '        // 不在 pointerup 提前收起，避免吞掉浏览器随后派发的原始 click。\n'
+    + '        // 关闭依据是宿主已经打开会话的事实（见下方 document 监听）。');
+  replace('        /** Swallow the host\'s title double-click rename: on touch a double *tap*\n'
+    + '         *  means "open the session" (DSHA\'s own two-tap detection sits on the row\'s\n'
+    + '         *  click handler), and letting the browser\'s `dblclick` reach the title would\n'
+    + '         *  open the host\'s rename dialog on that same gesture. Capture phase on',
+    '        /** Swallow the host\'s title double-click rename: repeated touch taps already\n'
+    + '         *  use the host\'s normal session-open path. Letting the browser\'s `dblclick`\n'
+    + '         *  reach the title would also open the rename dialog on that gesture.\n'
+    + '         *  Keep the original click handling unchanged. Capture phase on');
+  replace('        // DSHA 宿主在「真正打开会话」时才派发 dsha-session-open（单击只选中），\n'
+    + '        // 所以抽屉的关闭挂在这个事实上，而不是挂在点击上。',
+    '        // DSHA V4 有效单击打开会话后派发 dsha-session-open；\n'
+    + '        // 抽屉只在打开事实到达时关闭，保留原始 click 与行标记豁免。');
+  // The full-page backdrop is a button for accessibility, so the upstream
+  // generic :active inset tint also paints it. On dark-theme touch taps that
+  // adds #ffffff24 across the whole dim layer. Keep its own fade/close behavior
+  // and ordinary button feedback; only this owned backdrop skips the tint.
+  replace('/* Floating fallback button (hero / blank phases without a session header).',
+    `/* DSHA_BACKDROP_PRESS_V1: a dimming surface must not become a bright pressed button. */
+@media (max-width: 1023px) and (pointer: coarse) and (hover: none) {
+  [data-mobile-nav="backdrop"]:active {
+    box-shadow: none;
+  }
+}
+
+/* Floating fallback button (hero / blank phases without a session header).`);
   const css = `
   /* DSHA 可见区域边界：原生已消费 IME/systemBars，只读浏览器实际视口。 */
   [aria-modal="true"]:has(> :first-child > :last-child > button):not(:has([role="navigation"])):not(:has([class*="ZuhsRW"])):not([data-shortcut-modal="shortcuts"]),

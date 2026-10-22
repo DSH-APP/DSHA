@@ -153,9 +153,7 @@ public class FileBackupSource implements BackupSource {
     } catch (InterruptedIOException error) {
       throw error;
     } catch (IOException error) {
-      visitor.item(
-          new Item(
-              relative, "UNREADABLE", 0, "", "", BackupPathFailure.source(error, id, relative)));
+      visitor.item(new Item(relative, "UNREADABLE", 0, "", "", code(error)));
       return;
     }
     if (!excluded.isEmpty()) {
@@ -181,6 +179,11 @@ public class FileBackupSource implements BackupSource {
         if (child.contains("/")) throw new IOException("INVALID_CHILD");
         walk(relative.isEmpty() ? child : relative + "/" + child, visitor, control, count);
       }
+  }
+
+  private static String code(IOException error) {
+    String message = error.getMessage();
+    return message != null && message.matches("[A-Z_0-9]{2,80}") ? message : "SOURCE_UNREADABLE";
   }
 
   private BackupFileSystem.Node current(Item item) throws IOException {

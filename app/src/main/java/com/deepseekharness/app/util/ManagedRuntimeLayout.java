@@ -18,8 +18,12 @@ public final class ManagedRuntimeLayout {
     out.add("usr/local/share/dsha/dns-compat.cjs");
     out.add("usr/local/share/dsha/managed-assets-v2");
     out.add("etc/profile.d/dsha-runtime-env.sh");
+    out.add("usr/local/lib/dsha-pnpm");
+    out.add("root/.dsha-pnpm-version");
+    out.add("root/dsh-bin/pnpm");
     out.add("root/dsha-builtin.txt");
-    for (String name : BuiltinPlugins.SIGNED_BUILTINS)
+    out.add("root/dsha-app-integration");
+    for (String name : BuiltinPlugins.DEFAULT_BUILTINS)
       out.add(BuiltinPlugins.entityDir(name).substring(1));
     for (String name :
         new String[] {
@@ -43,7 +47,7 @@ public final class ManagedRuntimeLayout {
           "bridge-token-compat.cjs"
         }) out.add("root/.dsh/" + name);
     for (String name :
-        new String[] {"npm", "npx", "dsha-plugin", "adb-shell", "install-ubuntu-tools"})
+        new String[] {"dsh", "npm", "npx", "dsha-plugin", "adb-shell", "install-ubuntu-tools"})
       out.add("root/dsh-bin/" + name);
     return out;
   }

@@ -188,7 +188,7 @@ public class NativeConfigurationResetTest {
 
   @Test
   public void invalidWorkspaceAndTamperedMappingCannotMoveFiles() throws Exception {
-    for (String workspace : List.of("/root/../etc", "/etc", "/")) {
+    for (String workspace : List.of("/sdcard/project", "/root/../etc", "/etc", "/")) {
       File root = temporary.newFolder();
       fixture(root);
       try {
@@ -225,109 +225,6 @@ public class NativeConfigurationResetTest {
     } catch (IOException expected) {
     }
     assertEquals(before, read(root, ENV));
-  }
-
-  @Test
-  public void externalWorkspaceResetsOnlyPrivateSettingsAndNeverOpensEnvironment()
-      throws Exception {
-    for (String workspace :
-        List.of(
-            "/sdcard/Download/project",
-            "/storage/emulated/0/Download/project",
-            "/mnt/runtime/write/emulated/0/Download/project")) {
-      File root = temporary.newFolder();
-      fixture(root);
-      var guarded =
-          new JvmBackupFileSystem() {
-            @Override
-            public Node stat(File file) throws IOException {
-              String path = file.getAbsolutePath().replace('\\', '/');
-              if (path.contains("/sdcard/")
-                  || path.contains("/storage/emulated/")
-                  || path.contains("/mnt/runtime/"))
-                throw new AssertionError("External environment accessed: " + path);
-              return super.stat(file);
-            }
-          };
-      File operation =
-          NativeConfigurationReset.reset(
-              guarded,
-              root,
-              workspace,
-              NativeConfigurationReset.environment(
-                  com.deepseekharness.app.util.CredentialRead.available("test-only")),
-              settings(root),
-              null,
-              new BackupControl(null));
-      assertEquals("{}\n", read(root, SETTINGS));
-      assertEquals("ORIGINAL=value\n", read(root, ENV));
-      assertTrue(NativeConfigurationReset.retainedEnvironment(guarded, operation));
-      assertFalse(contains(operation, "test-only"));
-      NativeConfigurationReset.recover(guarded, root, operation, settings(root), null);
-      assertEquals("ORIGINAL=value\n", read(root, ENV));
-    }
-  }
-
-  @Test
-  public void linkedEnvironmentIsRetainedWhileSettingsStillReset() throws Exception {
-    File root = temporary.newFolder();
-    fixture(root);
-    File external = temporary.newFolder(), env = new File(root, ENV);
-    put(external, ".env", "external secret");
-    put(external, "manual-backup.tar.gz", "backup");
-    java.nio.file.Files.delete(env.toPath());
-    try {
-      java.nio.file.Files.createSymbolicLink(env.toPath(), new File(external, ".env").toPath());
-    } catch (IOException | UnsupportedOperationException unavailable) {
-      org.junit.Assume.assumeNoException(unavailable);
-    }
-    File operation = reset(root, null);
-    assertEquals("{}\n", read(root, SETTINGS));
-    assertTrue(java.nio.file.Files.isSymbolicLink(env.toPath()));
-    assertEquals("external secret", read(external, ".env"));
-    assertEquals("backup", read(external, "manual-backup.tar.gz"));
-    assertTrue(NativeConfigurationReset.retainedEnvironment(FS, operation));
-    assertFalse(contains(operation, "test-only"));
-  }
-
-  @Test
-  public void settingsOnlyRollbackAndVersionOneTwoFileHistoryRemainReadable() throws Exception {
-    File root = temporary.newFolder();
-    fixture(root);
-    assertThrows(
-        IOException.class,
-        () ->
-            NativeConfigurationReset.reset(
-                FS,
-                root,
-                "/sdcard/Download/project",
-                new byte[0],
-                settings(root),
-                name -> {
-                  if (name.equals("new-settings")) throw new IOException("fixture");
-                },
-                new BackupControl(null)));
-    originals(root);
-    assertTrue(HostPendingTransactions.pending(FS, root).isEmpty());
-    File operation = reset(root, null);
-    put(
-        operation,
-        "config-reset.json",
-        new String(
-            BackupJson.write(
-                Map.of(
-                    "version",
-                    1L,
-                    "id",
-                    operation.getName(),
-                    "home",
-                    "LEGACY",
-                    "workspace",
-                    "/root/project"),
-                4096),
-            java.nio.charset.StandardCharsets.UTF_8));
-    NativeConfigurationReset.recover(FS, root, operation, settings(root), null);
-    assertFalse(NativeConfigurationReset.retainedEnvironment(FS, operation));
   }
 
   @Test

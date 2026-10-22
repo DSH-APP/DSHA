@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "date": "2026-10-22",
+  "status": "FINAL_SCOPED_SOFTWARE_AND_PARTIAL_DEVICE_ACCEPTANCE",
+  "baselineSource": "e057379256161f42a28a2adcccef4ea4f5e7dcf1",
+  "package": "dsh.android.client",
+  "versionCode": 190,
+  "flavor": "standard",
+  "publicRepositoryWrites": false,
+  "privateRepository": "ym2025szz/DSHA-prerelase",
+  "preliminary1325": {
+    "apkSHA256": "a2903a74d9a425939c77372031cc7347b0926f7e93617fd041c8b3129c5c638b",
+    "apkBytes": 292169844,
+    "ordinaryScreenOffSeconds": 103.0,
+    "conditions": "One Android13/API33 phone; USB charging/debugging, actual DSHA DeepSeek bash job completed; no forced Doze or power/thermal comparison. Not the final package.",
+    "sameRuntimePIDsAndCPUWakeLock": true,
+    "switchFeedbackToNormalConfirmedSeconds": {
+      "on": 6.743077,
+      "off": 5.725922
+    },
+    "overallSwitchImprovementEstablished": false,
+    "stoppedInstallFilesIdenticalBeforeFirstLaunch": 55,
+    "batterySettingsNavigation": {
+      "opened": true,
+      "systemWhitelistChanged": false
+    },
+    "prorootNativeAuthSeconds": 5.1,
+    "prorootWebObserved": true,
+    "observer79Seconds": "Observer required name node but proroot uses bridge; observation timeout is not runtime startup duration.",
+    "agentPresetDefault": "Physical standard→ptc→standard completed; no precise latency claim."
+  },
+  "phase2": {
+    "status": "HISTORICAL_DEVELOPMENT_ONLY_SUPERSEDED_BY_1817",
+    "hostEntrypoints": 13,
+    "hostResult": "PASS",
+    "hostReceipt": {
+      "sha256": "6b69a76463265c47a74674b95245c2f77ddf619060d6fb7c8d84a4f71c50b6cf",
+      "bytes": 8139
+    },
+    "runtimeArchiveSHA256": "ba45bbcc231e22392134a8e58c5643742c8bcd4c70f29191f765b120dcfe5673",
+    "pluginRPCControlledScenario": {
+      "before": [
+        2,
+        2,
+        2
+      ],
+      "after": [
+        1,
+        1,
+        1
+      ],
+      "lateExternalChangedStillRefreshes": true,
+      "allSchedulesOneReadClaim": false
+    },
+    "entriesProjection": "listPlugins skips unused async preset/composition diagnostics; full inventory retains diagnostics and wait. Loading rows stay loading; no cache proves identity.",
+    "nativeStartProtection": "Implementation and independent adversarial tests pending; do not infer release readiness."
+  },
+  "knownLimits": [
+    "Final scope is selected software and explicitly recorded Android13 paths; no all-device, all-plugin or universal page-speed guarantee.",
+    "Root recursive READ child-symlink gap is still disclosed.",
+    "No new four/eight-hour endurance, Android16/OEM, natural Doze, CPU/power/thermal or complete plugin matrix.",
+    "Pre-existing private GitHub CI failures/Android skipped stages are not represented as passing."
+  ],
+  "credentialsOrDeviceIdentifiersIncluded": false,
+  "intermediate1817": {
+    "versionName": "0.2.1-rc.2-20261022.1817-dsh0.2.1-rc.2",
+    "apkSHA256": "8460ee70f5f6946132372737cfc90f097e00e89dc519973af5eb783f833ac60e",
+    "apkBytes": 292189033,
+    "selectedJUnitPerFlavor": 310,
+    "selectedJUnitClasses": 42,
+    "hostEntries": 14,
+    "apkChecks": 6,
+    "userFilesByteEqualBeforeFirstLaunch": 58,
+    "ordinaryScreenOffSeconds": 103.359,
+    "actualTaskSteps": 12,
+    "runtimePIDsAndWakeLockPreserved": true,
+    "immediateScreenOffStartObservedBothRuntimes": true,
+    "compositeObserverSeconds": {
+      "proroot": 7.063,
+      "proot": 9.219
+    },
+    "observerTimesAreNotPureBackendOrWebReadyBenchmarks": true,
+    "physicalSwitchPendingToConfirmedSeconds": {
+      "on": 4.143478,
+      "off": 3.571067
+    },
+    "pipStableFramesWithoutFullBlank": 1052,
+    "pipLocalHeaderMismatchFrames": 3,
+    "pipWallClockTimingAvailable": false,
+    "pictureInPictureOptInRestoredOff": true
+  },
+  "rejected2020": {
+    "versionName": "0.2.1-rc.2-20261022.2020-dsh0.2.1-rc.2",
+    "apkSHA256": "eddcc92712a6705c7dd24f2388e6915f297fbccef28f8e8af2f44656153b6a49",
+    "deviceRuntimeUpdate": "PATCH_CHAIN_MISMATCH",
+    "candidateCommitted": false,
+    "stoppedInstallUserFilesByteEqual": 58,
+    "cause": "WorkerV1 rewrote the executable after-anchor required by old policy patch index12; fresh Node build passed but production Java prepared-repeat/canonical archive restore rejected.",
+    "resolution": "WorkerV2 retains the actual complete policy execution prefix; no marker bypass or guard relaxation. New actual Java full-chain and exact-APK gate."
+  },
+  "candidate2100": {
+    "versionName": "0.2.1-rc.2-20261022.2100-dsh0.2.1-rc.2",
+    "status": "CURRENT_LOCAL_STANDARD_APK_SOFTWARE_AND_DEVICE_CHECKED",
+    "runtimeArchiveSHA256": "0bf8830eef95e317ffd25d9bce4547871694063d94facbf78104ebe2c197097a",
+    "runtimeArchiveBytes": 127308331,
+    "sourceMembersExpected": 2266,
+    "managementProbe": "Independent zero-argument strict management() RPC; original full list() zero-argument contract unchanged.",
+    "proofScheduling": "Two workers retain complete content verification and result order; unchanged global two-active/32-waiter boundary.",
+    "overloadBoundary": "Controlled18 simultaneous full queries:17 successes,1 PACKAGE_PROOF_BUSY, subsequent fresh query recovers.",
+    "pip119": "Existing production fix retained;14 actual View tests across SDK29/34 plus8 policy cases. Whole-PiP no-polling is not claimed.",
+    "apkSHA256": "d62f17f23a7949f0f25285ec7afa44cb35de24a6bc91887ba4600023d18ffee0",
+    "apkBytes": 292198739,
+    "software": {
+      "receiptSHA256": "d662b5f6400b2e5f4ec2e3910969d2bef70fe6f59d043222f7296ffc651eb3c3",
+      "classesPerFlavor": 44,
+      "testsPerFlavor": 332,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "hostEntries": 17,
+      "apkChecks": 7,
+      "lintWarnings": {
+        "Standard": 248,
+        "Low": 161
+      },
+      "testOnlyHostDependencyRevision": true
+    },
+    "device": {
+      "stoppedInstallCheckedFilesByteEqual": 58,
+      "prootWebAndRetainedConversation": true,
+      "screenOffStartBothRuntimesObserved": true,
+      "physicalSwitchConfirmedSeconds": {
+        "on": 3.2432,
+        "off": 3.099544,
+        "offAgain": 3.394244
+      },
+      "originalProfileRestored": true,
+      "pageDesktopViaPhoneSamplesMs": [
+        2470.354,
+        1919.402,
+        1406.708
+      ],
+      "baseline1817SinglePageSampleMs": 1882.5264,
+      "universalWholePageImprovementProven": false,
+      "prorootWebAndPluginList": true,
+      "compositeObserverSeconds": {
+        "proot": 11.969,
+        "proroot": 7.344
+      },
+      "compositeObserverIsNotPureAuthOrWebLoading": true,
+      "finalState": "Normal stop; proot selection restored; original plugin state and PiP off restored"
+    }
+  }
+}

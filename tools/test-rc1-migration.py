@@ -8,6 +8,8 @@ spec=importlib.util.spec_from_file_location('rc1_migration',SCRIPT); mod=importl
 class Migration(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory(prefix='dsha-rc1-');self.root=Path(self.temp.name);self.dsh=self.root/'.dsh';self.dsh.mkdir();self.state=self.root/'host-state'
+        self.runtime_version=json.loads((SCRIPT.parent/'runtime-patches.json').read_text())['dshVersion']
+        (self.dsh/'runtime-patches.json').write_text(json.dumps({'schema':1,'dshVersion':self.runtime_version}))
         (self.dsh/'settings.yaml').write_text('llm: {model: legacy}\n',encoding='utf8')
         (self.dsh/'sessions').mkdir();(self.dsh/'sessions/session.v3.jsonl').write_text('{"version":3}\n',encoding='utf8')
     def tearDown(self):self.temp.cleanup()
@@ -18,6 +20,45 @@ class Migration(unittest.TestCase):
     def result(self):return json.loads((self.folder()/'receipt.json').read_text())
     def verified(self):
         doc=self.doc();(self.folder()/'settings-result.json').write_text(json.dumps({'generation':doc['generation'],'status':'verified'}))
+    def test_new_records_and_host_checkpoint_use_deployed_runtime_version(self):
+        self.assertEqual(self.prepare(),0);self.verified();self.assertEqual(self.finalize(),0)
+        self.assertEqual(self.doc()['dshVersion'],self.runtime_version)
+        self.assertEqual(self.result()['dshVersion'],self.runtime_version)
+        self.assertEqual(self.result()['runtimeDshVersion'],self.runtime_version)
+        self.assertEqual(json.loads((self.folder()/'reuse.json').read_text())['dshVersion'],self.runtime_version)
+    def test_missing_or_wrong_deployed_registry_never_borrows_version_from_old_receipt(self):
+        registry=self.dsh/'runtime-patches.json';registry.unlink()
+        with self.assertRaisesRegex(ValueError,'REGISTRY_UNAVAILABLE'):self.prepare()
+        self.assertFalse(self.state.exists());self.assertTrue((self.dsh/'settings.yaml').is_file())
+        for value in ({'schema':1,'dshVersion':False},{'schema':2,'dshVersion':self.runtime_version},{'schema':1,'dshVersion':'unknown'}):
+            registry.write_text(json.dumps(value))
+            with self.assertRaisesRegex(ValueError,'REGISTRY_VERSION'):self.prepare()
+        self.assertFalse(self.state.exists())
+    def test_old_committed_generation_does_not_become_new_runtime_host_cache(self):
+        registry=self.dsh/'runtime-patches.json';registry.write_text(json.dumps({'schema':1,'dshVersion':'0.2.0-rc.2'}))
+        self.prepare();self.verified();self.finalize();old=self.folder()
+        prepared=(old/'prepare.json').read_bytes();receipt=(old/'receipt.json').read_bytes()
+        (old/'reuse.json').unlink()
+        registry.write_text(json.dumps({'schema':1,'dshVersion':self.runtime_version}))
+        with patch.object(mod.Resolver,'files',side_effect=AssertionError('version change must not replay or rescan old business sources')):
+            self.assertEqual(self.prepare(),0);self.assertEqual(self.finalize(),0)
+        self.assertEqual(old,self.folder());self.assertEqual(prepared,(old/'prepare.json').read_bytes())
+        self.assertEqual(receipt,(old/'receipt.json').read_bytes());self.assertFalse((old/'reuse.json').exists())
+    def test_old_pending_finishes_same_generation_without_relabeling_old_proof(self):
+        registry=self.dsh/'runtime-patches.json';registry.write_text(json.dumps({'schema':1,'dshVersion':'0.2.0-rc.2'}))
+        self.prepare();self.finalize();old=self.folder();self.assertEqual(self.result()['status'],'pending')
+        registry.write_text(json.dumps({'schema':1,'dshVersion':self.runtime_version}))
+        self.prepare();self.verified();self.assertEqual(self.finalize(),0)
+        self.assertEqual(old,self.folder());self.assertEqual(self.result()['status'],'committed')
+        self.assertEqual(self.result()['dshVersion'],'0.2.0-rc.2')
+        self.assertEqual(self.result()['runtimeDshVersion'],self.runtime_version)
+        self.assertFalse((old/'reuse.json').exists())
+    def test_runtime_registry_link_does_not_supply_version(self):
+        registry=self.dsh/'runtime-patches.json';registry.unlink()
+        external=self.root/'external-registry.json';external.write_text(json.dumps({'schema':1,'dshVersion':self.runtime_version}))
+        self.link(external,registry)
+        with self.assertRaisesRegex(ValueError,'REGISTRY_TYPE'):self.prepare()
+        self.assertFalse(self.state.exists())
     def test_real_pending_sequence_never_commits_without_settings_readback(self):
         self.assertEqual(self.prepare(),0);(self.dsh/'settings.yaml').rename(self.dsh/'settings.yaml.imported')
         self.assertEqual(self.finalize(),0);self.assertEqual(self.result()['status'],'pending')
@@ -53,7 +94,7 @@ class Migration(unittest.TestCase):
         self.assertEqual(self.finalize(),0);self.assertEqual(json.loads((self.folder()/'reuse.json').read_text()),checkpoint)
         bad=dict(self.result(),sourcePreserved=False)
         (self.folder()/'receipt.json').write_text(json.dumps(bad));(self.folder()/'reuse.json').unlink()
-        self.assertFalse(mod.publish_reuse(self.folder(),self.doc(),json.loads((self.state/'current.json').read_text()),bad))
+        self.assertFalse(mod.publish_reuse(self.folder(),self.doc(),json.loads((self.state/'current.json').read_text()),bad,self.runtime_version))
         self.assertFalse((self.folder()/'reuse.json').exists())
     def test_partial_or_legacy_committed_receipt_is_rechecked_instead_of_upgraded(self):
         self.prepare();self.verified();self.finalize();(self.folder()/'reuse.json').unlink()

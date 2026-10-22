@@ -10,7 +10,7 @@ import {createRequire} from 'node:module';
 const runtime = testRuntime('raw');
 const require = createRequire(join(runtime,'package.json'));
 const {Context} = await import(pathToFileURL(require.resolve('@deepseek-ai/cordis')));
-const {default:Jsonl} = await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-session-persistence-jsonl')));
+const Jsonl = await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-session-persistence-jsonl')));
 const {deleteSession,installSessionDeletionLifecycle} = await import(pathToFileURL(resolve(process.env.DSHA_MOBILE_DELETE || 'app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js')));
 const load = name => import(pathToFileURL(require.resolve(name)));
 const services = await Promise.all(['dsh-session','dsh-agent','dsh-session-projection','dsh-llm','dsh-system-prompt','dsh-tools','dsh-agent-loop'].map(name => load('@deepseek-ai/'+name)));

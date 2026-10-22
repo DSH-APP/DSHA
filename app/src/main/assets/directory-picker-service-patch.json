@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-api-workspace-controller/lib/index.js",
+  "sourceSha256": "257848af0e4bacb15265660a3750c7909bb4002ab02a1c2a3188045f882ee39e",
+  "packageIntegrity": "sha512-v1ZxPEY5suajD8dqCE7TjYzPllK/JS8LT1aCKGksiBqvgpzruG5YpPzw9JnY3Z3yJSrgwUYHlKpuHReG3Kbfvw==",
+  "reason": "Register the actual directory-picker Remote service independently from unrelated Workspace registry initialization; preserve named-class callers, schema, backend capability and Gateway authorization.",
+  "patches": [
+    {
+      "before": "\t\t\tctx.plugin(DirectoryPickerController);",
+      "after": "\t\t\t// Direct users of the named class retain its original child service.\n\t\t\tif (!ctx[directoryPickerComposition]) ctx.plugin(DirectoryPickerController);"
+    },
+    {
+      "before": "export { DirectoryPickerController, WorkspaceController, WorkspaceController as default };",
+      "after": "// DSHA_DIRECTORY_PICKER_INDEPENDENT_LIFETIME_V1\n// Browsing depends on the real picker backend, independently of Workspace\n// registry hydration. Each child keeps its original dependency and teardown.\nconst directoryPickerComposition = Symbol(\"dsha.directoryPicker.composed\");\nconst WorkspaceControllerPlugin = {\n\tname: WorkspaceController.name,\n\tConfig: WorkspaceController.Config,\n\tapply(ctx, config) {\n\t\tctx.plugin(DirectoryPickerController);\n\t\tctx.extend({ [directoryPickerComposition]: true }).plugin(WorkspaceController, config);\n\t}\n};\nexport { DirectoryPickerController, WorkspaceController, WorkspaceControllerPlugin as default };"
+    }
+  ]
+}

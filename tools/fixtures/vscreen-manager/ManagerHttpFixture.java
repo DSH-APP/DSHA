@@ -1,6 +1,13 @@
 package com.deepseekharness.app.vscreen;
 
-import com.sun.net.httpserver.HttpServer;
+import com.deepseekharness.app.util.HttpProtocol;
+import com.deepseekharness.app.util.VirtualScreenCoreIdentity;
+import com.deepseekharness.app.util.VirtualScreenHandshake;
+import com.deepseekharness.app.util.VirtualScreenLifecycleState;
+import java.io.*;
+import java.net.*;
+import java.util.Map;
+import java.util.UUID;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -17,7 +24,7 @@ import org.json.JSONObject;
 public final class ManagerHttpFixture {
   private static final ExecutorService CLIENTS = Executors.newFixedThreadPool(4);
   private static final ExecutorService SERVER = Executors.newFixedThreadPool(4);
-  private static HttpServer server;
+  private static PeerServer server;
   private static final AtomicInteger clearedUi = new AtomicInteger();
   private static final CopyOnWriteArrayList<Long> stopCallbacks = new CopyOnWriteArrayList<>();
   private static VirtualScreenManager manager =
@@ -45,18 +52,98 @@ public final class ManagerHttpFixture {
     return field;
   }
 
-  private static void install(long value, String token, String generation, long sequence)
-      throws Exception {
-    synchronized (stateLock) {
-      epoch.set(value);
-      field("activeEpoch").setLong(manager, value);
-      field("token").set(manager, token);
-      field("generation").set(manager, generation);
-      field("port").setInt(manager, server.getAddress().getPort());
-      field("stateRevision").setLong(manager, value);
-      field("frameSequence").setLong(manager, sequence);
-      field("starting").setBoolean(manager, false);
+  private static String token(String owner) {
+    try {
+      byte[] digest = java.security.MessageDigest.getInstance("SHA-256").digest(owner.getBytes(StandardCharsets.UTF_8));
+      return java.util.HexFormat.of().formatHex(digest).substring(0, 48);
+    } catch (Exception impossible) { throw new AssertionError(impossible); }
+  }
+
+  private static void install(long value, String owner, String generation, long sequence) throws Exception {
+    installInto(manager, server, value, owner, generation, sequence);
+  }
+
+  private static void installInto(VirtualScreenManager target, PeerServer endpoint, long value,
+      String owner, String generation, long sequence) throws Exception {
+    Object lock = field("LOCK").get(target);
+    synchronized (lock) {
+      var birth = VirtualScreenCoreIdentity.parse("123:" + value + ":2000:11111111-2222-3333-4444-555555555555:" + new UUID(0, value));
+      var handle = new VirtualScreenHandshake(endpoint.getAddress().getPort(), token(owner), birth);
+      endpoint.handle = handle;
+      ((AtomicLong) field("LIFECYCLE_EPOCH").get(target)).set(value);
+      field("activeEpoch").setLong(target, value);
+      field("token").set(target, handle.token);
+      field("core").set(target, handle);
+      field("pendingCleanup").set(target, null);
+      field("lifecycleState").set(target, VirtualScreenLifecycleState.READY);
+      field("generation").set(target, generation);
+      field("port").setInt(target, endpoint.getAddress().getPort());
+      field("stateRevision").setLong(target, value);
+      field("frameSequence").setLong(target, sequence);
+      field("starting").setBoolean(target, false);
     }
+  }
+
+  /** Synthetic platform replies, but the socket peer proof and HTTP parser are production code. */
+  private static final class PeerServer {
+    final ServerSocket listener;
+    final Map<String, java.util.function.Consumer<PeerExchange>> handlers = new ConcurrentHashMap<>();
+    volatile VirtualScreenHandshake handle;
+    volatile boolean running;
+    Executor executor;
+    volatile Throwable failure;
+
+    PeerServer(InetSocketAddress address, int backlog) throws IOException {
+      listener = new ServerSocket(); listener.bind(address, backlog);
+    }
+    static PeerServer create(InetSocketAddress address, int backlog) throws IOException {
+      return new PeerServer(address, backlog);
+    }
+    InetSocketAddress getAddress() { return (InetSocketAddress) listener.getLocalSocketAddress(); }
+    void setExecutor(Executor executor) { this.executor = executor; }
+    void createContext(String route, java.util.function.Consumer<PeerExchange> handler) { handlers.put(route, handler); }
+    void removeContext(String route) { handlers.remove(route); }
+    void start() {
+      running = true;
+      Thread accept = new Thread(() -> {
+        while (running) {
+          try { Socket socket = listener.accept(); executor.execute(() -> serve(socket)); }
+          catch (IOException closed) { if (running) failure = closed; }
+        }
+      }, "vscreen-fixture-peer");
+      accept.setDaemon(true); accept.start();
+    }
+    void serve(Socket socket) {
+      try (socket) {
+        VirtualScreenHandshake endpoint = handle;
+        require(endpoint != null, "fixture Core birth handle required");
+        var peer = VirtualScreenPeerProof.server(socket, endpoint);
+        var head = HttpProtocol.readHead(socket.getInputStream(), socket, HttpProtocol.BRIDGE, HttpProtocol.deadline(3000), true);
+        require(head != null && peer.authorizes(head.method, head.target, head.value(VirtualScreenPeerProof.HEADER)), "actual same-socket HMAC required before business route");
+        require(head.value("Authorization").isEmpty(), "no bearer credential is sent");
+        var exchange = new PeerExchange(socket, endpoint, head);
+        var handler = handlers.get(exchange.getRequestURI().getPath());
+        require(handler != null, "unexpected business route: " + exchange.getRequestURI().getPath());
+        handler.accept(exchange);
+      } catch (Throwable error) { failure = error; }
+    }
+    void stop(int ignored) throws IOException { running = false; listener.close(); }
+  }
+
+  private static final class PeerExchange implements AutoCloseable {
+    final Socket socket;
+    final VirtualScreenHandshake endpoint;
+    final HttpProtocol.Head head;
+    PeerExchange(Socket socket, VirtualScreenHandshake endpoint, HttpProtocol.Head head) {
+      this.socket = socket; this.endpoint = endpoint; this.head = head;
+    }
+    URI getRequestURI() { return URI.create(head.target); }
+    OutputStream getResponseBody() throws IOException { return socket.getOutputStream(); }
+    void sendResponseHeaders(int status, long length) throws IOException {
+      socket.getOutputStream().write(("HTTP/1.1 " + status + " OK\r\nContent-Length: " + length + "\r\nConnection: close\r\n\r\n").getBytes(StandardCharsets.US_ASCII));
+      socket.getOutputStream().flush();
+    }
+    public void close() { try { socket.close(); } catch (IOException ignored) {} }
   }
 
   private static String response(long sequence) {
@@ -65,7 +152,7 @@ public final class ManagerHttpFixture {
         + ",\"displayId\":4,\"package\":\"target.pkg\"}";
   }
 
-  private static void reply(com.sun.net.httpserver.HttpExchange exchange, String body)
+  private static void reply(PeerExchange exchange, String body)
       throws Exception {
     byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
     exchange.sendResponseHeaders(200, bytes.length);
@@ -85,8 +172,8 @@ public final class ManagerHttpFixture {
         exchange -> {
           try {
             require(
-                "Bearer owner-a".equals(exchange.getRequestHeaders().getFirst("Authorization")),
-                "real bearer identity");
+                token("owner-a").equals(exchange.endpoint.token),
+                "real authenticated Core identity");
             entered.countDown();
             await(release);
             reply(exchange, response(1));
@@ -443,29 +530,22 @@ public final class ManagerHttpFixture {
 
               public void stopped(long fence) {}
             });
-    AtomicLong peerEpoch = (AtomicLong) field("LIFECYCLE_EPOCH").get(peer);
+    PeerServer peerServer = PeerServer.create(new InetSocketAddress("127.0.0.1", 0), 8);
+    peerServer.setExecutor(SERVER);
+    peerServer.createContext("/vscreen/status", exchange -> {
+      try { reply(exchange, response(3).replace("display-a", "display-peer")); }
+      catch (Exception failure) { throw new RuntimeException(failure); }
+      finally { exchange.close(); }
+    });
+    peerServer.start();
+    installInto(peer, peerServer, 71, "owner-peer", "display-peer", 3);
     Object peerLock = field("LOCK").get(peer);
-    synchronized (peerLock) {
-      peerEpoch.set(71);
-      field("activeEpoch").setLong(peer, 71);
-      field("token").set(peer, "owner-peer");
-      field("generation").set(peer, "display-peer");
-      field("port").setInt(peer, server.getAddress().getPort());
-      field("stateRevision").setLong(peer, 71);
-      field("frameSequence").setLong(peer, 3);
-      field("starting").setBoolean(peer, false);
-    }
     require(peerLock != stateLock, "owners never share state LOCK");
     server.createContext(
         "/vscreen/status",
         exchange -> {
           try {
-            String token = exchange.getRequestHeaders().getFirst("Authorization");
-            reply(
-                exchange,
-                "Bearer owner-peer".equals(token)
-                    ? response(3).replace("display-a", "display-peer")
-                    : response(2));
+            reply(exchange, response(2));
           } catch (Exception failure) {
             throw new RuntimeException(failure);
           } finally {
@@ -478,8 +558,8 @@ public final class ManagerHttpFixture {
         exchange -> {
           try {
             require(
-                "Bearer owner-a".equals(exchange.getRequestHeaders().getFirst("Authorization")),
-                "close retains old session bearer");
+                token("owner-a").equals(exchange.endpoint.token),
+                "close retains the old authenticated Core identity");
             closeEntered.countDown();
             await(closeRelease);
             reply(exchange, "{\"ok\":true}");
@@ -493,7 +573,7 @@ public final class ManagerHttpFixture {
       install(61, "owner-a", "display-a", 2);
       require(manager.status().optBoolean("ok"), "first owner status accepts its generation");
       require(
-          peer.status().optBoolean("ok"), "second owner status accepts its own bearer/generation");
+          peer.status().optBoolean("ok"), "second owner accepts its distinct authenticated Core/generation");
       Future<JSONObject> oldClose = CLIENTS.submit(manager::close);
       await(closeEntered);
       install(63, "owner-new", "display-new", 7);
@@ -503,7 +583,8 @@ public final class ManagerHttpFixture {
       display.setInt(nodeCache, 99);
       closeRelease.countDown();
       require(
-          oldClose.get(3, TimeUnit.SECONDS).optBoolean("ok"), "old remote close result returns");
+          oldClose.get(3, TimeUnit.SECONDS).optString("error").equals("VSCREEN_CLOSE_UNKNOWN"),
+          "remote release reply cannot replace an unavailable birth exit proof");
       require(
           "display-new".equals(manager.generation()),
           "late close never detaches new manager state");
@@ -516,11 +597,12 @@ public final class ManagerHttpFixture {
           "one owner's close never changes another owner");
       require(peer.status().optBoolean("ok"), "unaffected peer remains request-capable");
       System.out.println(
-          "PASS actual distinct-owner bearer/state isolation and late close cache/UI callback fence");
+          "PASS actual distinct-Core HMAC/state isolation, release-versus-exit and late-close UI fence");
     } finally {
       closeRelease.countDown();
       server.removeContext("/vscreen/status");
       server.removeContext("/vscreen/close");
+      peerServer.stop(0);
       ((ScheduledExecutorService) field("WORKER").get(peer)).shutdownNow();
     }
   }
@@ -600,8 +682,8 @@ public final class ManagerHttpFixture {
     release.countDown();
     JSONObject node = result.get(3, TimeUnit.SECONDS);
     require(
-        "ACCESSIBILITY_UNAVAILABLE".equals(node.optString("error")),
-        "semantic path reached accessibility without pixel rejection");
+        "EXPLICIT_SCREEN_REQUEST_REQUIRED".equals(node.optString("error")),
+        "semantic path requires explicit capability context without pixel rejection");
     require(
         field("frameSequence").getLong(manager) == 2,
         "semantic identity receipt cannot regress frame metadata");
@@ -613,7 +695,7 @@ public final class ManagerHttpFixture {
   public static void main(String[] args) throws Exception {
     stateLock = field("LOCK").get(manager);
     epoch = (AtomicLong) field("LIFECYCLE_EPOCH").get(manager);
-    server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 8);
+    server = PeerServer.create(new InetSocketAddress("127.0.0.1", 0), 8);
     server.setExecutor(SERVER);
     server.start();
     try {
@@ -628,6 +710,7 @@ public final class ManagerHttpFixture {
       distinctOwnersAndLateClose();
       unknownWriteSurvivesRevocation();
       semanticNodeDoesNotAcquirePixelFreshness();
+      require(server.failure == null, "fixture server failure: " + server.failure);
     } finally {
       server.stop(0);
       CLIENTS.shutdownNow();

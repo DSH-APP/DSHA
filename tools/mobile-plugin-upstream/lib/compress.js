@@ -16,6 +16,15 @@
  *   decision (compress or not) is made on the actual size, and `Content-Length`
  *   always matches what is sent. Non-JSON responses call the original
  *   `writeHead` immediately and are never touched.
+ * - Compression itself runs OFF the event loop (`brotliCompress` / `gzip` with
+ *   a callback = libuv thread pool). It used to run synchronously inside
+ *   `end()`, and on a phone the host process shares the device with the
+ *   WebView: one multi-megabyte JSON response blocked every other request in
+ *   flight — including the small settings write behind the first-run notice,
+ *   which then sat at 「正在保存…」 for seconds. `end()` now returns before the
+ *   headers are written; the reply completes from the zlib callback
+ *   (2026-10-20, see tests/compress.test.ts「deferred off the event loop」).
+ *   Identity (no compression needed) and the abandon paths stay synchronous.
  *
  * The browser's fetch decompresses transparently, so no client change is
  * needed. SSE (`text/event-stream`) is intentionally left uncompressed: it is
@@ -29,7 +38,7 @@
  *
  * Ported from community fork wzxmt-zhc/dsh-web-mobile (v2.5.0).
  */
-import { brotliCompressSync, constants as zlibConstants, gzipSync } from 'node:zlib';
+import { brotliCompress, constants as zlibConstants, gzip } from 'node:zlib';
 import { ServerResponse as NodeServerResponse } from 'node:http';
 /** Only payloads at least this large are worth compressing. */
 const MIN_JSON_BYTES = 4 * 1024;
@@ -146,6 +155,67 @@ function writeHeadWith(res, origWriteHead, pending, headers) {
     return origWriteHead.apply(res, args);
 }
 /**
+ * Finish a deferred JSON response from the zlib callback, i.e. off the event
+ * loop (libuv thread pool). Everything the synchronous path used to do inside
+ * `end()` — header replay, `Content-Encoding`/`Content-Length` rewrite, body
+ * write, buffered `write()` callbacks — happens here, one tick later at the
+ * earliest. `end()` has already returned by then, so:
+ *
+ * - a caller that wrote or flushed headers during the compression window wins
+ *   (its own headers are on the wire; the buffered body goes out verbatim
+ *   instead of throwing ERR_HTTP_HEADERS_SENT out of a callback);
+ * - a compression error degrades to identity rather than a broken reply;
+ * - nothing may throw out of the callback — an uncaught throw there takes the
+ *   whole host process down, and this patch is process-wide.
+ */
+function finishDeferred(res, pending, body, callbacks, origWriteHead, origWrite, origEnd) {
+    const send = (compressed) => {
+        try {
+            if (res.writableEnded || res.destroyed)
+                return;
+            if (res.headersSent || compressed === null) {
+                // Abandon the deferral: headers are already out (or compression
+                // failed), so replay the body verbatim, exactly like the sync path.
+                if (!res.headersSent)
+                    writeHeadWith(res, origWriteHead, pending, pending.headers);
+                if (body.byteLength === 0)
+                    origEnd.apply(res, callbacks);
+                else
+                    origEnd.apply(res, [body, ...callbacks]);
+                fireWriteCallbacks(pending);
+                return;
+            }
+            const headers = { ...pending.headers };
+            for (const key of Object.keys(headers)) {
+                if (key.toLowerCase() === 'content-length')
+                    delete headers[key];
+            }
+            headers['content-encoding'] = pending.encoding;
+            headers['content-length'] = compressed.byteLength;
+            varyWithAcceptEncoding(headers);
+            writeHeadWith(res, origWriteHead, pending, headers);
+            origWrite.call(res, compressed);
+            origEnd.apply(res, callbacks);
+            fireWriteCallbacks(pending);
+        }
+        catch (error) {
+            // A throw out of an async callback is an unhandled exception: kill this
+            // one reply instead of the host process.
+            fireWriteCallbacks(pending);
+            res.destroy(error instanceof Error ? error : new Error(String(error)));
+        }
+    };
+    const done = (error, compressed) => {
+        send(error === null && compressed !== undefined ? compressed : null);
+    };
+    if (pending.encoding === 'br') {
+        brotliCompress(body, { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: BROTLI_QUALITY } }, done);
+    }
+    else {
+        gzip(body, { level: 6 }, done);
+    }
+}
+/**
  * Install the compression patch on http.ServerResponse.prototype.
  * @returns disposer restoring the original methods (plugin reload safety).
  */
@@ -229,23 +299,14 @@ export function installResponseCompression() {
             fireWriteCallbacks(pending);
             return ended;
         }
-        // Large JSON: compress and rewrite the length-bearing headers.
-        const compressed = pending.encoding === 'br'
-            ? brotliCompressSync(body, { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: BROTLI_QUALITY } })
-            : gzipSync(body, { level: 6 });
-        const headers = { ...pending.headers };
-        for (const key of Object.keys(headers)) {
-            if (key.toLowerCase() === 'content-length')
-                delete headers[key];
-        }
-        headers['content-encoding'] = pending.encoding;
-        headers['content-length'] = compressed.byteLength;
-        varyWithAcceptEncoding(headers);
-        writeHeadWith(this, origWriteHead, pending, headers);
-        origWrite.call(this, compressed);
-        const ended = origEnd.apply(this, callbacks);
-        fireWriteCallbacks(pending);
-        return ended;
+        // Large JSON: compress ASYNCHRONOUSLY and finish the reply from the zlib
+        // callback. See the module doc: keeping zlib on the event loop here used to
+        // stall every other in-flight request on a phone-sized host (first-run
+        // notice at 「正在保存…」). end() must therefore return before any byte of
+        // this response is written — headers, body and the buffered write()
+        // callbacks all land in finishDeferred().
+        finishDeferred(this, pending, body, callbacks, origWriteHead, origWrite, origEnd);
+        return this;
     }
     proto.writeHead = patchedWriteHead;
     proto.write = patchedWrite;

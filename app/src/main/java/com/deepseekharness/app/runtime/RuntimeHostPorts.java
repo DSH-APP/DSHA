@@ -3,10 +3,7 @@ package com.deepseekharness.app.runtime;
 /** App-owned configuration snapshot and cold-install diagnostics boundary. */
 public final class RuntimeHostPorts {
   private final ThreadLocal<Settings> invocation = new ThreadLocal<>();
-  private final ThreadLocal<java.util.Map<Boolean, EngineSpec>> engines = new ThreadLocal<>();
   private final ThreadLocal<PendingColdSelection> pendingCold = new ThreadLocal<>();
-  private final ThreadLocal<java.util.Set<String>> probedRoots = new ThreadLocal<>();
-  private final ThreadLocal<Boolean> dispatched = new ThreadLocal<>();
   private volatile Provider provider;
   private final com.deepseekharness.app.util.DiagnosticFailures diagnosticFailures =
       new com.deepseekharness.app.util.DiagnosticFailures();
@@ -25,21 +22,15 @@ public final class RuntimeHostPorts {
   }
 
   public static final class Settings {
-    public final String dnsMode, engine;
+    public final String dnsMode;
     public final boolean proroot, staticLoader, disableProotSeccomp;
 
     public Settings(
         String dnsMode, boolean proroot, boolean staticLoader, boolean disableProotSeccomp) {
-      this(dnsMode, proroot ? "bxroot" : "proot", staticLoader, disableProotSeccomp);
-    }
-
-    public Settings(
-        String dnsMode, String engine, boolean staticLoader, boolean disableProotSeccomp) {
       if (dnsMode == null || !dnsMode.matches("auto|ipv4|native"))
         throw new IllegalArgumentException("RUNTIME_DNS_MODE");
       this.dnsMode = dnsMode;
-      this.engine = com.deepseekharness.app.util.RuntimeEnginePolicy.require(engine);
-      this.proroot = "bxroot".equals(engine);
+      this.proroot = proroot;
       this.staticLoader = staticLoader;
       this.disableProotSeccomp = disableProotSeccomp;
     }
@@ -125,47 +116,10 @@ public final class RuntimeHostPorts {
     if (invocation.get() != null) return () -> {};
     Settings value = settings();
     invocation.set(value);
-    engines.set(new java.util.HashMap<>());
-    probedRoots.set(new java.util.HashSet<>());
-    dispatched.set(false);
     return () -> {
-      engines.remove();
-      probedRoots.remove();
-      dispatched.remove();
       pendingCold.remove();
       invocation.remove();
     };
-  }
-
-  EngineSpec engine(android.content.Context context, boolean compatibility) {
-    var selected = engines.get();
-    if (selected == null) return EngineSpec.select(context, settings(), compatibility);
-    return selected.computeIfAbsent(
-        compatibility, ignored -> EngineSpec.select(context, settings(), compatibility));
-  }
-
-  boolean rootProbed(String key) {
-    var roots = probedRoots.get();
-    return roots != null && roots.contains(key);
-  }
-
-  void rootProbedAdd(String key) {
-    var roots = probedRoots.get();
-    if (roots != null) roots.add(key);
-  }
-
-  ContainerRuntime capabilityFallback(android.content.Context context) {
-    if (Boolean.TRUE.equals(dispatched.get()))
-      throw new IllegalStateException("RUNTIME_BUSINESS_STARTED_NO_ENGINE_REPLAY");
-    EngineSpec fallback = EngineSpec.select(context, settings(), true);
-    var selected = engines.get();
-    if (selected != null) selected.put(false, fallback);
-    record("RUNTIME_CAPABILITY_FALLBACK", "bxroot -> proot: confirmed isolated capability failure");
-    return fallback.runtime;
-  }
-
-  void businessDispatched() {
-    if (invocation.get() != null) dispatched.set(true);
   }
 
   public String diagnosticFailure() {
@@ -264,8 +218,6 @@ public final class RuntimeHostPorts {
     if (pendingCold.get() != null) throw new java.io.IOException("COLD_RUNTIME_PREPARATION_EXISTS");
     if (publishedRootfs == null
         || mode == null
-        || !mode.runtime.matches("bxroot|proot")
-        || "bxroot".equals(mode.runtime) && !"bxroot".equals(frozen.engine)
         || packageSlotSha == null
         || !packageSlotSha.matches("[a-f0-9]{64}")
         || expectedRuntimeId == null
@@ -274,7 +226,12 @@ public final class RuntimeHostPorts {
     Provider provider = required();
     Settings stored = provider.snapshot();
     if (stored == null) throw new java.io.IOException("RUNTIME_SETTINGS_UNAVAILABLE");
-    if (!stored.engine.equals(frozen.engine))
+    if ("proroot".equals(mode.runtime)
+        && (!stored.proroot && !provider.preferFastColdMode()
+            || stored.staticLoader != frozen.staticLoader))
+      throw new java.io.IOException("COLD_RUNTIME_SELECTION_CHANGED");
+    if (mode == com.deepseekharness.app.util.ColdInstallPlan.Mode.PROROOT_DYNAMIC
+        && (!provider.preferFastColdMode() || !frozen.staticLoader))
       throw new java.io.IOException("COLD_RUNTIME_SELECTION_CHANGED");
     java.io.File root = publishedRootfs.getCanonicalFile();
     String identity = provider.coldRuntimeIdentity(root);
@@ -282,13 +239,16 @@ public final class RuntimeHostPorts {
       throw new java.io.IOException("COLD_RUNTIME_IDENTITY_UNAVAILABLE");
     java.util.Map<String, Object> before = provider.snapshotColdSelection();
     if (before == null) throw new java.io.IOException("COLD_SELECTION_AUTHORITY_UNAVAILABLE");
-    Settings candidate = new Settings(frozen.dnsMode, mode.runtime, false, mode.noSeccomp);
+    Settings candidate =
+        new Settings(
+            frozen.dnsMode,
+            "proroot".equals(mode.runtime),
+            mode.staticLoader(frozen.staticLoader),
+            "proroot".equals(mode.runtime) ? frozen.disableProotSeccomp : mode.noSeccomp);
     pendingCold.set(
         new PendingColdSelection(
             root, identity, packageSlotSha, expectedRuntimeId, mode, candidate, frozen, before));
     invocation.set(candidate);
-    var modes = engines.get();
-    if (modes != null) modes.clear();
   }
 
   /** 只接受本次完整真实试运行且 guest 已关闭的证明，再持久保存实际成功方式。 */
@@ -308,9 +268,9 @@ public final class RuntimeHostPorts {
     Object actual = proof.get("runtimeMode");
     boolean sameMode = pending.mode.runtime.equals(actual);
     boolean compatibilityFallback =
-        "bxroot".equals(pending.mode.runtime)
+        "proroot".equals(pending.mode.runtime)
             && "proot".equals(actual)
-            && "bxroot".equals(proof.get("fallbackFrom"))
+            && "proroot".equals(proof.get("fallbackFrom"))
             && (proof.get("fallbackExitCode") instanceof Integer
                 || proof.get("fallbackExitCode") instanceof Long)
             && ((Number) proof.get("fallbackExitCode")).longValue() >= Integer.MIN_VALUE
@@ -322,12 +282,13 @@ public final class RuntimeHostPorts {
     if (!pending.before.equals(provider.snapshotColdSelection()))
       throw new java.io.IOException("COLD_RUNTIME_SELECTION_CHANGED");
     Settings stored = provider.snapshot();
-    if (stored == null || !stored.engine.equals(pending.beforeSettings.engine))
+    if (stored == null
+        || "proroot".equals(actual) && stored.staticLoader != pending.beforeSettings.staticLoader)
       throw new java.io.IOException("COLD_RUNTIME_SELECTION_CHANGED");
     com.deepseekharness.app.util.ColdInstallPlan.Mode actualMode =
         sameMode
             ? pending.mode
-            : pending.beforeSettings.disableProotSeccomp
+            : pending.settings.disableProotSeccomp
                 ? com.deepseekharness.app.util.ColdInstallPlan.Mode.PROOT_COMPAT
                 : com.deepseekharness.app.util.ColdInstallPlan.Mode.PROOT;
     successfulColdRuntime(pending.root, actualMode, pending.packages);
@@ -340,14 +301,13 @@ public final class RuntimeHostPorts {
       com.deepseekharness.app.util.ColdInstallPlan.Mode mode,
       String packageSlotSha)
       throws java.io.IOException {
-    if (mode == null || !mode.runtime.matches("bxroot|proot"))
-      throw new java.io.IOException("COLD_RUNTIME_RETIRED_MODE");
     Settings proven = settings();
     Settings selected = required().successfulColdRuntime(rootfs, mode, packageSlotSha);
     if (selected == null
-        || !selected.engine.equals(
-            pendingCold.get() == null ? proven.engine : pendingCold.get().beforeSettings.engine)
-        || "proot".equals(mode.runtime) && selected.disableProotSeccomp != mode.noSeccomp)
+        || selected.proroot != "proroot".equals(mode.runtime)
+        || "proroot".equals(mode.runtime)
+            && selected.staticLoader != mode.staticLoader(proven.staticLoader)
+        || !"proroot".equals(mode.runtime) && selected.disableProotSeccomp != mode.noSeccomp)
       throw new java.io.IOException("COLD_RUNTIME_SELECTION_MISMATCH");
     if (invocation.get() != null) invocation.set(selected);
   }

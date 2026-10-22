@@ -14,15 +14,30 @@ public final class AgentTaskRegistration {
   private boolean active = true;
 
   public AgentTaskRegistration(long generation, String instance) {
+    this(generation, instance, randomNonce());
+  }
+
+  /** 仅恢复已经交给本次完整核验活跃Web的能力，不生成替代授权。 */
+  public static AgentTaskRegistration restore(long generation, String instance, String nonce) {
+    return new AgentTaskRegistration(generation, instance, nonce);
+  }
+
+  private AgentTaskRegistration(long generation, String instance, String savedNonce) {
     if (generation < 1 || instance == null || instance.isEmpty())
       throw new IllegalArgumentException("TASK_REGISTRATION_IDENTITY");
+    if (savedNonce == null || !savedNonce.matches("[a-f0-9]{64}"))
+      throw new IllegalArgumentException("TASK_REGISTRATION_NONCE");
     this.generation = generation;
     this.instance = instance;
+    nonce = savedNonce;
+  }
+
+  private static String randomNonce() {
     byte[] random = new byte[32];
     new SecureRandom().nextBytes(random);
     StringBuilder value = new StringBuilder(64);
     for (byte part : random) value.append(String.format(java.util.Locale.ROOT, "%02x", part & 255));
-    nonce = value.toString();
+    return value.toString();
   }
 
   /** This map is for the formal Web exec environment, never common shell/runtime defaults. */
@@ -64,6 +79,13 @@ public final class AgentTaskRegistration {
 
     public int port() {
       return port;
+    }
+
+    /** 已捕获的旧Snapshot也必须在同一能力锁内完成事件/claim，撤销后不能继续派发。 */
+    public <T> T whileActive(java.util.function.Supplier<T> action, T unavailable) {
+      synchronized (lease) {
+        return lease.active ? action.get() : unavailable;
+      }
     }
 
     /** Invalid shared-token callers cannot reserve or replace the legitimate reporter. */

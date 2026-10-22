@@ -1,0 +1,17 @@
+# ADR 0001: Build154 compatibility, permission, and delivery boundaries
+
+> Historical scope: this ADR records the implementation scope authorized for build154. “No publication in this round” below refers to that authorization. Current private publication authorization, version, and acceptance scope belong to [README](../../../README.en.md) and the [current release introduction](../release-introduction.md). Technical and data boundaries remain applicable where later ADRs have not superseded them.
+
+Status: adopted for that round. The basis was the user's requirements and inspection of the source. Decisions from another conversation quoted in an external build150 report were suggestions, not instructions.
+
+See the [module map](../module-map.md), [engineering standard](../engineering-standard.md), [handoff guide](../handoff.md), and [CONTRIBUTING](../../../CONTRIBUTING.en.md). Historical originals and current evidence remain separate: an old document's “current artifact” is not a passing result for a later delivery.
+
+1. Production terminals and plugins permit an open shell, unlocked dependency resolution, lifecycle scripts, and pnpmfile. Installation automatically commits and enables after package, path, digest, and transaction checks. User-disabled and safe-mode intent remains. Plugins run under the application's UID without an independent sandbox for malicious code.
+2. Independent emergency recovery retains a separate runtime root, five controlled repair tools, and native confirmation for writes. Opening the production terminal does not remove recovery-write confirmation or a stop barrier for an unknown process.
+3. New user exports are password-free tar.gz with no encryption switch. Internal automatic copies remain encrypted with random local key material. Historical encrypted originals still require authentication and their original password. Old-format readers and protection for unknown originals remain.
+4. Platform-provided application-root aliases may be normalized after precise ownership proof. Guest child paths and user packages retain NOFOLLOW restrictions. Cold-install runtime preference and environment publication form one recoverable operation.
+5. Managed source is bound to proof of its actual bytes. Uncertain exit evidence preserves the scene. There is no general shortcut that force-kills by port, name, or bare PID.
+6. That round did not operate a phone or generate an additional audit APK, as requested. Both flavors used the historical E7E3 certificate, v1/v2/v3 signing, the original package name, and an increasing version code. Software verification proves only the signature/identity prerequisites for an in-place update, not an actual phone update or universal compatibility.
+7. Windows development remains supported. Linux CI and host fixtures are separate evidence. A manual signing workflow accepts only a successful package run from the same repository and commit, together with its actual APK digest, and creates a draft. Protected environments, keys, and online operation require evidence from actual configuration. That round implemented the workflow locally without publishing it.
+
+Cost: compatibility readers and open third-party code increase contract and security-boundary complexity. Deleting user history or reinstating an approval threshold is not an acceptable way to reduce an audit score. Any retained scoring must disclose its method and unverified items; it cannot promise an unsupported score “below 20”.

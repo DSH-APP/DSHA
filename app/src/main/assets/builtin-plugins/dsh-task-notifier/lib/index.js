@@ -102,16 +102,21 @@ export class TaskReporter {
   }
   async tick() {
     if (this.disposed) return
+    let active = false
     for (const row of this.rows.values()) {
       if (!row.active) continue
+      active = true
       const agent = this.ctx.agents.get(row.session)
       const boundary = agent && this.ctx.sessionProjections.stateOf(agent.session, 'turnBoundary')
       if (agent === row.agent && agent?.session === row.sessionObject && agent.session.surface?.contentGeneration === row.surface
           && this.ctx.agents.roots().includes(agent) && agent.status === 'running' && boundary?.lastTurn === row.turn && boundary.openTurnStartSeq === row.startSeq)
         this.pending.set(row.session, { ...row })
     }
+    // Only live tasks can own a native stop control. Empty/terminal reporters
+    // need no registration or claim polling; failed terminal facts still flush.
+    if (!active && !this.pending.size) return
     await this.flush()
-    if (!this.identity || this.claiming || this.disposed) return
+    if (!active || !this.identity || this.claiming || this.disposed) return
     this.claiming = true
     try {
       const command = await this.transport('claim', { ...this.identity, client: this.client })

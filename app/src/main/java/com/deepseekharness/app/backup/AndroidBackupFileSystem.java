@@ -50,11 +50,7 @@ public class AndroidBackupFileSystem implements BackupFileSystem {
     return new IOException(
         error.errno == OsConstants.EACCES || error.errno == OsConstants.EPERM
             ? "PERMISSION_DENIED"
-            : error.errno == OsConstants.ENOSPC
-                ? "NO_SPACE"
-                : error.errno == OsConstants.ENOTDIR
-                    ? "SOURCE_NOT_DIRECTORY"
-                    : "FILESYSTEM_" + error.errno,
+            : error.errno == OsConstants.ENOSPC ? "NO_SPACE" : "FILESYSTEM_" + error.errno,
         error);
   }
 
@@ -82,8 +78,7 @@ public class AndroidBackupFileSystem implements BackupFileSystem {
         stat.st_size,
         stat.st_mtime,
         stat.st_dev,
-        stat.st_mode & 0777,
-        stat.st_ctime * 1_000_000_000L);
+        stat.st_mode & 0777);
   }
 
   @Override
@@ -153,10 +148,7 @@ public class AndroidBackupFileSystem implements BackupFileSystem {
     if (!expected.type.equals("FILE")) throw new IOException("FILE_TYPE");
     try {
       ParcelFileDescriptor handle =
-          owned(
-              file,
-              OsConstants.O_RDONLY | O_CLOEXEC | OsConstants.O_NOFOLLOW | OsConstants.O_NONBLOCK,
-              0);
+          owned(file, OsConstants.O_RDONLY | O_CLOEXEC | OsConstants.O_NOFOLLOW, 0);
       FileDescriptor fd = handle.getFileDescriptor();
       InputStream stream = new ParcelFileDescriptor.AutoCloseInputStream(handle);
       try {
@@ -195,11 +187,6 @@ public class AndroidBackupFileSystem implements BackupFileSystem {
 
   @Override
   public OutputStream create(File file) throws IOException {
-    return createOwned(file).stream;
-  }
-
-  @Override
-  public CreatedFile createOwned(File file) throws IOException {
     try {
       ParcelFileDescriptor handle =
           owned(
@@ -212,10 +199,8 @@ public class AndroidBackupFileSystem implements BackupFileSystem {
               0600);
       FileDescriptor fd = handle.getFileDescriptor();
       OutputStream stream = new ParcelFileDescriptor.AutoCloseOutputStream(handle);
-      final Node created;
       try {
-        created = node(Os.fstat(fd));
-        if (!created.type.equals("FILE")) throw new IOException("FILE_TYPE");
+        if (!OsConstants.S_ISREG(Os.fstat(fd).st_mode)) throw new IOException("FILE_TYPE");
       } catch (IOException | ErrnoException error) {
         try {
           stream.close();
@@ -224,30 +209,28 @@ public class AndroidBackupFileSystem implements BackupFileSystem {
         }
         throw error;
       }
-      OutputStream output =
-          new FilterOutputStream(stream) {
-            boolean closed;
+      return new FilterOutputStream(stream) {
+        boolean closed;
 
-            @Override
-            public void write(byte[] data, int off, int len) throws IOException {
-              out.write(data, off, len);
-            }
+        @Override
+        public void write(byte[] data, int off, int len) throws IOException {
+          out.write(data, off, len);
+        }
 
-            @Override
-            public void close() throws IOException {
-              if (closed) return;
-              closed = true;
-              try {
-                flush();
-                Os.fsync(fd);
-              } catch (ErrnoException e) {
-                throw failure(e);
-              } finally {
-                super.close();
-              }
-            }
-          };
-      return new CreatedFile(output, created);
+        @Override
+        public void close() throws IOException {
+          if (closed) return;
+          closed = true;
+          try {
+            flush();
+            Os.fsync(fd);
+          } catch (ErrnoException e) {
+            throw failure(e);
+          } finally {
+            super.close();
+          }
+        }
+      };
     } catch (ErrnoException e) {
       throw failure(e);
     }
@@ -321,13 +304,7 @@ public class AndroidBackupFileSystem implements BackupFileSystem {
       try (ParcelFileDescriptor handle = ParcelFileDescriptor.dup(fd)) {
         StructStat node = Os.fstat(fd);
         if (!OsConstants.S_ISDIR(node.st_mode) || node.st_uid != android.os.Process.myUid())
-          throw new OwnershipCheckFailure(
-              file.getAbsolutePath(),
-              android.os.Process.myUid(),
-              node.st_uid,
-              node.st_mode,
-              node.st_dev,
-              node.st_ino);
+          throw new IOException("RETIRED_DIRECTORY_NOT_OWNED");
         if ((node.st_mode & 0700) != 0700)
           Os.chmod("/proc/self/fd/" + handle.getFd(), (node.st_mode & 0777) | 0700);
       } finally {

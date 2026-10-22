@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-host-plugin-inventory/lib/index.js",
+  "sourceSha256": "f8e50fb2e24c92302570a41baa007e409cf4651bed0a65605b0871ba14325d30",
+  "patches": [
+    {
+      "before": "\tlet _list_decorators;",
+      "after": "\tlet _list_decorators;\n\tlet _management_decorators;"
+    },
+    {
+      "before": "\t\t\t_list_decorators = [Remote(\"list\")];",
+      "after": "\t\t\t_list_decorators = [Remote(\"list\")];\n\t\t\t_management_decorators = [Remote(\"management\")];"
+    },
+    {
+      "before": "\t\t\t__esDecorate(this, null, _list_decorators, {\n\t\t\t\tkind: \"method\",\n\t\t\t\tname: \"list\",\n\t\t\t\tstatic: false,\n\t\t\t\tprivate: false,\n\t\t\t\taccess: {\n\t\t\t\t\thas: (obj) => \"list\" in obj,\n\t\t\t\t\tget: (obj) => obj.list\n\t\t\t\t},\n\t\t\t\tmetadata: _metadata\n\t\t\t}, null, _instanceExtraInitializers);",
+      "after": "\t\t\t__esDecorate(this, null, _list_decorators, {\n\t\t\t\tkind: \"method\",\n\t\t\t\tname: \"list\",\n\t\t\t\tstatic: false,\n\t\t\t\tprivate: false,\n\t\t\t\taccess: {\n\t\t\t\t\thas: (obj) => \"list\" in obj,\n\t\t\t\t\tget: (obj) => obj.list\n\t\t\t\t},\n\t\t\t\tmetadata: _metadata\n\t\t\t}, null, _instanceExtraInitializers);\n\t\t\t__esDecorate(this, null, _management_decorators, {\n\t\t\t\tkind: \"method\",\n\t\t\t\tname: \"management\",\n\t\t\t\tstatic: false,\n\t\t\t\tprivate: false,\n\t\t\t\taccess: {\n\t\t\t\t\thas: (obj) => \"management\" in obj,\n\t\t\t\t\tget: (obj) => obj.management\n\t\t\t\t},\n\t\t\t\tmetadata: _metadata\n\t\t\t}, null, _instanceExtraInitializers);"
+    },
+    {
+      "before": "\t\tasync list() {\n\t\t\treturn readPluginInventory(this.ctx);\n\t\t}",
+      "after": "\t\tasync list() {\n\t\t\treturn readPluginInventory(this.ctx);\n\t\t}\n\t\t// DSHA_PLUGIN_MANAGEMENT_PROJECTION_V1: a separate strict, zero-argument\n\t\t// capability RPC. It never claims activation or mutation completion;\n\t\t// list() keeps its complete original diagnostics and wire contract.\n\t\tasync management() {\n\t\t\treturn { managementAvailable: this.ctx.get(\"pluginManager\") !== void 0 };\n\t\t}"
+    }
+  ]
+}

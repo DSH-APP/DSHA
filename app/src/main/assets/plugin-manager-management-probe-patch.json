@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js",
+  "sourceSha256": "b4efaa441258a547a0d7b3cab559fe073c69e69fe2bbb617c710ded134e7c4f9",
+  "patches": [
+    {
+      "before": "\t\t\t\t\t\tconst inventory = await this.ctx.remote.pluginInventory.list();",
+      "after": "\t\t\t\t\t\t// DSHA_PLUGIN_MANAGEMENT_PROBE_V1: this page consumes only the\n\t\t\t\t\t\t// live manager capability; full preset diagnostics stay opt-in elsewhere.\n\t\t\t\t\t\tconst inventory = await this.ctx.remote.pluginInventory.management();"
+    }
+  ]
+}

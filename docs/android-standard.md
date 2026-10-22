@@ -1,6 +1,6 @@
 # Android 11+ 标准版适配与减重
 
-> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[当前维护约束与历史资料说明](documentation-index.md#历史材料如何阅读)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
 
 
 当前预览版为 `1.2.0-rc1.2`（versionCode 111），最低 Android 11 / API 30，

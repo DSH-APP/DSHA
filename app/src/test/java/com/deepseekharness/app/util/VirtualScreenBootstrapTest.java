@@ -10,6 +10,11 @@ public class VirtualScreenBootstrapTest {
     for (byte b : value.getBytes(StandardCharsets.UTF_8)) parser.accept(b & 255);
   }
 
+  private static final String PAYLOAD =
+      "1 49152 "
+          + "a".repeat(48)
+          + " 123:456:2000:11111111-2222-3333-4444-555555555555:aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+
   @Test
   public void romNoiseDoesNotInvalidateExactBootstrap() throws Exception {
     var parser = new VirtualScreenBootstrap();
@@ -17,7 +22,7 @@ public class VirtualScreenBootstrapTest {
         parser,
         "vivo resources warning\n[okhttp] noisy permission check\r\n"
             + "DSHA_VSCREEN_BOOTSTRAP "
-            + "a".repeat(48)
+            + PAYLOAD
             + "\n");
     assertEquals("a".repeat(48), parser.token());
   }
@@ -94,12 +99,16 @@ public class VirtualScreenBootstrapTest {
   @Test
   public void ordinaryRomOutputIsNotTreatedAsAnAdbFailureDuringBootstrap() throws Exception {
     var parser = new VirtualScreenBootstrap();
-    feed(parser, "ROM notice ENVIRONMENT_BUSY\nDSHA_VSCREEN_BOOTSTRAP " + "a".repeat(48) + "\n");
+    feed(parser, "ROM notice ENVIRONMENT_BUSY\nDSHA_VSCREEN_BOOTSTRAP " + PAYLOAD + "\n");
     assertEquals("a".repeat(48), parser.token());
   }
 
   @Test
   public void logCodesRejectArbitrarySecretsAndKeepKnownMachineFailures() {
+    assertEquals(
+        "VSCREEN_CLOSE_UNKNOWN", VirtualScreenBootstrap.diagnosticCode("VSCREEN_CLOSE_UNKNOWN"));
+    assertEquals(
+        "VSCREEN_START_UNKNOWN", VirtualScreenBootstrap.diagnosticCode("VSCREEN_START_UNKNOWN"));
     assertEquals(
         "VSCREEN_FAILURE_UNCLASSIFIED",
         VirtualScreenBootstrap.diagnosticCode("VSCREEN_START_NoClassDefFoundError"));

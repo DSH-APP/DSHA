@@ -7,6 +7,18 @@ public final class WebLifecycle {
   private boolean stopping;
   private boolean userStopped;
 
+  /** 仅未收到任何启停意图的宿主会话可认领完整核验的原Web，不执行命令。 */
+  public synchronized boolean adoptRunning(long savedGeneration) {
+    if (generation != 0
+        || starting
+        || stopping
+        || userStopped
+        || savedGeneration < 1
+        || savedGeneration == Long.MAX_VALUE) return false;
+    generation = savedGeneration;
+    return true;
+  }
+
   /** 返回新代次；忙碌或不允许自动拉起时返回 -1。 */
   public synchronized long beginStart(boolean automatic, boolean stopSentinelPresent) {
     if (starting || stopping || (automatic && (userStopped || stopSentinelPresent))) {

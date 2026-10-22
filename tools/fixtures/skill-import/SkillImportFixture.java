@@ -22,8 +22,8 @@ public final class SkillImportFixture {
     imports.install("SKILL.md", explicit, new BackupControl(null));
     if (imports.list(new BackupControl(null)).entries.size() != 2)
       throw new IllegalStateException("SKILL_FIXTURE_IMPORT_COUNT");
-    if (!java.util.Arrays.equals(
-        regular, Files.readAllBytes(files.resolve("user-data-v5/dsh/skills/hello-world/SKILL.md"))))
+    if (!java.util.Arrays.equals(regular,
+        Files.readAllBytes(files.resolve("user-data-v5/dsh/skills/hello-world/SKILL.md"))))
       throw new IllegalStateException("SKILL_FIXTURE_IMPORT_BYTES");
     System.out.println("PASS_JVM_SKILL_IMPORT");
   }

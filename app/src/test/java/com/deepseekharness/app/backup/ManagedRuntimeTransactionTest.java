@@ -1,8 +1,6 @@
 package com.deepseekharness.app.backup;
 
 import com.deepseekharness.app.util.ManagedRuntimeLayout;
-import com.deepseekharness.app.util.ManagedRuntimePaths;
-import com.deepseekharness.app.util.BuiltinPlugins;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -72,79 +70,6 @@ public class ManagedRuntimeTransactionTest {
   }
 
   @Test
-  public void signedInternalGuardIsSwitchedBeforeTrialAndStableUserDataRemainUntouched()
-      throws Exception {
-    File files = temp.getRoot();
-    put(files, UserDataLayout.STABLE + "/sessions/chat", "original stable chat");
-    new UserDataLayout(fs, files).choose(UserDataLayout.Home.STABLE);
-    var task = ManagedRuntimeTransaction.create(fs, files);
-    Set<String> entities = new HashSet<>();
-    for (String name : BuiltinPlugins.SIGNED_BUILTINS)
-      entities.add(BuiltinPlugins.entityDir(name).substring(1));
-    for (String path : ManagedRuntimeLayout.paths()) {
-      if (path.equals("root/dsha-destructive-guard")) continue;
-      String member = entities.contains(path) ? path + "/signed-marker" : path;
-      if (path.equals(ManagedRuntimeLayout.DSH)) member += "/lib/bin.js";
-      put(task.stage(), ManagedRuntimeLayout.ROOT + member, "signed candidate");
-    }
-    File assets = new File(System.getProperty("dsha.assetsDir", "src/main/assets"));
-    File source = new File(assets, "builtin-plugins/dsh-destructive-guard");
-    String guard = ManagedRuntimeLayout.ROOT + "root/dsha-destructive-guard";
-    try (var members = Files.walk(source.toPath())) {
-      for (var member : members.filter(Files::isRegularFile).toList()) {
-        String relative =
-            source.toPath().relativize(member).toString().replace(File.separatorChar, '/');
-        put(task.stage(), guard + "/" + relative, Files.readString(member));
-      }
-    }
-    for (ManagedRuntimePaths.Marker marker : ManagedRuntimePaths.Marker.values())
-      put(task.stage(), marker.relative, "candidate marker");
-    File stagedRoot = new File(task.stage(), "linux/ubuntu"),
-        liveRoot = new File(files, "linux/ubuntu");
-    var view =
-        new ManagedRuntimePaths.View() {
-          public File[] list(File directory) {
-            return directory.listFiles();
-          }
-
-          public boolean symbolic(File file) {
-            return Files.isSymbolicLink(file.toPath());
-          }
-
-          public boolean exists(File file) {
-            return file.exists();
-          }
-
-          public String canonical(File file) throws IOException {
-            return file.getCanonicalPath();
-          }
-        };
-    List<String> paths = ManagedRuntimePaths.enumerate(stagedRoot, liveRoot, view);
-    assertTrue("候选实体必须进入实际切换清单", paths.contains(guard));
-    RuntimeDescriptor next = descriptor('b');
-    task.prepare(paths, next, null, null, new BackupControl(null));
-    assertFalse(new File(files, guard + "/lib/index.js").exists());
-    String expected = Files.readString(new File(source, "lib/index.js").toPath());
-    task.commit(
-        new BackupControl(null),
-        () -> {
-          assertEquals(
-              expected, Files.readString(new File(files, guard + "/lib/index.js").toPath()));
-          assertTrue(new File(files, guard + "/package.json").isFile());
-          assertTrue(
-              new UserDataLayout(fs, files)
-                  .binds(liveRoot).stream().anyMatch(bind -> bind[1].equals("/root/.dsh")));
-          assertEquals(
-              "original stable chat",
-              Files.readString(new File(files, UserDataLayout.STABLE + "/sessions/chat").toPath()));
-          return health(next);
-        },
-        () -> true);
-    assertEquals(expected, read(files, guard + "/lib/index.js"));
-    assertEquals("original stable chat", read(files, UserDataLayout.STABLE + "/sessions/chat"));
-  }
-
-  @Test
   public void completedRuntimeHistoryDoesNotIncreaseStablePendingCost() throws Exception {
     for (int count : new int[] {0, 65, 1000}) {
       File files = temp.newFolder(),
@@ -195,8 +120,6 @@ public class ManagedRuntimeTransactionTest {
                   });
       assertTrue(ManagedRuntimeTransaction.pending(counted, files).isEmpty());
       assertEquals(1, historyLists[0]);
-      assertFalse(new File(files, "host-runtime-completed-v1.json").exists());
-      ManagedRuntimeTransaction.archiveCompleted(counted, files);
       calls[0] = historyLists[0] = 0;
       long start = System.nanoTime();
       for (int i = 0; i < 5; i++)

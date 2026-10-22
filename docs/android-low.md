@@ -1,6 +1,6 @@
 # Android 6—12 兼容版
 
-> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[本轮约束](audits/build154/POLICY.md)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
+> 历史记录：本文对应文中日期、版本与当时实际执行的范围；旧命令、证书规则、数据策略和“当前产物”不作为本轮构建或验收入口。现行流程见[接手指南](接手指南.md)、[CONTRIBUTING](../CONTRIBUTING.md)与[当前维护约束与历史资料说明](documentation-index.md#历史材料如何阅读)。原字节及摘要保存在[历史文档清单](audits/build154/history-document-sources.json)。
 
 
 交付文件位于 `F:\DSHA_RESTART\release`：`dsha-1.2.0-rc1.2low.apk` 与同名 `.apk.sha256`。
@@ -10,7 +10,7 @@
 V1/V2/V3 签名验证通过，证书与旧正式包一致。
 
 兼容版版本名为 1.2.0-rc1.2low，versionCode 111，minSdk 23；与标准版共享
-applicationId com.dsh.client、配置路径、发布证书及离线环境版本 9。
+applicationId dsh.android.client、配置路径、发布证书及离线环境版本 9。
 只提供 arm64-v8a；32 位 ARM 手机无法安装。没有设置 maxSdk，Android 13+ 建议使用标准版。
 
 ## 功能与差异

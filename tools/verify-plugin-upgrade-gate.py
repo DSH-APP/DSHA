@@ -116,16 +116,13 @@ def main() -> None:
         ("rc1 分代迁移与独立快照", "test-rc1-migration.py"),
         ("启动链接缓存与受管身份", "test-startup-recovery.py"),
         ("插件发现、启停与删除边界", "test-plugin-discovery.py"),
+        ("系统与用户插件备份恢复分层", "test-backup-engine.py"),
         ("第三方插件直接启用与旧标记迁移", "test-plugin-review.py"),
         ("插件依赖未锁定重解析与失败保护", "test-plugin-dependencies.py"),
         ("插件安装事务与强杀恢复", "test-plugin-transactions.py"),
     ]
     for label, script in python_tests:
         run_bound(label, [sys.executable, "-B", str(ROOT / "tools" / script)])
-
-    run_bound("原生历史导入与系统/用户插件恢复分层",
-        [sys.executable, "-B", str(ROOT / "tools/run-unit-tests.py")],
-        {"DSHA_ONLY":"LegacyBackupImporterTest,NativeBackupInputTest,PluginRestoreGraphTest,SystemPluginStateTest,CredentialProjectionTest"})
 
     run_bound("当前 DSH schema 迁移与逐节读回",[node,str(ROOT/"tools/test-rc1-settings-migration.mjs")],{"DSHA_TEST_RUNTIME":str(args.raw_runtime)})
     run_current_host_plugin_manager(node, args.raw_runtime, args.managed_runtime)

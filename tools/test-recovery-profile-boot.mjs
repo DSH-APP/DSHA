@@ -91,6 +91,13 @@ try{
     const composer=page.locator('[contenteditable="true"]:visible,textarea:visible').first();
     const later=page.getByRole('button',{name:/^(稍后配置|Configure later|Later|Skip for now)$/i});
     await later.waitFor({state:'visible',timeout:8000}).catch(()=>{});if(await later.isVisible())await later.click();
+    // 0.2.1 presents an account sign-in sheet with an explicit close button.
+    const login=page.getByRole('dialog',{name:/^(开始使用|Get started)$/i});
+    await login.waitFor({state:'visible',timeout:3000}).catch(()=>{});
+    if(await login.isVisible()){
+      await login.getByRole('button',{name:/^(关闭|Close)$/i}).click();
+      await login.waitFor({state:'hidden'});
+    }
     await page.getByText('DSHA Recovery',{exact:true}).first().waitFor({state:'visible'});
     assert.equal(await page.getByText('选择一个工作区开始',{exact:true}).count(),0,'empty workspace screen cannot pass');
     await composer.waitFor({state:'visible'});await composer.click();

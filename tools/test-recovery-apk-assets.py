@@ -9,13 +9,29 @@ import unittest
 import zipfile
 from pathlib import Path
 from recovery_apk_assets import archive_locations, SHARED
-from recovery_runtime_overlay import TARGETS, INPUT_ASSETS
+from recovery_runtime_overlay import TARGETS, INPUT_ASSETS, CAPSULE_DEPENDENCIES
 
 spec=importlib.util.spec_from_file_location('verify_recovery_apk',Path(__file__).with_name('verify-recovery-apk.py'))
 verifier=importlib.util.module_from_spec(spec);spec.loader.exec_module(verifier)
 
 
 class RecoveryApkAssetsTests(unittest.TestCase):
+    def test_mandatory_capsule_dependencies_are_signed_and_in_final_file_proof(self):
+        content = {asset: ('dependency:' + asset).encode() for asset in CAPSULE_DEPENDENCIES}
+        rows = [dict(asset=asset, path=target, sha256=hashlib.sha256(content[asset]).hexdigest(), bytes=len(content[asset]))
+                for asset, target in CAPSULE_DEPENDENCIES.items()]
+        descriptor = dict(capsuleDependencies=rows, files=[{key: row[key] for key in ('path', 'sha256', 'bytes')} for row in rows])
+        def check(blobs, proof):
+            memory = io.BytesIO()
+            with zipfile.ZipFile(memory, 'w') as apk:
+                for asset, data in blobs.items(): apk.writestr('assets/' + asset, data)
+            with zipfile.ZipFile(memory) as apk: verifier.verify_capsule_dependencies(apk, proof)
+        check(content, descriptor)
+        changed = dict(content); changed['recovery-native-consent.cjs'] = b'changed'
+        with self.assertRaisesRegex(RuntimeError, 'RECOVERY_DEPENDENCY_HASH'): check(changed, descriptor)
+        stale = copy.deepcopy(descriptor); stale['files'].pop()
+        with self.assertRaisesRegex(RuntimeError, 'RECOVERY_DEPENDENCY_PROOF'): check(content, stale)
+
     def setUp(self):
         self.content = {'recovery-rootfs.bin': b'pinned ubuntu', 'recovery-dsh-runtime.bin': b'pinned rc2'}
         self.descriptor = dict(id='a' * 64, archives=[dict(asset=name, sha256=hashlib.sha256(body).hexdigest()) for name, body in self.content.items()])

@@ -40,9 +40,9 @@ public final class ScreenConfirmationPolicy {
 
   public String encode() {
     StringBuilder value =
-        new StringBuilder("1\n").append(mode.name()).append('\n').append(revision).append('\n');
+        new StringBuilder("2\n").append(mode.name()).append('\n').append(revision);
     for (var rule : rules.entrySet())
-      value.append(rule.getKey()).append('=').append(rule.getValue().name()).append('\n');
+      value.append('\n').append(rule.getKey()).append('=').append(rule.getValue().name());
     return value.toString();
   }
 
@@ -51,12 +51,15 @@ public final class ScreenConfirmationPolicy {
     try {
       if (value == null || value.length() > 100_000) return manual();
       String[] lines = value.split("\n", -1);
-      if (lines.length < 4
-          || lines.length > 260
-          || !lines[0].equals("1")
-          || !lines[lines.length - 1].isEmpty()) return manual();
+      boolean current = lines.length >= 3 && lines.length <= 259 && lines[0].equals("2");
+      boolean legacy =
+          lines.length >= 4
+              && lines.length <= 260
+              && lines[0].equals("1")
+              && lines[lines.length - 1].isEmpty();
+      if (!(current || legacy)) return manual();
       Map<String, Rule> rules = new LinkedHashMap<>();
-      for (int i = 3; i < lines.length - 1; i++) {
+      for (int i = 3; i < (legacy ? lines.length - 1 : lines.length); i++) {
         String[] parts = lines[i].split("=", -1);
         if (parts.length != 2 || rules.put(parts[0], Rule.valueOf(parts[1])) != null)
           return manual();

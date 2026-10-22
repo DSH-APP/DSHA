@@ -11,23 +11,7 @@ public final class WebRuntimeFallback {
       boolean pluginFailure,
       boolean current,
       Integer exitCode) {
-    return false;
-  }
-
-  public static boolean shouldRetry(
-      String runtime,
-      boolean retried,
-      boolean hadAuth,
-      boolean pluginFailure,
-      boolean current,
-      Integer exitCode,
-      boolean explicitEngineFailure,
-      boolean treeClosed,
-      boolean businessDispatched) {
-    return "bxroot".equals(runtime)
-        && explicitEngineFailure
-        && treeClosed
-        && !businessDispatched
+    return "proroot".equals(runtime)
         && !retried
         && !hadAuth
         && !pluginFailure

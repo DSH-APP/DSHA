@@ -55,6 +55,20 @@ public final class RecoveryRuntime {
     "language-patch.json",
     "web-integration/language.js"
   };
+  private static final String POLICY_ROOT =
+      "usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/dsha-destructive-policy/";
+  private static final String[] DEPENDENCY_ASSETS = {
+    "destructive-policy/package.json", "destructive-policy/index.js",
+    "destructive-policy/destructive.js", "destructive-policy/workdir.js",
+    "recovery-native-consent.cjs"
+  };
+  private static final String[] DEPENDENCY_PATHS = {
+    POLICY_ROOT + "package.json",
+    POLICY_ROOT + "index.js",
+    POLICY_ROOT + "destructive.js",
+    POLICY_ROOT + "workdir.js",
+    "run/dsha-launcher/native-consent.cjs"
+  };
   private final Context context;
   private final File files;
   private final JSONObject descriptor;
@@ -64,9 +78,6 @@ public final class RecoveryRuntime {
   public final String runtimeId, instanceId, profile;
   public final File session, home;
   private File rootfs;
-  private com.deepseekharness.app.runtime.EngineSpec engine;
-  private com.deepseekharness.app.runtime.RuntimeHostPorts.Settings engineSettings;
-  private boolean compatibleRetried;
 
   public RecoveryRuntime(
       Context context, String instanceId, BooleanSupplier cancelled, Consumer<String> progress)
@@ -167,6 +178,7 @@ public final class RecoveryRuntime {
         }
       }
       applyBrowserOverlay(candidate);
+      installCapsuleDependencies(candidate);
       verifyRoot(candidate);
       check();
       RecoveryStoragePlan.prepared(fs, staging, runtimeId, instanceId);
@@ -289,6 +301,7 @@ public final class RecoveryRuntime {
       if ((Os.stat(bash.getAbsolutePath()).st_mode & 0111) == 0)
         throw new IOException("RECOVERY_BASH_MODE");
       inside(root, "usr/local/bin/node");
+      verifyCapsuleDependencies(root);
     } catch (JSONException | ErrnoException error) {
       throw new IOException("RECOVERY_FILE_PROOF_FAILED", error);
     }
@@ -330,6 +343,66 @@ public final class RecoveryRuntime {
     }
   }
 
+  /** Mandatory imports are signed capsule bytes, never borrowed from the formal environment. */
+  private JSONArray capsuleDependencies() throws IOException {
+    try {
+      JSONArray rows = descriptor.getJSONArray("capsuleDependencies");
+      if (rows.length() != DEPENDENCY_ASSETS.length)
+        throw new IOException("RECOVERY_DEPENDENCY_COUNT");
+      for (int i = 0; i < DEPENDENCY_ASSETS.length; i++) {
+        JSONObject row = rows.getJSONObject(i);
+        if (!DEPENDENCY_ASSETS[i].equals(row.getString("asset"))
+            || !DEPENDENCY_PATHS[i].equals(row.getString("path"))
+            || row.getLong("bytes") < 1
+            || row.getLong("bytes") > 1024 * 1024
+            || !row.getString("sha256").matches("[a-f0-9]{64}"))
+          throw new IOException("RECOVERY_DEPENDENCY_PROOF");
+      }
+      return rows;
+    } catch (JSONException invalid) {
+      throw new IOException("RECOVERY_DEPENDENCY_PROOF", invalid);
+    }
+  }
+
+  private void installCapsuleDependencies(File root) throws IOException {
+    JSONArray rows = capsuleDependencies();
+    try {
+      for (int i = 0; i < rows.length(); i++) {
+        check();
+        JSONObject row = rows.getJSONObject(i);
+        String[] components = DEPENDENCY_PATHS[i].split("/");
+        File parent = root;
+        for (int part = 0; part < components.length - 1; part++)
+          parent = directory(parent, components[part]);
+        File target = new File(parent, components[components.length - 1]);
+        if (exists(target)) throw new IOException("RECOVERY_DEPENDENCY_COLLISION");
+        byte[] bytes = asset(DEPENDENCY_ASSETS[i], (int) row.getLong("bytes"));
+        if (bytes.length != row.getLong("bytes")) throw new IOException("RECOVERY_DEPENDENCY_SIZE");
+        verifyDigest(new ByteArrayInputStream(bytes), row.getString("sha256"));
+        writeAtomic(target, bytes);
+      }
+    } catch (JSONException invalid) {
+      throw new IOException("RECOVERY_DEPENDENCY_PROOF", invalid);
+    }
+  }
+
+  private void verifyCapsuleDependencies(File root) throws IOException {
+    JSONArray rows = capsuleDependencies();
+    try {
+      for (int i = 0; i < rows.length(); i++) {
+        File target = inside(root, DEPENDENCY_PATHS[i]);
+        rejectLink(target);
+        if (!target.isFile() || target.length() != rows.getJSONObject(i).getLong("bytes"))
+          throw new IOException("RECOVERY_DEPENDENCY_MISSING");
+        try (InputStream input = new FileInputStream(target)) {
+          verifyDigest(input, rows.getJSONObject(i).getString("sha256"));
+        }
+      }
+    } catch (JSONException invalid) {
+      throw new IOException("RECOVERY_DEPENDENCY_PROOF", invalid);
+    }
+  }
+
   private static String resolvedLink(File root, File link, String target) throws IOException {
     String base = root.getCanonicalPath();
     String joined = target.startsWith("/") ? base + target : link.getParent() + "/" + target;
@@ -350,12 +423,7 @@ public final class RecoveryRuntime {
             BuildConfig.LOW_ANDROID ? "libproot_legacy.so" : "libproot.so",
             BuildConfig.LOW_ANDROID ? "libprootloader_legacy.so" : "libprootloader.so",
             "libtalloc.so",
-            "libandroidshmem.so",
-            "libbxroot.so",
-            "libbxroot-runtime.so",
-            "libbxroot-ulx.so",
-            "libdsha-session.so",
-            "libtermux.so"
+            "libandroidshmem.so"
           }) if (!hashes.has(required)) throw new IOException("RECOVERY_LAUNCHER_PROOF_MISSING");
       Iterator<String> names = hashes.keys();
       while (names.hasNext()) {
@@ -429,43 +497,31 @@ public final class RecoveryRuntime {
       throws IOException {
     check();
     verifyNativeLibraries();
-    File tmp = directory(session, "tmp"), lib = directory(session, "lib");
-    directory(rootfs, ".l2s");
+    File tmp = directory(session, "tmp"),
+        lib = directory(session, "lib"),
+        l2s = directory(rootfs, ".l2s");
     copyNative("libtalloc.so", new File(lib, "libtalloc.so.2"));
     copyNative("libandroidshmem.so", new File(lib, "libandroid-shmem.so"));
-    if (engine == null) {
-      engineSettings =
-          new com.deepseekharness.app.core.ConfigStore(context).runtimeSettingsSnapshot();
-      engine = com.deepseekharness.app.runtime.EngineSpec.select(context, engineSettings, false);
-      if ("bxroot".equals(engine.effective)) {
-        var candidate = engine;
-        // 固定应急舱只有独立 Node；资格检查不能依赖正式环境补齐的 Python。
-        String fingerprint =
-            com.deepseekharness.app.runtime.RuntimeEngineQualification.fingerprint(
-                context,
-                rootfs,
-                false,
-                com.deepseekharness.app.util.RuntimeCapabilityProbe.Kind.NODE);
-        if (!com.deepseekharness.app.runtime.RuntimeEngineQualification.check(
-            context,
-            rootfs,
-            tmp,
-            false,
-            fingerprint,
-            com.deepseekharness.app.util.RuntimeCapabilityProbe.Kind.NODE,
-            (probe, scratch) ->
-                com.deepseekharness.app.runtime.RuntimeEngineQualification.probeBuilder(
-                    context, candidate.runtime, rootfs, scratch, probe))) {
-          engine = com.deepseekharness.app.runtime.EngineSpec.select(context, engineSettings, true);
-          compatibleRetried = true;
-          recordOutcome(
-              "CAPABILITY_FALLBACK", "bxroot -> proot; isolated probe and owned tree closed");
-        }
-      }
-    }
-    var container = engine.runtime;
-    List<String> argv = new ArrayList<>(container.baseArgv(rootfs, false, null));
-    appendSessionBindings(argv, home, tmp);
+    File nativeDir = new File(context.getApplicationInfo().nativeLibraryDir);
+    String proot = BuildConfig.LOW_ANDROID ? "libproot_legacy.so" : "libproot.so";
+    String loader = BuildConfig.LOW_ANDROID ? "libprootloader_legacy.so" : "libprootloader.so";
+    List<String> argv = new ArrayList<>();
+    Collections.addAll(
+        argv,
+        new File(nativeDir, proot).getAbsolutePath(),
+        "--link2symlink",
+        "-L",
+        "--kill-on-exit",
+        "-0",
+        "--rootfs=" + rootfs.getAbsolutePath(),
+        "--cwd=/root");
+    for (String path : new String[] {"/dev", "/proc", "/sys", "/system", "/apex"})
+      if (new File(path).exists()) bind(argv, path, path);
+    bind(argv, "/dev/urandom", "/dev/random");
+    bind(argv, "/proc/self/fd", "/dev/fd");
+    bind(argv, l2s.getAbsolutePath(), l2s.getAbsolutePath());
+    bind(argv, home.getAbsolutePath(), "/root");
+    bind(argv, tmp.getAbsolutePath(), "/tmp");
     String command =
         "umask 077; [ ! -e /root/.recovery-stop ] || exit 0; "
             + "printf '%s\\n' $$ > /root/.recovery-pid; IFS= read -r DSHA_STAT < /proc/$$/stat; "
@@ -474,8 +530,19 @@ public final class RecoveryRuntime {
             + ShellQuote.arg(profile)
             + " --no-open --host 127.0.0.1 --port 0";
     Collections.addAll(argv, "/bin/bash", "-c", command);
-    // 宿主 native-session 持久登记出生身份后，才从受信控制通道允许 engine exec。
-    ProcessBuilder builder = new ProcessBuilder(argv).redirectErrorStream(true);
+    // launcher 自报出生身份后才 exec；应用在任意一条 Java 指令间被回收也留下可恢复身份。
+    StringBuilder host =
+        new StringBuilder(
+                "umask 077; IFS= read -r DSHA_STAT < /proc/$$/stat || exit 125; "
+                    + "DSHA_FIELDS=${DSHA_STAT##*) }; set -- $DSHA_FIELDS; printf '%s %s\\n' $$ ${20} > ")
+            .append(ShellQuote.arg(new File(session, "launcher.identity").getAbsolutePath()))
+            .append(" || exit 125; [ ! -e ")
+            .append(ShellQuote.arg(new File(home, ".recovery-stop").getAbsolutePath()))
+            .append(" ] || exit 0; exec ");
+    for (String argument : argv) host.append(ShellQuote.arg(argument)).append(' ');
+    ProcessBuilder builder =
+        new ProcessBuilder("/system/bin/sh", "-c", host.toString()).redirectErrorStream(true);
+    Compat.redirectStdinDevNull(builder);
     Map<String, String> env = builder.environment();
     env.clear();
     env.put("PATH", "/usr/local/bin:/usr/bin:/bin");
@@ -485,8 +552,11 @@ public final class RecoveryRuntime {
     env.put("TMPDIR", "/tmp");
     env.put("BROWSER", "true");
     env.put("DSH_CONFIRM", "1");
-    container.applyEnv(builder, session, lib, tmp, rootfs);
-    env.put("DSHA_RUNTIME_ENGINE", container.id());
+    env.put("PROOT_LOADER", new File(nativeDir, loader).getAbsolutePath());
+    env.put("PROOT_NO_SECCOMP", "1");
+    env.put("PROOT_TMP_DIR", tmp.getAbsolutePath());
+    env.put("PROOT_L2S_DIR", l2s.getAbsolutePath());
+    env.put("LD_LIBRARY_PATH", lib.getAbsolutePath() + ":" + nativeDir.getAbsolutePath());
     env.put("NARB_DISABLE_NATIVE_CACHE", "1");
     env.put("DSHA_ANDROID_RUNTIME", "1");
     env.put("DSHA_NATIVE_PLUGIN_MANAGER", "1");
@@ -498,90 +568,16 @@ public final class RecoveryRuntime {
     writeAtomic(new File(files, "recovery-active"), instanceId.getBytes(StandardCharsets.US_ASCII));
     write(new File(session, "launched"), instanceId.getBytes(StandardCharsets.US_ASCII));
     try {
-      var owned =
-          com.deepseekharness.app.runtime.OwnedRuntimeSession.start(
-              builder,
-              tmp,
-              context,
-              id ->
-                  write(
-                      new File(session, "native-session-id"),
-                      id.getBytes(StandardCharsets.US_ASCII)));
-      try {
-        owned.getOutputStream().close(); // 已完成出生握手；应急 Web 不接受交互 stdin。
-        return owned;
-      } catch (IOException failure) {
-        try {
-          owned.close();
-        } catch (RuntimeException unknown) {
-          failure.addSuppressed(unknown);
-        }
-        throw failure;
-      }
+      return builder.start();
     } catch (IOException failure) {
-      // native-session 可能已存在但握手/回收证据不可读。保留启动记录；不能猜测没有 guest。
+      // start 未返回 Process 时 Java 未创建可运行的目标；本地记录不能把它误当活进程。
+      markClosed(session, instanceId);
       throw failure;
     }
   }
 
-  static void appendSessionBindings(List<String> argv, File home, File tmp) {
-    // baseArgv 已提供系统与 L2S 绑定，重复追加会挤掉原生有界表末尾的独立 HOME。
-    for (int i = argv.size() - 2; i >= 0; i--)
-      if (argv.get(i).equals("-b") && argv.get(i + 1).startsWith("/storage/emulated/0:")) {
-        argv.remove(i + 1);
-        argv.remove(i);
-      }
-    // 应急不获得个人公共存储绑定；根与 HOME 仍独立。
-    bind(argv, home.getAbsolutePath(), "/root");
-    bind(argv, tmp.getAbsolutePath(), "/tmp");
-  }
-
-  public boolean retryCompatible(
-      Process previous,
-      int exitCode,
-      boolean explicitEngineFailure,
-      boolean pluginFailure,
-      boolean hadAuth)
-      throws IOException {
-    boolean treeClosed =
-        previous instanceof com.deepseekharness.app.runtime.OwnedGuestProof owned
-            && owned.confirmedTreeExit();
-    boolean neverExecuted =
-        previous instanceof com.deepseekharness.app.runtime.OwnedGuestProof owned
-            && owned.commandWasNeverExecuted();
-    if (engine == null
-        || !com.deepseekharness.app.util.WebRuntimeFallback.shouldRetry(
-            engine.effective,
-            compatibleRetried,
-            hadAuth,
-            pluginFailure,
-            !cancelled.getAsBoolean(),
-            exitCode,
-            neverExecuted,
-            treeClosed,
-            !neverExecuted)) return false;
-    if (!(previous instanceof com.deepseekharness.app.runtime.OwnedRuntimeSession owned)
-        || !owned.closeConfirmed()) return false;
-    engine = com.deepseekharness.app.runtime.EngineSpec.select(context, engineSettings, true);
-    compatibleRetried = true;
-    recordOutcome(
-        "ENGINE_FALLBACK",
-        "bxroot -> proot; pre-auth engine exit=" + exitCode + "; owned tree closed");
-    return true;
-  }
-
   /** 主线程进程句柄已经交给控制器后登记，失败仍由控制器保留句柄并停止。 */
   public void recordLauncher(Process process) throws IOException {
-    if (process instanceof com.deepseekharness.app.runtime.OwnedRuntimeSession owned) {
-      try {
-        owned.requireCurrentBirth();
-      } catch (
-          com.deepseekharness.app.runtime.OwnedRuntimeSession.IdentityInspectionUnavailable
-              denied) {
-        throw new IdentityUnavailable(denied);
-      }
-      return;
-    }
     File record = new File(session, "launcher.identity");
     rejectLink(record);
     long deadline = android.os.SystemClock.elapsedRealtime() + 2500;
@@ -706,31 +702,6 @@ public final class RecoveryRuntime {
   private static boolean stopRecorded(File session, File home, String instanceId, Process process)
       throws IOException {
     write(new File(home, ".recovery-stop"), instanceId.getBytes(StandardCharsets.US_ASCII));
-    if (process instanceof com.deepseekharness.app.runtime.OwnedRuntimeSession owned) {
-      try {
-        if (!owned.closeConfirmed()) return false;
-      } catch (RuntimeException unknown) {
-        try {
-          writeAtomic(
-              new File(session, "stop-diagnostic.json"),
-              com.deepseekharness.app.backup.BackupJson.write(owned.diagnosticSnapshot(), 65536));
-        } catch (IOException unavailable) {
-          unknown.addSuppressed(unavailable);
-        }
-        throw new IOException("RECOVERY_STOP_UNCONFIRMED", unknown);
-      }
-      markClosed(session, instanceId);
-      return true;
-    }
-    File nativeRecord = new File(session, "native-session-id");
-    rejectLink(nativeRecord);
-    if (process == null && exists(nativeRecord)) {
-      String id = new String(read(nativeRecord, 100), StandardCharsets.US_ASCII).trim();
-      if (!com.deepseekharness.app.runtime.OwnedRuntimeSession.recordedExit(
-          session.getParentFile().getParentFile(), id)) return false;
-      markClosed(session, instanceId);
-      return true;
-    }
     String profile = "dsha-emergency-" + instanceId;
     File identity = new File(home, ".recovery-identity");
     rejectLink(identity);

@@ -4,8 +4,8 @@
 import argparse, hashlib, json, os, re, shutil, stat, tempfile, time, traceback, uuid
 from pathlib import Path
 
-# Dependency version for converted preset candidates, not a data-format claim.
-VERSION = '0.2.0-rc.2'
+# The deployed patch registry supplies the runtime version for new records.
+# Existing migration generations keep their original version and settings ledger.
 # Stable asset marker: settings.yaml.imported is a retryable input after a
 # pending section result; it never authorizes a false committed receipt.
 RESTORED_SETTINGS_IMPORTED_FOR_RETRY = True
@@ -212,10 +212,40 @@ def state_path(root, state_root):
     return Path(state_root) if state_root else Path(root)/'.dsha-rc1-host-state'
 
 
+def runtime_version(root):
+    """Read the already deployed managed registry; never guess from an old user receipt."""
+    registry = Path(root) / '.dsh' / 'runtime-patches.json'
+    try:
+        if not stat.S_ISDIR(os.lstat(registry.parent).st_mode):
+            raise ValueError('MIGRATION_RUNTIME_REGISTRY_PARENT')
+        before = os.lstat(registry)
+        if not stat.S_ISREG(before.st_mode): raise ValueError('MIGRATION_RUNTIME_REGISTRY_TYPE')
+        descriptor = os.open(registry, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+        with os.fdopen(descriptor, 'rb') as stream:
+            node = os.fstat(stream.fileno())
+            identity = lambda value: (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns)
+            if not stat.S_ISREG(node.st_mode) or identity(before) != identity(node) or node.st_size > 2 * 1024 * 1024:
+                raise ValueError('MIGRATION_RUNTIME_REGISTRY_TYPE')
+            payload = stream.read(2 * 1024 * 1024 + 1)
+            if len(payload) > 2 * 1024 * 1024: raise ValueError('MIGRATION_RUNTIME_REGISTRY_LIMIT')
+            if identity(node) != identity(os.fstat(stream.fileno())) or identity(node) != identity(os.lstat(registry)):
+                raise ValueError('MIGRATION_RUNTIME_REGISTRY_CHANGED')
+        registry = json.loads(payload.decode('utf-8'))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise ValueError('MIGRATION_RUNTIME_REGISTRY_UNAVAILABLE') from error
+    version = registry.get('dshVersion') if isinstance(registry, dict) else None
+    if (not isinstance(registry, dict) or registry.get('schema') != 1
+            or not isinstance(version, str)
+            or not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?', version)):
+        raise ValueError('MIGRATION_RUNTIME_REGISTRY_VERSION')
+    return version
+
+
 def prepare(root, state_root=None, startup_id='manual', approved=()):
     dsh = Path(os.path.abspath(os.path.join(root, '.dsh'))); state = state_path(root, state_root)
     if not dsh.exists(): emit('skipped', reason='DSH_MISSING'); return 0
     if dsh.is_symlink(): raise ValueError('DSH_HOME_LINK_NOT_APPROVED')
+    active_version = runtime_version(root)
     resolver = Resolver(dsh, approved); stamp = quick(dsh, resolver)
     state.mkdir(parents=True, exist_ok=True)
     if state.is_symlink(): raise ValueError('STATE_ROOT_LINK')
@@ -224,7 +254,7 @@ def prepare(root, state_root=None, startup_id='manual', approved=()):
         folder = state/'generations'/current['generation']; prepared = read_json(folder/'prepare.json')
         if prepared.get('protectionComplete'):
             current['startupId'] = startup_id; write_json(state/'current.json', current)
-            emit('already', generation=current['generation'], protectionComplete=True, continuation='保留数据 → rc1 迁移记录'); return 0
+            emit('already', generation=current['generation'], protectionComplete=True, dshVersion=prepared.get('dshVersion'), runtimeDshVersion=active_version, continuation='保留数据 → rc1 迁移记录'); return 0
     # Full inventory only for a new/incomplete migration. Completed ordinary startup remains a small read.
     try:
         entries, fingerprint = inventory(dsh, resolver)
@@ -244,7 +274,7 @@ def prepare(root, state_root=None, startup_id='manual', approved=()):
         emit('failed', generation=generation if reuse else None, protectionComplete=False, stage='space-preflight', reason='MIGRATION_SPACE_REQUIRED', requiredBytes=needed)
         return 1
     folder.mkdir(parents=True, exist_ok=True)
-    doc = dict(version=2, dshVersion=VERSION, generation=generation, startupId=startup_id, dshHome=str(dsh), status='preparing', protectionComplete=False, createdAt=previous.get('createdAt',int(time.time())), **stamp, inputDigest=fingerprint, snapshotInventory=list(reusable.values()), sources=[], presets=[], sessions=[], warnings=[])
+    doc = dict(version=2, dshVersion=active_version, generation=generation, startupId=startup_id, dshHome=str(dsh), status='preparing', protectionComplete=False, createdAt=previous.get('createdAt',int(time.time())), **stamp, inputDigest=fingerprint, snapshotInventory=list(reusable.values()), sources=[], presets=[], sessions=[], warnings=[])
     write_json(folder/'prepare.json', doc)
     write_json(state/'pending.json',dict(generation=generation,inputDigest=fingerprint,**stamp))
     operation, logical, actual = 'snapshot', None, None
@@ -314,11 +344,12 @@ def prepare(root, state_root=None, startup_id='manual', approved=()):
         return 1
 
 
-def publish_reuse(folder, prepared, current, receipt):
+def publish_reuse(folder, prepared, current, receipt, active_version):
     """Bounded host checkpoint; legacy or damaged receipts grant no fast path."""
     generation = current.get('generation')
     if not re.fullmatch(r'[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}',str(generation)): return False
     if any(row.get('version') != 2 or row.get('generation') != generation for row in (prepared,current,receipt)): return False
+    if prepared.get('dshVersion') != active_version or receipt.get('dshVersion') != active_version: return False
     if prepared.get('status') != 'prepared' or prepared.get('protectionComplete') is not True or not same_input(prepared,current): return False
     if receipt.get('status') != 'committed' or any(receipt.get(key) is not True for key in ('sourcePreserved','settingsImported','protectionComplete')): return False
     checkpoint = {key:prepared[key] for key in ('version','generation','dshVersion','dshHome','dataRoot','inputs','status','protectionComplete')}
@@ -337,14 +368,15 @@ def publish_reuse(folder, prepared, current, receipt):
 def finalize(root, state_root=None, startup_id='manual', approved=()):
     dsh=Path(os.path.abspath(os.path.join(root,'.dsh'))); state=state_path(root,state_root)
     if not (state/'current.json').is_file(): emit('missing-prepare',protectionComplete=False); return 1
+    active_version=runtime_version(root)
     current=read_json(state/'current.json'); folder=state/'generations'/current['generation']; doc=read_json(folder/'prepare.json')
     if current['startupId'] != startup_id: emit('stale-startup',protectionComplete=False); return 1
     resolver=Resolver(dsh,approved); warnings=[]; preserved=True
     # 完成代次普通重启不反复哈希历史。首次 finalize 或 pending 明确迁移才核验。
     old=read_json(folder/'receipt.json') if (folder/'receipt.json').is_file() else {}
     if old.get('status')=='committed' and old.get('version')==2 and old.get('generation')==current['generation'] and all(old.get(key) is True for key in ('sourcePreserved','settingsImported','protectionComplete')):
-        publish_reuse(folder,doc,current,old)
-        emit('committed',generation=current['generation'],sourcePreserved=True,settingsImported=True,cached=True); return 0
+        publish_reuse(folder,doc,current,old,active_version)
+        emit('committed',generation=current['generation'],sourcePreserved=True,settingsImported=True,cached=True,dshVersion=old.get('dshVersion'),runtimeDshVersion=active_version); return 0
     for row in doc['sources']:
         snapshot=folder/row['snapshot']
         if not snapshot.is_file() or snapshot.is_symlink() or digest(snapshot)!=row['sha256']:
@@ -368,9 +400,9 @@ def finalize(root, state_root=None, startup_id='manual', approved=()):
     if not imported: warnings.append('SETTINGS_PENDING_READBACK_OR_REVIEW')
     old_sessions=[row for row in doc['sessions'] if not re.search(r'session\.v4\.',row['path'])]
     status='failed' if not preserved else ('pending' if not imported else 'committed')
-    receipt=dict(version=2,dshVersion=VERSION,generation=current['generation'],startupId=startup_id,status=status,sourcePreserved=preserved,protectionComplete=preserved,settingsImported=imported,settingsStatus='verified' if imported else 'pending',sessionsStatus='preserved-awaiting-runtime-open' if old_sessions else 'no-legacy-input',sessionCompatibilityVerified=False if old_sessions else None,presets=len(doc['presets']),sessions=len(doc['sessions']),warnings=warnings,verifiedAt=int(time.time()))
+    receipt=dict(version=2,dshVersion=doc.get('dshVersion'),runtimeDshVersion=active_version,generation=current['generation'],startupId=startup_id,status=status,sourcePreserved=preserved,protectionComplete=preserved,settingsImported=imported,settingsStatus='verified' if imported else 'pending',sessionsStatus='preserved-awaiting-runtime-open' if old_sessions else 'no-legacy-input',sessionCompatibilityVerified=False if old_sessions else None,presets=len(doc['presets']),sessions=len(doc['sessions']),warnings=warnings,verifiedAt=int(time.time()))
     write_json(folder/'receipt.json',receipt); write_json(dsh/'.dsha-rc1-migration/receipt.json',receipt)
-    if status == 'committed': publish_reuse(folder,doc,current,receipt)
+    if status == 'committed': publish_reuse(folder,doc,current,receipt,active_version)
     emit(status,**{k:v for k,v in receipt.items() if k!='status'},continuation='保留数据 → rc1 迁移记录；待审阅设置/预设不影响进入已就绪网页')
     return 0 if preserved else 1
 

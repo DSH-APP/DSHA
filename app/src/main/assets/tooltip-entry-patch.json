@@ -1,11 +1,12 @@
 {
   "version": 1,
-  "dshVersion": "0.2.0-rc.2",
+  "dshVersion": "0.2.1-rc.2",
   "module": "@deepseek-ai/dsh-web-frontend/dist/index.html",
+  "sourceSha256": "3a402b94efa1253d80666438e60ed89d0b5cf1fd07d24a2f59731623e9bd8a49",
   "patches": [
     {
-      "before": "src=\"./assets/index-5SrrfWpU.js\"",
-      "after": "src=\"./assets/index-5SrrfWpU.js?dsha-tooltip=rc2-1\""
+      "before": "src=\"./assets/index-CN7NIWNw.js\"",
+      "after": "src=\"./assets/index-CN7NIWNw.js?dsha-tooltip=0.2.1-rc2-1\""
     }
   ]
 }

@@ -31,15 +31,6 @@
                 </LinearLayout>
                 <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_shortcuts" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_models" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
-                        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_settings" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
-                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_models" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_models_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
-                    </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_address" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
                         <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui_link" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
                         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">

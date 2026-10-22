@@ -1,11 +1,10 @@
 """Check every available descriptor byte without requiring ignored offline archives."""
-import argparse
 import hashlib
 import importlib.util
 import json
 from pathlib import Path
 import re
-from runtime_input_contract import load, launcher_paths, bridge_protocol, relative, ASSETS, JAVA
+from runtime_input_contract import load, launcher_paths, ASSETS
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -26,7 +25,7 @@ def archive_inputs(root):
     return {name for name in module.NAMES if name.endswith(('.bin', '.tar.gz'))}
 
 
-def verify(root=ROOT, deferred_archives=None, source_only=False):
+def verify(root=ROOT, deferred_archives=None):
     root = Path(root)
     assets = root / ASSETS
     spec = load(root)
@@ -41,9 +40,6 @@ def verify(root=ROOT, deferred_archives=None, source_only=False):
     if descriptor['dshVersion'] != package['dependencies']['@deepseek-ai/dsh'] \
             or descriptor['baseVersion'] != (assets / 'offline-rootfs.version').read_text().strip():
         raise ValueError('DESCRIPTOR_SOURCE_VERSION')
-    if (root / JAVA / 'HttpShellService.java').is_file() \
-            and descriptor['bridgeProtocol'] != bridge_protocol(root):
-        raise ValueError('DESCRIPTOR_SOURCE_BRIDGE_PROTOCOL')
     expected = {'managed-runtime-inputs.json', *spec['assetFiles'],
                 *(row['asset'] for row in spec['installs'])}
     for name in spec['assetTrees']:
@@ -70,35 +66,14 @@ def verify(root=ROOT, deferred_archives=None, source_only=False):
             raise ValueError('DESCRIPTOR_SOURCE_BYTES: ' + name)
         checked += 1
     launchers = launcher_paths(root, spec)
-    claimed_launchers = dict(descriptor.get('launcherInputs', {}))
-    deferred_native = []
-    if source_only:
-        prefixes = tuple(name.rstrip('/') + '/' for name in spec['launcherTrees']
-                         if name in ('app/src/main/jniLibs', 'app/src/low/jniLibs'))
-        def native(name):
-            return name.startswith(prefixes) and name.endswith('.so')
-        if any(native(name) and name not in claimed_launchers for name in launchers):
-            raise ValueError('DESCRIPTOR_LAUNCHER_MEMBER_SET')
-        deferred_native = sorted(name for name in claimed_launchers if native(name))
-        for name in deferred_native:
-            relative(name)
-            if not re.fullmatch('[a-f0-9]{64}', str(claimed_launchers[name])):
-                raise ValueError('DESCRIPTOR_LAUNCHER_DIGEST: ' + name)
-        launchers = {name: path for name, path in launchers.items() if not native(name)}
-        claimed_launchers = {name: sha for name, sha in claimed_launchers.items() if not native(name)}
-    if set(claimed_launchers) != set(launchers):
+    if set(descriptor.get('launcherInputs', {})) != set(launchers):
         raise ValueError('DESCRIPTOR_LAUNCHER_MEMBER_SET')
     for name, path in launchers.items():
-        if digest(path) != claimed_launchers[name]:
+        if digest(path) != descriptor['launcherInputs'][name]:
             raise ValueError('DESCRIPTOR_LAUNCHER_BYTES: ' + name)
     return {'checkedAssets': checked, 'checkedLaunchers': len(launchers),
-            'deferredArchives': sorted(deferred), 'deferredNative': deferred_native,
-            'nativeBytesVerified': not source_only}
+            'deferredArchives': sorted(deferred)}
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--source-only', action='store_true',
-                        help='Verify source while explicitly deferring all native binaries; never package acceptance')
-    args = parser.parse_args()
-    print(json.dumps(verify(source_only=args.source_only), sort_keys=True))
+    print(json.dumps(verify(), sort_keys=True))

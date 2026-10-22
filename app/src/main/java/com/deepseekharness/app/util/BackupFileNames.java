@@ -24,15 +24,6 @@ public final class BackupFileNames {
     if (lower.endsWith(".gif")) return "image/gif";
     if (lower.endsWith(".webp")) return "image/webp";
     if (lower.endsWith(".pdf")) return "application/pdf";
-    if (lower.endsWith(".mp4") || lower.endsWith(".m4v")) return "video/mp4";
-    if (lower.endsWith(".webm")) return "video/webm";
-    if (lower.endsWith(".mov")) return "video/quicktime";
-    if (lower.endsWith(".mkv")) return "video/x-matroska";
-    if (lower.endsWith(".mp3")) return "audio/mpeg";
-    if (lower.endsWith(".m4a")) return "audio/mp4";
-    if (lower.endsWith(".wav")) return "audio/wav";
-    if (lower.endsWith(".ogg") || lower.endsWith(".opus")) return "audio/ogg";
-    if (lower.endsWith(".flac")) return "audio/flac";
     if (lower.endsWith(".zip")) return "application/zip";
     if (lower.endsWith(".tar.gz") || lower.endsWith(".tgz") || lower.endsWith(".gz"))
       return "application/gzip";

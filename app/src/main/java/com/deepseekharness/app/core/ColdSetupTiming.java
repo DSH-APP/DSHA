@@ -5,8 +5,9 @@ import android.content.ContextWrapper;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import com.deepseekharness.app.backup.*;
-import com.deepseekharness.app.runtime.*;
-
+import com.deepseekharness.app.runtime.ProotBootstrap;
+import com.deepseekharness.app.runtime.RuntimeHostPorts;
+import com.deepseekharness.app.runtime.RuntimeTrial;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -92,9 +93,7 @@ public final class ColdSetupTiming {
             }
             throw failure;
           } finally {
-            if (completed) {
-              cleanup.clean(new BackupControl(null));
-            }
+            if (completed) cleanup.clean(new BackupControl(null));
             scoped.clearPreferences();
           }
         });

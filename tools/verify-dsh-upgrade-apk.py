@@ -10,8 +10,65 @@ import re
 import tarfile
 import zipfile
 from test_runtime_fixture import runtime as verified_runtime
+from runtime_stable_patches import load_chains, apply as apply_stable_patches
 
 PREFIX = 'usr/local/lib/node_modules/@deepseek-ai/dsh'
+SIDEBAR_RIGHT = '@deepseek-ai/dsh-client-ui-sidebar-right/lib/client.js'
+SIDEBAR_RECIPE = 'sidebar-layout-recovery-patch.json'
+FRONTEND_ENTRY = '@deepseek-ai/dsh-web-frontend/dist/assets/index-CN7NIWNw.js'
+CONVERSATION = '@deepseek-ai/dsh-client-ui-conversation/lib/client.js'
+CONVERSATION_SPECIAL_INPUTS = ('lexical-claim-patch.json', 'conversation-materialized-patch.json')
+REVIEWED_OFFICIAL_CHAINS = {
+    SIDEBAR_RIGHT: (SIDEBAR_RECIPE,),
+    FRONTEND_ENTRY: ('tooltip-interaction-patch.json',),
+    CONVERSATION: ('composer-enter-patch.json', 'queue-dock-patch.json'),
+}
+
+
+def official_conversation_content(raw, assets, version):
+    """Independently verify the retired transform and the retained special patch."""
+    proof = json.loads((assets / CONVERSATION_SPECIAL_INPUTS[0]).read_text(encoding='utf-8'))
+    text = raw.decode('utf-8')
+    require(proof.get('version') == 1 and proof.get('module') == CONVERSATION
+            and proof.get('dshVersion') == version and proof.get('retired') is True
+            and proof.get('patches') == []
+            and proof.get('sourceSha256') == hashlib.sha256(raw).hexdigest(),
+            'OFFICIAL_COMMAND_CHIP_RETIREMENT_PROOF_CHANGED')
+    require(text.count('class CommandChipNode') == 1 and 'TOKEN_STYLE' not in text
+            and 'node.splitText(token.length)' not in text
+            and 'DSHA_CLAIM_DECOR_OVERFLOW_STYLE_V1' not in text,
+            'OFFICIAL_COMMAND_CHIP_ARCHITECTURE_CHANGED')
+    recipe = json.loads((assets / CONVERSATION_SPECIAL_INPUTS[1]).read_text(encoding='utf-8'))
+    require(recipe.get('module') == CONVERSATION and recipe.get('dshVersion') == version
+            and isinstance(recipe.get('patches'), list) and len(recipe['patches']) == 1,
+            'OFFICIAL_CONVERSATION_SPECIAL_RECIPE_CHANGED')
+    for patch in recipe['patches']:
+        require(set(patch) == {'before', 'after'} and text.count(patch['before']) == 1,
+                'OFFICIAL_CONVERSATION_SPECIAL_ANCHOR_CHANGED')
+        text = text.replace(patch['before'], patch['after'])
+    return text.encode('utf-8')
+
+
+def official_feature_digest(apk, assets, version, module, raw):
+    """Keep raw protection except for these explicitly reviewed complete chains."""
+    expected = raw
+    if module in REVIEWED_OFFICIAL_CHAINS:
+        chains, _ = load_chains(assets, version)
+        chain = chains.get(module, [])
+        require(tuple(row[0] for row in chain) == REVIEWED_OFFICIAL_CHAINS[module],
+                'OFFICIAL_FEATURE_PRODUCTION_CHAIN_CHANGED:' + module)
+        names = {'runtime-patches.json'}
+        for asset in REVIEWED_OFFICIAL_CHAINS[module] + (CONVERSATION_SPECIAL_INPUTS if module == CONVERSATION else ()):
+            recipe = json.loads((assets / asset).read_text(encoding='utf-8'))
+            names.add(asset)
+            names.update(patch['prependAsset'] for patch in recipe['patches'] if 'prependAsset' in patch)
+        for name in sorted(names):
+            require(apk.read('assets/' + name) == (assets / name).read_bytes(),
+                    'OFFICIAL_FEATURE_APK_RECIPE_CHANGED:' + name)
+        if module == CONVERSATION:
+            expected = official_conversation_content(raw, assets, version)
+        expected = apply_stable_patches(expected, chain)
+    return hashlib.sha256(expected).hexdigest()
 
 
 def verify_ubuntu_tools(apk, lock, lock_sha256, expected_archive_sha256):
@@ -117,10 +174,11 @@ def verify(path):
                 b'DSHA_DEEPSEEK_MESSAGES_PROJECTED_TOOL_CALL_V1',
                 b'if (block.type === "tool-call") return [dshaMessagesProjectedToolCall(block)];',
             ),
-            PREFIX + '/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js': b'DSHA_CLAIM_DECOR_OVERFLOW_STYLE_V1',
             PREFIX + '/node_modules/dsha-client-combo-cache/index.js': b'createComboCache',
         }
-        # 新增预览、文件交付和反馈模块必须与锁定官方包逐字节一致，不能被旧适配覆盖。
+        # Unpatched features keep exact locked raw bytes. The explicitly
+        # reviewed active chains run before archive construction; compare their
+        # complete bytes, retaining raw protection for every other module.
         untouched = {}
         runtime = verified_runtime('raw',os.environ.get('DSHA_TEST_RUNTIME')) / 'node_modules'
         frontend = runtime / '@deepseek-ai/dsh-web-frontend/dist'
@@ -134,9 +192,12 @@ def verify(path):
                             ('dsh-client-ui-sidebar-right', 'lib/client.js'),
                             ('dsh-client-ui-sidebar-files', 'lib/client.js'),
                             ('dsh-client-ui-model-selection', 'lib/client.js'),
+                            ('dsh-client-ui-conversation', 'lib/client.js'),
                             ('dsh-web-frontend', 'dist/' + frontend_entry)]:
             source = runtime / '@deepseek-ai' / name / entry
-            untouched[PREFIX + '/node_modules/@deepseek-ai/' + name + '/' + entry] = hashlib.sha256(source.read_bytes()).hexdigest()
+            module = '@deepseek-ai/' + name + '/' + entry
+            untouched[PREFIX + '/node_modules/' + module] = official_feature_digest(
+                apk, root / 'app/src/main/assets', dsh_version, module, source.read_bytes())
         preserved_features = list(untouched)
         aliases, expanded = 0, 0
         legacy_workflow_aliases = {
@@ -206,8 +267,9 @@ def verify(path):
         require(('assets/builtin-plugins/dsh-web-mobile/lib/delete-session.js' in apk.namelist()), 'VERIFICATION_FAILED')
         require((b'NARB_DISABLE_NATIVE_CACHE' in apk.read('assets/dsha-runtime-env.sh')), 'VERIFICATION_FAILED')
         migration = apk.read('assets/rc1-migration.py')
-        require((b'RESTORED_SETTINGS_IMPORTED_FOR_RETRY' in migration), 'VERIFICATION_FAILED')
-        require((b'legacy-agent-presets' in migration), 'VERIFICATION_FAILED')
+        require(b'RESTORED_SETTINGS_IMPORTED_FOR_RETRY' in migration, 'Production settings migration is missing')
+        require(b'legacy-agent-presets' in migration, 'Legacy preset reader is missing')
+        require('assets/fresh-settings-policy-patch.json' not in apk.namelist(), 'Fresh-only settings policy must not enter production')
         return dict(apk=str(path), dsh=dsh_version, environment=version, plugins=plugins,
                     preservedOfficialFeatures=preserved_features,
                     sharedModuleAliases=aliases, expandedBytes=expanded, ubuntuToolPackages=len(tools_lock['packages']),

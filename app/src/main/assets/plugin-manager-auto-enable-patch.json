@@ -1,10 +1,11 @@
 {
-  "dshVersion": "0.2.0-rc.2",
+  "dshVersion": "0.2.1-rc.2",
   "module": "@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js",
   "patches": [
     {
-      "before": "this.ctx.remote.pluginManager.installBundle(spec, {\n\t\t\t\t\tenabled: false,",
-      "after": "this.ctx.remote.pluginManager.installBundle(spec, {\n\t\t\t\t\tenabled: true,"
+      "before": "enabled: subject.selection ?? false,",
+      "after": "enabled: subject.selection ?? true, // DSHA_NEW_INSTALL_ENABLED_V2: retain explicit catalog selection, including false."
     }
-  ]
+  ],
+  "sourceSha256": "b4efaa441258a547a0d7b3cab559fe073c69e69fe2bbb617c710ded134e7c4f9"
 }

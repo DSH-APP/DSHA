@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "dshVersion": "0.2.0-rc.2",
+  "dshVersion": "0.2.1-rc.2",
   "patches": [
     {
       "before": "\t\tfunction SearchResultItem({ result, currentId, onOpen, onUnarchive, t }) {",
-      "after": "\n        // DSHA_SESSION_INTERACTION_V3：按实际输入类型分流，选择与打开保持独立状态。\n        const dshaSessionSelection = createDshaSessionSelection();\n        function useDshaPickedSession(currentId, rowId) {\n            return (0, react.useSyncExternalStore)((listener) => dshaSessionSelection.subscribe(listener, currentId, rowId),\n                () => dshaSessionSelection.selected(currentId, rowId), () => dshaSessionSelection.selected(currentId, rowId));\n        }\n        function dshaSessionClick(event, id, currentId, onOpen) {\n            dshaSessionSelection.click(event, id, currentId, () => {\n                const focused = document.activeElement;\n                if (focused instanceof HTMLElement && focused.closest('[data-composer-input]')) focused.blur();\n                onOpen(id);\n                document.dispatchEvent(new CustomEvent('dsha-session-open', { detail: { id } }));\n            });\n        }\n\t\tfunction SearchResultItem({ result, currentId, onOpen, onUnarchive, t }) {",
+      "after": "\n        // DSHA_SESSION_INTERACTION_V4：有效单击打开，保留实际输入类型与取消边界。\n        const dshaSessionSelection = createDshaSessionSelection();\n        function useDshaPickedSession(currentId, rowId) {\n            return (0, react.useSyncExternalStore)((listener) => dshaSessionSelection.subscribe(listener, currentId, rowId),\n                () => dshaSessionSelection.selected(currentId, rowId), () => dshaSessionSelection.selected(currentId, rowId));\n        }\n        function dshaSessionClick(event, id, currentId, onOpen) {\n            dshaSessionSelection.click(event, id, currentId, () => {\n                const focused = document.activeElement;\n                if (focused instanceof HTMLElement && focused.closest('[data-composer-input]')) focused.blur();\n                onOpen(id);\n                document.dispatchEvent(new CustomEvent('dsha-session-open', { detail: { id } }));\n            });\n        }\n\t\tfunction SearchResultItem({ result, currentId, onOpen, onUnarchive, t }) {",
       "prependAsset": "web-integration/session-interaction.js"
     },
     {
@@ -17,19 +17,23 @@
     },
     {
       "before": "\t\t\t\tonClick: () => {\n\t\t\t\t\tonOpen(result.id);\n\t\t\t\t},",
-      "after": "\t\t\t\t\"data-dsha-session-select\": result.id,\n\t\t\t\t\"aria-description\": [t(\"row.selectHint\"), result.archived ? t(\"toast.archivedNotOpenable\") : \"\"].filter(Boolean).join(\". \"),\n                tabIndex: 0,\n                onKeyDown: (event) => { if (event.target === event.currentTarget && (event.key === \"Enter\" || event.key === \" \")) { event.preventDefault(); if (event.key === \"Enter\") dshaSessionClick({detail:0}, result.id, currentId, onOpen); else dshaSessionSelection.select(result.id,currentId); } },\n\t\t\t\tstyle: { touchAction: \"manipulation\" },\n\t\t\t\tonPointerDown: (event) => dshaSessionSelection.pointerDown(event, result.id, currentId),\n                    onPointerCancel: (event) => dshaSessionSelection.pointerCancel(event, result.id, currentId),\n                    onClick: (event) => dshaSessionClick(event, result.id, currentId, onOpen),"
+      "after": "\t\t\t\t\"data-dsha-session-select\": result.id,\n\t\t\t\t\"aria-description\": [t(\"row.selectHint\"), result.archived ? t(\"toast.archivedNotOpenable\") : \"\"].filter(Boolean).join(\". \"),\n                tabIndex: 0,\n                onKeyDown: (event) => { if (event.target === event.currentTarget && (event.key === \"Enter\" || event.key === \" \")) { event.preventDefault(); if (!event.repeat) dshaSessionClick({detail:0}, result.id, currentId, onOpen); } },\n\t\t\t\tstyle: { touchAction: \"manipulation\" },\n\t\t\t\tonPointerDown: (event) => dshaSessionSelection.pointerDown(event, result.id, currentId),\n                    onPointerMove: (event) => dshaSessionSelection.pointerMove(event, result.id, currentId),\n                    onPointerCancel: (event) => dshaSessionSelection.pointerCancel(event, result.id, currentId),\n                    onContextMenu: (event) => dshaSessionSelection.pointerCancel(event, result.id, currentId),\n                    onClick: (event) => dshaSessionClick(event, result.id, currentId, onOpen),"
     },
     {
       "before": "\t\t\t\t\tonClick: () => {\n\t\t\t\t\t\tonOpen(node.id);\n\t\t\t\t\t},",
-      "after": "\t\t\t\t\t\"data-dsha-session-select\": node.id,\n\t\t\t\t\t\"aria-description\": [t(\"row.selectHint\"), node.archived ? t(\"toast.archivedNotOpenable\") : \"\"].filter(Boolean).join(\". \"),\n\t\t\t\t\tstyle: { touchAction: \"manipulation\" },\n\t\t\t\t\tonPointerDown: (event) => dshaSessionSelection.pointerDown(event, node.id, currentId),\n                    onPointerCancel: (event) => dshaSessionSelection.pointerCancel(event, node.id, currentId),\n                    onClick: (event) => dshaSessionClick(event, node.id, currentId, onOpen),\n\t\t\t\t\ttabIndex: 0,\n\t\t\t\t\tonKeyDown: (event) => {\n                        if (event.target !== event.currentTarget) return;\n                        if (event.key === 'Enter') {\n                            event.preventDefault();\n                            dshaSessionClick({ detail: 0 }, node.id, currentId, onOpen);\n                        } else if (event.key === ' ') {\n                            event.preventDefault();\n                            dshaSessionSelection.select(node.id, currentId);\n                        }\n                    },"
+      "after": "\t\t\t\t\t\"data-dsha-session-select\": node.id,\n\t\t\t\t\t\"aria-description\": [t(\"row.selectHint\"), node.archived ? t(\"toast.archivedNotOpenable\") : \"\"].filter(Boolean).join(\". \"),\n\t\t\t\t\tstyle: { touchAction: \"manipulation\" },\n\t\t\t\t\tonPointerDown: (event) => dshaSessionSelection.pointerDown(event, node.id, currentId),\n                    onPointerMove: (event) => dshaSessionSelection.pointerMove(event, node.id, currentId),\n                    onPointerCancel: (event) => dshaSessionSelection.pointerCancel(event, node.id, currentId),\n                    onContextMenu: (event) => dshaSessionSelection.pointerCancel(event, node.id, currentId),\n                    onClick: (event) => dshaSessionClick(event, node.id, currentId, onOpen),\n\t\t\t\t\ttabIndex: 0,\n\t\t\t\t\tonKeyDown: (event) => {\n                        if (event.target !== event.currentTarget) return;\n                        if (event.key === 'Enter') {\n                            event.preventDefault();\n                            if (!event.repeat) dshaSessionClick({ detail: 0 }, node.id, currentId, onOpen);\n                        } else if (event.key === ' ') {\n                            event.preventDefault();\n                            if (!event.repeat) dshaSessionClick({ detail: 0 }, node.id, currentId, onOpen);\n                        }\n                    },"
     },
     {
       "before": "\"row.archived\": \"已归档\",",
-      "after": "\"row.archived\": \"已归档\",\n            \"row.selectHint\": \"鼠标单击打开；触屏或笔单击选中、双击打开；Enter 打开\","
+      "after": "\"row.archived\": \"已归档\",\n            \"row.selectHint\": \"单击或轻触打开；Enter 或空格打开\","
     },
     {
       "before": "\"row.archived\": \"Archived\",",
-      "after": "\"row.archived\": \"Archived\",\n            \"row.selectHint\": \"Mouse: click to open. Touch or pen: tap to select, double-tap to open. Enter opens.\","
+      "after": "\"row.archived\": \"Archived\",\n            \"row.selectHint\": \"Click or tap to open. Enter or Space opens.\","
+    },
+    {
+      "before": "\t\t\t\t\tonDragStart: !draggable ? void 0 : (e) => {",
+      "after": "\t\t\t\t\tonDragStart: !draggable ? void 0 : (e) => {\n                        dshaSessionSelection.pointerCancel(e, node.id, currentId);"
     }
   ]
 }

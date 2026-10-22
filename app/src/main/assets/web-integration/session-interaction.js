@@ -1,6 +1,6 @@
-// 鼠标单击打开；touch/pen单击只选择、两次邻近点击打开。键盘和读屏显式激活直接打开。
+// DSHA_SESSION_SINGLE_ACTIVATE_V4: one valid click/tap opens, without changing its input source.
 function createDshaSessionSelection(now = () => performance.now()) {
-    let picked = null, lastTap = null, lastPointer = null;
+    let picked = null, lastPointer = null;
     const listeners = new Map(), all = new Set(), contexts = new Map();
     const rowListeners = (currentId, rowId, create) => {
         let rows = contexts.get(currentId);
@@ -41,40 +41,39 @@ function createDshaSessionSelection(now = () => performance.now()) {
             const selected = picked !== null && picked.currentId === currentId ? picked.id : currentId;
             return rowId === void 0 ? selected : selected === rowId;
         },
-        select(id, currentId) { lastTap = null; lastPointer = null; select(id, currentId); },
+        select(id, currentId) { lastPointer = null; select(id, currentId); },
         pointerDown(event, id, currentId) {
             const type = event.pointerType || event.nativeEvent?.pointerType;
             lastPointer = !event.defaultPrevented && !(event.button > 0) && ['mouse', 'touch', 'pen'].includes(type)
                 ? { id, currentId, type, time: now(), pointerId: event.pointerId,
-                    x: event.clientX ?? 0, y: event.clientY ?? 0 } : null;
-            if (lastPointer === null || type === 'mouse' || lastTap !== null && lastTap.type !== type) lastTap = null;
+                    x: event.clientX ?? 0, y: event.clientY ?? 0, cancelled: false } : null;
+        },
+        pointerMove(event, id, currentId) {
+            if (lastPointer?.id === id && lastPointer.currentId === currentId
+                && (event.pointerId === undefined || lastPointer.pointerId === event.pointerId)
+                && (Math.abs((event.clientX ?? 0) - lastPointer.x) > 12
+                    || Math.abs((event.clientY ?? 0) - lastPointer.y) > 12)) lastPointer.cancelled = true;
         },
         pointerCancel(event, id, currentId) {
             if (lastPointer?.id === id && lastPointer.currentId === currentId
                 && (event.pointerId === undefined || lastPointer.pointerId === event.pointerId)) {
-                lastPointer = null; lastTap = null;
+                // Keep a tombstone until the next down/click: a late synthetic click
+                // after scrolling, drag or context-menu cancellation must not navigate.
+                lastPointer.cancelled = true;
             }
         },
         click(event, id, currentId, open) {
             const time = now(), x = event.clientX ?? 0, y = event.clientY ?? 0;
             const pointer = lastPointer; lastPointer = null;
-            if (event.defaultPrevented || event.button > 0) { lastTap = null; return; }
-            if (event.detail === 0) { lastTap = null; select(id, currentId); open(); return; }
-            // React onClick可能是MouseEvent包装；同一行的pointerdown保留实际输入来源。
-            // 不按窗口主指针/media query判断：触屏设备外接鼠标仍应一次打开。
-            const declared = event.pointerType || event.nativeEvent?.pointerType;
-            const type = ['mouse', 'touch', 'pen'].includes(declared) ? declared
-                : event.sourceCapabilities?.firesTouchEvents || event.nativeEvent?.sourceCapabilities?.firesTouchEvents ? 'touch'
-                : pointer !== null && pointer.id === id && pointer.currentId === currentId
-                    && time >= pointer.time && time - pointer.time <= 1500
-                    && Math.abs(x - pointer.x) <= 24 && Math.abs(y - pointer.y) <= 24 ? pointer.type : 'mouse';
-            if (type === 'mouse') { lastTap = null; select(id, currentId); open(); return; }
-            const double = lastTap !== null && lastTap.type === type && lastTap.id === id && lastTap.currentId === currentId
-                && time - lastTap.time <= 500 && time >= lastTap.time
-                && Math.abs(x - lastTap.x) <= 24 && Math.abs(y - lastTap.y) <= 24;
-            lastTap = double ? null : { id, currentId, type, time, x, y };
+            if (event.defaultPrevented || event.button > 0) return;
+            if (event.detail === 0) { select(id, currentId); open(); return; }
+            // Use the actual pointerdown even when React wraps click as MouseEvent.
+            // No media-query inference or synthetic keyboard click is needed.
+            if (pointer !== null && pointer.id === id && pointer.currentId === currentId
+                && (pointer.cancelled || Math.abs(x - pointer.x) > 12 || Math.abs(y - pointer.y) > 12
+                    || pointer.type !== 'mouse' && time - pointer.time >= 600)) return;
             select(id, currentId);
-            if (double) open();
+            open();
         }
     };
 }

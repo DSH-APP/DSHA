@@ -56,18 +56,6 @@ def inventory(root=ROOT, protected=(), generated=()):
         if not (root / TOOL_SOURCE).is_file():
             raise TreeFormatError("FORMAT_TOOL_SOURCE_MISSING")
         result.append(TOOL_SOURCE)
-    fixtures = root / "tools/fixtures"
-    if fixtures.is_dir():
-        for path in fixtures.rglob("*.java"):
-            relative = path.relative_to(root).as_posix()
-            fixture_parts = path.relative_to(fixtures).parts
-            if EXCLUDED_PARTS.intersection(fixture_parts) or "build" in fixture_parts:
-                continue
-            if relative in protected or relative in generated:
-                continue
-            if path.is_symlink() or not path.is_file():
-                raise TreeFormatError("FORMAT_SOURCE_LINK_OR_NONFILE: " + relative)
-            result.append(relative)
     return sorted(result)
 
 
@@ -86,8 +74,6 @@ def declared_files(manifest):
 def batch_key(name):
     if name == TOOL_SOURCE:
         return ("tools", "java-format")
-    if name.startswith("tools/fixtures/") and name.endswith(".java"):
-        return ("tools", "fixtures/" + Path(name).parts[2])
     parts = Path(name).parts
     if len(parts) < 8 or parts[:2] != ("app", "src") or parts[2] not in SETS:
         raise TreeFormatError("FORMAT_UNEXPECTED_SOURCE: " + name)

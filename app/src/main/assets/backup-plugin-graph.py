@@ -9,7 +9,7 @@ import re
 
 POOL_MARKER = '.dsha-dependency-pool.json'
 CORE = {'@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'}
-SHARED = {'@deepseek-ai/cordis', '@deepseek-ai/schemastery'}
+SHARED = {'@deepseek-ai/cordis', '@deepseek-ai/schemastery', 'react', 'react-dom'}
 
 
 class Records(list):
@@ -40,9 +40,17 @@ def archive_plugins(root, stage, copy_data, skip, checks, valid_name, global_nm,
     source_ids, roots = {}, set()
     shared_pools = {base.resolve() for base in global_nm if base.is_dir()}
     pool = stage / '.dsha-plugin-src/.deps'
-    def provided(name):
-        return name in SHARED or name in system_plugins or (name.startswith('@deepseek-ai/dsh-')
-                                  and any((base / name / 'package.json').is_file() for base in global_nm))
+    spec = importlib.util.spec_from_file_location('backup_package_provenance', Path(__file__).with_name('register-builtin-plugins.py'))
+    provenance = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(provenance)
+    proofs = provenance.managed_package_proofs(root / '.dsh/managed-package-proofs.json')
+    def provided(name, source):
+        matched = provenance.managed_runtime_package(name, source, proofs)
+        if matched and checks is not None:
+            # Rehash at the final snapshot boundary. A package modified after
+            # classification must not disappear from an otherwise valid backup.
+            checks.append((Path(source), proofs[name], 'DSHA_MANAGED_PACKAGE_PROOF'))
+        return matched
 
     def node(source):
         source = source.resolve(strict=True)
@@ -63,9 +71,6 @@ def archive_plugins(root, stage, copy_data, skip, checks, valid_name, global_nm,
         requirements = {}
         runtime = pkg.get('dependencies') or {}
         peers = pkg.get('peerDependencies') or {}
-        spec = importlib.util.spec_from_file_location('backup_client_seeds', Path(__file__).with_name('plugin-client-seeds.py'))
-        seed_reader = importlib.util.module_from_spec(spec); spec.loader.exec_module(seed_reader)
-        client_peers = seed_reader.client_peers(source, pkg, global_nm, resolve_module)
         optional = set(pkg.get('optionalDependencies') or {})
         for section in ('dependencies', 'peerDependencies', 'optionalDependencies'):
             values = pkg.get(section) or {}
@@ -73,7 +78,7 @@ def archive_plugins(root, stage, copy_data, skip, checks, valid_name, global_nm,
                 raise ValueError('插件依赖声明必须是对象')
             requirements.update(values)
         optional.update(name for name, meta in (pkg.get('peerDependenciesMeta') or {}).items()
-                        if name not in runtime and isinstance(meta, dict) and meta.get('optional'))
+                        if isinstance(meta, dict) and meta.get('optional'))
         # 未列入 manifest 的随包依赖同样保留；裸资源目录维持原相对位置。
         embedded = source / 'node_modules'
         # 受管插件的 node_modules 可借用整个宿主池；只归档其明确依赖，不能连带打包整个 dsh。
@@ -98,23 +103,22 @@ def archive_plugins(root, stage, copy_data, skip, checks, valid_name, global_nm,
         for name in requirements:
             if not valid_name(name):
                 raise ValueError('插件依赖包名无效')
-            if provided(name):
+            if name in system_plugins:
                 continue
             dependency = resolve_module(source, name, global_nm)
             if dependency is None:
-                if name in client_peers and name in peers and name not in runtime:
-                    continue
                 if name in optional:
                     continue
                 # 旧插件把浏览器宿主接口/编译期类型列为 dsh peer，未必存在同名 npm 包。
                 # 只放行纯宿主 peer；真实运行依赖和其他缺失 peer 仍需修复，已安装依赖照常归档。
-                if name in peers and name not in runtime and name.startswith('@deepseek-ai/dsh-'):
+                if name in peers and name not in runtime and name in SHARED:
                     continue
                 # 保留损坏前的真实状态：已有源码/依赖照常归档，缺失项明确记入清单。
                 # 备份负责保护数据，不能要求用户先修好第三方插件才允许升级。
                 record.setdefault('missing', []).append(name)
                 continue
-            record['links'][name] = node(dependency)
+            if not provided(name, dependency):
+                record['links'][name] = node(dependency)
         return key
 
     profiles = stage / '.dsh/profiles'
@@ -147,10 +151,9 @@ def archive_plugins(root, stage, copy_data, skip, checks, valid_name, global_nm,
             elif source is None:
                 source = resolve_module(original, name, global_nm)
             if source is None or not (source / 'package.json').is_file():
-                # 官方模块由随包运行时重建；未知第三方缺失时必须报告，不能备份空壳。
-                if name.startswith('@deepseek-ai/') and not specification.startswith(('file:', 'link:')):
-                    continue
                 raise ValueError('插件源码缺失，请修复后再备份：' + name)
+            if provided(name, source):
+                continue
             key = node(source)
             roots.add((name, source.resolve()))
             records.append({'profile': pkg_path.parent.name, 'name': name,
@@ -165,6 +168,8 @@ def archive_plugins(root, stage, copy_data, skip, checks, valid_name, global_nm,
         if name in system_plugins:
             continue
         source = Path(row['directory']).resolve()
+        if provided(name, source):
+            continue
         if (name, source) in roots:
             continue
         key = node(source)

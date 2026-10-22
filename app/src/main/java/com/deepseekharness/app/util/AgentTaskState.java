@@ -66,6 +66,11 @@ public final class AgentTaskState {
     prune();
   }
 
+  /** 暂失运行证明时终结旧票；同代重新登记也不能恢复已经排队或失效的row。 */
+  public synchronized void invalidate(long expected, String id) {
+    if (generation == expected && instance.equals(id)) identity(-1, "");
+  }
+
   public synchronized boolean bind(String source) {
     if (!source.matches("[a-f0-9]{32}")) return false;
     if (client.isEmpty()) client = source;

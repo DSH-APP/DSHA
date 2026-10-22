@@ -153,4 +153,55 @@ public class SocketDispatchTest {
       assertTrue(dispatch.awaitStopped(2000));
     }
   }
+
+  @Test
+  public void idleHeaderReadersCannotConsumeRequestWorkers() throws Exception {
+    try (Pairs sockets = new Pairs();
+        SocketDispatch dispatch = new SocketDispatch("test-idle-readers", 2, 1, 1, 1)) {
+      CountDownLatch reading = new CountDownLatch(2),
+          release = new CountDownLatch(1),
+          served = new CountDownLatch(1);
+      var first = dispatch.accept(sockets.server());
+      var second = dispatch.accept(sockets.server());
+      for (var owner : List.of(first, second))
+        assertTrue(
+            dispatch.read(
+                owner,
+                () -> {
+                  reading.countDown();
+                  try {
+                    release.await();
+                  } catch (InterruptedException stopped) {
+                    Thread.currentThread().interrupt();
+                  }
+                }));
+      assertTrue(reading.await(2, TimeUnit.SECONDS));
+      assertTrue(dispatch.request(first, served::countDown));
+      assertTrue(
+          "idle readers must leave execution workers available", served.await(2, TimeUnit.SECONDS));
+      assertEquals(Long.valueOf(2), dispatch.metrics().get("headerThreads"));
+      dispatch.close();
+      release.countDown();
+      assertTrue(dispatch.awaitStopped(2000));
+    }
+  }
+
+  @Test
+  public void networkRetirementClosesPeersAndCompanionsButKeepsAdmissionOpen() throws Exception {
+    try (Pairs sockets = new Pairs();
+        SocketDispatch dispatch = new SocketDispatch("test-network-change", 2, 1, 1, 1)) {
+      var old = dispatch.accept(sockets.server());
+      old.attach(sockets.server());
+      dispatch.closeConnections();
+      assertTrue(old.ended());
+      assertEquals(-1, sockets.peers.get(0).getInputStream().read());
+      assertEquals(-1, sockets.peers.get(1).getInputStream().read());
+      assertEquals(Long.valueOf(0), dispatch.metrics().get("connections"));
+      var current = dispatch.accept(sockets.server());
+      assertNotNull("network change must not close listener admission", current);
+      CountDownLatch served = new CountDownLatch(1);
+      assertTrue(dispatch.request(current, served::countDown));
+      assertTrue(served.await(2, TimeUnit.SECONDS));
+    }
+  }
 }

@@ -18,7 +18,7 @@ const recipe = JSON.parse(await readFile(path.join(root, asset), 'utf8'));
 const canonical = await readFile(path.join(runtime, 'node_modules', recipe.module), 'utf8');
 const version = JSON.parse(await readFile(
   require.resolve('@deepseek-ai/dsh-api-workspace-controller/package.json'), 'utf8')).version;
-assert.equal(version, '0.2.0-rc.2');
+assert.equal(version, '0.2.1-rc.2');
 assert.equal(recipe.dshVersion, version);
 const fixture = await mkdtemp(path.join(root, 'app/build/workspace-policy-'));
 await symlink(path.join(runtime, 'node_modules'), path.join(fixture, 'node_modules'),
@@ -27,6 +27,9 @@ const sha = text => createHash('sha256').update(text).digest('hex');
 
 const python = process.env.DSHA_PYTHON || 'python';
 const buildScript = path.join(root, 'tools/build-dsh-runtime.py');
+// The service-lifetime Host regression may supply a byte-for-byte recipe copy
+// with one pending entry added to an isolated registry before release adoption.
+const stableAssets = path.resolve(process.env.DSHA_WORKSPACE_POLICY_STABLE_ASSETS || path.join(root, 'app/src/main/assets'));
 const patchScript = [
   'import importlib.util,json,pathlib,sys',
   'sys.path.insert(0,str(pathlib.Path(sys.argv[1]).parent))',
@@ -36,17 +39,30 @@ const patchScript = [
   'request=json.load(sys.stdin)',
   'source=request["source"].encode("utf-8")',
   'patched=builder.patched_content(pathlib.PurePosixPath(request["module"]),source)',
+  'chains,_=builder.load_chains(pathlib.Path(request["stableAssets"]),"0.2.1-rc.2")',
+  'patched=builder.apply_stable_patches(patched,chains.get(request["module"],[]))',
   'print(json.dumps({"source":patched.decode("utf-8"),"inputs":builder.recipe_inputs()}))'
 ].join(';');
 function build(source, module = recipe.module) {
   return JSON.parse(execFileSync(python, ['-B', '-c', patchScript, buildScript], {
-    input: JSON.stringify({ source, module }), encoding: 'utf8', windowsHide: true,
+    input: JSON.stringify({ source, module, stableAssets }), encoding: 'utf8', windowsHide: true,
     timeout: 30000, maxBuffer: 8 * 1024 * 1024, stdio: ['pipe', 'pipe', 'pipe']
   }));
 }
 const transformed = build(canonical);
 assert.equal(transformed.inputs[asset], sha(await readFile(path.join(root, asset))));
-const expected = canonical.replace(recipe.patches[0].before, recipe.patches[0].after);
+let expected = canonical.replace(recipe.patches[0].before, recipe.patches[0].after);
+// Other signed stable recipes may share this module. The builder first applies
+// this specialized Documents policy, then the declared stable chain.
+const registry = JSON.parse(await readFile(path.join(stableAssets, 'runtime-patches.json'), 'utf8'));
+for (const row of registry.active) {
+  const stable = JSON.parse(await readFile(path.join(stableAssets, row.asset), 'utf8'));
+  if ((row.module ?? stable.module) !== recipe.module) continue;
+  for (const patch of stable.patches) {
+    assert.equal(expected.split(patch.before).length, 2);
+    expected = expected.replace(patch.before, () => patch.after);
+  }
+}
 assert.equal(transformed.source, expected, 'actual builder must apply the exact locked recipe');
 const rejectsAnchor = source => assert.throws(() => build(source), /source anchor changed/);
 rejectsAnchor(canonical.replace(recipe.patches[0].before, 'changed locked resolver'));

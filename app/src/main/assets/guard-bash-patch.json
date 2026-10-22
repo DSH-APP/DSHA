@@ -1,15 +1,16 @@
 {
   "version": 1,
-  "dshVersion": "0.2.0-rc.2",
+  "dshVersion": "0.2.1-rc.2",
   "module": "@deepseek-ai/dsh-tool-bash/lib/index.js",
   "patches": [
     {
       "before": "import z from \"@deepseek-ai/schemastery\";",
-      "after": "import { preparedEnvironment, verifyBashRequest } from \"dsha-destructive-policy\"; // DSHA_REQUIRED_POLICY_V1\nimport z from \"@deepseek-ai/schemastery\";"
+      "after": "import { preparedEnvironment, verifyBashRequest, verifyGlobalConsent } from \"dsha-destructive-policy\"; // DSHA_REQUIRED_POLICY_V1\nimport z from \"@deepseek-ai/schemastery\";"
     },
     {
       "before": "\t\t\t\tconst dshEnv = ctx.shellEnv.collect(exec);",
-      "after": "\t\t\t\tverifyBashRequest(exec, workdir);\n\t\t\t\tconst dshEnv = preparedEnvironment(exec);"
+      "after": "\t\t\t\tawait verifyGlobalConsent(exec);\n\t\t\t\tverifyBashRequest(exec, workdir);\n\t\t\t\tconst dshEnv = preparedEnvironment(exec);"
     }
-  ]
+  ],
+  "sourceSha256": "a1215d7bcaf82c0755be48321ef6bb45075f1cb33296d6263009e9d10fd596f6"
 }

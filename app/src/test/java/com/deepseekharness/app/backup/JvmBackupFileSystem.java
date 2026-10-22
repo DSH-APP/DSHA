@@ -18,13 +18,11 @@ public class JvmBackupFileSystem implements BackupFileSystem {
               .name()
               .hashCode();
       int mode = 0700;
-      long ctime = 0;
       try {
         Map<String, Object> unix =
-            Files.readAttributes(file.toPath(), "unix:dev,mode,ctime", LinkOption.NOFOLLOW_LINKS);
+            Files.readAttributes(file.toPath(), "unix:dev,mode", LinkOption.NOFOLLOW_LINKS);
         device = ((Number) unix.get("dev")).longValue();
         mode = ((Number) unix.get("mode")).intValue() & 0777;
-        ctime = ((FileTime) unix.get("ctime")).to(java.util.concurrent.TimeUnit.NANOSECONDS);
       } catch (UnsupportedOperationException ignored) {
         /* Windows 无 unix view；FileStore 身份仍真实分域。 */
       }
@@ -36,8 +34,7 @@ public class JvmBackupFileSystem implements BackupFileSystem {
           a.size(),
           a.lastModifiedTime().toMillis(),
           device,
-          mode,
-          ctime);
+          mode);
     } catch (NoSuchFileException e) {
       return new Node("MISSING", "", 0, 0, 0, 0);
     }

@@ -23,7 +23,7 @@
 ## 新手机验证
 
 设备为 M2012K10C（Redmi K40 Gaming），Android 13 / API 33、4 KB 页大小。
-最初未安装 com.dsh.client，先安装 low debug，再相同签名覆盖 standard debug 和 low debug。
+最初未安装 dsh.android.client，先安装 low debug，再相同签名覆盖 standard debug 和 low debug。
 
 - 两版都通过界面下载并安装用户提供的 Minglink/dsh-infinite-gen-3 master.zip，显示 0.5.0。
 - low 通过系统文件选择器导入本地 ZIP；standard 的备用文件选择器也完整返回文件并导入成功。

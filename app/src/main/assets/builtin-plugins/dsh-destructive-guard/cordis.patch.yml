@@ -13,8 +13,8 @@
 #   approval 变 ask 之后，"沙箱全开 + 会问"这个组合不在 dsh-base 的三档里，而
 #   permission-presets 在构造时用 derive() 推导默认档位，推导不出就直接抛错
 #   （dsh-permission-presets/lib/index.js:180）。所以显式补一档并把它设为默认。
-#   danger-full-access 这一档仍是 approval=never —— 那时守卫会把破坏性命令硬拒绝，
-#   是"更严"而不是"绕过"。
+#   danger-full-access 这一档仍是 approval=never；只有当前会话明确选择此档、
+#   sandbox 与 approval 服务同时确认时，免本守卫的网页审批；执行身份核验仍保留。
 #
 # defaultPreset 必须跟着 `DSH_PERMISSION_MODE` 走：新会话的沙箱档位是从默认 preset
 # 的 spec 里 pin 下去的（dsh-permission-presets/lib/index.js:376 pinInitialPermission），
@@ -47,12 +47,12 @@
         sandbox: danger-full-access
         approval: never
         name: danger-full-access
-        description: Full file access without approval prompts; destructive and opaque agent commands are refused.
+        description: Full agent file and command access without web approval prompts; native and system permissions still apply.
       guarded-full-access:
         sandbox: danger-full-access
         approval: ask
-        name: guarded-full-access
-        description: Full file access; destructive or opaque agent commands and existing-file overwrites ask once.
+        name: 历史权限配置
+        description: 仅兼容读取已保存的会话和默认值，不再作为新选项；DSHA 安全确认由设备页的全局权限控制。
 - insert:
   - id: destructive-guard
     name: 'dsh-destructive-guard'

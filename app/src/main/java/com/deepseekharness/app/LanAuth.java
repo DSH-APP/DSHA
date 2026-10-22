@@ -24,6 +24,10 @@ final class LanAuth {
   /** Return the credential source for one complete request header. */
   static int tokenOk(String head, String token) {
     if (head == null || token == null || token.isEmpty()) return AUTH_DENY;
+    // A freshly copied link also cleans its query credential when this browser
+    // already has the current cookie. Otherwise the sensitive URL stays visible.
+    String query = queryToken(head);
+    if (query != null && constantTimeEquals(token, query)) return AUTH_OK_SET_COOKIE;
     String cookie = null;
     for (String line : head.split("\\r?\\n")) {
       int colon = line.indexOf(':');
@@ -41,8 +45,29 @@ final class LanAuth {
       }
     }
     if (cookie != null && constantTimeEquals(token, cookie)) return AUTH_OK;
-    String query = queryToken(head);
-    return query != null && constantTimeEquals(token, query) ? AUTH_OK_SET_COOKIE : AUTH_DENY;
+    return AUTH_DENY;
+  }
+
+  /** Keep callback paths and state while removing the proxy credential only. */
+  static String cleanRedirectTarget(String target) {
+    // A Location beginning // or /\\ is interpreted as a different authority by
+    // browsers. Bootstrap may redirect only to a single-slash local target.
+    if (target == null
+        || !target.startsWith("/")
+        || target.startsWith("//")
+        || target.indexOf('\\') >= 0
+        || target.indexOf('#') >= 0
+        || containsControlOrSpace(target)) return "/";
+    return stripTokenFromUrl(target);
+  }
+
+  private static boolean containsControlOrSpace(String target) {
+    // 逐字符检查保留相同规则，也支持 API 23。
+    for (int i = 0; i < target.length(); i++) {
+      char value = target.charAt(i);
+      if (value <= 32 || value == 127) return true;
+    }
+    return false;
   }
 
   static com.deepseekharness.app.util.LanFailureResponse.Reason denialReason(

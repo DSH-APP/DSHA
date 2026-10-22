@@ -18,6 +18,9 @@ public final class DiagnosticActivity extends AppCompatActivity {
   private DiagnosticRepository repository;
   private com.deepseekharness.app.core.ErrorLogRepository logs;
   private EditText steps;
+  private PendingLogExport pendingLogExport;
+
+  private record PendingLogExport(boolean include, String note) {}
 
   public static android.content.Intent downloadLogs(android.content.Context context) {
     return new android.content.Intent(context, DiagnosticActivity.class)
@@ -26,9 +29,12 @@ public final class DiagnosticActivity extends AppCompatActivity {
 
   private final ActivityResultLauncher<String> logExporter =
       registerForActivityResult(
-          new ActivityResultContracts.CreateDocument("text/plain"),
+          new ActivityResultContracts.CreateDocument("application/gzip"),
           uri -> {
-            if (uri != null) logs.export(uri);
+            PendingLogExport selected = pendingLogExport;
+            pendingLogExport = null;
+            if (uri != null && selected != null)
+              logs.export(uri, selected.include(), selected.note());
           });
   private final ActivityResultLauncher<String> exporter =
       registerForActivityResult(
@@ -85,20 +91,8 @@ public final class DiagnosticActivity extends AppCompatActivity {
         .setOnClickListener(
             v -> startActivity(new android.content.Intent(this, StartupRecoveryActivity.class)));
     logs = new ViewModelProvider(this).get(com.deepseekharness.app.core.ErrorLogRepository.class);
-    findViewById(R.id.diagnostic_logs_download).setOnClickListener(v -> logs.download());
-    findViewById(R.id.diagnostic_logs_save_as)
-        .setOnClickListener(
-            v -> {
-              try {
-                logExporter.launch(com.deepseekharness.app.core.ErrorLogRepository.filename());
-              } catch (RuntimeException error) {
-                Toast.makeText(
-                        this,
-                        com.deepseekharness.app.util.UiText.text("无法打开文件管理器，请尝试下载到默认目录"),
-                        Toast.LENGTH_LONG)
-                    .show();
-              }
-            });
+    findViewById(R.id.diagnostic_logs_download).setOnClickListener(v -> chooseLogExport(false));
+    findViewById(R.id.diagnostic_logs_save_as).setOnClickListener(v -> chooseLogExport(true));
     logs.state.observe(
         this,
         state -> {
@@ -121,7 +115,7 @@ public final class DiagnosticActivity extends AppCompatActivity {
                           this, getPackageName() + ".updates", new java.io.File(uri.getPath()));
                 startActivity(
                     new android.content.Intent(android.content.Intent.ACTION_VIEW)
-                        .setDataAndType(uri, "text/plain")
+                        .setDataAndType(uri, logs.savedMimeType())
                         .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION));
               } catch (RuntimeException error) {
                 Toast.makeText(
@@ -133,6 +127,9 @@ public final class DiagnosticActivity extends AppCompatActivity {
               }
             });
     steps = findViewById(R.id.diagnostic_steps);
+    steps.setSaveEnabled(false);
+    steps.setFilters(
+        new android.text.InputFilter[] {new android.text.InputFilter.LengthFilter(32768)});
     findViewById(R.id.diagnostic_back).setOnClickListener(v -> finish());
     findViewById(R.id.diagnostic_refresh).setOnClickListener(v -> repository.generate());
     findViewById(R.id.diagnostic_repair).setOnClickListener(v -> repository.repairNetworkTools());
@@ -225,6 +222,55 @@ public final class DiagnosticActivity extends AppCompatActivity {
       if (getIntent().getBooleanExtra("download_error_logs", false)) logs.download();
       // 首页先展示检查范围，由用户发起耗时探针。
     }
+  }
+
+  /** Additional context is an explicit choice for this action and is never persisted. */
+  private void chooseLogExport(boolean saveAs) {
+    pendingLogExport = null;
+    android.widget.CheckBox include = new android.widget.CheckBox(this);
+    include.setChecked(false);
+    include.setText(
+        com.deepseekharness.app.util.UiText.choose(
+            "仅本次附加本页主动填写的说明", "Attach the context entered on this page for this export only"));
+    new DshaDialogBuilder(this)
+        .setTitle(com.deepseekharness.app.util.UiText.choose("导出故障包", "Export diagnostics"))
+        .setMessage(
+            com.deepseekharness.app.util.UiText.choose(
+                "包含结构化状态、现有脱敏操作记录尾部和摘要。原始进程输出、完整异常链及未采集的历史不会补入。附加说明默认不选，仅包含本页输入，不开启自动业务记录。",
+                "Includes structured state, existing redacted operation tails and a summary. Raw process output, full exception chains and uncollected history are unavailable. Additional context is off by default and contains only this page's input; it enables no automatic business capture."))
+        .setView(include)
+        .setNegativeButton(
+            com.deepseekharness.app.util.UiText.choose("取消", "Cancel"),
+            (dialog, which) -> pendingLogExport = null)
+        .setOnCancelListener(dialog -> pendingLogExport = null)
+        .setPositiveButton(
+            com.deepseekharness.app.util.UiText.choose("继续", "Continue"),
+            (dialog, which) -> {
+              boolean selected = include.isChecked();
+              String note = selected && steps != null ? steps.getText().toString() : "";
+              if (!saveAs) {
+                logs.export(null, selected, note);
+                return;
+              }
+              pendingLogExport = new PendingLogExport(selected, note);
+              try {
+                logExporter.launch(com.deepseekharness.app.core.ErrorLogRepository.filename());
+              } catch (RuntimeException error) {
+                pendingLogExport = null;
+                Toast.makeText(
+                        this,
+                        com.deepseekharness.app.util.UiText.text("无法打开文件管理器，请尝试下载到默认目录"),
+                        Toast.LENGTH_LONG)
+                    .show();
+              }
+            })
+        .show();
+  }
+
+  @Override
+  protected void onDestroy() {
+    pendingLogExport = null;
+    super.onDestroy();
   }
 
   private void showHistory() {

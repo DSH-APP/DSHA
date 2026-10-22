@@ -174,6 +174,21 @@ def parse_shell_result(raw, marker):
     return ShellResult(out[:match.start()], int(match.group(1)))
 
 
+def bridge_request(route, parameters, timeout):
+    """Dedicated VScreen transport adapter to the production170 authenticated local bridge."""
+    import urllib.request
+    import urllib.parse
+    with open('/root/.dsh/.bridge_token') as source:
+        token = source.read().strip()
+    if not token:
+        raise ValueError('CREDENTIAL_UNAVAILABLE')
+    request = urllib.request.Request(
+        'http://127.0.0.1:3090' + route + '?' + urllib.parse.urlencode(parameters),
+        headers={'X-Token': token})
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    return opener.open(request, timeout=timeout)
+
+
 def vscreen_bridge_failure(stage, error):
     """Fixed stage/reason only: exception messages may include credentials or private paths."""
     import urllib.error
@@ -201,15 +216,7 @@ def request_native_vscreen_commit(ticket):
     import urllib.request
     import urllib.parse
     try:
-        with open('/root/.dsh/.bridge_token') as source:
-            token = source.read().strip()
-        if not token:
-            raise policy.Blocked('ADB_COMMIT_BRIDGE_CREDENTIAL_UNAVAILABLE')
-        query = urllib.parse.urlencode({'ticket': ticket})
-        request = urllib.request.Request('http://127.0.0.1:3090/device/vscreen/commit?' + query,
-            headers={'X-Token': token})
-        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-        with opener.open(request, timeout=10) as response:
+        with bridge_request('/device/vscreen/commit', {'ticket': ticket}, timeout=10) as response:
             value = json.loads(response.read(65536)).get('result')
         if value != 'VSCREEN_START_COMMITTED':
             raise policy.Blocked('ADB_COMMIT_BRIDGE_AUTH_REJECTED' if value == '[UNAUTHORIZED]' else 'ADB_COMMIT_BRIDGE_TICKET_REJECTED')
@@ -346,15 +353,7 @@ def request_native_vscreen_start(cmd, ticket):
     import urllib.request
     import urllib.parse
     try:
-        with open('/root/.dsh/.bridge_token') as source:
-            token = source.read().strip()
-        if not token:
-            raise policy.Blocked('ADB_START_BRIDGE_CREDENTIAL_UNAVAILABLE')
-        query = urllib.parse.urlencode({'cmd': cmd, 'ticket': ticket})
-        request = urllib.request.Request('http://127.0.0.1:3090/device/vscreen/start?' + query,
-            headers={'X-Token': token})
-        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-        with opener.open(request, timeout=15) as response:
+        with bridge_request('/device/vscreen/start', {'cmd': cmd, 'ticket': ticket}, timeout=15) as response:
             envelope = json.loads(response.read(1024 * 1024))
         if envelope.get('result') == '[UNAUTHORIZED]':
             raise policy.Blocked('ADB_START_BRIDGE_AUTH_REJECTED')

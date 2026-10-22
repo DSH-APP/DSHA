@@ -29,6 +29,10 @@ public final class VirtualScreenRoutes {
         return "preview";
       case "/app/vscreen/see":
         return "see";
+      case "/app/vscreen/anchor":
+        return "anchor";
+      case "/app/vscreen/anchored-click":
+        return "anchored-click";
       case "/app/vscreen/tap":
         return "tap";
       case "/app/vscreen/swipe":
@@ -54,6 +58,7 @@ public final class VirtualScreenRoutes {
   public static boolean mutates(String operation) {
     if (operation == null) return false;
     switch (operation) {
+      case "anchored-click":
       case "tap":
       case "swipe":
       case "key":

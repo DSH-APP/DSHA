@@ -5,36 +5,18 @@ import static org.junit.Assert.*;
 
 public class WebRuntimeFallbackTest {
   @Test
-  public void onlyExplicitPreauthEngineFailureWithClosedOwnedTreeRetriesOnce() {
-    assertTrue(
-        WebRuntimeFallback.shouldRetry(
-            "bxroot", false, false, false, true, 139, true, true, false));
-    assertFalse(
-        WebRuntimeFallback.shouldRetry("bxroot", true, false, false, true, 139, true, true, false));
-    assertFalse(
-        WebRuntimeFallback.shouldRetry("proot", false, false, false, true, 139, true, true, false));
-    assertFalse(
-        WebRuntimeFallback.shouldRetry(
-            "proroot", false, false, false, true, 139, true, true, false));
+  public void silentAndCrashExitCanRetryOnce() {
+    assertTrue(WebRuntimeFallback.shouldRetry("proroot", false, false, false, true, 139));
+    assertTrue(WebRuntimeFallback.shouldRetry("proroot", false, false, false, true, 0));
+    assertFalse(WebRuntimeFallback.shouldRetry("proroot", true, false, false, true, 139));
+    assertFalse(WebRuntimeFallback.shouldRetry("proot", false, false, false, true, 139));
   }
 
   @Test
-  public void unknownBusinessPluginTimeoutAndGenericExitNeverReplay() {
-    assertFalse(
-        WebRuntimeFallback.shouldRetry(
-            "bxroot", false, false, false, true, 139, false, true, false));
-    assertFalse(
-        WebRuntimeFallback.shouldRetry(
-            "bxroot", false, false, false, true, 139, true, false, false));
-    assertFalse(
-        WebRuntimeFallback.shouldRetry("bxroot", false, false, false, true, 139, true, true, true));
-    assertFalse(
-        WebRuntimeFallback.shouldRetry("bxroot", false, true, false, true, 139, true, true, false));
-    assertFalse(
-        WebRuntimeFallback.shouldRetry("bxroot", false, false, true, true, 139, true, true, false));
-    assertFalse(
-        WebRuntimeFallback.shouldRetry(
-            "bxroot", false, false, false, true, null, true, true, false));
-    assertFalse(WebRuntimeFallback.shouldRetry("bxroot", false, false, false, true, 0));
+  public void noElapsedTimeOrPluginFailureCanTriggerFallback() {
+    assertFalse(WebRuntimeFallback.shouldRetry("proroot", false, false, false, true, null));
+    assertFalse(WebRuntimeFallback.shouldRetry("proroot", false, false, true, true, 1));
+    assertFalse(WebRuntimeFallback.shouldRetry("proroot", false, true, false, true, 139));
+    assertFalse(WebRuntimeFallback.shouldRetry("proroot", false, false, false, false, 139));
   }
 }

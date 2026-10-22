@@ -6,11 +6,12 @@ public final class PictureInPicturePolicy {
 
   public static boolean canEnter(
       boolean supported,
+      boolean userEnabled,
       boolean allowed,
       boolean contentReady,
       boolean leavingForActivity,
       boolean finishing) {
-    return supported && allowed && contentReady && !leavingForActivity && !finishing;
+    return supported && userEnabled && allowed && contentReady && !leavingForActivity && !finishing;
   }
 
   /** Android 要求宽高比位于 1:2.39 至 2.39:1，超长屏使用留边而不裁切。 */

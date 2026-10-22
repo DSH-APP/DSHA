@@ -9,32 +9,20 @@ import org.junit.Test;
 
 public class ConfigStoreRuntimeSettingsTest {
   @Test
-  public void oldProotMigratesButNewExplicitSelectionPersists() {
-    assertEquals(
-        "bxroot",
-        ConfigStore.runtimeSettingsFrom(Map.of(Constants.KEY_CONTAINER_RUNTIME, "proot")).engine);
-    assertEquals(
-        "proot",
-        ConfigStore.runtimeSettingsFrom(
-                Map.of(Constants.KEY_CONTAINER_RUNTIME, "proot", "runtime_engine_migration", 172))
-            .engine);
-  }
-
-  @Test
   public void missingSettingsUseTheSingleConfigStoreDefaults() {
     var snapshot = ConfigStore.runtimeSettingsFrom(Map.of());
     assertEquals("auto", snapshot.dnsMode);
-    assertEquals("bxroot", snapshot.engine);
+    assertFalse(snapshot.proroot);
     assertTrue(snapshot.staticLoader);
     assertFalse(snapshot.disableProotSeccomp);
   }
 
   @Test
-  public void anUnselectedColdInstallMayTryFastModeWithoutChangingTheRuntimeDefault() {
-    assertTrue(ConfigStore.preferFastColdModeFrom(Map.of()));
+  public void unselectedColdInstallKeepsTheStableProotDefault() {
+    assertFalse(ConfigStore.preferFastColdModeFrom(Map.of()));
     var values = Map.of("dns_mode", "ipv4", "ui_language", "en");
-    assertTrue(ConfigStore.preferFastColdModeFrom(values));
-    assertEquals("bxroot", ConfigStore.runtimeSettingsFrom(values).engine);
+    assertFalse(ConfigStore.preferFastColdModeFrom(values));
+    assertFalse(ConfigStore.runtimeSettingsFrom(values).proroot);
   }
 
   @Test

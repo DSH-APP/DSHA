@@ -15,6 +15,3 @@ export npm_config_cafile="${npm_config_cafile:-$SSL_CERT_FILE}"
 export npm_config_prefix="${npm_config_prefix:-/usr/local}"
 export NARB_DISABLE_NATIVE_CACHE="${NARB_DISABLE_NATIVE_CACHE:-1}"
 export NARB_DISABLE_NATIVE_CACHE="${NARB_DISABLE_NATIVE_CACHE:-1}"
-# AI 与脚本共用的临时文件目录（唯一约定，与 util/ScratchPaths.java 一致）；终端里可直接用。
-export DSHA_CACHE_DIR=/root/.cache/dsha
-# 原生准备与设备引导负责逐级 NOFOLLOW 核验。登录 shell 不沿任意链接 mkdir。

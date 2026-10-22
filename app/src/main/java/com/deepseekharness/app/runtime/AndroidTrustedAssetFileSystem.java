@@ -54,6 +54,7 @@ final class AndroidTrustedAssetFileSystem
   private final Map<String, String> writtenLinks = new LinkedHashMap<>();
   private final Set<String> dirtyDirectories = new LinkedHashSet<>();
   private final LinkedHashMap<String, Directory> cache = new LinkedHashMap<>(64, .75f, true);
+  private final DirectoryRoutes routes = new DirectoryRoutes();
   private final BackupControl control = new BackupControl(null);
   private final List<ParcelFileDescriptor> pendingSync = new ArrayList<>(128);
   private Directory activeParent;
@@ -141,6 +142,55 @@ final class AndroidTrustedAssetFileSystem
 
     String path(String leaf) {
       return leaf.isEmpty() ? fixedPath : fixedPath + "/" + leaf;
+    }
+  }
+
+  /** 每个解压会话独占；只缓存字符串解析，不缓存目录存在性、权限、身份或描述符。 */
+  static final class DirectoryRoutes {
+    private final LinkedHashMap<String, DirectoryRoute> entries =
+        new LinkedHashMap<>(64, .75f, true);
+
+    DirectoryRoute get(String relative) {
+      DirectoryRoute route = entries.get(relative);
+      if (route != null) return route;
+      route = new DirectoryRoute(relative);
+      entries.put(relative, route);
+      if (entries.size() > CACHED_DIRECTORIES) {
+        var oldest = entries.entrySet().iterator();
+        oldest.next();
+        oldest.remove();
+      }
+      return route;
+    }
+  }
+
+  static final class DirectoryRoute {
+    private final String[] parts, prefixes;
+
+    private DirectoryRoute(String relative) {
+      parts = relative.split("/");
+      prefixes = new String[parts.length];
+      String prefix = "";
+      for (int index = 0; index < parts.length; index++) {
+        prefix = prefix.isEmpty() ? parts[index] : prefix + "/" + parts[index];
+        prefixes[index] = prefix;
+      }
+    }
+
+    int size() {
+      return parts.length;
+    }
+
+    String part(int index) {
+      return parts[index];
+    }
+
+    String before(int index) {
+      return index == 0 ? "" : prefixes[index - 1];
+    }
+
+    String prefix(int index) {
+      return prefixes[index];
     }
   }
 
@@ -300,10 +350,10 @@ final class AndroidTrustedAssetFileSystem
     verifyRoot();
     Directory at = rootDirectory;
     if (relative.isEmpty()) return at;
-    String prefix = "";
-    for (String part : relative.split("/")) {
-      String before = prefix;
-      prefix = prefix.isEmpty() ? part : prefix + "/" + part;
+    DirectoryRoute route = routes.get(relative);
+    for (int index = 0; index < route.size(); index++) {
+      String part = route.part(index);
+      String before = route.before(index), prefix = route.prefix(index);
       StructStat n = rawStat(at.path(part));
       if (n == null && create) {
         try {
@@ -460,8 +510,8 @@ final class AndroidTrustedAssetFileSystem
   }
 
   @Override
-  public TrustedAssetFileSystem.CreatedFile prepareSmallFile(
-      File file, byte[] bytes, int count, int mode) throws IOException {
+  public CreatedFile prepareSmallFile(File file, byte[] bytes, int count, int mode)
+      throws IOException {
     if (activeParent == null
         || !file.equals(activeTarget)
         || bytes == null
@@ -493,7 +543,7 @@ final class AndroidTrustedAssetFileSystem
             prepared.device,
             prepared.permissions);
     // 已创建的短成员即使写入失败也先把真实出生身份交回边界，close 再抛出失败。
-    return new TrustedAssetFileSystem.CreatedFile(PREPARED_OUTPUT, owned) {
+    return new CreatedFile(PREPARED_OUTPUT, owned) {
       boolean closed;
 
       @Override
@@ -522,7 +572,7 @@ final class AndroidTrustedAssetFileSystem
   }
 
   @Override
-  public TrustedAssetFileSystem.CreatedFile createWithMode(File file, int mode) throws IOException {
+  public CreatedFile createWithMode(File file, int mode) throws IOException {
     ParcelFileDescriptor handle =
         open(file, OsConstants.O_WRONLY | OsConstants.O_CREAT | OsConstants.O_EXCL, 0600);
     FileDescriptor fd = handle.getFileDescriptor();
@@ -539,7 +589,7 @@ final class AndroidTrustedAssetFileSystem
       }
       throw error instanceof ErrnoException errno ? failure(errno) : (IOException) error;
     }
-    return new TrustedAssetFileSystem.CreatedFile(output, opened) {
+    return new CreatedFile(output, opened) {
       boolean closed;
 
       @Override

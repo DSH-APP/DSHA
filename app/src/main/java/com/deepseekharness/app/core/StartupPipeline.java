@@ -14,7 +14,7 @@ final class StartupPipeline {
 
     void status(String status);
 
-    void releasePrior();
+    void releasePrior() throws IOException;
 
     void recoverData() throws Exception;
 
@@ -49,6 +49,8 @@ final class StartupPipeline {
     String register() throws Exception;
 
     String legacyPlugins() throws Exception;
+
+    com.deepseekharness.app.util.BoundedProcessRunner.Result materializeCasLinks() throws Exception;
   }
 
   interface Diagnostics {
@@ -118,6 +120,12 @@ final class StartupPipeline {
                 boot.runPluginManagerResult("migrate-review-markers", ""),
                 "PLUGIN_LEGACY_ACTIVATION");
           }
+
+          public com.deepseekharness.app.util.BoundedProcessRunner.Result materializeCasLinks()
+              throws Exception {
+            return boot.execAndReadWithProotResult(
+                "python3 /root/.dsh/plugin-manager.py materialize-cas-links", 120_000);
+          }
         },
         new Diagnostics() {
           public String recordId() {
@@ -136,8 +144,15 @@ final class StartupPipeline {
 
   String prepare(long generation, boolean safeMode, Actions actions) throws Exception {
     if (!actions.current()) return null;
-    // 凭据不可读时在停止/准备运行环境前暂停，不以空 Key 启动造成误导性认证失败。
-    runtime.credentials();
+    // The native key is a legacy environment fallback. Its unavailable state remains
+    // explicit, but must not prevent opening Web's own credential configuration.
+    try {
+      runtime.credentials();
+    } catch (com.deepseekharness.app.util.CredentialRead.Unavailable unavailable) {
+      String warning = legacyCredentialWarning(unavailable.result);
+      actions.status(warning);
+      diagnostics.message(generation, warning);
+    }
     runtime.stopLan();
     actions.stage(com.deepseekharness.app.util.UiText.text("停止旧 Web 进程"));
     String stopError = runtime.stopWeb();
@@ -181,6 +196,20 @@ final class StartupPipeline {
     }
     if (!actions.current()) return null;
     if (!safeMode) {
+      if (Thread.currentThread().isInterrupted())
+        throw new java.io.InterruptedIOException("PLUGIN_CAS_COPY_INTERRUPTED");
+      actions.stage(
+          com.deepseekharness.app.util.UiText.choose(
+              "检查旧插件文件链接", "Checking legacy plugin file links"));
+      long copied =
+          requireCasCopyReceipt(
+              com.deepseekharness.app.util.GuestCommandOutcome.requireCompleted(
+                  runtime.materializeCasLinks(), "PLUGIN_CAS_COPY"));
+      if (copied > 0)
+        diagnostics.message(
+            generation,
+            com.deepseekharness.app.util.UiText.format("已修复 %s 个旧包文件链接，原链接已保留。", copied));
+      if (!actions.current()) return null;
       actions.stage(com.deepseekharness.app.util.UiText.text("注册插件"));
       // 内置插件注册：rootfs 烘焙的实体要登记进 web profile 才会被 dsh 加载。
       // 覆盖安装（rootfs 保留）与全新安装（rootfs 重新解压）都靠这一步补齐；
@@ -231,5 +260,65 @@ final class StartupPipeline {
                 "本次配置快照暂不可用：%s", error.getClass().getSimpleName()));
       }
     return startupProfile;
+  }
+
+  /** Read-only compatibility fallback; Web's persisted credentials retain their own priority. */
+  static Map<String, String> legacyCredentialEnvironment(
+      com.deepseekharness.app.util.CredentialRead read,
+      java.util.function.Consumer<String> warning) {
+    java.util.Objects.requireNonNull(read);
+    if (read.state == com.deepseekharness.app.util.CredentialRead.State.AVAILABLE)
+      return Map.of("DEEPSEEK_API_KEY", read.requireValue());
+    if (read.state != com.deepseekharness.app.util.CredentialRead.State.NOT_CONFIGURED)
+      warning.accept(legacyCredentialWarning(read));
+    return Map.of();
+  }
+
+  private static String legacyCredentialWarning(com.deepseekharness.app.util.CredentialRead read) {
+    return "LEGACY_NATIVE_KEY_"
+        + read.state.name()
+        + "/"
+        + read.reason.name()
+        + ": "
+        + com.deepseekharness.app.util.UiText.choose(
+            "旧原生 API Key 无法读取，原记录已保留。本次不注入兼容凭据；可继续在网页配置模型和凭据。",
+            "The legacy native API key is unavailable and its saved record was retained. No compatibility key will be injected; configure the model and credentials in Web.");
+  }
+
+  /** One completed repair receipt authorizes proceeding; errors and pending work never do. */
+  static long requireCasCopyReceipt(String output) throws IOException {
+    Map<String, Object> result = null;
+    if (output != null)
+      for (String raw : output.split("\\r?\\n")) {
+        String line = raw.trim();
+        if (!line.startsWith("PLUGIN_RESULT: ")) continue;
+        if (result != null) throw new IOException("PLUGIN_CAS_COPY_DUPLICATE_RESULT");
+        result =
+            com.deepseekharness.app.backup.BackupJson.read(
+                line.substring("PLUGIN_RESULT: ".length())
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                65536);
+      }
+    if (result == null) throw new IOException("PLUGIN_CAS_COPY_RESULT_MISSING");
+    if (!"ok".equals(result.get("status")))
+      throw new IOException(
+          "PLUGIN_CAS_COPY_NOT_COMPLETED: "
+              + com.deepseekharness.app.util.SensitiveData.redact(
+                  String.valueOf(result.get("message"))));
+    if (!"DSHA_PNPM_CAS_COPY_V1".equals(result.get("algorithm"))
+        || !"web".equals(result.get("profile"))
+        || !Boolean.TRUE.equals(result.get("storeReadOnly"))
+        || !(result.get("changed") instanceof Boolean))
+      throw new IOException("PLUGIN_CAS_COPY_RECEIPT_INVALID");
+    long copied = com.deepseekharness.app.backup.BackupJson.number(result, "migratedFiles");
+    String operation = com.deepseekharness.app.backup.BackupJson.string(result, "operationId");
+    boolean changed = Boolean.TRUE.equals(result.get("changed"));
+    if (copied < 0
+        || copied > 100000
+        || changed != (copied > 0)
+        || changed && !operation.matches(com.deepseekharness.app.util.Ids.UUID_PATTERN)
+        || !changed && !operation.isEmpty())
+      throw new IOException("PLUGIN_CAS_COPY_RECEIPT_INVALID");
+    return copied;
   }
 }

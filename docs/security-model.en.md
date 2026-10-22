@@ -1,6 +1,8 @@
 # DSHA security model
 
-This page describes current source policy. Historical documentation is preserved under tools/history. Formal terminals and third-party plugins are open under the current user policy; the independent recovery runtime retains five controlled tools and native write confirmation. The [threat-model ADR 0002](adr/0002-current-threat-model.md) records the assets, actors and scope of individual controls.
+> Maintained English entry: [Security model](en/security-model.md). See the [complete English index](en/index.md) and [current delivery scope](en/release-introduction.md). Historical examples below retain their original identity.
+
+This page describes current source policy. Historical documentation is preserved under tools/history. Formal terminals and third-party plugins are open under the current user policy; the independent recovery runtime retains five controlled tools and native write confirmation. The [threat-model ADR 0002](en/adr/0002-current-threat-model.md) records the assets, actors and scope of individual controls.
 
 ## Assets and actors
 
@@ -27,7 +29,11 @@ Plugins run with the app UID and can access permitted files and execute code. Au
 
 Root, Shizuku or ADB is selected before dispatch. Native and privileged execution policies check device commands. SMS, virtual screens, screenshots/UI reads, microphone and storage require their respective native grants and actual Android permissions. Confirmation does not prove target identity. Unknown execution must not be replayed through another channel.
 
-Managed device file writes are restricted to allowed shared-storage descendants and `/data/local/tmp/`. The shared root, DCIM, Pictures, Android/data, Android/obb and their ancestors are protected. This boundary governs managed device commands; it is not a file firewall around same-UID terminals or plugins. SMS is disabled by default and requires a separate revocable grant for strict `content query` against the current Android user. Provider writes and direct reads of the telephony private tree are rejected.
+Managed device file writes are restricted to policy-approved shared-storage descendants and `/data/local/tmp/`. The shared root, DCIM, Pictures, Android/data, Android/obb and their ancestors are protected against writes. This boundary governs managed device commands; it is not a file firewall around same-UID terminals or plugins. SMS queries are off by default and require a separate revocable grant for strict `content query` against the current Android user. Provider writes are refused; file-read guards reject recognized telephony paths and canonical targets.
+
+**Known coverage gap**: review of `140c7ba` on 2026-10-22 found that recursive READ validates top-level arguments and canonical paths, not nested symlink targets encountered during traversal. Reads such as `grep -R` that follow links cannot therefore be claimed unable to reach the entire telephony tree. This remains an implementation issue requiring repair. Isolated policy checks establish the missing pre-dispatch validation; no real phone SMS was read and no ROM exploit was demonstrated. The FILE adapter's NOFOLLOW behavior does not replace the READ guard. See section 6.2 of [permission architecture](en/device-permissions-architecture.md) for code entry points and repair requirements.
+
+Metadata discovery of su, manager authorization and execution as UID 0 are separate facts. DSHA does not implement a Root manager in its APK. Section 5.1 of [references and provenance](en/references-and-provenance.md) records the pinned upstream review and compatibility limits. Root-manager identity authorization does not implement DSHA's command, SMS or virtual-screen policy, or turn same-UID arbitrary plugin code into a strong sandbox.
 
 Accessibility receives other applications' window events; pairing scans only handle Settings during a short user-enabled window. Active UI reads and screenshots are separate capabilities. Screenshots may be stored in private Pictures/DSHA and returned using content URIs; they are not exclusively memory-resident. Microphone approval is limited to current local-page audio requests; camera and screen-audio requests are rejected.
 
@@ -51,4 +57,4 @@ Stopping requires birth identity, session and exit evidence; bare PID, port or n
 
 ## Delivery and evidence limits
 
-Formal packages retain com.dsh.client, the historical E7E3 certificate and v1/v2/v3 signatures. Release passwords are explicit and another certificate is never substituted. This round performs no phone actions as requested. Software tests, APK/ELF/signature checks and physical overwrite installation are separate evidence. Current results come from the audit and delivery report linked by README; previous reports do not establish the current verification scope.
+Formal packages retain dsh.android.client, the historical E7E3 certificate and v1/v2/v3 signatures. Release passwords are explicit and another certificate is never substituted. Historical F13/package-rename records performed no phone actions. This performance round has new device-acceptance authorization; actual results still need records bound to the final APK. Software tests, APK/ELF/signature checks and physical overwrite installation are separate evidence. Current results come from the audit and delivery report linked by README; previous reports do not establish the current verification scope.

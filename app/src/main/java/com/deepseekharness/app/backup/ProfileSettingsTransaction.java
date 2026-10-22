@@ -59,14 +59,23 @@ public final class ProfileSettingsTransaction implements HostDataTransaction.Tar
 
   @Override
   public File resolve(String id) throws IOException {
+    // Historical public homes remain readable, but a maintenance journal may not
+    // turn them into rename/write/delete targets after an upgrade.
+    if (!GuestDataResolver.within(files, home))
+      throw new IOException("SETTINGS_EXTERNAL_HOME_PRESERVED");
     if (id.equals("environment") && record.get("workspace") instanceof String) {
       String workspace =
           NativeConfigurationReset.normalizeWorkspace((String) record.get("workspace"));
-      return fs.child(
-          files, com.deepseekharness.app.util.GuestPaths.ROOT_RELATIVE + "/" + workspace + "/.env");
+      return PrivateMaintenancePaths.target(
+          fs,
+          files,
+          fs.child(
+              files,
+              com.deepseekharness.app.util.GuestPaths.ROOT_RELATIVE + "/" + workspace + "/.env"));
     }
     if (!id.equals("profile-patch")) throw new IOException("SETTINGS_TRANSACTION_TARGET");
-    return fs.child(home, "profiles/" + profile + "/cordis.patch.yml");
+    return PrivateMaintenancePaths.target(
+        fs, files, fs.child(home, "profiles/" + profile + "/cordis.patch.yml"));
   }
 
   private HostDataTransaction.Settings nativeSettings() {

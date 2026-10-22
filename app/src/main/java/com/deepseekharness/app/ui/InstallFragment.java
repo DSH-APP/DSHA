@@ -352,7 +352,7 @@ public class InstallFragment extends Fragment {
       return;
     }
     boolean recovery = maintenance.pendingMaintenance();
-    new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext())
+    new com.deepseekharness.app.ui.DshaDialogBuilder(requireContext(), true)
         .setTitle(
             recovery
                 ? com.deepseekharness.app.util.UiText.text("恢复中断维护？")

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-client-file-upload/lib/index.js",
+  "sourceSha256": "5dd5bd2d20656a1edeb1366e6b878afb04db519d2ba400135cb020ef037912fb",
+  "packageIntegrity": "sha512-gLrn7EIxv59e/IBcxOv3x/1AMzkoBdjWAIAGnMLQOnPLl1HLddF1X1gLUAJ73XqhyPp4ePWmz/nReNOluTDN9A==",
+  "reason": "Tie the sole cold-Session Agent resolver registration to its owning Service effect without comparing Cordis-wrapped function properties; preserve live duplicate rejection, exact old-disposer fencing, upload intake and Session-scoped receipts.",
+  "patches": [
+    {
+      "before": "\t\tregisterAgentResolver(resolve) {\n\t\t\tif (this.agentResolver !== void 0) throw new Error(\"file-upload: Agent resolver is already registered\");\n\t\t\tthis.agentResolver = resolve;\n\t\t\treturn () => {\n\t\t\t\tif (this.agentResolver === resolve) this.agentResolver = void 0;\n\t\t\t};\n\t\t}",
+      "after": "\t\tregisterAgentResolver(resolve) {\n\t\t\tif (this.agentResolver !== void 0) throw new Error(\"file-upload: Agent resolver is already registered\");\n\t\t\t// DSHA_FILE_UPLOAD_RESOLVER_LIFETIME_V1: Cordis traces function-valued\n\t\t\t// Service reads. Keep ownership in a stable data object so disposal\n\t\t\t// compares the exact registration, never a newly wrapped callback.\n\t\t\tconst registration = { resolve };\n\t\t\tthis.agentResolver = registration;\n\t\t\treturn () => {\n\t\t\t\tif (this.agentResolver === registration) this.agentResolver = void 0;\n\t\t\t};\n\t\t}"
+    },
+    {
+      "before": "\t\t\tconst resolver = this.agentResolver;\n\t\t\tif (resolver === void 0) throw new RemoteError(\"session/not-found\", `session \"${sessionId}\" is not attached`, { sessionId });\n\t\t\treturn resolver(sessionId);",
+      "after": "\t\t\tconst registration = this.agentResolver;\n\t\t\tif (registration === void 0) throw new RemoteError(\"session/not-found\", `session \"${sessionId}\" is not attached`, { sessionId });\n\t\t\tconst { resolve } = registration;\n\t\t\treturn resolve(sessionId);"
+    }
+  ]
+}

@@ -161,10 +161,7 @@ public final class ProfileSettingsTrial {
       RuntimeWorkPort.Work lease = RuntimeWorkPort.begin();
       Process process = null;
       BoundedOutputDrain output = new BoundedOutputDrain();
-      String runtimeMode = "UNKNOWN";
-      Throwable primaryFailure = null;
-      try (var engineScope = proot.hostPorts().open()) {
-        runtimeMode = proot.runtime().id();
+      try {
         String command =
             "export DSH_HOME="
                 + ShellQuote.arg(guest + "/home")
@@ -183,8 +180,8 @@ public final class ProfileSettingsTrial {
                 + "exec /usr/local/bin/node /usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js --profile "
                 + ShellQuote.arg(trialProfile)
                 + " --no-open --host 127.0.0.1 --port 0";
-        process = proot.execRootfsForTrial(command, payload, guest, runtimeMode);
-        runtimeMode = TrialSupport.runtimeMode(process);
+        TrialSupport.write(fs, operation, "launched", id.getBytes(StandardCharsets.US_ASCII));
+        process = proot.execRootfsForTrial(command, payload, guest, "proot");
         File result = new File(payload, "result.json");
         long started = System.currentTimeMillis();
         TrialWaitBudget wait = new TrialWaitBudget(TrialWaitBudget.Phase.SETTINGS);
@@ -217,64 +214,51 @@ public final class ProfileSettingsTrial {
             review,
             fs.small(new File(payload, profileRoot + "/cordis.patch.yml"), BackupLimits.MANIFEST));
       } catch (IOException | RuntimeException error) {
-        primaryFailure = error;
         String tail = output.diagnostics();
         if (tail.length() > 8000) tail = tail.substring(tail.length() - 8000);
-        try {
-          fs.atomic(
-              operation,
-              "failure.json",
-              BackupJson.write(
-                  Map.of(
-                      "runtimeMode",
-                      runtimeMode,
-                      "error",
-                      BackupErrorCode.from(error),
-                      "output",
-                      tail,
-                      "failedAt",
-                      System.currentTimeMillis()),
-                  32768));
-        } catch (IOException recording) {
-          error.addSuppressed(recording);
-        }
+        fs.atomic(
+            operation,
+            "failure.json",
+            BackupJson.write(
+                Map.of(
+                    "runtimeMode",
+                    "proot",
+                    "error",
+                    BackupErrorCode.from(error),
+                    "output",
+                    tail,
+                    "failedAt",
+                    System.currentTimeMillis()),
+                32768));
         throw error;
       } finally {
-        Process tracked = process;
-        TrialSupport.finish(
-            tracked,
-            lease,
-            new TrialSupport.Cleanup() {
-              public void stop() throws IOException {
-                if (tracked == null) return;
-                String stopped = manager.stop();
-                if (!stopped.isEmpty())
-                  throw new IOException(
-                      "SETTINGS_TRIAL_PROCESS_UNCONFIRMED: " + SensitiveData.redact(stopped));
-                ProcessTermination.awaitExit(tracked, 3000);
-              }
-
-              public boolean confirmed(Process launcher) throws IOException {
-                return launcher == null
-                    ? TrialSupport.untrackedExitConfirmed(
-                        fs,
-                        operation,
-                        sessionId -> OwnedRuntimeSession.recordedExit(files, sessionId))
-                    : manager.confirmTrackedTrialStopped(launcher);
-              }
-
-              public void closeRecord() throws IOException {
-                File marker = fs.child(operation, "closed");
-                if (fs.stat(marker).type.equals("MISSING"))
-                  TrialSupport.write(
-                      fs, operation, "closed", id.getBytes(StandardCharsets.US_ASCII));
-                else if (!id.equals(new String(fs.small(marker, 128), StandardCharsets.US_ASCII)))
-                  throw new IOException("TRIAL_MARKER");
-                if (!fs.stat(payload).type.equals("MISSING")) fs.removeOwned(operation, "payload");
-                RuntimeTrialRecords.pruneClosed(fs, records);
-              }
-            },
-            primaryFailure);
+        boolean exited = process == null;
+        if (process != null) {
+          try {
+            String stopped = manager.stop();
+            if (stopped.isEmpty()) ProcessTermination.awaitExit(process, 3000);
+            exited = stopped.isEmpty() && manager.confirmTrackedTrialStopped(process);
+          } catch (IOException | RuntimeException ignored) {
+          }
+        }
+        if (!exited) {
+          lease.retainUntilExit(
+              TrialSupport.checkedExit(
+                  process,
+                  manager::confirmTrackedTrialStopped,
+                  () -> {
+                    try {
+                      manager.stop();
+                    } catch (Exception ignored) {
+                    }
+                  },
+                  "SETTINGS_TRIAL_PROCESS_UNCONFIRMED"));
+          throw new IOException("SETTINGS_TRIAL_PROCESS_UNCONFIRMED");
+        }
+        lease.close();
+        TrialSupport.write(fs, operation, "closed", id.getBytes(StandardCharsets.US_ASCII));
+        fs.removeOwned(operation, "payload");
+        RuntimeTrialRecords.pruneClosed(fs, records);
       }
     } catch (IOException | RuntimeException preparationFailure) {
       // 启动前失败没有 guest，关闭本次空现场，避免一次无效 profile 阻塞以后检查。

@@ -15,6 +15,14 @@ export declare function panelOwnsMainArea(): boolean;
 export interface PanelExit {
     /** Leave the panel (no-op when the host has no panel-selection API). */
     exit: () => void;
+    /**
+     * Step back ONE level: click the host's own 「返回上一级」 control when a
+     * panel subpage is open, otherwise leave the panel. Shares exit's in-flight
+     * and disposed guards.
+     */
+    back: () => void;
+    /** Whether a panel subpage currently carries the host's own back control. */
+    subpageOpen: () => boolean;
     /** Whether the host can select a panel at all; false on rc.6. */
     supported: boolean;
     /**
@@ -78,8 +86,13 @@ export declare function createPanelExit(layout: unknown): PanelExit;
  * @param exitPanel - the shared exit action.
  * @param supported - false on hosts with no panel-selection API; the task then
  *   never arms a history entry at all.
+ * @param backOneLevel - the shared one-level action (the FAB's too): click the
+ *   host's own subpage back control, or leave the panel when none is on screen.
+ * @param subpageOpen - whether that host control is on screen right now. A
+ *   panel subpage gets no history entry of its own, so a back press there must
+ *   climb the host view and RE-ARM the entry it just consumed.
  */
-export declare function createPanelBackExitTask(exitPanel: () => void, supported: boolean): ReconcilerTask;
+export declare function createPanelBackExitTask(exitPanel: () => void, supported: boolean, backOneLevel: () => void, subpageControl: () => HTMLElement | null): ReconcilerTask;
 /**
  * Tapping the already-selected panel row again returns to the conversation.
  * Unselected rows are left alone — they still go through the host's own

@@ -109,7 +109,8 @@ public final class RootShell {
       String source = ctx.getApplicationInfo().sourceDir;
       String canonical = new File(source).getCanonicalPath();
       if (!source.equals(canonical)
-          || !DeviceShellPolicy.inspectVirtualScreenLaunch(command, canonical, ctx.getPackageName())
+          || !DeviceShellPolicy.inspectManagedVirtualScreen(
+                  command, canonical, ctx.getPackageName())
               .allowed())
         return com.deepseekharness.app.util.UiText.text("[POLICY_BLOCKED] 虚拟屏启动参数无法核验\n[EXIT=126]");
     } catch (Exception invalid) {
@@ -117,6 +118,38 @@ public final class RootShell {
           "[POLICY_BLOCKED] 无法核验 DSHA 安装包路径\n[EXIT=126]");
     }
     return runPrivileged(ctx, command, -1, "virtual-screen-start");
+  }
+
+  /** Preserve pre-send refusal separately from a possibly executed native launch/probe. */
+  public static com.deepseekharness.app.device.DeviceTransportResult execVirtualScreenTyped(
+      Context ctx, String command) {
+    if (!enabled(ctx))
+      return com.deepseekharness.app.device.DeviceTransportResult.notSent(
+          "root", "ROOT_NOT_ENABLED", "[POLICY_BLOCKED] ROOT_NOT_ENABLED\n[EXIT=126]");
+    try {
+      String source = ctx.getApplicationInfo().sourceDir;
+      String canonical = new File(source).getCanonicalPath();
+      if (!source.equals(canonical)
+          || !DeviceShellPolicy.inspectManagedVirtualScreen(
+                  command, canonical, ctx.getPackageName())
+              .allowed())
+        return com.deepseekharness.app.device.DeviceTransportResult.notSent(
+            "root",
+            "DEVICE_POLICY_BLOCKED",
+            "[POLICY_BLOCKED] VSCREEN_ARGUMENTS_UNVERIFIED\n[EXIT=126]");
+    } catch (Exception invalid) {
+      return com.deepseekharness.app.device.DeviceTransportResult.notSent(
+          "root",
+          "SELF_PACKAGE_UNVERIFIED",
+          "[POLICY_BLOCKED] SELF_PACKAGE_UNVERIFIED\n[EXIT=126]");
+    }
+    if (executable() == null)
+      return com.deepseekharness.app.device.DeviceTransportResult.notSent(
+          "root", "ROOT_UNAVAILABLE", "[ROOT_UNAVAILABLE] ROOT_UNAVAILABLE\n[EXIT=124]");
+    return com.deepseekharness.app.device.DeviceTransportResult.fromLegacy(
+        "root",
+        runPrivileged(ctx, command, -1, "virtual-screen-start"),
+        com.deepseekharness.app.device.DeviceTransportIdentity.unknown());
   }
 
   private static String runPrivileged(
@@ -156,7 +189,12 @@ public final class RootShell {
           new LastResult(
               result.timedOut ? Status.TIMED_OUT : Status.FAILED,
               su,
-              SensitiveData.redact(result.output.trim()));
+              "exit="
+                  + result.exitCode
+                  + " bytes="
+                  + result.totalBytes
+                  + " truncated="
+                  + result.truncated);
       return "[EXECUTION_UNKNOWN] "
           + lastResult.render(su)
           + com.deepseekharness.app.util.UiText.text("。未取得完整结果，不会自动重试\n[EXIT=125]");

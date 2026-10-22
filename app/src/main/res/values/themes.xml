@@ -34,7 +34,7 @@
 
         <item name="android:colorBackground">@color/surface</item>
         <item name="android:windowBackground">@color/surface</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@color/surface</item>
         <item name="android:navigationBarColor">@color/surface</item>
         <item name="android:textColorPrimary">@color/text</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
@@ -57,8 +57,6 @@
         <item name="checkboxStyle">@style/Widget.DSHA.CheckBox</item>
         <item name="materialSwitchStyle">@style/Widget.DSHA.Switch</item>
     </style>
-
-    <style name="Theme.DSHA.Conversation" parent="Theme.DeepseekHarness" />
 
     <!-- appcompat / framework AlertDialog：必须是完整 Dialog 主题（不能给 Overlay） -->
     <style name="Dialog.DSHA.Alert" parent="Theme.Material3.DayNight.Dialog.Alert">

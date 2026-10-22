@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-host-plugin-inventory/lib/index.js",
+  "sourceSha256": "f8e50fb2e24c92302570a41baa007e409cf4651bed0a65605b0871ba14325d30",
+  "patches": [
+    {
+      "before": "/** Read current Loader entries and optional preset compositions.\n* @param ctx Context with the Loader service.\n* @returns Current inventory with optional display metadata and no separate runtime cache.\n*/\nasync function readPluginInventory(ctx) {\n\tconst entries = [];\n\tconst packages = ctx.get(\"pluginPackages\");\n\tfor (const entry of ctx.loader.entries()) {\n\t\tif (entry.options.group) continue;\n\t\tconst base = entry.parent.tree.ctx.baseUrl;\n\t\tconst meta = base === void 0 ? void 0 : packages?.metaOf(entry.options.name, base);\n\t\tentries.push({\n\t\t\tentryId: pluginEntryId(entry.id),\n\t\t\tmoduleName: entry.options.name,\n\t\t\tenabled: !entry.disabled,\n\t\t\tfiberPhase: entry.fiber === void 0 ? null : FIBER_PHASE[entry.fiber.state],\n\t\t\t...meta === void 0 ? {} : { meta }\n\t\t});\n\t}",
+      "after": "// DSHA_PLUGIN_ENTRIES_PROJECTION_V1: one synchronous projection of live\n// Loader facts. Preset compositions remain the full inventory reader's job.\nfunction readPluginEntries(ctx) {\n\tconst entries = [];\n\tconst packages = ctx.get(\"pluginPackages\");\n\tfor (const entry of ctx.loader.entries()) {\n\t\tif (entry.options.group) continue;\n\t\tconst base = entry.parent.tree.ctx.baseUrl;\n\t\tconst meta = base === void 0 ? void 0 : packages?.metaOf(entry.options.name, base);\n\t\tentries.push({\n\t\t\tentryId: pluginEntryId(entry.id),\n\t\t\tmoduleName: entry.options.name,\n\t\t\tenabled: !entry.disabled,\n\t\t\tfiberPhase: entry.fiber === void 0 ? null : FIBER_PHASE[entry.fiber.state],\n\t\t\t...meta === void 0 ? {} : { meta }\n\t\t});\n\t}\n\treturn entries;\n}\n/** Read current Loader entries and optional preset compositions.\n* @param ctx Context with the Loader service.\n* @returns Current inventory with optional display metadata and no separate runtime cache.\n*/\nasync function readPluginInventory(ctx) {\n\tconst entries = readPluginEntries(ctx);\n\tconst packages = ctx.get(\"pluginPackages\");"
+    },
+    {
+      "before": "export { PluginInventoryGateway, PluginInventoryGateway as default, pluginEntryId, readPluginInventory };",
+      "after": "export { PluginInventoryGateway, PluginInventoryGateway as default, pluginEntryId, readPluginEntries, readPluginInventory };"
+    }
+  ]
+}

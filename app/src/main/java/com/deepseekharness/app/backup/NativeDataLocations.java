@@ -48,12 +48,6 @@ public final class NativeDataLocations {
   private final File files, rootfs, publicStorage, publicData;
   private final GuestDataResolver resolver;
 
-  interface NativeSettings {
-    byte[] read(boolean includeKey) throws IOException;
-  }
-
-  private final NativeSettings nativeSettings;
-
   public NativeDataLocations(Context context) throws IOException {
     this.context = context.getApplicationContext();
     fs = new AndroidBackupFileSystem();
@@ -64,34 +58,6 @@ public final class NativeDataLocations {
     resolver =
         new GuestDataResolver(
             fs, rootfs, publicStorage, Arrays.asList(new File(files, "user-data-v5"), publicData));
-    nativeSettings =
-        includeKey -> {
-          try {
-            return new ConfigStore(this.context)
-                .exportPortableSettings(includeKey)
-                .toString()
-                .getBytes(java.nio.charset.StandardCharsets.UTF_8);
-          } catch (org.json.JSONException error) {
-            throw new IOException("SETTINGS_FORMAT", error);
-          }
-        };
-  }
-
-  NativeDataLocations(
-      BackupFileSystem fs, File files, File publicStorage, NativeSettings nativeSettings) {
-    context = null;
-    this.fs = fs;
-    this.files = files.getAbsoluteFile();
-    rootfs = com.deepseekharness.app.util.GuestPaths.rootfs(this.files);
-    this.publicStorage = publicStorage.getAbsoluteFile();
-    publicData = new File(this.publicStorage, "Documents/dshdata");
-    resolver =
-        new GuestDataResolver(
-            fs,
-            rootfs,
-            this.publicStorage,
-            Arrays.asList(new File(this.files, "user-data-v5"), publicData));
-    this.nativeSettings = nativeSettings;
   }
 
   public File files() {
@@ -128,21 +94,13 @@ public final class NativeDataLocations {
           if (selection.scope.equals("application") || selection.scope.equals("plugins")) {
             try {
               result.plugins =
-                  context == null
-                      ? new NativePluginGraph(
-                          fs,
-                          resolver,
-                          actual.file,
-                          new File(rootfs, "usr/local/lib/node_modules"),
-                          rootfs,
-                          Map.of())
-                      : new NativePluginGraph(
-                          context,
-                          fs,
-                          resolver,
-                          actual.file,
-                          new File(rootfs, "usr/local/lib/node_modules"),
-                          rootfs);
+                  new NativePluginGraph(
+                      context,
+                      fs,
+                      resolver,
+                      actual.file,
+                      new File(rootfs, "usr/local/lib/node_modules"),
+                      rootfs);
               result.plugins.collect(control);
             } catch (InterruptedIOException cancelled) {
               throw cancelled;
@@ -151,10 +109,7 @@ public final class NativeDataLocations {
               result.notices.add("PLUGIN_GRAPH_UNAVAILABLE");
               result.sources.add(
                   new UnavailableBackupSource(
-                      "plugin-graph-unavailable",
-                      "plugins",
-                      BackupPathFailure.source(error, "plugin-graph-unavailable", ""),
-                      false));
+                      "plugin-graph-unavailable", "plugins", BackupErrorCode.from(error), false));
             }
           }
           result.possibleExistingData = true;
@@ -193,7 +148,18 @@ public final class NativeDataLocations {
     if (selection.scope.equals("application") || selection.scope.equals("settings")) {
       result.sources.add(
           new ValueBackupSource(
-              "native-settings", "settings", () -> nativeSettings.read(selection.includeApiKey)));
+              "native-settings",
+              "settings",
+              () -> {
+                try {
+                  return new ConfigStore(context)
+                      .exportPortableSettings(selection.includeApiKey)
+                      .toString()
+                      .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                } catch (org.json.JSONException error) {
+                  throw new IOException("SETTINGS_FORMAT", error);
+                }
+              }));
       // dsh 0.1.7 imports the legacy settings.yaml into the active web
       // profile. Keep that profile layer in a settings-only archive so
       // an upgrade does not silently lose provider/model configuration.
@@ -251,7 +217,7 @@ public final class NativeDataLocations {
             new UnavailableBackupSource(id(name), scope, "PUBLIC_DATA_PERMISSION", false));
       }
     }
-    if (!readable && (context == null || new ConfigStore(context).isWelcomed())) {
+    if (!readable && new ConfigStore(context).isWelcomed()) {
       result.possibleExistingData = true;
       result.sources.add(
           new UnavailableBackupSource(
@@ -262,12 +228,8 @@ public final class NativeDataLocations {
   private void addProfileSettings(Located result, Selection selection, File data)
       throws IOException {
     File profiles = new File(data, "profiles");
-    File actualProfiles = resolver.resolve(profiles).file;
-    String type = fs.stat(actualProfiles).type;
-    if (type.equals("MISSING")) return;
-    if (!type.equals("DIRECTORY"))
-      throw BackupPathFailure.at("SOURCE_NOT_DIRECTORY", "profiles", "");
-    List<String> names = fs.list(actualProfiles);
+    if (fs.stat(profiles).type.equals("MISSING")) return;
+    List<String> names = fs.list(resolver.resolve(profiles).file);
     if (names.size() > 512) throw new IOException("PROFILE_LIMIT");
     for (String profileName : names) {
       if (!com.deepseekharness.app.util.ProfileConfigPath.profile(profileName)) {
@@ -275,16 +237,13 @@ public final class NativeDataLocations {
         continue;
       }
       File profile = new File(profiles, profileName);
-      File actualProfile = resolver.resolve(profile).file;
-      if (!fs.stat(actualProfile).type.equals("DIRECTORY"))
-        throw BackupPathFailure.at("SOURCE_NOT_DIRECTORY", "profiles", profileName);
       for (String name : new String[] {"package.json", "cordis.patch.yml"}) {
         File source = new File(profile, name);
-        File resolved = resolver.resolve(source).file;
-        if (!fs.stat(resolved).type.equals("FILE")) continue;
+        if (!fs.stat(source).type.equals("FILE")) continue;
         String relative = "profiles/" + profileName + "/" + name;
         String id = "profile-config-" + hash(relative);
         result.guestTargets.put(id, "root/.dsh/" + relative);
+        File resolved = resolver.resolve(source).file;
         result.sources.add(
             new FileBackupSource(fs, id, "settings", resolved, false, (path, node) -> "") {
               @Override
@@ -359,8 +318,7 @@ public final class NativeDataLocations {
               ? new CredentialFileBackupSource(source)
               : source);
     } catch (IOException error) {
-      result.sources.add(
-          new UnavailableBackupSource(id, scope, BackupPathFailure.source(error, id, ""), false));
+      result.sources.add(new UnavailableBackupSource(id, scope, "DATA_LOCATION_UNREADABLE", false));
     }
   }
 

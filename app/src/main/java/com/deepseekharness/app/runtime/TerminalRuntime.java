@@ -81,9 +81,7 @@ final class TerminalRuntime {
         execution.launcher().environment(builder, spec);
         builder.environment().put("DSH_CONFIRM", "0");
         builder.environment().put("DSH_INTERACTIVE", "1");
-        process =
-            IsolatedInstallProcess.start(
-                builder, new File(context.getCacheDir(), "runtime-sessions"), context, null);
+        process = builder.start();
         work.retainUntilExit(process);
         return process;
       } catch (IOException | RuntimeException | Error error) {

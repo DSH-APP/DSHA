@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from release_layout import digest
-from release_names import apk_filename, apk_name_version
+from release_names import apk_name_version, apk_filename
 
 
 def load(name, filename):
@@ -125,14 +125,14 @@ class ReleaseLayoutTest(unittest.TestCase):
         self.assertEqual(list((self.root/'artifacts/release-staging').iterdir()),[])
 
     def test_manifest_downloads_follow_download_version_group(self):
-        self.write('app/build.gradle', b"ext.dshaApkNameVersion = '0.2.0-rc2'\n")
         notes = self.write('notes.txt', b'limited checked scope')
         output = self.root / 'artifacts/manifests/release-manifest.json'
-        version = '0.2.9-20261004.2100-dsh0.2.0-rc.2'
-        apks = [self.write('dsha-0.2.0-rc2.apk', b'standard'), self.write('dsha-0.2.0-rc2low.apk', b'low')]
+        version = '0.2.1-rc.2'
+        self.write('app/build.gradle', b"ext.dshaApkNameVersion = '0.2.1-rc.2'\n")
+        apks = [self.write(apk_filename(flavor, self.root), flavor.encode()) for flavor in ('standard', 'low')]
         def inspect(apk, flavor, *_):
             return dict(filename=apk.name, flavor=flavor, versionName=version + ('low' if flavor == 'low' else ''),
-                        versionCode=158, runtimeId='same-runtime', dshVersion='0.2.0-rc.2', minSdk=30 if flavor == 'standard' else 23,
+                        versionCode=190, runtimeId='same-runtime', dshVersion='0.2.1-rc.2', minSdk=30 if flavor == 'standard' else 23,
                         bytes=apk.stat().st_size, sha256=digest(apk))
         argv = ['manifest', '--standard', str(apks[0]), '--low', str(apks[1]), '--build-tools', str(self.root),
                 '--notes', str(notes), '--output', str(output)]
@@ -142,9 +142,34 @@ class ReleaseLayoutTest(unittest.TestCase):
             manifest.main()
         release = json.loads(output.read_text(encoding='utf8'))['releases'][0]
         self.assertEqual(release['version'], version)
-        self.assertEqual(release['apkNameVersion'], '0.2.0-rc2')
+        self.assertEqual(release['apkNameVersion'], '0.2.1-rc.2')
+        self.assertEqual(release['versionCode'], 190)
         for artifact in release['artifacts']:
-            self.assertEqual(artifact['url'], 'https://dsha.cc/downloads/0.2.0-rc2/' + artifact['filename'])
+            self.assertEqual(artifact['url'], 'https://dsha.cc/downloads/0.2.1-rc.2/' + artifact['filename'])
+
+    def test_current_manifest_rejects_historic_filename_without_weakening_name_rule(self):
+        self.write('app/build.gradle', b"ext.dshaApkNameVersion = '0.2.1-rc.2'\n")
+        notes = self.write('notes.txt', b'local fixture only')
+        output = self.root / 'artifacts/manifests/release-manifest.json'
+        apks = [self.write('dsha-0.2.0-rc2.apk', b'standard'),
+                self.write('dsha-0.2.0-rc2low.apk', b'low')]
+        def inspect(apk, flavor, *_):
+            return dict(filename=apk.name, flavor=flavor,
+                        versionName='0.2.1-rc.2' + ('low' if flavor == 'low' else ''),
+                        versionCode=190, runtimeId='same-runtime', dshVersion='0.2.1-rc.2',
+                        minSdk=30 if flavor == 'standard' else 23,
+                        bytes=apk.stat().st_size, sha256=digest(apk))
+        argv = ['manifest', '--standard', str(apks[0]), '--low', str(apks[1]),
+                '--build-tools', str(self.root), '--notes', str(notes), '--output', str(output)]
+        with patch('sys.argv', argv), patch.object(manifest, 'inspect', inspect), \
+                patch.object(manifest, 'apk_name_version', lambda: apk_name_version(self.root)), \
+                patch.object(manifest, 'apk_filename', lambda flavor: apk_filename(flavor, self.root)):
+            with self.assertRaisesRegex(ValueError, 'dsha-0.2.1-rc.2.apk'):
+                manifest.main()
+        self.assertFalse(output.exists())
+        for apk in apks:
+            self.assertTrue(apk.exists())
+            self.assertFalse(apk.with_suffix('.apk.sha256').exists())
 
 
 if __name__ == '__main__':

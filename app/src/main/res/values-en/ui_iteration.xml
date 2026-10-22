@@ -7,8 +7,6 @@
     <string name="ui2_stop">□  Stop</string>
     <string name="ui2_port">Active Web port</string>
     <string name="ui2_environment">Runtime environment</string>
-    <string name="ui2_models">Model settings</string>
-    <string name="ui2_models_sub">Providers, endpoints and models</string>
     <string name="ui2_address">Access addresses</string>
     <string name="ui2_address_sub">Local and LAN addresses</string>
     <string name="ui2_logs">Startup log</string>
@@ -43,7 +41,7 @@
 
     <string name="ui2_welcome_title0">Your AI workspace,\nright on your phone.</string>
     <string name="ui2_welcome_lead0">Write code, work with files and use tools.\nTake your workspace with you.</string>
-    <string name="ui2_offline_badge">Offline setup  ·  No root  ·  0.2.0-rc2</string>
+    <string name="ui2_offline_badge">Offline setup  ·  No root  ·  %1$s</string>
     <string name="ui2_welcome_title1">From an idea\nto getting it done.</string>
     <string name="ui2_welcome_lead1">Conversations, files and tools, together.</string>
     <string name="ui2_w1_0">Conversations and tasks</string>
@@ -56,8 +54,8 @@
     <string name="ui2_welcome_lead2">Device control permission is optional.</string>
     <string name="ui2_w2_0">Conversations and files</string>
     <string name="ui2_ws2_0">Stored locally, with manual exports.</string>
-    <string name="ui2_w2_1">API keys</string>
-    <string name="ui2_ws2_1">Protected locally and excluded from backups by default.</string>
+    <string name="ui2_w2_1">Models and credentials</string>
+    <string name="ui2_ws2_1">Configure models and API keys in Web UI. Existing native credentials are retained.</string>
     <string name="ui2_w2_2">Device actions</string>
     <string name="ui2_ws2_2">Root, Shizuku, ADB and SMS have separate permissions.</string>
     <string name="ui2_online_notice">Online models receive the messages and attachments you choose to send.</string>
@@ -65,7 +63,7 @@
     <string name="ui2_skip">Skip introduction</string>
     <string name="ui2_updates_sub">Stable and preview releases</string>
     <string name="ui2_install_environment">Installation and runtime</string>
-    <string name="ui2_runtime_config">Providers and runtime</string>
+    <string name="ui2_runtime_config">Runtime settings</string>
     <string name="ui2_resolve">Resolve and install</string>
     <string name="ui2_data_title">Data and backups</string>
     <string name="ui2_data_sub">Exports, recovery and file sharing.</string>
@@ -111,14 +109,10 @@
     <string name="ui2_environment_recovery">Environment recovery</string>
     <string name="ui2_environment_recovery_sub">Inspect startup dependencies and interrupted maintenance</string>
     <string name="ui2_installation_log">Check and installation log</string>
-    <string name="ui2_legacy_hint">Provider credentials can also be saved in model settings.</string>
-    <string name="ui2_config_sub">Save your changes. Port and runtime changes apply on the next start.</string>
-    <string name="ui2_models_full">Providers · Credentials · Endpoint · Protocol · Models</string>
+    <string name="ui2_config_sub">Configure models and API keys in Web UI. Port and runtime changes apply on the next start.</string>
     <string name="ui2_network_runtime">Runtime and network</string>
-    <string name="ui2_port_auto">Assign the Web port automatically</string>
-    <string name="ui2_restore_port_drafts">Restore previous-port drafts</string>
-    <string name="ui2_port_preferred">Manual Web port</string>
-    <string name="ui2_port_hint">Automatic mode uses a system-assigned port, then reuses it while available. A conflict chooses another port. Turn this off to specify a port.</string>
+    <string name="ui2_port_preferred">Preferred Web port</string>
+    <string name="ui2_port_hint">If occupied, keep the preferred port and use an available one.</string>
     <string name="ui2_dns">DNS policy</string>
     <string name="ui2_display">Display and startup</string>
     <string name="ui2_floating">Floating status</string>

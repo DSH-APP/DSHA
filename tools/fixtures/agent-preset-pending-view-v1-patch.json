@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.1-rc.2",
+  "module": "@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js",
+  "sourceSha256": "6ecdf173de66fce620e588f10ed1e3b624725febab059fb867beefef9ae4ddb8",
+  "packageIntegrity": "sha512-Tp3CI/LpwykU3ttjG7MfLHk+5jep/qgwL982MAyYuoRHItuj/zvGLH/fXX0X8VAWW9OtRyv7gs/yFffkfXZ5dQ==",
+  "patches": [
+    {
+      "before": "setDefault: \"Set as new task default\",",
+      "after": "setDefault: \"Set as new task default\",\n            presetSaving: \"Saving new task default…\",\n            presetConfirming: \"Checking the saved default…\",\n            presetSyncing: \"Updating the current blank task…\",\n            presetSavedSyncFailed: \"The new task default was saved, but the current blank task could not switch: {reason}\","
+    },
+    {
+      "before": "setDefault: \"设为新任务默认\",",
+      "after": "setDefault: \"设为新任务默认\",\n            presetSaving: \"正在保存新任务默认…\",\n            presetConfirming: \"正在确认已保存的默认预设…\",\n            presetSyncing: \"正在同步当前空白任务…\",\n            presetSavedSyncFailed: \"新任务默认已保存，但当前空白任务未能切换：{reason}\","
+    },
+    {
+      "before": "\t\t\t\t\tstate.error === null ? null : (0, react_jsx_runtime.jsx)(\"p\", {",
+      "after": "                    // DSHA_PRESET_PENDING_VIEW_V1: show progress, not a speculative default.\n                    state.saving ? (0, react_jsx_runtime.jsx)(\"p\", {\n                        role: \"status\", \"aria-live\": \"polite\", \"data-dsha-preset-pending\": state.savePhase,\n                        children: t(state.savePhase === \"syncing\" ? \"presetSyncing\" : state.savePhase === \"confirming\" ? \"presetConfirming\" : \"presetSaving\")\n                    }) : null,\n\t\t\t\t\tstate.error === null ? null : (0, react_jsx_runtime.jsx)(\"p\", {"
+    },
+    {
+      "before": "\t\t\t\tthis.set({\n\t\t\t\t\tsaving: true,\n\t\t\t\t\terror: null\n\t\t\t\t});\n\t\t\t\ttry {\n\t\t\t\t\tconst error = await write();\n\t\t\t\t\tawait this.load();\n\t\t\t\t\tif (error !== void 0) throw new Error(error);\n\t\t\t\t\tconst selected = this.store.getSnapshot().rows.find((row) => row.isDefault);\n\t\t\t\t\tif (selected !== void 0) {\n\t\t\t\t\t\tconst error = await sync?.(selected.id);\n\t\t\t\t\t\tif (error !== void 0) throw new Error(error);\n\t\t\t\t\t}\n\t\t\t\t} catch (error) {\n\t\t\t\t\tthis.set({ error: message(error) });\n\t\t\t\t} finally {\n\t\t\t\t\tthis.pendingSave = void 0;\n\t\t\t\t\tthis.set({ saving: false });",
+      "after": "                // DSHA_PRESET_PENDING_V2: persistence, verification and Agent\n                // recomposition are distinct waits with distinct feedback.\n\t\t\t\tthis.set({ saving: true, savePhase: \"saving\", error: null });\n\t\t\t\ttry {\n\t\t\t\t\tconst error = await write();\n                    this.set({ savePhase: \"confirming\" });\n                    // DSHA_PRESET_POST_WRITE_READ_V1: a read already in flight\n                    // may have captured the old default before this write.\n                    // Let its own finally clear the slot, then request a read\n                    // that starts after the write (or shares a newer read).\n                    const previousRead = this.loading;\n                    if (previousRead !== void 0) await previousRead;\n\t\t\t\t\tawait this.load();\n\t\t\t\t\tif (error !== void 0) throw new Error(error);\n                    const snapshot = this.store.getSnapshot();\n                    // readRoster reports errors in the store. Never synchronize\n                    // the stale default retained from before a failed read.\n                    if (snapshot.status !== \"ready\") throw new Error(snapshot.error ?? \"Preset verification failed\");\n\t\t\t\t\tconst selected = snapshot.rows.find((row) => row.isDefault);\n\t\t\t\t\tif (selected !== void 0 && sync !== void 0) {\n                        this.set({ savePhase: \"syncing\" });\n\t\t\t\t\t\tconst error = await sync(selected.id);\n\t\t\t\t\t\tif (error !== void 0) throw new Error(error);\n\t\t\t\t\t}\n\t\t\t\t} catch (error) {\n                    const reason = message(error);\n                    this.set({ error: this.store.getSnapshot().savePhase === \"syncing\"\n                        ? this.ctx.locale.bind(\"settings.agentPreset\")(\"presetSavedSyncFailed\", { reason }) : reason });\n\t\t\t\t} finally {\n\t\t\t\t\tthis.pendingSave = void 0;\n\t\t\t\t\tthis.set({ saving: false, savePhase: null });"
+    }
+  ]
+}

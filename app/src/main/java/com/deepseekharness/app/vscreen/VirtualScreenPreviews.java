@@ -12,7 +12,9 @@ import org.json.JSONObject;
 final class VirtualScreenPreviews {
   private final Handler MAIN = new Handler(Looper.getMainLooper());
   private CoalescingPoller<Sample> poller;
+  private java.util.concurrent.ScheduledExecutorService worker;
   private final VirtualScreenManager manager;
+  private final VirtualScreenPreviewInputGate inputGate = new VirtualScreenPreviewInputGate();
 
   VirtualScreenPreviews(VirtualScreenManager manager) {
     this.manager = java.util.Objects.requireNonNull(manager);
@@ -21,10 +23,12 @@ final class VirtualScreenPreviews {
   private static final class Sample {
     final JSONObject value;
     final long epoch;
+    final VirtualScreenPreviewInputGate.Fetch fetch;
 
-    Sample(JSONObject value, long epoch) {
+    Sample(JSONObject value, long epoch, VirtualScreenPreviewInputGate.Fetch fetch) {
       this.value = value;
       this.epoch = epoch;
+      this.fetch = fetch;
     }
   }
 
@@ -32,15 +36,27 @@ final class VirtualScreenPreviews {
     final JSONObject value;
     final Bitmap bitmap;
     final long epoch;
+    private final VirtualScreenPreviewInputGate.Hold hold;
+    private boolean adopted;
 
-    Frame(JSONObject value, Bitmap bitmap, long epoch) {
+    Frame(JSONObject value, Bitmap bitmap, long epoch, VirtualScreenPreviewInputGate.Hold hold) {
       this.value = value;
       this.bitmap = bitmap;
       this.epoch = epoch;
+      this.hold = hold;
+    }
+
+    void adopted() {
+      adopted = bitmap != null;
+    }
+
+    void finished() {
+      if (hold != null) hold.close();
     }
 
     void release() {
       if (bitmap != null) bitmap.recycle();
+      finished();
     }
   }
 
@@ -61,13 +77,26 @@ final class VirtualScreenPreviews {
       if (sample == null || sample.epoch != manager.epoch()) return;
       synchronized (this) {
         if (closed) return;
-        if (sample.value.optBoolean("ok")
-            && drawnEpoch == sample.epoch
+        if (!sample.value.optBoolean("ok")) {
+          // A consumer revokes its input identity on a frame gap. Even the same successful
+          // sequence must be delivered again before that identity can become usable.
+          drawnEpoch = drawnSequence = -1;
+          drawnGeneration = "";
+        } else if (drawnEpoch == sample.epoch
             && drawnGeneration.equals(sample.value.optString("generation"))
             && drawnSequence == sample.value.optLong("frameSeq", -1)) return;
       }
-      Frame next =
-          new Frame(sample.value, VirtualScreenManager.previewBitmap(sample.value), sample.epoch);
+      var hold = sample.fetch.retain();
+      if (hold == null) return;
+      Frame next;
+      try {
+        next =
+            new Frame(
+                sample.value, VirtualScreenManager.previewBitmap(sample.value), sample.epoch, hold);
+      } catch (RuntimeException | Error failure) {
+        hold.close();
+        throw failure;
+      }
       Frame replaced;
       synchronized (this) {
         if (closed) {
@@ -77,7 +106,21 @@ final class VirtualScreenPreviews {
           pending = next;
           if (!queued) {
             queued = true;
-            MAIN.post(deliver);
+            boolean posted;
+            try {
+              posted = MAIN.post(deliver);
+            } catch (RuntimeException | Error unavailable) {
+              queued = false;
+              pending = null;
+              next.release();
+              if (replaced != null) replaced.release();
+              throw unavailable;
+            }
+            if (!posted) {
+              queued = false;
+              pending = null;
+              next.release();
+            }
           }
         }
       }
@@ -99,16 +142,21 @@ final class VirtualScreenPreviews {
         frame.release();
         return;
       }
-      if (frame.bitmap != null)
-        synchronized (this) {
-          drawnEpoch = frame.epoch;
-          drawnGeneration = frame.value.optString("generation");
-          drawnSequence = frame.value.optLong("frameSeq", -1);
-        }
       try {
         listener.accept(frame);
+        if (frame.adopted
+            && !closed
+            && frame.epoch == manager.epoch()
+            && manager.frameCurrent(frame.value))
+          synchronized (this) {
+            drawnEpoch = frame.epoch;
+            drawnGeneration = frame.value.optString("generation");
+            drawnSequence = frame.value.optLong("frameSeq", -1);
+          }
       } catch (RuntimeException failedConsumer) {
         frame.release();
+      } finally {
+        frame.finished();
       }
     }
 
@@ -131,18 +179,32 @@ final class VirtualScreenPreviews {
   Lease subscribe(Object owner, Consumer<Frame> listener) {
     assertMain();
     if (poller == null) {
+      worker =
+          Executors.newSingleThreadScheduledExecutor(
+              task -> {
+                Thread thread = new Thread(task, "vscreen-previews");
+                thread.setDaemon(true);
+                return thread;
+              });
       poller =
           new CoalescingPoller<>(
-              Executors.newSingleThreadScheduledExecutor(
-                  task -> {
-                    Thread thread = new Thread(task, "vscreen-previews");
-                    thread.setDaemon(true);
-                    return thread;
-                  }),
+              worker,
               () -> {
-                long epoch = manager.epoch();
-                JSONObject value = manager.preview();
-                return epoch == manager.epoch() ? new Sample(value, epoch) : null;
+                var fetch = inputGate.beginPreview();
+                if (fetch == null) return null;
+                try {
+                  long epoch = manager.epoch();
+                  JSONObject value = manager.preview();
+                  return epoch == manager.epoch() ? new Sample(value, epoch, fetch) : null;
+                } finally {
+                  // This executor task runs after CoalescingPoller finishes all current offers.
+                  // Each decoded/pending frame retains its own hold until adoption or release.
+                  try {
+                    worker.execute(fetch::offered);
+                  } catch (RuntimeException unavailable) {
+                    fetch.offered();
+                  }
+                }
               },
               3,
               250);
@@ -150,6 +212,15 @@ final class VirtualScreenPreviews {
     Lease lease = new Lease(listener);
     lease.subscription = poller.subscribe(owner, lease::offer);
     return lease;
+  }
+
+  VirtualScreenPreviewInputGate.Gesture beginGesture(JSONObject displayed) {
+    assertMain();
+    var gesture = inputGate.beginGesture();
+    if (gesture == null) return null;
+    if (displayed != null && manager.frameCurrent(displayed)) return gesture;
+    gesture.close();
+    return null;
   }
 
   static void assertMain() {

@@ -24,8 +24,7 @@ reads.discard('runtime-descriptor.json')
 if reads - identified:
     raise SystemExit('实际补丁资产未进入运行时身份: ' + ','.join(sorted(reads - identified)))
 builtin_registry = json.loads((ROOT / 'app/src/main/assets/builtin-plugins.json').read_text(encoding='utf8'))
-# Internal guard bundles are signed and installed too; only the legacy app-integration tree is separate.
-builtin_names = {row['name'] for row in builtin_registry['plugins'] if row['name'] != 'dsh-app-integration'}
+builtin_names = {row['name'] for row in builtin_registry['plugins'] if not row.get('internal')}
 installed_names = {row['asset'].split('/')[1] for row in spec['installs'] if row['asset'].startswith('builtin-plugins/')}
 if builtin_names != installed_names:
     raise SystemExit('签名内置插件声明与安装表不同')

@@ -36,6 +36,8 @@ public final class StartupText {
 
   public static String render(String text, String language) {
     if (text == null) return "";
+    if (text.equals("DSH 启动异常") || text.equals("DSH startup error"))
+      return choose(language, "DSH 启动异常", "DSH startup error");
     java.util.regex.Matcher exited =
         java.util.regex.Pattern.compile(
                 "^(proot|proroot)(?: 进程退出，退出码 | process exited with code )(-?[0-9]+) ?(?:（(鉴权前|鉴权后)）|\\((before authentication|after authentication)\\))$")

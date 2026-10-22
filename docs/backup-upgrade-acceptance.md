@@ -6,7 +6,7 @@
 
 状态：**按用户收尾要求，rc2.1 已完成本轮验收并本地打包交付**。最终产物及验收边界见 [build 130 交付记录](releases/v0.1.5-rc2.1-build130.md)。这不代表完整专项所有扩展矩阵已完成；早期 `app/build` APK 与以下分阶段旧记录不能代替最终证据。
 
-交付文件为 `release/dsha-0.1.5-rc2.1.apk`、`release/dsha-0.1.5-rc2.1low.apk` 及各自 SHA-256；版本码 130，包名 `com.dsh.client`，继续使用历史 E7E3… 发布证书。用户恢复真机验证后，又明确要求“快速验收完收尾，然后把 apk 打包好”；本轮未上传 GitHub，未覆盖原手机安装。
+交付文件为 `release/dsha-0.1.5-rc2.1.apk`、`release/dsha-0.1.5-rc2.1low.apk` 及各自 SHA-256；版本码 130，包名 `dsh.android.client`，继续使用历史 E7E3… 发布证书。用户恢复真机验证后，又明确要求“快速验收完收尾，然后把 apk 打包好”；本轮未上传 GitHub，未覆盖原手机安装。
 
 ## 最终收尾证据与范围
 
@@ -21,7 +21,7 @@
 
 ## 2026-09-13 真机验证
 
-设备：Redmi M2012K10C，Android 13 / API 33，arm64，4 KiB 页，系统 WebView 116.0.5845.92。验收 APK 是与 Release 共用生产代码的 **非调试构建**，独立包名 `com.dsh.client.rc21audit`，沿用历史发布证书。原安装 `com.dsh.client` 的 rc2 / 129 未被覆盖；所有故障数据、临时 Bash 隔离和强杀进程均属于验收安装。
+设备：Redmi M2012K10C，Android 13 / API 33，arm64，4 KiB 页，系统 WebView 116.0.5845.92。验收 APK 是与 Release 共用生产代码的 **非调试构建**，独立包名 `dsh.android.client.rc21audit`，沿用历史发布证书。原安装 `dsh.android.client` 的 rc2 / 129 未被覆盖；所有故障数据、临时 Bash 隔离和强杀进程均属于验收安装。
 
 构建使用 `tools/device-backup-audit.init.gradle`，运行 `tools/run-backup-device-audit.py --serial <serial> --apk <deviceAudit.apk> --mode core|runtime|workflow|ui`。脚本安装前核对包名、非调试标志和证书，只接受独立验收包；报告保存在本轮新建的 `app/build/backup-device-validation/<UUID>/`。测试代码和 ContentProvider 不进入常规 Release。
 

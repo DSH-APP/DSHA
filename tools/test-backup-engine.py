@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """独立目录中的往返与故障测试，Linux 上额外验证真实软链接和提交回滚。"""
 import importlib.util
+import hashlib
 import io
 import json
 import os
@@ -289,6 +290,53 @@ class BackupTest(unittest.TestCase):
         self.assertEqual([{'profile': 'web', 'name': 'dsh-web-mobile', 'enabled': True, 'disabled': False}],
                          [row for row in manifest['systemPluginState'] if row['name'] == 'dsh-web-mobile'])
 
+    def test_user_scoped_and_dsh_prefixed_plugins_and_dependencies_are_not_omitted(self):
+        name = '@deepseek-ai/dsh-ai-created'
+        dependency = '@deepseek-ai/dsh-ai-helper'
+        base = '.dsh/profiles/web/node_modules/' + name
+        self.put(base + '/package.json', json.dumps({'name': name, 'version': '1.0.0',
+                 'dsh': {'bundle': {'patch': 'cordis.patch.yml'}}, 'dependencies': {dependency: '1.0.0'}}))
+        self.put(base + '/cordis.patch.yml', '[]\n')
+        self.put(base + '/private.js', 'retain AI plugin bytes')
+        self.put(base + '/node_modules/' + dependency + '/package.json', json.dumps({'name': dependency, 'version': '1.0.0'}))
+        self.put(base + '/node_modules/' + dependency + '/value.js', 'retain actual dependency bytes')
+        self.put('.dsh/profiles/web/package.json', json.dumps({'dependencies': {name: '1.0.0'},
+                 'dsh': {'profile': {'bundles': [name]}}}))
+        engine.make_backup(self.root, self.archive, 'plugins')
+        with tarfile.open(self.archive) as archive:
+            manifest = json.loads(archive.extractfile(engine.MANIFEST).read())
+            names = {row['name'] for row in manifest['pluginDependencyGraph'].values()}
+            self.assertEqual({name, dependency}, names)
+            values = [archive.extractfile(member).read() for member in archive.getmembers() if member.isfile()]
+            self.assertIn(b'retain AI plugin bytes', values)
+            self.assertIn(b'retain actual dependency bytes', values)
+
+    def test_unavailable_user_package_in_official_scope_is_reported(self):
+        name = '@deepseek-ai/user-missing-plugin'
+        self.put('.dsh/profiles/web/package.json', json.dumps({'dependencies': {name: '1.0.0'},
+                 'dsh': {'profile': {'bundles': [name]}}}))
+        with self.assertRaisesRegex(ValueError, '插件源码缺失'):
+            engine.make_backup(self.root, self.archive, 'plugins')
+
+    def test_managed_package_modified_after_classification_blocks_backup_publication(self):
+        name = '@deepseek-ai/dsh-ai-fixture'
+        base = '.dsh/profiles/web/node_modules/' + name
+        self.put(base + '/package.json', json.dumps({'name': name, 'version': '1.0.0', 'dsh': {'bundle': {'patch': 'cordis.patch.yml'}}}))
+        self.put(base + '/cordis.patch.yml', '[]\n')
+        self.put('.dsh/profiles/web/package.json', json.dumps({'dependencies': {name: '1.0.0'}, 'dsh': {'profile': {'bundles': [name]}}}))
+        provenance = engine.plugin_support('register-builtin-plugins.py')
+        proof = self.put('.dsh/managed-package-proofs.json', json.dumps({'version': 1, 'packages': {name: provenance.package_content_proof(self.root / base)}}))
+        original = engine.inline_plugins
+        def changed(*args, **kwargs):
+            records = original(*args, **kwargs)
+            self.put(base + '/user-private-draft.js', 'must never silently disappear')
+            return records
+        self.archive.write_bytes(b'previous-output-preserved')
+        with patch.dict(os.environ, {'DSHA_MANAGED_PACKAGE_PROOFS_SHA256': hashlib.sha256(proof.read_bytes()).hexdigest()}), patch.object(engine, 'inline_plugins', side_effect=changed):
+            with self.assertRaisesRegex(ValueError, '受管插件内容变化'):
+                engine.make_backup(self.root, self.archive, 'plugins')
+        self.assertEqual(b'previous-output-preserved', self.archive.read_bytes())
+
     def test_disabled_builtin_intent_survives_without_archiving_spoofed_source(self):
         self.put('.dsh/profiles/web/package.json', json.dumps({'dependencies': {'dsh-web-mobile': 'link:/old/system'},
                  'dsh': {'profile': {'bundles': []}}}))
@@ -459,8 +507,10 @@ class BackupTest(unittest.TestCase):
     def test_recovery_after_interrupted_process(self):
         self.put("dst/value", "old")
         self.put("new/value", "new")
-        engine.dump(self.root / ".dsha-restore-journal.json", {"complete": False, "steps": [{"dst": str(self.root / "dst"), "old": str(self.root / "old"), "new": str(self.root / "new"), "existed": True}]})
-        os.replace(self.root / "dst", self.root / "old")
+        old = self.root / "dst.pre-restore-20261019-120000-0123abcd"
+        new = self.root / "dst.restore-stage-20261019-120000-0123abcd"
+        engine.dump(self.root / ".dsha-restore-journal.json", {"complete": False, "steps": [{"dst": str(self.root / "dst"), "old": str(old), "new": str(new), "existed": True}]})
+        os.replace(self.root / "dst", old)
         os.replace(self.root / "new", self.root / "dst")
         engine.recover(self.root)
         self.assertEqual("old", (self.root / "dst/value").read_text())
@@ -579,7 +629,7 @@ class BackupTest(unittest.TestCase):
         self.assertEqual("disabled", (self.root / ".dsh/profiles/web/node_modules/@deepseek-ai/example.disabled").read_text())
 
     @unittest.skipIf(os.name == "nt", "真实符号链接在 Linux 容器执行")
-    def test_public_symlinks_cross_device_and_existing_bindings(self):
+    def test_selected_link_is_detached_privately_without_rewriting_original(self):
         public = self.root / "public"
         public.mkdir()
         for name in engine.HOT:
@@ -589,12 +639,13 @@ class BackupTest(unittest.TestCase):
         engine.make_backup(self.root, self.archive, "sessions")
         self.put("public/sessions/one/session.jsonl", "changed")
         self.put("public/attachments/image.png", "changed")
+        external_before = self.contents(public)
         engine.restore_archive(self.root, self.archive, "sessions")
-        restored = {name: data for name, data in self.contents(public).items()
-                    if ".pre-restore-" not in name}
-        self.assertEqual(before, restored)
-        self.assertTrue(list(public.glob("sessions.pre-restore-*")))
-        self.assertTrue((self.root / ".dsh/sessions").is_symlink())
+        self.assertEqual(external_before, self.contents(public))
+        self.assertFalse(list(public.glob("*.pre-restore-*")))
+        self.assertFalse((self.root / ".dsh/sessions").is_symlink())
+        self.assertEqual(before["sessions/one/session.jsonl"],
+                         (self.root / ".dsh/sessions/one/session.jsonl").read_bytes())
         other = self.root / "other-device"
         other.mkdir()
         engine.restore_archive(other, self.archive, "sessions")
@@ -813,6 +864,95 @@ class ExtractionSymlinkSafetyTest(unittest.TestCase):
         self.make_archive([(".dsh/settings.yaml", b"a"), (".dsh/settings.yaml", b"b")])
         with self.assertRaisesRegex(ValueError, "重复路径"):
             engine.inspect_archive(self.archive, fresh, "full")
+
+
+class PrivateMaintenanceDestinationsTest(unittest.TestCase):
+    def setUp(self):
+        self.private = tempfile.TemporaryDirectory()
+        self.external = tempfile.TemporaryDirectory()
+        self.root, self.outside = Path(self.private.name), Path(self.external.name)
+        self.token = "20261019-120000-0123abcd"
+
+    def tearDown(self):
+        self.external.cleanup()
+        self.private.cleanup()
+
+    def row(self, dst):
+        return {"dst": str(dst), "old": str(dst.with_name(dst.name + ".pre-restore-" + self.token)),
+                "new": str(dst.with_name(dst.name + ".restore-stage-" + self.token)), "existed": True}
+
+    def journal(self, rows, complete=False):
+        target = self.root / ".dsha-restore-journal.json"
+        engine.dump(target, {"complete": complete, "steps": rows})
+        return target
+
+    def test_old_external_rows_are_retained_before_any_private_or_external_mutation(self):
+        for complete in (False, True):
+            with self.subTest(complete=complete):
+                private = self.row(self.root / "private.txt")
+                public = self.row(self.outside / "manual-backup.tar.gz")
+                for row in (private, public):
+                    Path(row["dst"]).write_bytes(b"current bytes")
+                    Path(row["old"]).write_bytes(b"historic bytes")
+                    Path(row["new"]).write_bytes(b"candidate bytes")
+                journal = self.journal([private, public], complete)
+                original = journal.read_bytes()
+                with self.assertRaisesRegex(ValueError, "EXTERNAL_TARGET_PRESERVED"):
+                    engine.recover(self.root)
+                self.assertEqual(original, journal.read_bytes())
+                for row in (private, public):
+                    self.assertEqual(b"current bytes", Path(row["dst"]).read_bytes())
+                    self.assertEqual(b"historic bytes", Path(row["old"]).read_bytes())
+                    self.assertEqual(b"candidate bytes", Path(row["new"]).read_bytes())
+
+    def test_commit_rejects_external_target_before_staging_or_renaming(self):
+        source = self.root / "candidate"
+        source.write_bytes(b"incoming")
+        target = self.outside / "workspace.txt"
+        target.write_bytes(b"personal bytes")
+        with self.assertRaisesRegex(ValueError, "EXTERNAL_TARGET_PRESERVED"):
+            engine.commit(self.root, [(source, target)])
+        self.assertEqual(b"personal bytes", target.read_bytes())
+        self.assertEqual([target], list(self.outside.iterdir()))
+        self.assertFalse((self.root / ".dsha-restore-journal.json").exists())
+
+    def test_unsupported_journal_binding_is_not_replayed(self):
+        row = self.row(self.root / "file")
+        row["old"] = str(self.root / "unrelated-private-file")
+        Path(row["old"]).write_bytes(b"unrelated original")
+        journal = self.journal([row])
+        original = journal.read_bytes()
+        with self.assertRaisesRegex(ValueError, "JOURNAL_BINDING"):
+            engine.recover(self.root)
+        self.assertEqual(b"unrelated original", Path(row["old"]).read_bytes())
+        self.assertEqual(original, journal.read_bytes())
+
+    @unittest.skipIf(os.name == "nt", "真实符号链接在 Linux 容器执行")
+    def test_symlink_parent_rejects_recovery_without_touching_external_file(self):
+        (self.root / "link").symlink_to(self.outside, target_is_directory=True)
+        target = self.outside / "file"
+        target.write_bytes(b"external")
+        row = self.row(self.root / "link/file")
+        journal = self.journal([row])
+        original = journal.read_bytes()
+        with self.assertRaisesRegex(ValueError, "PARENT_LINK_OR_SPECIAL"):
+            engine.recover(self.root)
+        self.assertEqual(b"external", target.read_bytes())
+        self.assertEqual(original, journal.read_bytes())
+
+    @unittest.skipIf(os.name == "nt", "POSIX guest paths are verified on Linux")
+    def test_missing_external_workspace_is_not_created_or_traversed(self):
+        source = self.root / "source"
+        (source / "storages").mkdir(parents=True)
+        missing = self.outside / "missing-workspace"
+        (source / "storages/workspace.json").write_text(json.dumps({"tables": {"workspaces": {
+            "external": {"path": str(missing)}, "private": {"path": str(self.root / "private-workspace")}
+        }}}), encoding="utf-8")
+        stage = self.root / "stage"
+        stage.mkdir()
+        replacements = engine.workspace_replacements(source, self.root, stage)
+        self.assertFalse(missing.exists())
+        self.assertEqual([self.root / "private-workspace"], [dst for _, dst in replacements])
 
 
 if __name__ == "__main__":

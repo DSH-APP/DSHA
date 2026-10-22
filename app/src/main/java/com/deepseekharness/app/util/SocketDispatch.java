@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class SocketDispatch implements AutoCloseable {
   private final int maximum;
   private final Set<Ticket> tickets = new HashSet<>();
-  private final ThreadPoolExecutor shortPool, streamPool, pumpPool;
+  private final ThreadPoolExecutor readPool, shortPool, streamPool, pumpPool;
   private boolean closed;
   private int peak;
   private final AtomicLong accepted = new AtomicLong(), rejected = new AtomicLong();
@@ -19,6 +19,11 @@ public final class SocketDispatch implements AutoCloseable {
     if (maximum < 1 || workers < 1 || queued < 1 || streams < 1)
       throw new IllegalArgumentException();
     this.maximum = maximum;
+    // One bounded header reader per admitted connection. Idle keep-alive peers
+    // must not monopolize the short backend-request workers.
+    readPool = pool(name + "-header", maximum, new ArrayBlockingQueue<>(maximum));
+    readPool.setKeepAliveTime(10, TimeUnit.SECONDS);
+    readPool.allowCoreThreadTimeOut(true);
     shortPool = pool(name + "-request", workers, new ArrayBlockingQueue<>(queued));
     streamPool = pool(name + "-stream", streams, new SynchronousQueue<>());
     pumpPool = pool(name + "-pump", streams, new SynchronousQueue<>());
@@ -102,6 +107,10 @@ public final class SocketDispatch implements AutoCloseable {
     return execute(shortPool, owner, work);
   }
 
+  public boolean read(Ticket owner, Runnable work) {
+    return execute(readPool, owner, work);
+  }
+
   public boolean stream(Ticket owner, Runnable work) {
     return execute(streamPool, owner, work);
   }
@@ -155,6 +164,8 @@ public final class SocketDispatch implements AutoCloseable {
         rejected.get(),
         "queued",
         (long) shortPool.getQueue().size(),
+        "headerThreads",
+        (long) readPool.getPoolSize(),
         "requestThreads",
         (long) shortPool.getPoolSize(),
         "streamThreads",
@@ -172,14 +183,24 @@ public final class SocketDispatch implements AutoCloseable {
       copy = new ArrayList<>(tickets);
     }
     for (Ticket ticket : copy) ticket.close();
+    readPool.shutdownNow();
     shortPool.shutdownNow();
     streamPool.shutdownNow();
     pumpPool.shutdownNow();
   }
 
+  /** Retire connections after a network change without stopping the listener. */
+  public void closeConnections() {
+    List<Ticket> copy;
+    synchronized (this) {
+      copy = new ArrayList<>(tickets);
+    }
+    for (Ticket ticket : copy) ticket.close();
+  }
+
   public boolean awaitStopped(long millis) throws InterruptedException {
     long until = System.nanoTime() + millis * 1000000L;
-    for (ThreadPoolExecutor pool : List.of(shortPool, streamPool, pumpPool))
+    for (ThreadPoolExecutor pool : List.of(readPool, shortPool, streamPool, pumpPool))
       if (!pool.awaitTermination(Math.max(0, until - System.nanoTime()), TimeUnit.NANOSECONDS))
         return false;
     return true;

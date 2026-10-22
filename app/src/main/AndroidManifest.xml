@@ -58,10 +58,9 @@
         android:theme="@style/Theme.DeepseekHarness">
 
         <activity android:name=".ui.BrowserOriginRestoreActivity" android:exported="false" />
-        <activity android:name=".ui.ModelSetupActivity" android:exported="false" />
         <activity android:name=".ui.CommunityActivity" android:exported="false" />
         <activity android:name=".ui.OnboardingPrepareActivity" android:exported="false" />
-        <activity android:name=".ui.OnboardingReadyActivity" android:exported="false" />
+
         <activity android:name=".ui.AccessibilitySetupActivity" android:exported="false" />
         <activity
             android:name=".ui.MainActivity"
@@ -146,12 +145,11 @@
             android:name=".ui.WebPreviewActivity"
             android:exported="false"
             android:launchMode="singleTask"
-            android:taskAffinity="${applicationId}.conversation"
-            android:excludeFromRecents="true"
+            android:taskAffinity="${applicationId}.browser.webview"
             android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.DSHA.Conversation" />
+            android:theme="@style/Theme.DeepseekHarness" />
 
         <activity
             android:name=".ui.ExtractActivity"

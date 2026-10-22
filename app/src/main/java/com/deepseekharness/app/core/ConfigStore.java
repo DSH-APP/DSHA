@@ -20,15 +20,6 @@ public class ConfigStore {
   public ConfigStore(Context ctx) {
     this.prefs = ctx.getSharedPreferences(Constants.PREFS, Context.MODE_PRIVATE);
     this.vault = new KeyVault(ctx);
-    if (integer("runtime_engine_migration", 0) < 172) {
-      Object legacy = prefs.getAll().get(Constants.KEY_CONTAINER_RUNTIME);
-      if (!prefs
-          .edit()
-          .putString("runtime_engine_legacy", String.valueOf(legacy))
-          .putString(Constants.KEY_CONTAINER_RUNTIME, "bxroot")
-          .putInt("runtime_engine_migration", 172)
-          .commit()) throw new IllegalStateException("RUNTIME_ENGINE_MIGRATION_PERSISTENCE");
-    }
     // 启动计数备份已移除；覆盖安装与旧备份恢复均不能重新启用。
     if (prefs.contains(Constants.KEY_AUTO_BACKUP) || prefs.contains("backup_launch_count"))
       prefs.edit().remove(Constants.KEY_AUTO_BACKUP).remove("backup_launch_count").apply();
@@ -273,11 +264,17 @@ public class ConfigStore {
   }
 
   public boolean isPictureInPictureEnabled() {
-    return flag(Constants.KEY_PICTURE_IN_PICTURE, true);
+    // 历史键可能来自默认开启或归档，不能证明用户明确选择；原值继续保留。
+    // 本机选择不进入 BACKUP_SETTING_KEYS，因此恢复设置也不会重新开启小窗。
+    return Boolean.TRUE.equals(prefs.getAll().get(Constants.KEY_PICTURE_IN_PICTURE_USER_CHOICE));
   }
 
   public void setPictureInPictureEnabled(boolean value) {
-    prefs.edit().putBoolean(Constants.KEY_PICTURE_IN_PICTURE, value).apply();
+    prefs
+        .edit()
+        .putBoolean(Constants.KEY_PICTURE_IN_PICTURE, value)
+        .putBoolean(Constants.KEY_PICTURE_IN_PICTURE_USER_CHOICE, value)
+        .apply();
   }
 
   public String getPictureInPictureLayout() {
@@ -310,42 +307,22 @@ public class ConfigStore {
     prefs.edit().putBoolean(Constants.KEY_GECKO_CORE, v).apply();
   }
 
-  /** build172 首次升级优先 bxroot；之后显式 proot 选择保持。 */
-  public String getContainerRuntime() {
-    return com.deepseekharness.app.util.RuntimeEnginePolicy.requested(
-        prefs.getAll().get(Constants.KEY_CONTAINER_RUNTIME),
-        prefs.getAll().get("runtime_engine_migration"));
-  }
-
-  public void setContainerRuntime(String value) {
-    prefs
-        .edit()
-        .putString(
-            Constants.KEY_CONTAINER_RUNTIME,
-            com.deepseekharness.app.util.RuntimeEnginePolicy.require(value))
-        .putInt("runtime_engine_migration", 172)
-        .apply();
-  }
-
-  /** 旧控件/调用者兼容门面，已不创建 proroot。 */
+  /** 默认稳定的 proot；用户可选择 proroot。 */
   public boolean isProroot() {
-    return "bxroot".equals(getContainerRuntime());
+    return "proroot".equals(text(Constants.KEY_CONTAINER_RUNTIME, "proot"));
   }
 
-  public void setProroot(boolean value) {
-    setContainerRuntime(value ? "bxroot" : "proot");
+  public void setProroot(boolean v) {
+    prefs.edit().putString(Constants.KEY_CONTAINER_RUNTIME, v ? "proroot" : "proot").apply();
   }
 
-  /** 冷安装可试用快速方式；任何历史选择（包括显式 proot 和无效旧值）都保留。 */
+  /** 首次安装同样默认稳定 proot；只由用户显式选择启用 proroot。 */
   public boolean preferFastColdMode() {
     return preferFastColdModeFrom(prefs.getAll());
   }
 
   static boolean preferFastColdModeFrom(java.util.Map<String, ?> values) {
-    return !values.containsKey(Constants.KEY_CONTAINER_RUNTIME)
-        && !values.containsKey("cold_runtime_root")
-        && !values.containsKey("cold_runtime_packages")
-        && !values.containsKey("cold_runtime_mode");
+    return false;
   }
 
   public boolean isProrootStaticLoader() {
@@ -377,14 +354,19 @@ public class ConfigStore {
           || packageSlotSha == null
           || !packageSlotSha.matches("[a-f0-9]{64}"))
         throw new java.io.IOException("COLD_RUNTIME_SELECTION_RECORD");
+      if (mode == com.deepseekharness.app.util.ColdInstallPlan.Mode.PROROOT_DYNAMIC
+          && (!preferFastColdModeFrom(prefs.getAll()) || !isProrootStaticLoader()))
+        throw new java.io.IOException("COLD_RUNTIME_SELECTION_CHANGED");
       var edit =
           prefs
               .edit()
+              .putString(Constants.KEY_CONTAINER_RUNTIME, mode.runtime)
               .putString("cold_runtime_root", rootIdentity)
               .putString("cold_runtime_packages", packageSlotSha)
               .putString("cold_runtime_mode", mode.name());
-      // 实际冷安装方式只是回执，不覆盖用户请求；下一轮仍优先 bxroot。
-      if ("proot".equals(mode.runtime)) edit.putBoolean("proot_disable_seccomp", mode.noSeccomp);
+      if (mode == com.deepseekharness.app.util.ColdInstallPlan.Mode.PROROOT_DYNAMIC)
+        edit.putBoolean("proroot_static_loader", false);
+      if (!"proroot".equals(mode.runtime)) edit.putBoolean("proot_disable_seccomp", mode.noSeccomp);
       if (!edit.commit()) throw new java.io.IOException("COLD_RUNTIME_SELECTION_PERSISTENCE");
       return runtimeSettingsSnapshot();
     }
@@ -414,10 +396,6 @@ public class ConfigStore {
         else if (value instanceof Float) edit.putFloat(key, (Float) value);
         else throw new java.io.IOException("COLD_SELECTION_TYPE");
       }
-      if (!(before.get("runtime_engine_migration") instanceof Number)
-          || ((Number) before.get("runtime_engine_migration")).intValue() < 172)
-        edit.putString(Constants.KEY_CONTAINER_RUNTIME, "bxroot")
-            .putInt("runtime_engine_migration", 172);
       if (!edit.commit()) throw new java.io.IOException("COLD_SELECTION_ROLLBACK_PERSISTENCE");
     }
   }
@@ -432,8 +410,10 @@ public class ConfigStore {
     return new com.deepseekharness.app.runtime.RuntimeHostPorts.Settings(
         com.deepseekharness.app.util.ResolverConfig.mode(
             com.deepseekharness.app.util.PreferenceValue.text(values.get("dns_mode"), "auto")),
-        com.deepseekharness.app.util.RuntimeEnginePolicy.requested(
-            values.get(Constants.KEY_CONTAINER_RUNTIME), values.get("runtime_engine_migration")),
+        "proroot"
+            .equals(
+                com.deepseekharness.app.util.PreferenceValue.text(
+                    values.get(Constants.KEY_CONTAINER_RUNTIME), "proot")),
         com.deepseekharness.app.util.PreferenceValue.flag(
             values.get("proroot_static_loader"), true),
         com.deepseekharness.app.util.PreferenceValue.flag(
@@ -481,37 +461,44 @@ public class ConfigStore {
   }
 
   public void rememberFallbackWebPort(int preferred, int actual) {
-    prefs.edit().putInt("web_fallback_for", preferred).putInt("web_fallback_port", actual).apply();
+    if (actual < 1 || actual > 65535 || com.deepseekharness.app.util.WebPortPolicy.reserved(actual))
+      throw new IllegalArgumentException("WEB_AUTHENTICATED_PORT");
+    java.util.Set<String> ports = new java.util.LinkedHashSet<>();
+    Object old = prefs.getAll().get("web_origin_ports");
+    if (old instanceof java.util.Set<?>)
+      for (Object value : (java.util.Set<?>) old)
+        if (value instanceof String) ports.add((String) value);
+    ports.add(String.valueOf(actual));
+    prefs
+        .edit()
+        .putInt("web_fallback_for", preferred)
+        .putInt("web_fallback_port", actual)
+        .putStringSet("web_origin_ports", ports)
+        .apply();
   }
 
-  /** Local browser origins are not portable settings or credentials. */
+  /** Local origins are only offered to the explicit, checked browser-data recovery flow. */
   public java.util.Set<Integer> webOriginPorts() {
     java.util.Set<Integer> ports = new java.util.LinkedHashSet<>();
-    // Historical releases used this origin. Empty stores simply have nothing to recover.
     ports.add(Constants.DSH_WEB_PORT);
-    String saved = text("web_origin_ports", "");
-    for (String value : saved.split(",")) {
-      try {
-        int port = Integer.parseInt(value);
-        if (port > 0 && port <= 65535 && !com.deepseekharness.app.util.WebPortPolicy.reserved(port))
-          ports.add(port);
-      } catch (NumberFormatException ignored) {
+    int configured = getPortInt();
+    if (configured > 0
+        && configured <= 65535
+        && !com.deepseekharness.app.util.WebPortPolicy.reserved(configured)) ports.add(configured);
+    Object values = prefs.getAll().get("web_origin_ports");
+    if (values instanceof java.util.Set<?>) {
+      for (Object value : (java.util.Set<?>) values) {
+        try {
+          if (!(value instanceof String)) continue;
+          int port = Integer.parseInt((String) value);
+          if (port > 0
+              && port <= 65535
+              && !com.deepseekharness.app.util.WebPortPolicy.reserved(port)) ports.add(port);
+        } catch (NumberFormatException ignored) {
+        }
       }
     }
     return java.util.Collections.unmodifiableSet(ports);
-  }
-
-  public void rememberWebOriginPort(int port) {
-    if (port < 1 || port > 65535 || com.deepseekharness.app.util.WebPortPolicy.reserved(port))
-      return;
-    java.util.Set<Integer> ports = new java.util.LinkedHashSet<>(webOriginPorts());
-    ports.add(port);
-    StringBuilder encoded = new StringBuilder();
-    for (int value : ports) {
-      if (encoded.length() > 0) encoded.append(',');
-      encoded.append(value);
-    }
-    prefs.edit().putString("web_origin_ports", encoded.toString()).apply();
   }
 
   public boolean isStartupRecoveryRequested() {
@@ -618,9 +605,9 @@ public class ConfigStore {
 
   public void importBackupSettings(org.json.JSONObject data) throws java.io.IOException {
     SharedPreferences.Editor edit = prefs.edit();
-    if (data.has("port")) edit.putString(Constants.KEY_PORT, String.valueOf(importedPort(data)));
-    if (data.has("portMode") || data.has("port"))
-      edit.putString(Constants.KEY_WEB_PORT_MODE, importedPortMode(data));
+    if (data.has("port"))
+      edit.putString(Constants.KEY_PORT, String.valueOf(importedPort(data)))
+          .putString(Constants.KEY_WEB_PORT_MODE, importedPortMode(data));
     if (data.has("workdir"))
       edit.putString(Constants.KEY_WORKDIR, data.optString("workdir", Constants.DEFAULT_WORKDIR));
     if (data.has("permissionMode"))
@@ -687,9 +674,10 @@ public class ConfigStore {
   public java.util.Map<String, Object> prepareHostSettings(
       org.json.JSONObject data, boolean includeKey) throws java.io.IOException {
     java.util.Map<String, Object> next = hostSettingsState();
-    if (data.has("port")) next.put(Constants.KEY_PORT, String.valueOf(importedPort(data)));
-    if (data.has("portMode") || data.has("port"))
+    if (data.has("port")) {
+      next.put(Constants.KEY_PORT, String.valueOf(importedPort(data)));
       next.put(Constants.KEY_WEB_PORT_MODE, importedPortMode(data));
+    }
     if (data.has("workdir")) {
       String path = data.optString("workdir");
       if (path.length() > 2048 || path.indexOf('\0') >= 0)
@@ -775,19 +763,6 @@ public class ConfigStore {
     }
     if (!edit.remove("backup_restore_previous_settings").commit())
       throw new java.io.IOException(com.deepseekharness.app.util.UiText.text("恢复设置事务写入失败"));
-  }
-
-  /** 旧日志的工作目录写权限只来自本机恢复前记录；当前/归档的 registry 不能扩权。 */
-  public String legacyRestorePreviousWorkdir() throws java.io.IOException {
-    String saved = text("backup_restore_previous_settings", "");
-    if (saved.isEmpty()) return "";
-    var before =
-        com.deepseekharness.app.backup.BackupJson.read(
-            saved.getBytes(java.nio.charset.StandardCharsets.UTF_8), 16384);
-    Object value = before.get(Constants.KEY_WORKDIR);
-    if (value == null) return "";
-    if (!(value instanceof String)) throw new java.io.IOException("LEGACY_RESTORE_SETTINGS_RECORD");
-    return (String) value;
   }
 
   public void recordBackupResult(String uri, String name, String failure, int scope) {

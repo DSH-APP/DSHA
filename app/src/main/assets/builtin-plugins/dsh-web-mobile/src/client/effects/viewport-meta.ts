@@ -18,8 +18,19 @@ const IOS_MARKER = 'data-mobile-nav-ios'
  * user pinch but other engines honor them, so writing them would only take
  * zoom away from Android/DSHA; the iOS focus-zoom fix is the >=16px field
  * floor (data-mobile-nav-ios), not a zoom ban (#45).
+ *
+ * `interactive-widget=resizes-content`（2026-10-18 补）：手机上「键盘弹起时整页被
+ * 顶上去、顶栏出屏」不是本插件的布局 bug，而是 Chrome for Android 的键盘视口模型——
+ * 该 flag 缺省即 `resizes-visual`，只缩**视觉**视口，布局视口（`100%` / `100dvh`
+ * 跟着的那个）仍是整屏高，浏览器为了露出被聚焦的输入框把整页往上平移。本仓所有
+ * 键盘测量都是在 Android WebView（`adjustResize`，键盘缩**布局**视口）上取的，那台
+ * 引擎没有这个问题；显式要 `resizes-content` 就是让 Chromium 浏览器回到同一模型：
+ * `100dvh` / `innerHeight` / frame 全都等于可见区，页面不再平移。不认这个值的引擎
+ * （iOS Safari）会忽略它，行为与改动前一致——iOS 的键盘模型仍由
+ * composer-keyboard-lift.ts 兜。
  */
-const VIEWPORT_CONTENT = 'width=device-width, initial-scale=1, viewport-fit=cover'
+const VIEWPORT_CONTENT =
+  'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content'
 
 /**
  * CSS custom property carrying the viewport height WITHOUT the soft keyboard

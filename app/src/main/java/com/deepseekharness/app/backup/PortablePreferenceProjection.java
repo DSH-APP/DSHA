@@ -10,7 +10,6 @@ public final class PortablePreferenceProjection {
   private static final Set<String> TEXT =
       Set.of(
           Constants.KEY_PORT,
-          Constants.KEY_WEB_PORT_MODE,
           Constants.KEY_WORKDIR,
           Constants.KEY_PERMISSION_MODE,
           "ui_theme",

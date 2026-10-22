@@ -13,7 +13,8 @@ public final class WebLaunchCommand {
       long generation) {
     if (listenPort < 0 || listenPort > 65535 || generation < 0)
       throw new IllegalArgumentException("WEB_LAUNCH_IDENTITY");
-    return "export DSH_HOME=/root/.dsh && "
+    return "export PATH=\"/root/dsh-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin${PATH:+:$PATH}\" && "
+        + "export DSH_HOME=/root/.dsh && "
         + "export DSHA_WORKSPACE_DOCUMENTS=/root/Documents && "
         + "export DSH_PERMISSION_MODE="
         + ShellQuote.arg(permissionMode)
@@ -39,7 +40,9 @@ public final class WebLaunchCommand {
         + " 2>/dev/null; "
         + "[ ! -e "
         + WebProcSel.STOP_SENTINEL
-        + " ] || exit 0; exec dsh "
+        + " ] || exit 0; "
+        + DshEntrypoint.exec()
+        + " "
         + ("web".equals(profile) ? "web" : "--profile " + ShellQuote.arg(profile))
         + " --no-open --host 127.0.0.1 --port "
         + listenPort;

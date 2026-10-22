@@ -34,6 +34,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class DeviceBridgeService extends Service {
 
   private static volatile DeviceBridgeService current;
+  private final String serviceInstanceId = java.util.UUID.randomUUID().toString();
+  private static final java.util.concurrent.atomic.AtomicLong ADB_INTENT_EPOCH =
+      new java.util.concurrent.atomic.AtomicLong();
+
+  /** Fence delayed ADB probes and accessibility repair before an off/on change is published. */
+  public static void adbIntentChanging() {
+    ADB_INTENT_EPOCH.incrementAndGet();
+    com.deepseekharness.app.screen.AccessibilityRepairOwner.cancel(
+        com.deepseekharness.app.util.AccessibilityRepairState.CancelCause.ADB_INTENT_CHANGED);
+  }
+
+  private boolean probeCurrent(long intentEpoch) {
+    return running
+        && current == this
+        && isAdbEnabled(this)
+        && intentEpoch == ADB_INTENT_EPOCH.get()
+        && !AdbBridge.isPairing()
+        && !Thread.currentThread().isInterrupted();
+  }
+
   private volatile boolean running = false;
   private HttpShellService.Lease bridgeLease;
 
@@ -195,6 +215,7 @@ public class DeviceBridgeService extends Service {
   @Override
   public void onDestroy() {
     running = false;
+    com.deepseekharness.app.screen.AccessibilityRepairOwner.deviceStopped(serviceInstanceId);
     releaseBridge();
     if (probeThread != null) probeThread.interrupt();
     current = null;
@@ -351,6 +372,9 @@ public class DeviceBridgeService extends Service {
   private void probeAsync(final String reason) {
     if (!running || !isAdbEnabled(this) || AdbBridge.isPairing()) return;
     if (!probing.compareAndSet(false, true)) return;
+    final long probeIntentEpoch = ADB_INTENT_EPOCH.get();
+    final long repairIntentEpoch =
+        com.deepseekharness.app.screen.AccessibilityRepairOwner.intentEpoch();
     probeThread =
         new Thread(
             () -> {
@@ -359,7 +383,7 @@ public class DeviceBridgeService extends Service {
                     this,
                     com.deepseekharness.app.util.UiText.text("ADB 后台准备与探活"),
                     () -> {
-                      runProbe(reason);
+                      runProbe(reason, probeIntentEpoch, repairIntentEpoch);
                       return null;
                     });
               } catch (AdbEnvironmentTask.Busy e) {
@@ -381,8 +405,8 @@ public class DeviceBridgeService extends Service {
     probeThread.start();
   }
 
-  private void runProbe(String reason) {
-    if (!running || !isAdbEnabled(this)) return;
+  private void runProbe(String reason, long probeIntentEpoch, long repairIntentEpoch) {
+    if (!probeCurrent(probeIntentEpoch)) return;
     // 3090 桥自愈：桥被系统回收/异常退出后自动补拉起。
     // 重试仍使用本服务的需求；不会创建没有释放方的匿名监听实例。
     try {
@@ -420,16 +444,18 @@ public class DeviceBridgeService extends Service {
     }
     if (!running || !isAdbEnabled(this) || AdbBridge.isPairing()) return;
     // 1) 无副作用 TCP 探活（避免每轮都触发系统「已连接无线调试」toast）
-    boolean needFull = System.currentTimeMillis() - lastFullVerifyAt > FULL_VERIFY_INTERVAL_MS;
+    boolean needFull =
+        System.currentTimeMillis() - lastFullVerifyAt > FULL_VERIFY_INTERVAL_MS
+            || (!DshaAccessibilityService.connected() && DshaAccessibilityService.enabled(this));
     if (!needFull && tcpReachable(readConnectPort(proot), 1200)) {
-      onProbeOk(reason);
+      onProbeOk(reason, null, probeIntentEpoch, repairIntentEpoch);
       return;
     }
     // 2) 完整握手验证（无副作用探活失败时才做）
     String r = probeCommand(proot, null);
     if (AdbResult.shellReady(r)) {
       lastFullVerifyAt = System.currentTimeMillis();
-      onProbeOk(reason);
+      onProbeOk(reason, r, probeIntentEpoch, repairIntentEpoch);
       return;
     }
     if (r != null && r.contains("NO_KEY:")) {
@@ -456,7 +482,11 @@ public class DeviceBridgeService extends Service {
       String r2 = probeCommand(proot, endpoint);
       if (AdbResult.shellReady(r2)) {
         lastFullVerifyAt = System.currentTimeMillis();
-        onProbeOk(com.deepseekharness.app.util.UiText.format("重连端口 %s", endpoint.port));
+        onProbeOk(
+            com.deepseekharness.app.util.UiText.format("重连端口 %s", endpoint.port),
+            r2,
+            probeIntentEpoch,
+            repairIntentEpoch);
         return;
       }
       if (r2 != null
@@ -486,7 +516,11 @@ public class DeviceBridgeService extends Service {
         String r3 = probeCommand(proot, p2);
         if (AdbResult.shellReady(r3)) {
           lastFullVerifyAt = System.currentTimeMillis();
-          onProbeOk(com.deepseekharness.app.util.UiText.text("自动重开无线调试后重连"));
+          onProbeOk(
+              com.deepseekharness.app.util.UiText.text("自动重开无线调试后重连"),
+              r3,
+              probeIntentEpoch,
+              repairIntentEpoch);
           return;
         }
       }
@@ -508,16 +542,19 @@ public class DeviceBridgeService extends Service {
     }
   }
 
-  private void onProbeOk(String detail) {
+  private void onProbeOk(
+      String detail, String authenticatedProbe, long probeIntentEpoch, long repairIntentEpoch) {
+    if (!probeCurrent(probeIntentEpoch)) return;
     consecutiveFailures = 0;
     setAdbState("connected", detail);
-    // A verified ADB probe also proves the WRITE_SECURE_SETTINGS grant can
-    // be used. Some ROMs silently unbind the accessibility service while
-    // leaving its secure-setting entry enabled; request one bounded
-    // rebind, while preserving an explicit user-off as the source of truth.
-    try {
-      DshaAccessibilityService.rebindIfEnabled(this);
-    } catch (Throwable ignored) {
+    // TCP reachability is never accepted as authenticated permission to alter system settings.
+    if (authenticatedProbe != null && AdbResult.shellReady(authenticatedProbe)) {
+      com.deepseekharness.app.screen.AccessibilityRepairOwner.afterAuthenticatedProbe(
+          this,
+          serviceInstanceId,
+          authenticatedProbe,
+          repairIntentEpoch,
+          () -> probeCurrent(probeIntentEpoch));
     }
     try {
       NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);

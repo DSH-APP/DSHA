@@ -24,6 +24,8 @@ public final class VscreenBridgeRequest {
     TOUCH,
     PREVIEW,
     SEE,
+    ANCHOR,
+    ANCHORED_CLICK,
     TAP,
     SWIPE,
     KEY,
@@ -57,6 +59,18 @@ public final class VscreenBridgeRequest {
     T touch(String generation, long frame, String stroke, int action, float x, float y);
 
     T preview();
+
+    default T see() {
+      return preview();
+    }
+
+    default T anchor(String generation, long frame, String observation, int x, int y) {
+      throw new IllegalStateException("ANCHORED_MODE_UNAVAILABLE");
+    }
+
+    default T anchoredClick(String generation, long frame, String anchor) {
+      throw new IllegalStateException("ANCHORED_MODE_UNAVAILABLE");
+    }
 
     T action(String mode, String generation, long frame, String query);
 
@@ -100,8 +114,14 @@ public final class VscreenBridgeRequest {
             Float.parseFloat(value("x", "0")),
             Float.parseFloat(value("y", "0")));
       case PREVIEW:
-      case SEE:
         return actions.preview();
+      case SEE:
+        return actions.see();
+      case ANCHOR:
+        return actions.anchor(
+            gen, frame, value("observationId", ""), (int) number("x", -1), (int) number("y", -1));
+      case ANCHORED_CLICK:
+        return actions.anchoredClick(gen, frame, value("anchorId", ""));
       case TAP:
       case SWIPE:
       case KEY:
@@ -117,7 +137,12 @@ public final class VscreenBridgeRequest {
 
   public static boolean postRoute(String route) {
     return Set.of(
-            "/app/vscreen/edit", "/app/vscreen/submit", "/app/vscreen/node", "/app/vscreen/type")
+            "/app/vscreen/edit",
+            "/app/vscreen/submit",
+            "/app/vscreen/node",
+            "/app/vscreen/type",
+            "/app/vscreen/anchor",
+            "/app/vscreen/anchored-click")
         .contains(route);
   }
 
@@ -226,11 +251,12 @@ public final class VscreenBridgeRequest {
       values.remove("operation");
       values.remove("op");
     }
-    return new VscreenBridgeRequest(Operation.valueOf(name.toUpperCase(Locale.ROOT)), values);
+    return new VscreenBridgeRequest(
+        Operation.valueOf(name.toUpperCase(Locale.ROOT).replace('-', '_')), values);
   }
 
   public String route() {
-    return "/app/vscreen/" + operation.name().toLowerCase(Locale.ROOT);
+    return "/app/vscreen/" + operation.name().toLowerCase(Locale.ROOT).replace('_', '-');
   }
 
   public String query() {
@@ -288,6 +314,9 @@ public final class VscreenBridgeRequest {
 
   private void validate() throws HttpProtocol.Failure {
     Set<String> allowed = new HashSet<>();
+    allowed.add("coreInstance");
+    if (parameters.containsKey("coreInstance") && !Ids.uuid(value("coreInstance", "")))
+      throw new HttpProtocol.Failure(400, "INVALID_coreInstance");
     switch (operation) {
       case CREATE:
         allowed.add("orientation");
@@ -305,6 +334,22 @@ public final class VscreenBridgeRequest {
       case PREVIEW:
       case SEE:
       case CLOSE:
+        break;
+      case ANCHOR:
+      case ANCHORED_CLICK:
+        allowed.addAll(List.of("generation", "frameSeq"));
+        need("coreInstance", 36);
+        need("generation", 80);
+        integer("frameSeq", 1, 9007199254740991L, true);
+        String token = operation == Operation.ANCHOR ? "observationId" : "anchorId";
+        allowed.add(token);
+        need(token, 36);
+        if (!Ids.uuid(value(token, ""))) throw new HttpProtocol.Failure(400, "INVALID_" + token);
+        if (operation == Operation.ANCHOR) {
+          allowed.addAll(List.of("x", "y"));
+          integer("x", 0, Integer.MAX_VALUE, true);
+          integer("y", 0, Integer.MAX_VALUE, true);
+        }
         break;
       case EDITOR:
       case EDIT:
@@ -364,5 +409,12 @@ public final class VscreenBridgeRequest {
       throw new HttpProtocol.Failure(400, "UNKNOWN_ARGUMENT");
     if (parameters.containsKey("text") && parameters.get("text").length() > 16000)
       throw new HttpProtocol.Failure(400, "INVALID_text");
+  }
+
+  /** Parsing stays independent of live state; the manager enforces required caller evidence. */
+  public boolean requiresExistingCore() {
+    return operation != Operation.CREATE
+        && operation != Operation.STATUS
+        && operation != Operation.CLOSE;
   }
 }

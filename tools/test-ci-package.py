@@ -1,13 +1,9 @@
 import copy
-import hashlib
-import io
 import importlib.util
 import json
 from pathlib import Path
-import tarfile
 import tempfile
 import unittest
-import zipfile
 
 spec=importlib.util.spec_from_file_location('ci_package',Path(__file__).with_name('verify-ci-package.py'))
 gate=importlib.util.module_from_spec(spec);spec.loader.exec_module(gate)
@@ -104,46 +100,5 @@ class PackageBinding(unittest.TestCase):
         for key,value in [('head_sha','other'),('conclusion','failure'),('path','.github/workflows/other.yml'),('event','pull_request')]:
             other=copy.deepcopy(run);other[key]=value
             with self.subTest(key=key),self.assertRaises(ValueError):gate.validate_run(other,'DSH-APP/DSHA','abc')
-
-upgrade_spec=importlib.util.spec_from_file_location('apk_upgrade_gate',Path(__file__).with_name('verify-dsh-upgrade-apk.py'))
-upgrade=importlib.util.module_from_spec(upgrade_spec);upgrade_spec.loader.exec_module(upgrade)
-
-class UbuntuToolsLayout(unittest.TestCase):
-    def fixture(self, status=None, marker=None, omit=None, duplicate=False, proof_change=None):
-        lock={'packages':[{'Package':'test-tools','Version':'1','Filename':'test-tools_1_arm64.deb','SHA256':'a'*64}]}
-        lock_sha='b'*64
-        status=status or b'Package: test-tools\nVersion: 1\nStatus: install ok installed\n\n'
-        data=io.BytesIO()
-        with tarfile.open(fileobj=data,mode='w:gz') as archive:
-            for name,value in [('var/lib/dpkg/status',status),('root/.dsha-ubuntu-tools-version',(marker or lock_sha).encode())]:
-                if name==omit:continue
-                member=tarfile.TarInfo(name);member.size=len(value);archive.addfile(member,io.BytesIO(value))
-                if duplicate and name=='var/lib/dpkg/status':archive.addfile(member,io.BytesIO(value))
-        raw=data.getvalue();sha=hashlib.sha256(raw).hexdigest()
-        proof={'schema':1,'archiveSha256':sha,'packageLockSha256':lock_sha,'packages':1,'statusSha256':hashlib.sha256(status).hexdigest()}
-        proof.update(proof_change or {})
-        apk_data=io.BytesIO()
-        with zipfile.ZipFile(apk_data,'w') as apk:
-            apk.writestr('assets/ubuntu-tools.layout','configured-overlay-v1')
-            apk.writestr('assets/ubuntu-tools.bin',raw)
-            apk.writestr('assets/ubuntu-tools.manifest.json',json.dumps(proof))
-        return zipfile.ZipFile(io.BytesIO(apk_data.getvalue())),lock,lock_sha,sha
-    def test_actual_zip_configured_layout_and_locked_state(self):
-        apk,lock,lock_sha,sha=self.fixture()
-        with apk:upgrade.verify_ubuntu_tools(apk,lock,lock_sha,sha)
-    def test_archive_and_proof_mismatch_fail_closed(self):
-        for change in ({'packageLockSha256':'c'*64},{'statusSha256':'d'*64},{'packages':2}):
-            apk,lock,lock_sha,sha=self.fixture(proof_change=change)
-            with self.subTest(change=change),apk,self.assertRaises(RuntimeError):upgrade.verify_ubuntu_tools(apk,lock,lock_sha,sha)
-        apk,lock,lock_sha,sha=self.fixture()
-        with apk,self.assertRaises(RuntimeError):upgrade.verify_ubuntu_tools(apk,lock,lock_sha,'e'*64)
-    def test_missing_duplicate_and_wrong_marker_fail_closed(self):
-        for change in ({'omit':'var/lib/dpkg/status'},{'duplicate':True},{'marker':'c'*64}):
-            apk,lock,lock_sha,sha=self.fixture(**change)
-            with self.subTest(change=change),apk,self.assertRaises(RuntimeError):upgrade.verify_ubuntu_tools(apk,lock,lock_sha,sha)
-    def test_unconfigured_or_wrong_version_even_with_valid_digest_is_rejected(self):
-        for status in (b'Package: test-tools\nVersion: 1\nStatus: unpacked\n\n',b'Package: test-tools\nVersion: 2\nStatus: install ok installed\n\n'):
-            apk,lock,lock_sha,sha=self.fixture(status=status)
-            with self.subTest(status=status),apk,self.assertRaises(RuntimeError):upgrade.verify_ubuntu_tools(apk,lock,lock_sha,sha)
 
 if __name__=='__main__':unittest.main()

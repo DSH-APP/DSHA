@@ -14,7 +14,6 @@ public final class StartupDiagnostics {
   private final StartupIssueBudget issueBudget = new StartupIssueBudget();
   private final Map<String, String> owners = new LinkedHashMap<>();
   private final java.io.File files;
-  private final com.deepseekharness.app.backup.BackupFileSystem filesystem;
   private final java.util.function.LongSupplier clock;
   private final Events events;
   private String recentError = "";
@@ -35,20 +34,11 @@ public final class StartupDiagnostics {
 
   public StartupDiagnostics(Context context) {
     this(
-        trustedAppFiles(context),
+        context.getApplicationContext().getFilesDir(),
         new com.deepseekharness.app.backup.AndroidBackupFileSystem(),
         SystemClock::elapsedRealtime,
         androidEvents(context),
         java.util.concurrent.Executors.newSingleThreadScheduledExecutor());
-  }
-
-  private static java.io.File trustedAppFiles(Context context) {
-    java.io.File files = context.getApplicationContext().getFilesDir();
-    try {
-      return files.getCanonicalFile();
-    } catch (java.io.IOException unavailable) {
-      return files.getAbsoluteFile();
-    }
   }
 
   StartupDiagnostics(
@@ -58,7 +48,6 @@ public final class StartupDiagnostics {
       Events events,
       java.util.concurrent.ScheduledExecutorService historyIo) {
     this.files = java.util.Objects.requireNonNull(files);
-    this.filesystem = java.util.Objects.requireNonNull(filesystem);
     this.clock = java.util.Objects.requireNonNull(clock);
     this.events = java.util.Objects.requireNonNull(events);
     this.historyIo = java.util.Objects.requireNonNull(historyIo);
@@ -284,40 +273,51 @@ public final class StartupDiagnostics {
         });
   }
 
-  /** 独立 JVM 夹具结束时排空异步保存；生产诊断继续按原有 historyGate 写入。 */
-  void closeHistoryForFixture(long timeoutMillis) throws java.io.IOException {
+  /** 格式化删 filesDir 前阻止新历史写入，并等待此前已接受的保存/健康快照全部返回。 */
+  public void drainForFactoryReset(long timeoutMillis) throws java.io.IOException {
     historyGate.closeAndAwait(historyIo, timeoutMillis);
   }
 
+  /** 清除磁盘后不能让下一次 begin 把格式化前的内存记录重新写回。 */
+  public synchronized void completeFactoryResetDrain() {
+    owners.clear();
+    recentError = "";
+    errorLines = 0;
+    explicitStartupFailure = false;
+    issueBudget.begin(0);
+    recordId = "";
+    result = "starting";
+    failure = "";
+    started = 0;
+    lastSaved = 0;
+    historyError = "";
+    historyGate.reopen();
+  }
+
   /** 成功重试不得覆盖上次失败证据，供旧设备无输出退出时排查。 */
-  public void preserveFailure(com.deepseekharness.app.backup.HostWebLog runtimeLog, String reason) {
+  public void preserveFailure(java.io.File runtimeLog, String reason) {
     try {
       String text =
           com.deepseekharness.app.util.UiText.format(
               "最近启动失败\n%s\n%s\n\n%s\n\n=== 进程输出 ===\n",
               new java.util.Date(), reason, snapshot().log);
-      if (runtimeLog != null) {
-        try {
-          text += runtimeLog.read();
-        } catch (java.io.IOException changed) {
-          text += "WEB_LOG_CHANGED_RETAINED\n";
-        }
-      }
-      com.deepseekharness.app.backup.HostWebLog.saveFailure(
-          filesystem, files, SensitiveData.redact(text));
+      if (runtimeLog.isFile() && !com.deepseekharness.app.util.Compat.isSymbolicLink(runtimeLog))
+        text += com.deepseekharness.app.util.TextLogTail.read(runtimeLog, 256 * 1024);
+      com.deepseekharness.app.util.Compat.write(
+          new java.io.File(files, "last-startup-failure.log"),
+          SensitiveData.redact(text).getBytes(java.nio.charset.StandardCharsets.UTF_8));
     } catch (Exception ignored) {
     }
   }
 
   public static String lastFailure(Context context) {
     try {
-      var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
-      java.io.File files = trustedAppFiles(context);
-      if (fs.stat(fs.child(files, "last-startup-failure.log")).type.equals("MISSING"))
-        return com.deepseekharness.app.util.UiText.text("暂无保留的失败记录\n");
-      return com.deepseekharness.app.util.LogCompactor.compact(
-          SensitiveData.redact(com.deepseekharness.app.backup.HostWebLog.readFailure(fs, files)),
-          16000);
+      java.io.File file = new java.io.File(context.getFilesDir(), "last-startup-failure.log");
+      return file.isFile()
+          ? com.deepseekharness.app.util.LogCompactor.compact(
+              SensitiveData.redact(com.deepseekharness.app.util.TextLogTail.read(file, 384 * 1024)),
+              16000)
+          : com.deepseekharness.app.util.UiText.text("暂无保留的失败记录\n");
     } catch (Exception error) {
       return com.deepseekharness.app.util.UiText.text("失败记录暂不可读\n");
     }

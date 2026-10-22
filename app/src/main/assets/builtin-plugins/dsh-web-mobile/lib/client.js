@@ -36,7 +36,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IconFolderOpen = exports.IconPanelLeft = exports.IconDownload = exports.IconPaperclip = void 0;
+exports.IconFolderOpen = exports.IconPanelLeft = exports.IconPaperclip = void 0;
 const primitives = __importStar(require("@deepseek-ai/dsh-client-ui-primitives"));
 /** 命名缺失时的兜底：渲染成空，绝不抛错。 */
 const missingIcon = () => null;
@@ -52,8 +52,6 @@ const pickIcon = (names) => {
 };
 /** 输入区文件入口（回形针）。 */
 exports.IconPaperclip = pickIcon(['IconPaperclipOutlineRegular', 'IconPaperclipOutline16']);
-/** 抽屉页脚的会话日志导出。 */
-exports.IconDownload = pickIcon(['IconDownloadOutlineRegular', 'IconDownloadOutline16']);
 /** 会话头部的目录抽屉开关。 */
 exports.IconPanelLeft = pickIcon(['IconPanelLeftOutlineRegular', 'IconPanelLeftOutline16']);
 /** 会话头部的 Files/右侧栏入口。 */
@@ -176,114 +174,6 @@ function MobileNavToggle({ toggleSidebar, t }) {
     return ((0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [(0, jsx_runtime_1.jsx)("button", { type: "button", "data-mobile-nav": "toggle", "aria-label": t('open'), title: t('open'), onClick: () => toggleSidebar(), children: (0, jsx_runtime_1.jsx)(icon_compat_ts_1.IconPanelLeft, { size: 16 }) }), (0, jsx_runtime_1.jsx)("button", { type: "button", "data-mobile-nav": "files", "aria-label": t('files'), title: t('files'), onClick: toggleExplorer, children: (0, jsx_runtime_1.jsx)(icon_compat_ts_1.IconFolderOpen, { size: 16 }) })] }));
 }
 };
-__modules["core/sessions-compat.js"] = function (require, module, exports) {
-"use strict";
-// Sessions service shape drifted in 0.1.6-alpha.2 (audit doc §10.1): a2
-// removed `ISessions.open`/`clear` and `SessionListState.current` /
-// `currentAddress`, moving selection to per-session `retainedBy` counters
-// (upstream reads it as
-// `Object.values(byId).find(s => (s.retainedBy.mainView ?? 0) > 0)?.id`).
-// These helpers let call sites stay compile-green against rc.2 typings while
-// degrading explicitly on an a2 host instead of throwing or silently dying.
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.DELETE_VERIFY_INTERVAL_MS = exports.DELETE_VERIFY_ATTEMPTS = void 0;
-exports.currentSessionIdOf = currentSessionIdOf;
-exports.sessionsCanClear = sessionsCanClear;
-exports.sessionsCanOpen = sessionsCanOpen;
-exports.verifySessionDeleted = verifySessionDeleted;
-/** The current session id: rc.2's `current` field when present, else the a2
- *  main-view-retained session. Undefined when the shape matches neither. */
-function currentSessionIdOf(list) {
-    if (typeof list !== 'object' || list === null)
-        return undefined;
-    const snapshot = list;
-    if (typeof snapshot.current === 'string')
-        return snapshot.current;
-    for (const key in snapshot.byId) {
-        const summary = snapshot.byId[key];
-        // for-in guarantees the key exists, not the value — an explicitly
-        // undefined property still reaches the guard below.
-        if (summary === undefined)
-            continue;
-        const mainView = summary.retainedBy?.mainView;
-        if (typeof mainView === 'number' && mainView > 0 && typeof summary.id === 'string')
-            return summary.id;
-    }
-    return undefined;
-}
-/** a2 removed `clear()` (selection lifecycle moved to the retain model). */
-function sessionsCanClear(sessions) {
-    return typeof sessions?.clear === 'function';
-}
-/** a2 removed `open()`; callers must degrade (armNav fallback in
- *  phone-chrome) instead of throwing inside the capture pointerup listener. */
-function sessionsCanOpen(sessions) {
-    return typeof sessions?.open === 'function';
-}
-/** How many times an unanswered delete request is re-checked against the list. */
-exports.DELETE_VERIFY_ATTEMPTS = 4;
-/** Delay between two re-checks of the session list. */
-exports.DELETE_VERIFY_INTERVAL_MS = 350;
-/**
- * Decide whether a session delete landed even though no HTTP response arrived.
- *
- * The delete route is the plugin's only REST call, and the host half deployed
- * on DSHA aborts its reply AFTER the handler already moved the session into the
- * trash: the browser rejects the fetch with `TypeError: Failed to fetch`
- * (`net::ERR_EMPTY_RESPONSE`) for a delete that DID happen. Reporting that as a
- * failure is a lie the user has to work around, so the session list — not the
- * fetch promise — is the judge: re-read it a bounded number of times and only
- * conclude failure when the id survives every attempt.
- *
- * @param deps - list accessors plus the injected wait.
- * @returns true as soon as the id is gone, false when it survives the budget.
- */
-async function verifySessionDeleted(deps) {
-    const attempts = deps.attempts ?? exports.DELETE_VERIFY_ATTEMPTS;
-    const intervalMs = deps.intervalMs ?? exports.DELETE_VERIFY_INTERVAL_MS;
-    for (let attempt = 0; attempt < attempts; attempt += 1) {
-        try {
-            await deps.refresh?.();
-        }
-        catch {
-            // A failed refresh is not an answer; the snapshot below still is.
-        }
-        if (!deps.listed())
-            return true;
-        if (attempt + 1 < attempts)
-            await deps.sleep(intervalMs);
-    }
-    return !deps.listed();
-}
-};
-__modules["components/MobileDrawerFooter.js"] = function (require, module, exports) {
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.MobileDrawerFooter = MobileDrawerFooter;
-const jsx_runtime_1 = require("react/jsx-runtime");
-const icon_compat_ts_1 = require("./core/icon-compat.js");
-const sessions_compat_ts_1 = require("./core/sessions-compat.js");
-/**
- * Mobile-only drawer footer action, relocated from the session header to the
- * drawer footer (beside Settings): the official session-log-export
- * controller, so the progress/result dialog is shared with the desktop flow.
- * Hidden entirely on wide screens (CSS media query).
- *
- * The Files entry that used to live here was removed on 2026-09-17: while the
- * drawer is open neither the host (it refuses to expand the right sidebar)
- * nor the third-party drawer-dismiss shim (it swallows every frame-interior
- * click outside the drawer, programmatic ones included) lets a click reach
- * the right-sidebar opener, so the entry could only ever close the drawer.
- * Contract: docs/specs/2026-09-17-sidebar-files-coexistence-design.md
- */
-function MobileDrawerFooter({ useSessions, downloadSessionLog, t }) {
-    const sessionId = useSessions((state) => (0, sessions_compat_ts_1.currentSessionIdOf)(state));
-    return ((0, jsx_runtime_1.jsx)("div", { "data-mobile-nav": "drawer-actions", children: (0, jsx_runtime_1.jsxs)("button", { type: "button", "data-mobile-nav": "session-log", "aria-label": t('sessionLog'), title: t('sessionLog'), disabled: sessionId === undefined, onClick: () => {
-                if (sessionId !== undefined)
-                    downloadSessionLog(sessionId);
-            }, children: [(0, jsx_runtime_1.jsx)(icon_compat_ts_1.IconDownload, { size: 14 }), (0, jsx_runtime_1.jsx)("span", { children: t('sessionLog') })] }) }));
-}
-};
 __modules["components/ComposerFileButton.js"] = function (require, module, exports) {
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -361,37 +251,41 @@ exports.BASE_CSS = `
   outline-offset: 1px;
 }
 
-/* Drawer footer action: the relocated Session log download. The Files entry
-   was removed on 2026-09-17 (see
-   docs/specs/2026-09-17-sidebar-files-coexistence-design.md). */
-[data-mobile-nav="drawer-actions"] {
+/* Drawer brand-row session-log icon (issue #225): the plugin-owned button is
+   injected into the host's logo row by effects/drawer-session-log.ts, so it
+   sizes as a compact icon control instead of the old footer pill. The host
+   brand button is flex:1 and gives up exactly this width. The wrapper keeps the
+   button out of the row's direct-button set: the third-party dsh-web-all layer
+   adopts that row's last direct button as its sidebar toggle (see
+   effects/drawer-session-log.ts#mount). */
+[data-mobile-nav="session-log-wrap"] {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
 }
 [data-mobile-nav="session-log"] {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 34px;
-  padding: 0 12px;
-  border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, .12));
-  border-radius: 12px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--dsw-radius-md, 8px);
   background: transparent;
-  color: var(--dsw-alias-label-primary, inherit);
-  font-family: inherit;
-  font-size: 13px;
-  line-height: 20px;
+  color: var(--dsw-alias-label-secondary, inherit);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-[data-mobile-nav="session-log"]:hover:not(:disabled) {
+[data-mobile-nav="session-log"]:hover:not(:disabled),
+[data-mobile-nav="session-log"]:active:not(:disabled) {
   background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));
 }
 [data-mobile-nav="session-log"]:disabled {
   color: var(--dsw-alias-label-dimmed, rgba(0, 0, 0, .35));
   cursor: default;
+  background: transparent;
 }
 
 [data-mobile-nav="delete-confirm-title"] {
@@ -705,6 +599,20 @@ exports.BASE_CSS = `
     :where(button:has(> svg:only-child), button[aria-label]:not(:has(> span, > div))):where(:active):where(:not(:disabled, [aria-disabled="true"])) {
       transform: scale(.96);
     }
+    /* 例外（2026-10-20，店主）：头部那两颗芯片不要按压反馈。
+       症状：点「智能体团队」图标开面板、再点它关闭时，图标周围闪一块浅灰
+       （:active 的 inset 填充 + 图标缩到 .96）；「子智能体 / N 个子代理」芯片同样。
+       为什么要去掉：这两颗**开启态本来就有宿主自己的反馈** —— 团队图标打开时变粗，
+       子智能体芯片右侧有 chevron；按压灰圈和它们说的是同一件事，等于两份反馈叠在
+       一起，功能重复。加上两颗平时没有底色，整块浮灰在浅色壁纸上像一块脏。所以
+       只给它们清掉，其它按钮（抽屉行、菜单项、标签页、回形针等）的按压反馈原样保留。
+       两个标记都是宿主稳定的 data-*（不是哈希类）；宿主换标记时本块惰性失效，
+       届时按新标记改选择器即可，不必连带改上面两条通用规则。 */
+    [data-team-action] > button:active,
+    [data-dsha-lineage-trigger]:active {
+      box-shadow: none;
+      transform: none;
+    }
     @media (prefers-reduced-motion: reduce) {
       :where(button, [role="button"], [role="menuitem"], [role="menuitemradio"], [role="option"], [role="tab"], [role="treeitem"], a[href]) {
         transition: none;
@@ -713,6 +621,13 @@ exports.BASE_CSS = `
         transform: none;
       }
     }
+  }
+}
+
+/* DSHA_BACKDROP_PRESS_V1: a dimming surface must not become a bright pressed button. */
+@media (max-width: 1023px) and (pointer: coarse) and (hover: none) {
+  [data-mobile-nav="backdrop"]:active {
+    box-shadow: none;
   }
 }
 
@@ -1002,6 +917,28 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     touch-action: pan-y pinch-zoom !important;
   }
 
+  /* 壁纸兼容（issue #228）：deepseek-harness-background 0.6.x 在
+     body[data-dsh-bg] 上把 --dsw-specific-sidebar-fill 置为 transparent（body 内联），
+     而抽屉列以该令牌为唯一底色；令牌存在时 var() 的 fallback 不会生效，整列
+     于是透出壁纸。宿主内表面（sidebarCol）用同一令牌，也透明，没有第二层
+     填充源。壁纸启用时按该令牌自身的两档静态值补回原色：浅色
+     --dsw-static-neutral-bluish-50、深色 --dsw-static-neutral-bluish-900。
+     这两个静态令牌在明暗两套里取值相同，所以深色必须单独一条。
+     规则只在 body[data-dsh-bg] 下命中，无壁纸时完全不参与。 */
+  /* @patch
+     id: wallpaper-drawer-fill
+     for: deepseek-harness-background 0.6.x 的 body[data-dsh-bg]（壁纸启用时把 --dsw-specific-sidebar-fill 置为 transparent）
+     why: 抽屉列的唯一底色就是该令牌，第三方插件把它清空后整列透出壁纸；宿主内表面同样透明，没有其它填充源
+     until: 上游提供不透明的面板填充接缝，或不再把 --dsw-specific-sidebar-fill 置空——届时本块删除
+     test: tests/wallpaper-surface-fill.test.ts
+  */
+  body[data-dsh-bg] [data-mobile-nav="frame"] > :first-child {
+    background: var(--dsw-static-neutral-bluish-50, #f9fafb);
+  }
+  body[data-ds-dark-theme][data-dsh-bg] [data-mobile-nav="frame"] > :first-child {
+    background: var(--dsw-static-neutral-bluish-900, #1b1b1c);
+  }
+
   /* Closed slot, at the host's OWN specificity. 0.1.5 added a narrow-branch
      rule [data-dsh-frame][data-sidebar-collapsed] [data-pane="sidebar"]
      { width:52px !important; transform:none; pointer-events:none;
@@ -1207,7 +1144,7 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      that live in the conversation (composer/drawer keep their chrome
      interactive); header buttons remain reachable the moment the selection
      collapses, which is also what a tap anywhere else does. */
-  html[data-mobile-nav-selecting] [data-mobile-nav="frame"] [data-phase] header {
+  html[data-mobile-nav-selecting] [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header {
     pointer-events: none !important;
   }
   /* A transparent header was harmless while nothing could scroll underneath it;
@@ -1700,6 +1637,43 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]):has([class*="_primary"] ~ [class*="_primary"]) > [class*="_trailing"] > [class*="_primary"] {
     margin-left: 0;
   }
+  /* 2026-10-20（店主）：「暂停键和发送键……大小缩小，和其他功能键保持一样的大小」。
+     同行三个功能键（+ / 权限 / 📎）的官方标称是 28×28，主键（发送、停止生成）官方
+     是 34×34 —— 手机档把主键压到同一档：盒 28×28、内边距清零、圆角保持正圆，
+     图标仍是 16px，因此圆心与同行按钮落在同一条线上。双主键形态（停止 + 发送）
+     同样命中，两者都收小，8px 的防误触间距规则不受影响。
+     2026-10-20 二轮：App 会往页面注入一张读不到 cssRules 的样式表（见上方页签条
+     注释），第一版没加 !important，真机上尺寸没变。这里按「抗覆盖」写：三项尺寸
+     全部 important，并补一条不依赖 [data-phase] / _card / _row 祖先链的兜底选择器
+     （车道直系子元素即主键），祖先链任一新代断层都不至于整条规则死掉。
+     后续：2026-10-20 四/五轮把**手机档**再改到 30px + 18px 图标并统一颜色，
+     覆盖在文件末尾「输入区功能键尺寸」段；本段仍是 768–1023 平板档的值，别删。 */
+  [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] > [class*="_primary"] {
+    box-sizing: border-box !important;
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+  }
+  [class*="_trailing"] > [class*="_primary"] {
+    box-sizing: border-box !important;
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+  }
+  [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] > [class*="_primary"] svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  [class*="_trailing"] > [class*="_primary"] svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
 
   /* --- ContextMeter hit area on 0.1.7-rc.2+ (issue #140) ---
      The stats-line overlay parks the ring in the composer card's trailing
@@ -1949,9 +1923,25 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      浅色档宿主两头同为白、本来就没有断层，不参与；桌面档不碰。
      宿主深色标记挂在 body 上（实测设 body[data-ds-dark-theme] 即切到 #151517），
      html 上若也挂同一个标记一并覆盖。 */
-  body[data-ds-dark-theme] [data-mobile-nav="frame"] [data-phase] header,
-  html[data-ds-dark-theme] [data-mobile-nav="frame"] [data-phase] header {
+  body[data-ds-dark-theme] [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header,
+  html[data-ds-dark-theme] [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header {
     background-color: var(--dsw-alias-bg-base, #151517) !important;
+  }
+  /* 壁纸兼容（issue #228）：同一个插件把 --dsw-alias-bg-base 也置为 transparent
+     （见上方深色顶栏规则）。深色下顶栏用该令牌与页面同色，令牌被清空后顶栏
+     失去底色，消息滚动区从标题行下方穿过。壁纸启用时用该令牌自身的深色静态
+     定义补回原色；浅色档通用规则已经用未被覆盖的 --dsw-alias-bg-layer-1，
+     不需要新规则。门控含 data-ds-dark-theme，特异性 (0,4,2) 高于上方深色
+     规则的 (0,3,2)，不依赖源码顺序。 */
+  /* @patch
+     id: wallpaper-header-fill
+     for: deepseek-harness-background 0.6.x 的 body[data-dsh-bg]（壁纸启用时把 --dsw-alias-bg-base 置为 transparent）
+     why: 深色顶栏以该令牌与页面同色，第三方插件把它清空后顶栏失去底色，滚动内容从标题行穿过
+     until: 上游提供不透明的面板填充接缝，或不再把 --dsw-alias-bg-base 置空——届时本块删除
+     test: tests/wallpaper-surface-fill.test.ts
+  */
+  body[data-ds-dark-theme][data-dsh-bg] [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header {
+    background-color: var(--dsw-static-neutral-bluish-950, #151517) !important;
   }
   /* 头部 UI 的按下反馈（店主 2026-09-23："是头部 UI，没有触发反馈"）。
      取证：头部四个宿主包 :active 全为 0，反馈只挂 :hover。
@@ -2047,7 +2037,7 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      x=100 with our rule present, matching and later in source order. The value
      is 0 because our own toggle already occupies that left seat (painted at
      x=8-36), so the host reservation is pure dead space on a phone. */
-  [data-mobile-nav="frame"] [data-phase] header {
+  [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header {
     padding-left: 0 !important;
     padding-right: 8px !important;
     position: relative !important;
@@ -2140,17 +2130,45 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
       margin-top: 0 !important;
       margin-bottom: 0 !important;
     }
-    [data-mobile-nav="frame"] [data-phase] header [class*="wSkVaW_tabs"] [class*="wSkVaW_tab"] {
-      padding-bottom: 5px !important;
+    /* 2026-10-20 五轮（真机截图实测）：上面那条 5px 一直没生效 —— 宿主按钮自带
+       padding: 0 0 9px，App 注入表又把它钉回 9px，所以文字离下划线 10px、离标题只有
+       7px（店主：「太挤了，把对话那一行移动贴近下面那条线」）。改用宿主稳定的
+       data-conversation-tabs 标记 + html body 前缀把特异性拉满，把下内边距压到 3px：
+       文字随之下沉 6px —— 贴近分隔线，同时标题侧的留白回来。 */
+    html body [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header [data-conversation-tabs][role="tablist"] > button[role="tab"],
+    html body [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header [data-conversation-tabs] > button[class*="wSkVaW_tab"] {
+      /* 2026-10-20：店主「先把刚刚的改动还原」——回到上一版定稿的 6 / 3
+         （总高仍是 16 + 9 = 25px，文字下沉、下划线不动）。后续再按店主给的目标间距调。 */
+      padding: 6px 0 3px !important;
     }
-    /* 真机诊断：页签条的 margin-top 计算值是 4px，但把 document.styleSheets 里
-       所有能读的规则拿来和它 matches()，命中的 margin/padding 规则是 **0 条**
-       —— 说明这 4px 来自一张读不到 cssRules 的表（跨源，App 自己注入的样式表），
-       普通 !important 平级打不过它。所以这里加码：前缀 html + 钉住 header.wSkVaW_header，
-       特异性抬到 (0,5,1)，实测能压过（页签条 4 → 0）。 */
-    html [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header [class*="wSkVaW_tabs"] {
-      margin-top: -4px !important;
+    /* 2026-10-20 修正：页签条的 margin-top **是有效的**（早前判定"无效"是误判 —— 当时
+       与行高改动叠在一起，测到的位移被行高变化掩盖）。经验公式（设备像素）：
+       间距 ≈ 67.5 + 3.81 × (row-gap + margin-top)；基线 margin-top 由本文件下方
+       「header:has(_headerLeading) [role="tablist"] { margin-top: 4px }」 给出。
+       终态 = row-gap 3.5 + margin-top −8 ⇒ 净 −4.5 ⇒ 实测 50（店主定稿）。 */
+    html body [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header [data-conversation-tabs][role="tablist"],
+    html body [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [data-conversation-tabs][role="tablist"] {
+      /* 必须压过本文件下方 header:has(_headerLeading) [role="tablist"] 的 4px（(0,4,1)），
+         所以这里挂满 data 标记（(0,5,3)）；只写 [role="tablist"] 会输。 */
+      margin-top: -8px !important;
     }
+    /* 2026-10-20（终态）：「标题↔对话」间距的唯一有效旋钮是 header 的 row-gap。
+       两行网格先回到内容高（App 注入表原本钉死 40px + 36px），再由 row-gap 撑缝：
+       页签行整体下移、header 跟着长高 ⇒ 标题侧留白变大、对话到下方黑线的距离不变。
+       实测（设备像素）：auto/0 → 37；+6px → 60；+3.5px → 50（店主定稿值）。
+       页签条自身的 margin-top 被 App 表钉死，-4/-8/0/6px 四个值都无效，已放弃。 */
+    html body [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header {
+      grid-template-rows: auto auto !important;
+      row-gap: 3.5px !important;
+    }
+    /* 页签行钉到内容高（16px 行高 + 5px 下划线位 = 21px）：文字与下划线贴住行底，
+       不再在 36px 的老行高里居中，多出来的空白由上面的 row-gap 统一管理。 */
+    html body [data-mobile-nav="frame"] [data-phase] header [role="tablist"] {
+      min-height: 0 !important;
+      height: 21px !important;
+      align-items: flex-end !important;
+    }
+
     /* 真机读数：头部的 grid-template-rows 被钉成固定的 40px 36px（宿主自己没写行高，
        是 DSHA 那张表给的），于是标题行、页签行都各留一截死空间。改成 auto：两行各自
        贴住内容，标题行按 36px 的预设 chip 走、页签行由页签按钮撑开。 */
@@ -2176,7 +2194,7 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      painted partially outside the viewport), so the reclaim lives in exactly
      one place: the header padding. */
 
-  [data-mobile-nav="frame"] [data-phase] header > :first-child {
+  [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header > :first-child {
     display: flex !important;
     align-items: center;
     box-sizing: border-box;
@@ -2187,7 +2205,7 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
        breathing room; the host's 60px rail reservation is neutralised above. */
     padding-left: 40px;
   }
-  [data-mobile-nav="frame"] [data-phase] header > :first-child > :first-child {
+  [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header > :first-child > :first-child {
     display: flex !important;
     align-items: center;
     flex: 1 1 auto;
@@ -2229,7 +2247,7 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
       right: 4px !important;
     }
   }
-  [data-mobile-nav="frame"] [data-phase] header [class*="_headerActions"] {
+  [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header [class*="_headerActions"] {
     display: flex !important;
     align-items: center;
     box-sizing: border-box;
@@ -2363,8 +2381,15 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     width: 28px;
   }
   /* Session log download: gone from the header row on mobile (the utilities
-     seat holds only the session-log-export capsule). */
-  [data-mobile-nav="frame"] [data-phase] header > :first-child > :last-child {
+     seat holds only the session-log-export capsule).
+     ⚠ 作用域必须是会话顶栏本身（header.wSkVaW_header），不能写成裸 header：
+     提问卡（dsh-client-ui-user-questions）的 Mbwy4a_frame 就渲染在 composerSeat 里、
+     也在 [data-phase] 之下，它的 Mbwy4a_header > headingBlock > :last-child 正是问题正文
+     <h2>。裸 header 版本把问题正文整行 display:none —— 店主「你提的问题被吞掉了」即此
+     （2026-10-20 真机 DOM 取证：h2 computed display:none，逐条禁用本样式表内的规则定位到
+     这条）。顶栏的签名类由宿主 ConversationRoot.module.css 的 .header 提供（wSkVaW_header），
+     本文件其它顶栏规则同样以它/其子类作代际锚。 */
+  [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header > :first-child > :last-child {
     display: none !important;
   }
   /* View tabs strip (official [role="tablist"] under the crumbs row).
@@ -2460,43 +2485,39 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   [data-mobile-nav="frame"] [data-phase] header [class*="wSkVaW_titleCluster"] {
     /* 本批之前的值。2026-10-12/13 那串「46 → 40 → 36 → 32 → 26 → 34」的实验
        **只针对手机档**（后台任务圆点搬进标题行后与预设 chip 的间距），已整串
-       搬进下面那条手机档作用域；共用档（= 平板档）保持本批之前的 46px 不动。 */
-    padding-right: 46px !important;
+       搬进下面那条手机档作用域；共用档（= 平板档）保持本批之前的 46px 不动。
+       预留从 padding 改记 margin（2026-10-17）：标题簇是 overflow:auto 的滚动
+       容器，内容溢出时的裁剪线是 **padding box** —— 写在 padding 上会留下 46px
+       的「可绘制溢出区」，挤爆的那一截 chip 正好画进预留带、被绝对定位的文件
+       按钮压住（真机症状：预设 chip 末字被文件夹图标盖住）。改记 margin 后簇的
+       border box 收在预留带左侧，溢出再大也止步于按钮之前，内容宽度不变
+       （345 − 46 ⇄ 299 − 0）。 */
+    padding-right: 0 !important;
+    margin-right: 46px !important;
   }
   /* Header crowding on narrow phones.
      Three tenants want the same row: the session title, the mode chip and the
-     status chips. The status chips are the only ones whose words are
-     redundant — the background-job chip keeps its state dot, its chevron and
-     its aria-label, and the popover above now lists the jobs — so the job
-     trigger's verbose label ("1 background job running") is what yields. The
-     mode chip is the only mode switcher a phone has and the title is the only
-     session identity, so both keep their words and the title ellipsizes
-     instead (measured 2026-09-14 at 390px with a lineage chip present: after
-     this the mode label keeps 101px of text and the crumb 135px).
+     status chips. The mode chip is the only mode switcher a phone has and the
+     title is the only session identity, so both keep their words and the title
+     ellipsizes instead (measured 2026-09-14 at 390px with a lineage chip
+     present: after this the mode label keeps 101px of text and the crumb
+     135px).
      The lineage root (dsh-client-ui-subagent) sits in the crumbs for BOTH
      running and idle descendants, so the guards below key on that root rather
      than the transient running-state dot — otherwise the row would reflow the
      moment agents go idle. Match roots with [class*="_root"] (the real class
-     carries a trailing space; [class$="_root"] matches nothing). */
-  @media (max-width: 440px) {
-    /* The job label is the single widest tenant of the actions lane and the
-       only one whose text is already carried elsewhere (aria-label + popover).
-       Truncating it to a number instead would print the wrong count for a
-       double-digit job list, so it is dropped whole — dot, chevron and tap
-       target stay. */
-    [data-mobile-nav="frame"] [data-phase] header [class*="_headerActions"] [class*="_root"]:not([class*="_switcherRoot"]):has(> button[class*="_trigger"]) [class*="_count"] {
-      display: none !important;
-    }
-  }
+     carries a trailing space; [class$="_root"] matches nothing).
+     The background-job label used to yield here through two width-gated rules
+     (<=440px, and <=559px when the lineage chip was present). Both were keyed
+     on the chip's classed wrapper, which host 0.2.1 no longer renders, so they
+     are deleted: the label is now hidden unconditionally by the job-chip rule
+     in the phone-scope section (see header-job-chip-collapse). */
   /* With the subagent lineage (any state) AND a background job present
-     together, 390px cannot hold the title, the mode words, the lineage count
-     and the job label at once; the job label goes first, above 440px too. */
+     together, 390px cannot hold the title, the mode words and the lineage
+     count at once; the crumb gives 8px back to the action lane. */
   @media (max-width: 559px) {
     [data-mobile-nav="frame"] [data-phase] header [class*="_crumbs"] {
       padding-right: 8px;
-    }
-    [data-mobile-nav="frame"] [data-phase] header:has([class*="_crumbs"] [class*="_root"]) [class*="_headerActions"] [class*="_root"]:not([class*="_switcherRoot"]):has(> button[class*="_trigger"]) [class*="_count"] {
-      display: none !important;
     }
   }
   /* Last resort on 320px-class screens: the title and both status chips cannot
@@ -2865,13 +2886,14 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     width: 100% !important;
     margin-top: 4px !important;
   }
-  /* 标签行右侧的两个状态 chip：
-     · 后台任务 chip（dsh-client-ui-jobs 的 QsffPG_root）
-     · 子代理谱系 chip（dsh-client-ui-subagent 的 ZKlsPq_root）
-     它们在动作行里会和标题窗口 + 预设 + 文件抢同一条 flex，实测直接叠在一起
-     （进子代理会话时最明显）。两块都绝对定位到「对话/轨迹」行右侧，动作行只留
-     [预设][文件]；标签行右侧按 chip 宽度预留，标签变多横向滑动也不会钻到下面。
-     两个 chip 同时存在时，子代理排在后台任务左边。 */
+  /* 状态 chip 的座位：
+     · 子代理谱系 chip（dsh-client-ui-subagent 的 ZKlsPq_root）—— 绝对定位到
+       「对话/轨迹」行右侧；
+     · 后台任务 chip（dsh-client-ui-jobs）—— 2026-10-17 起不再搬座位：宿主
+       0.2.1 只渲染无类名包裹 div，旧代 QsffPG_root 那套座位规则已整块删除，
+       现行规则见本条下方的 header-job-chip-collapse。
+    谱系 chip 若不搬，会和标题窗口 + 预设 + 文件抢同一条 flex，实测直接叠在
+     一起（进子代理会话时最明显）；动作行因此只留 [预设][团队][文件]。 */
   [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) {
     position: relative !important;
   }
@@ -2924,54 +2946,28 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
       left: 3px !important;
     }
   }
+  /* 后台任务 chip 的**现行**规则（宿主 0.2.1 起）：上面那整个 QsffPG_root 族在该代
+     静默失配 —— 宿主只渲染一个**无类名**的包裹 div，类名映射表里已经没有 root 键。
+     失效后果实测：8 字文案（1 个后台任务运行中）回到标题行，标题触 72px 地板后动作
+     簇仍放不下，溢出的 30px 画进文件按钮预留带、被文件夹图标压住（真机「顶部错位」）。
+     用户规格（2026-10-17）：只留状态圆点 + 折叠箭头，位置排在预设与文件夹之间、
+     智能体团队 chip（pin 为 order 2）的右边。锚改用「trigger 直接挂 _count」这一
+     形状，不依赖包裹 div 的类名；槽位是 display:contents 的包裹节点，故不写直接
+     子元素组合符。诊断与判据见 pitfalls「header 拥挤」。 */
   /* @patch
-     id: header-chip-seat
-     for: 宿主 3.0.6 的 headerActions / titleCluster 槽位（两颗状态 chip 的座位）
-     why: 槽位树由宿主 React 管理，本插件不能插入自有节点，只能靠 CSS 改排位
-     until: 上游在标题行提供稳定的 actions/title 槽标记，或把两颗 chip 分到独立容器
+     id: header-job-chip-collapse
+     for: dsh-client-ui-jobs 的后台任务 chip（0.2.1 起包裹 div 无类名）
+     why: chip 由宿主作为 header.actions 槽的贡献节点渲染，类名与结构归宿主所有，
+          插件只能在样式层收窄可见内容与序位
+     until: 宿主给该 chip 稳定的数据标记，或在手机档自带折叠形态
      test: tests/a2-header-gating.test.ts
   */
-  [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="_headerActions"] [class*="QsffPG_root"] {
-    /* 本批之前的值：后台任务 chip 坐在标签行右端（贴 header 底边 + 下内边距 9px
-       = 与标签文字齐平）。2026-10-12 的「搬进标题行」只针对手机档，见手机档作用域。 */
-    position: absolute !important;
-    right: 8px !important;
-    bottom: 0 !important;
-    height: 25px !important;
-    min-height: 25px !important;
-    /* 必须显式 flex：宿主 .QsffPG_root 只声明了 position:relative，是 block 容器，
-       下面那条 align-items 在 block 上完全无效 —— 里面的 inline-flex 按钮会按基线
-       落位，实测低 6.8px、内容挂出 header 下沿（69.5 -> 75.8），和第 11 条那类
-       "chip 与标签行不齐平"是同一毛病。谱系 chip 的 .ZKlsPq_root 本身就是
-       inline-flex，所以只有 jobs 这个 root 需要补。 */
-    display: flex !important;
-    align-items: stretch !important;
-    z-index: 3 !important;
-    margin: 0 !important;
-    min-width: 0 !important;
-    max-width: 118px !important;
-    flex: 0 0 auto !important;
-  }
-  [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="QsffPG_root"] > button {
-    height: 25px !important;
-    min-height: 25px !important;
-    padding: 0 2px 9px !important;
-    line-height: 16px !important;
-    align-items: center !important;
-  }
-  /* 手机档（≤767 + coarse）：2026-10-12 第三批·B 方案 —— 后台任务 chip **进标题行**
-     （static + order 9，排在智能体预设 chip 之后），按钮去掉贴底用的 9px 下内边距。
-     为什么只搬一颗：受控实测两颗状态 chip 同搬 ⇒ 标题触 72px 地板后右簇仍溢出 10px
-     （带文案态直接盖住文件夹按钮），所以子智能体 chip 回标签行、这颗进标题行。
-     平板档没被要求动，仍是本批之前的「标签行右端」形态。 */
   @media (max-width: 767px) and (pointer: coarse) {
-    [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="_headerActions"] [class*="QsffPG_root"] {
-      position: static !important;
+    [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="_headerActions"] div:has(> button[class*="_trigger"] > [class*="_count"]) {
       order: 9 !important;
-      margin: 0 0 0 2px !important;
     }
-    [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="QsffPG_root"] > button {
-      padding: 0 2px !important;
+    [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="_headerActions"] button[class*="_trigger"] > [class*="_count"] {
+      display: none !important;
     }
   }
   /* 头部弹层定位（jobs 任务列表 / subagent 谱系 / 预设菜单都会命中的同一族）：
@@ -3021,7 +3017,17 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   }
   /* 子代理谱系 chip（ZKlsPq_root）：0.1.6 把它渲染在标题面包屑内部。进子代理
      会话时面包屑变成「父会话 / 当前会话」两段 + 这个 chip，动作行就叠在一起，
-     所以整块搬到「对话/轨迹」这一行的空白区里居中，并与标签文字纵向对齐。 */
+     所以整块搬到「对话/轨迹」这一行的空白区里居中，并与标签文字纵向对齐。
+     后台任务 chip（同族的另一颗状态 chip）2026-10-17 起改由「trigger 直接挂
+     _count」的形状锚收窄（见下方 header-job-chip-collapse）——宿主 0.2.1 不再给
+     它的包裹 div 类名，QsffPG_root 那套座位规则已整块删除。 */
+  /* @patch
+     id: header-chip-seat
+     for: 宿主 3.0.6 的 headerActions / titleCluster 槽位（子智能体谱系 chip 的座位）
+     why: 槽位树由宿主 React 管理，本插件不能插入自有节点，只能靠 CSS 改排位
+     until: 上游在标题行提供稳定的 actions/title 槽标记，或把该 chip 分到独立容器
+     test: tests/a2-header-gating.test.ts
+  */
   [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="ZKlsPq_root"] {
     position: absolute !important;
     /* 在「标签右侧的空白区」里居中（左边界让开对话/轨迹，约 104px），
@@ -3032,8 +3038,10 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
        总高 25px 且贴着 header 底边。chip 也做成 25px 高、bottom:0、下内边距 9px，
        内容区正好落在同一段 16px 里，文字必然与「对话/轨迹」齐平。 */
     bottom: 0 !important;
-    height: 25px !important;
-    min-height: 25px !important;
+    /* 2026-10-20：页签行收到 21px（16px 行高 + 5px 下划线位）后，chip 的 25px 盒
+       会比标签行高出 4px、文字随之上浮。这里镜像标签的盒：21px 高、贴底。 */
+    height: 21px !important;
+    min-height: 21px !important;
     align-items: stretch !important;
     z-index: 3 !important;
     margin: 0 auto !important;
@@ -3042,23 +3050,20 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
     max-width: min(32vw, 116px) !important;
     flex: 0 0 auto !important;
   }
-  /* 后台任务 chip 也在标签行时，聚合 chip 往左让出它那一格，仍保持居中。
-     :not(_switcherRoot)：switcher 变体不参与让位——它由下面的专属定位规则
-     右锚 right:8，若被本族 right:126 拖走，179.4 宽会横穿 tab 带（取证
-     实测 84.6..264 盖住轨迹/记忆两 tab；headless 中任务已结束但
-     QsffPG_root 仍在 DOM，:has 命中幽灵元素）；聚合态不受影响，让位语义
-     原样保留。 */
   /* 2026-10-12：原「后台任务在场 ⇒ 谱系 chip 让位到 right:126px」规则已删除。
      用户规格是主次对调（谱系 chip 固定不动、后台任务 chip 让到它左侧），
-     让位一旦保留就会把谱系 chip 推走 —— 与规格直接冲突。 */
+     让位一旦保留就会把谱系 chip 推走 —— 与规格直接冲突。2026-10-17 起后台
+     任务 chip 已不在标签行（宿主去了类名、旧座位规则删除），让位更没有存在
+     的理由。 */
   [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="ZKlsPq_root"] > button {
-    height: 25px !important;
-    min-height: 25px !important;
+    height: 21px !important;
+    min-height: 21px !important;
     line-height: 16px !important;
     /* 原 9px 下内边距是「贴 header 底边、与标签文字齐平」用的；搬进标题行后要改贴
        预设 chip 的竖直中心（与后台任务 chip 搬上去时同一处理）。 */
     /* 2026-10-12 用户规格：右侧内边距 4 → 2px，让 chip 的文字/箭头更靠近右缘。 */
-    padding: 0 4px 9px !important;
+    /* 下内边距 9 → 5，与页签按钮的 5px 下划线位一致：两者文字底边都离 header 底边 5px。 */
+    padding: 0 4px 5px !important;
     align-items: center !important;
   }
   /* 已知边界：标签行出现第三个标签时，标签总宽约
@@ -3128,13 +3133,9 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      记忆两 tab。本条用双类结构锚（聚合态类表无 _switcherRoot，零误伤）
      把 switcher 拉回右缘 8px 惯例位；top:48 使 25 高中心 60.5 ≈ tab 中心
      60，完成基线对齐——基础规则的 bottom:0 因 top+height+bottom 全非 auto
-     过约束，按 spec 忽略 bottom、top 执政，行为确定。right:8 能落地靠上
-     一条 yield 规则的 :not(_switcherRoot)（否则幽灵 QsffPG 在场时
-     right:126 特异性更高会把 right:8 压掉，实测右缘 264 即此因）。
-     360 真机推演：右锚后左缘 360−8−180=172 > tabs 端 ~126，46px 空隙，
-     与 QsffPG 同场时本条让位取消后二者同靠右——QsffPG 真在场时由
-     findHorizontalScroller/后续实测定去留（数值 48/8/180 均可调）。菜单
-     position:fixed 独立定位层，不受本条影响（取证已证）。 */
+     过约束，按 spec 忽略 bottom、top 执政，行为确定。
+     360 真机推演：右锚后左缘 360−8−180=172 > tabs 端 ~126，46px 空隙。
+     菜单 position:fixed 独立定位层，不受本条影响（取证已证）。 */
   [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="ZKlsPq_root"][class*="_switcherRoot"] {
     /* 同上，进标题行流程。变体实测宽 180px，而标题行右簇只有约 229px 可用
        （= 可用 305 − 标题地板 72 − 间隙 4），减去预设 chip 95 与间距后只剩约 124px，
@@ -3159,16 +3160,10 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   }
   /* 聚合 chip 右锚（用户拍板 2026-09-19：中置的子代理元素应右靠）：与
      switcher 同款右靠 + 基线（top:48 → 25 高中心 60.5 ≈ tab 中心 60；
-     bottom:0 过约束被忽略、top 执政）。聚合 ~97 宽右锚后 285..382，无
-     QsffPG 时零碰撞（tabs 端 ≤170）。:not(_switcherRoot) 把变体让给上面
-     switcher 专属规则，二者匹配集不相交、无 order-tie。共场（QsffPG 在
-     场）由既有 QsffPG yield 族接管（right:126 → 聚合 166.6..264）：126
-     沿用 yield 族既有几何——按旧代 84 宽 chip（268..352）定的安全距，
-     同时覆盖用户实测 31 窄态（349-380）；示例值 right:44 只够窄态、84 宽
-     态会叠，不采纳。yield 的幽灵副作用（任务结束后聚合停在 264）无
-     tab/QsffPG 重叠，属无害惰性，彻底解（JS 可见性标记）留 effects
-     车道。聚合 max-width min(32vw,116) 沿用基础规则不动；数值 48/8 可
-     调。 */
+     bottom:0 过约束被忽略、top 执政）。聚合 ~97 宽右锚后 285..382，标签行
+     无第二颗状态 chip 时零碰撞（tabs 端 ≤170）。:not(_switcherRoot) 把变体
+     让给上面 switcher 专属规则，二者匹配集不相交、无 order-tie。聚合
+     max-width min(32vw,116) 沿用基础规则不动；数值 48/8 可调。 */
   /* @patch
      id: lineage-chip-pinned
      for: 宿主 ZKlsPq 子智能体 chip 的绝对定位落点（含包含块）
@@ -3179,7 +3174,7 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="ZKlsPq_root"]:not([class*="_switcherRoot"]) {
     /* 2026-10-12 用户规格（第三批·B 方案）：把**子智能体 chip 从标签行搬进标题行**，
        坐在「智能体预设 chip」与「文件夹按钮」之间 —— 即原先后台任务圆点占的那个位置；
-       后台任务圆点同时回到标签行（见 QsffPG 规则）。
+       后台任务 chip 已进标题行（现由 header-job-chip-collapse 收窄）。
        原来它是 absolute + right:8px + top:48px（相对 header，视觉上落在标签行 y=42..67）。
        进流程后 left/right/top 全部失效，由 order 排在预设 chip 之后。 */
     /* 2026-10-12 换位后回标签行：绝对定位贴右缘、top:48（原形态）。 */
@@ -3213,7 +3208,14 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
        再靠"后到先得"取胜。 */
     [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="ZKlsPq_root"]:not([class*="_switcherRoot"]),
     [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="ZKlsPq_root"][class*="_switcherRoot"] {
-      top: 42px !important;
+      /* 2026-10-20：原先钉 top: 42px 是按「标题行 40 + 页签行 36」的固定几何推的，
+         本插件这几轮把页签行压到 21px 之后，42 就比「对话」低了一截、还压到正文上。
+         改成贴 header 底边：chip 盒 21px、下内边距 5px，与页签按钮同一个盒模型，
+         页签行再怎么压缩都不会再错位（top 必须显式 auto，否则上面那条 48px 继续执政）。 */
+      top: auto !important;
+      /* 截图实测逐轮校：页签文字本轮下沉后，chip 需再降 5px 才与「对话」同基线
+         （负值不越出 header 视觉范围，chip 高 21、z-index 3）。 */
+      bottom: -2px !important;
     }
   }
   /* 谱系 chip 里的文字（子代理标题 /「N 个子代理」）给一个规矩的省略号窗口：
@@ -3447,6 +3449,44 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   [aria-modal="true"]:not(:has(> :first-child > :last-child > button)) {
     max-width: calc(100vw - 32px);
   }
+  /* Image lightbox (dsh-client-ui-primitives ImageLightbox; body-portal
+     div[role=dialog][aria-modal=true] whose stage holds the image and the
+     close button). The export rule directly above only excludes dialogs whose
+     stage's LAST child contains a button; in this lightbox the stage's last
+     child IS the close button (its own child is the icon svg), so the
+     :not(:has(...)) predicate is true and the 100vw - 32px cap hits the
+     backdrop: on a 390 viewport the mask covers [0,358] and the right 32px is
+     neither painted nor hit-testable. The misc.css 720px centered tablet rule
+     hits it the same way. This positive override restores the full-bleed
+     backdrop without editing either of them: the leading div buys the extra
+     specificity point, and that point is load-bearing on the tablet branch —
+     misc.css.ts is concatenated AFTER layout.css.ts, so an equal-specificity
+     override would lose to the 720px centered tablet rule (0,3,1 vs 0,3,1)
+     and leave the 768-1023 lightbox inset on both sides.
+     The :has() arm stays SINGLE-level: a nested :has() is an invalid selector
+     and Chromium would drop the whole rule silently (see the settings mask
+     episode in docs/maintenance/pitfalls.md).
+     touch-action:none keeps the page-level pinch/pan out of this layer (the
+     root rule's pan-y pinch-zoom stays untouched for every other surface);
+     tests/ios-zoom-guard.test.ts pins this deliberate none and
+     effects/image-lightbox-zoom.ts attaches its gesture listeners to this
+     dialog node only, never to document. */
+  /* @patch
+     id: image-lightbox-fullbleed
+     for: dsh-client-ui-primitives ImageLightbox（role=dialog + aria-modal=true，stage 末孩子是关闭按钮）
+     why: 宿主遮罩自身是 fixed inset:0，却被上方「非设置形状弹层」的 max-width 收窄规则与 misc.css 平板档 720px 居中规则命中，右侧漏画且不拦点击
+     until: 宿主给灯箱提供独立的 data-* 标记或自带移动端铺满形态，届时删本块
+     test: tests/css-rules.test.ts
+  */
+  div[role="dialog"][aria-modal="true"]:has(> :first-child > img) {
+    left: 0 !important;
+    right: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    touch-action: none !important;
+  }
   /* Nav bar: hide the "Settings" caption (redundant on a full-width sheet)
      and wrap the tab list so every tab is visible — a horizontal scroll cut
      the last tab ("Plugins") off with no affordance to scroll. */
@@ -3676,8 +3716,10 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   }
   /* 页首是宿主滚动盒的直接子元素，宿主给它 width:100%（.X_2TxG_page>*）。
      这种盒子上用 margin 会把整行顶出右缘、给面板加出一条横向滚动条，所以
-     这里用 margin + 等量收窄：margin 盒仍是 100%，左缘让开 FAB，右缘不动
-     （工具栏「添加插件」保持贴右）。 */
+     这里用 margin + 等量收窄：margin 盒仍是 100%，左缘让开 FAB，右缘不再
+     外扩。0.2.1-rc.2 起工具栏已换行且按 flex-start 排布，「添加插件」不再
+     贴右，旧注释里那个「保持贴右」的右缘假设已不成立；规则本身的行为
+     （左缘让位、右缘不越界）不变。 */
   [data-mobile-nav="frame"] section[data-plugin-panel] [class*="_pageHead"] {
     margin-left: var(--dsh-web-mobile-panel-clearance) !important;
     width: calc(100% - var(--dsh-web-mobile-panel-clearance)) !important;
@@ -3713,10 +3755,57 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
      首字被整颗压住（2026-10-06 报障截图）。让位量沿用同一口径
      （56px − 宿主自身 padding）；作用对象取 h1：它是 margin:0 的 flex item，
      margin-left 只吃 flex 自由空间，不需要 width 补偿，也不会像整宽盒那样
-     顶出横向滚动条。「_pageHeading」片段在全部宿主 client bundle 里只有这一个
-     渲染者（2026-10-06 全量扫描），不误伤。 */
+     顶出横向滚动条。0.2.1-rc.2 起插件管理页的标题 h1 也命中「_pageHeading」
+     片段（旧注释「全部宿主 bundle 只有这一个渲染者」的假设已不成立），本页
+     会被一起串到；下方嵌套的手机档块把 section[data-plugin-panel] 里的两级
+     margin-left 归零，自动化任务面板仍用本条让位。 */
   [data-mobile-nav="frame"] [class*="_pageHeading"] > h1 {
     margin-left: var(--dsh-web-mobile-panel-clearance, calc(56px - clamp(24px, 4vw, 48px))) !important;
+  }
+  /* 插件管理页页首左对齐（2026-10-20 实测）：插件管理页的页头同时被上面两条
+     「给 FAB 让位」的规则命中 —— 一条给 [class*="_pageHead"] 加 margin-left，
+     另一条给 [class*="_pageHeading"] > h1 加 margin-left。两个片段互为子串，
+     页首容器与标题各自被让位一次，页首于是离左缘远、与左上角浮起的 ← 之间
+     空出一大截。手机档只对 section[data-plugin-panel] 收口：先把 clearance
+     改成 60px 口径（FAB 右缘 48 + 12 间距；390px 视口上算出 36px），再归零被
+     「_pageHead」子串误伤的两级 margin。只影响本页；自动化任务面板与详情
+     crumb 的让位规则照旧。
+     同日按店主参考图再落一档：页首必须「一行内排」——标题+说明在左、刷新键与
+     添加插件按钮在右。宿主 pageHead 是 flex-wrap:wrap，这一步直接禁止换行、让
+     heading 可收缩（min-width:0），工具栏 flex:0 0 auto + margin-left:auto 贴右；
+     说明文字过长时在左列内换行，不再把工具栏挤到第二行。 */
+  /* @patch
+     id: plugin-panel-head-left-align
+     for: dsh-client-ui-plugin-manager 0.2.1-rc.2 的 section[data-plugin-panel] 页首（_pageHead / _pageHeading / h1 三层）
+     why: 两条让位规则靠子串同时命中页首容器与页首标题，叠加后页首离左缘过远；宿主没有区分「页头容器」与「页首标题」的稳定标记
+     until: 宿主给页首容器独立标记，或页首不再需要给 FAB 让位，届时删本块
+     test: tests/css-rules.test.ts
+  */
+  @media (max-width: 767px) and (pointer: coarse) {
+    /* 一行内排：标题 + 说明在左、工具栏（刷新 + 添加插件）在右（2026-10-20 店主参考图）。
+       宿主 pageHead 自己是 flex-wrap:wrap + space-between；内容宽 300 出头时
+       heading(≈154) + gap16 + toolbar(≈172) 放不下一行，就折成三行堆叠。
+       这里禁止换行、把 heading 让成可收缩的 flex 项（min-width:0 才能压到内容宽），
+       toolbar 保持自身宽度贴右；说明过长时在左列内换行，不再把工具栏挤下去。 */
+    [data-mobile-nav="frame"] section[data-plugin-panel] > [class*="_pageHead"] {
+      --dsh-web-mobile-panel-clearance: calc(60px - clamp(24px, 4vw, 48px));
+      flex-wrap: nowrap !important;
+      align-items: flex-start !important;
+      gap: 8px !important;
+    }
+    [data-mobile-nav="frame"] section[data-plugin-panel] [class*="_pageHeading"] {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      margin-left: 0 !important;
+      width: auto !important;
+    }
+    [data-mobile-nav="frame"] section[data-plugin-panel] [class*="_toolbar"] {
+      flex: 0 0 auto !important;
+      margin-left: auto !important;
+    }
+    [data-mobile-nav="frame"] section[data-plugin-panel] [class*="_pageHeading"] > h1 {
+      margin-left: 0 !important;
+    }
   }
   /* 快捷键弹层在手机上的落地形态。上面那条 :not([data-shortcut-modal="shortcuts"])
      只是把它从设置面板家族里摘出来、还它官方的内部排版（2026-09-25 实测：纵向列
@@ -4063,10 +4152,14 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
                 多出 4px（用户要的是整组右移，不是拉开）；
        32 → 26：与「文件夹座位 36→30」**配对** —— 座位窄 6px 后其左沿右移 6px；
        26 → 34：用户反馈圆点离文件夹太近（0px），左下 8px 后按钮盒内还有 7px 内边距到
-                图标，视觉距离约 15px。代价：整簇左移 8px，标题窗口相应窄 8px。 */
+                图标，视觉距离约 15px。代价：整簇左移 8px，标题窗口相应窄 8px。
+       2026-10-17：数值不变，只把这条预留从 padding 改记 margin —— 理由同共用档那条
+       （滚动容器的裁剪线在 padding box，padding 预留挡不住溢出，chip 会被文件按钮
+       压住）。 */
   @media (max-width: 767px) and (pointer: coarse) {
     [data-mobile-nav="frame"] [data-phase] header [class*="wSkVaW_titleCluster"] {
-      padding-right: 34px !important;
+      padding-right: 0 !important;
+      margin-right: 34px !important;
     }
   }
   /* ② 标题行三个（标题 / 预设 / 后台任务）之间的间距：共用 4px → 手机档 6px
@@ -4098,6 +4191,135 @@ exports.LAYOUT_CSS = `/* ---------- mobile-only layout (narrow viewport AND touc
   @media (max-width: 767px) and (pointer: coarse) {
     [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="_headerActions"] {
       gap: 6px !important;
+    }
+  }
+  /* ===== 对话区留白 + 输入框高度（2026-10-20，店主截图定档）=====
+     店主三处「留白太多」＋「输入框太小」，只对真·手机档生效（平板保持上游排布）。
+     真机读数（1380×3036，dpr≈3.83，下同）：
+       · 思考行文字底 → 运行状态分隔线 99 设备px、分隔线 →「深度求索中」文字 59（合计 158）；
+       · 「深度求索中」文字底 → 输入卡片上缘 82；
+       · 回复正文文字底 → 动作行图标顶 112。
+     每条都取宿主自己那一层旋钮，不碰别的间距（一次只动一处，便于逐条回滚）：
+       ① 运行状态是宿主的稳定标记 [data-chat-running]，它自己声明 --dsh-chat-flow-gap:12px
+          给自己的 margin-top 供值；分隔线内距是 8/10。首轮按「旋钮各自减半」落成 6/4/5，
+          真机复测「思考行文字底 → 分隔线」只从 99 降到 63（约 64%，不是 50%）——
+          因为两行文字各自的 29px 行盒里还有约 25 设备px 的固定行距收不掉。于是第二轮按
+          「文字到文字减半」反推：三条边距合计压到 11px（运行状态 margin-top 4、分隔线上 3、
+          下 4），实测 99 → 51、158 → 86，才是店主眼里的「一半」。这一条同时把宿主
+          「turn-process 之后 16px」那一档压平（合计仍是 8px）；header 那套页签规则不参与。
+       ② 「深度求索中」到输入卡片之间没有别的留白，就是聊天滚动区的 padding-bottom；
+          同样是先 16 → 8（实测 82 → 50，只有 61%），再收到 6px（实测 82 → 42）。
+          滚动区用「直接子节点带 data-chat-flow」认 —— 带这个标记的元素不止一处
+          （step-process 的内容容器也带），靠「_scroll 祖先 + 直接子代」两点收窄才不会误伤。
+       ③ 动作行挂在 turn-tail（[data-turn-tail]）里，与正文的间距 = 流间距 12px +
+          动作行自身 margin-top 4px ⇒ 把承载它的 flowItem（data-chat-flow-kind="turn-tail"）
+          的流间距压到 4px，合计 8px，正好一半。
+       ④ 输入卡片内的上下分布（2026-10-20 二轮）：首轮把编辑器 min-height 抬到 40px，
+          真机看「文字 ↔ 功能键」空出 19px（卡片 65 → 77），功能键离卡片底缘却只剩 2px，
+          店主两处都不满意。改成「文字段落回原高 + 给功能键留出底部呼吸」：编辑器回到共用档
+          的 28px（本条覆盖物一并撤掉），行内底部给 6px——功能键相对卡片底缘上移 6px（2 → 8），
+          文字与功能键之间由 19 回到 7px，卡片净高 71px（键行 30px 时为 73px）。
+          会话区底部吸底，长高只往上吃聊天区，底部 stats 行不位移。
+       2026-10-20 十轮（店主：「不行太挤了，还原吧」）：七～九轮对消息流的收紧
+       （turn-tail 内部 gap 0、userRow gap 2 与时间行盒 20、turn-process 5、上下文环命中盒 -3）
+       已整段删除，全部回到宿主默认值（16 / 6 + 28 / 16 / -4）；上面 ①～④ 是本轮之前
+       店主已逐条验收过的值，保留。 */
+  @media (max-width: 767px) and (pointer: coarse) {
+    [data-mobile-nav="frame"] [data-phase] [data-chat-running]:not(:first-child) {
+      margin-top: 4px !important;
+    }
+    [data-mobile-nav="frame"] [data-phase] [data-chat-running] [class*="_runningDivider"] {
+      margin: 3px 0 4px !important;
+    }
+    [data-mobile-nav="frame"] [data-phase] [class*="_scroll"]:has(> [data-chat-flow]) {
+      padding-bottom: 6px !important;
+    }
+    [data-mobile-nav="frame"] [data-phase] [data-chat-flow-kind="turn-tail"] {
+      margin-top: 4px !important;
+    }
+    [data-mobile-nav="frame"] [data-phase="active"] [data-composer-card] [class*="_row"]:has(> [class*="_trailing"]) {
+      padding-bottom: 6px !important;
+    }
+  }
+  /* ===== 输入区功能键尺寸（2026-10-20 三轮 → 四轮）=====
+     三轮初版把整行盒子统一抬到 32px，真机看「很不协调：偏中间那几颗（权限 / 模型 /
+     语音）下面很空」——圆键（加号、发送 / 停止）有可见圆底，盒子就是它的可见边界；
+     中间几颗是**无底图标键**，盒子加高只会给图标多垫一圈透明空白，眼睛读到的是
+     「图标变小了、下面还空着」。所以盒子尺寸按元素分档，不再统一：
+       · 有可见圆底的：加号、📎、发送 / 停止 = 30px（比原来 28 大一档，比 32 收一档）；
+         📎 也走这一档，margin-left 由 -8 收到 -9（盒子 +2px 的一半），图标中心原地不动；
+       · 无底图标键（权限 / 模型 chip / 语音）= 盒子不动，靠**图标**变大，一律 18px：
+         加号 14、权限 14（.iWlSmW_triggerIcon svg）、模型 16、📎 与主键 16；
+       · 上下文环不动 —— 它本来就是 18px 的仪表，图标统一到 18 后整行反而齐了。
+     上一轮为「图标键」加的那两条透明 min-height 已删除（就是它们制造的空白）。 */
+  @media (max-width: 767px) and (pointer: coarse) {
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) [class*="_add"] {
+      width: 30px !important;
+      min-width: 30px !important;
+      height: 30px !important;
+      min-height: 30px !important;
+    }
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] > [class*="_primary"],
+    [class*="_trailing"] > [class*="_primary"] {
+      width: 30px !important;
+      min-width: 30px !important;
+      height: 30px !important;
+      min-height: 30px !important;
+      /* 宿主 .uV2eYG_primary 自带 transform: translateY(-2px)（给 34px 主键做光学对齐）。
+         现在整排键同高 30px、盒中心对齐，保留 -2px 会让发送/停止键比旁边高 2px
+         （真机实测：蓝键中心 2817、其余图标 2825）。这里归零。 */
+      transform: none !important;
+    }
+    [data-mobile-nav="frame"] [data-phase] [data-composer-card] [data-mobile-nav="file-upload"] {
+      width: 30px !important;
+      min-width: 30px !important;
+      max-width: 30px !important;
+      height: 30px !important;
+      min-height: 30px !important;
+      margin-left: -9px !important;
+    }
+    /* 图标统一 18px（宿主：加号 14、主键 16；📎 是我们自己的控件，也是 16）。 */
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) [class*="_add"] svg,
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] > [class*="_primary"] svg,
+    [class*="_trailing"] > [class*="_primary"] svg,
+    [data-mobile-nav="frame"] [data-phase] [data-composer-card] [data-mobile-nav="file-upload"] svg {
+      width: 18px !important;
+      height: 18px !important;
+    }
+    /* 无底图标键：权限 / 模型 chip / 语音，图标一律 18px（宿主：权限 14 / 模型 16 /
+       语音本来就是 18）。**两种形状都要写**：权限把图标包在 _triggerIcon 包装里
+       （iWlSmW_triggerIcon > svg），模型的 triggerIcon 直接挂在 svg 自己身上
+       （ModelSelect 的 IconDataOutlineRegular 带 className=triggerIcon）—— 只写
+       「… _triggerIcon svg」时模型那颗静默不中（四轮真机复测墨迹 55 → 56 设备px）。
+       上限 18：再大就会压到 ⌄ 的节距（图标与 chevron 之间只有 ~2px）。 */
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_tools"] > [class*="_modes"] [class*="_triggerIcon"],
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_tools"] > [class*="_modes"] [class*="_triggerIcon"] svg,
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] [class*="_triggerIcon"],
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] button[class*="_trigger"]:not([aria-haspopup]) svg {
+      width: 18px !important;
+      height: 18px !important;
+    }
+    /* ===== 功能键颜色统一（2026-10-20 五轮）=====
+       店主：「功能键有部分是加黑加深的，有部分是灰色的，颜色不协调」。
+       真机取色（设备像素，按最暗的实心像素）：
+         · 加号 #07080c、📎 #08070c、语音 #08080a —— 近黑（label-primary）；
+         · 权限 ⚠ #5a5c60、模型图标 #595c62 —— 灰（label-secondary）；
+         · 两个 ⌄ #a6aaab —— 更浅一档（label-caption），宿主自己给 ⌄ 的层级。
+       三种来源：加号是宿主 .uV2eYG_add 的 color:label-primary；📎 是我们的按钮
+       color: inherit（吃到卡片正文色）；语音键没写 color 所以继承；
+       权限/模型是宿主写死的 label-secondary。手机上把整行图标统一到
+       **label-secondary**（与占多数的权限/模型/环一致，⌄ 仍留 caption 层级），
+       发送键保持蓝色主色不动。只作用于手机档：平板/桌面保留宿主原本的分层。
+       语音键不能靠「:not([aria-haspopup])」认：语音不可用时宿主会临时给它
+       aria-haspopup="dialog"（打开安装引导），那一刻颜色就会漏掉、又变回黑的。
+       改用它的锚点包装 _triggerAnchor > button。
+       想反过来走深色的话，把这五条里的 token 换成 --dsw-alias-label-primary 即可。 */
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) [class*="_add"],
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] [class*="_triggerAnchor"] > button,
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_tools"] > [class*="_modes"] [class*="_trigger"],
+    [data-phase] [class*="_card"]:has(textarea, [data-composer-input]) [class*="_row"]:has([class*="_trailing"]) > [class*="_trailing"] > [class*="_root"] > [class*="_trigger"],
+    [data-mobile-nav="frame"] [data-phase] [data-composer-card] [data-mobile-nav="file-upload"] {
+      color: var(--dsw-alias-label-secondary) !important;
     }
   }
 }
@@ -4607,71 +4829,6 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
     border: 1px solid var(--dsw-alias-border-l1, rgba(0, 0, 0, .12)) !important;
   }
 
-  /* ---------- dsh-model-capabilities: model row must not crush its name ----------
-     On the Models page each catalog model is a flex row:
-     [model id] [display name] [chips] [chevron]. A chip can be long — the
-     reasoning summary prints the whole level list
-     ("reasoning: minimal/low/medium/high/xhigh/max", measured 322px at
-     min-content) — and the chips wrapper inherits the flex default
-     min-width: auto, so it grows past the row and squeezes the model id to
-     its minimum content width. With overflow-wrap: anywhere on the id, the
-     text then breaks one character per line: owner report 2026-10-05,
-     "gpt-6.1-sol" rendering as a 8x270px vertical sliver at 393px (a 223px
-     chip against a 259px row).
-
-     Upstream already declares flex-wrap: wrap on the wrapper — it is MEANT
-     to move to another line — but a single chip alone exceeds the row, so
-     wrapping never triggers. Let the row itself wrap and give the chips a
-     full-width line of their own; the chips then wrap chip-by-chip inside
-     it and every chip keeps a readable width.
-
-     Measured at 393px (id width x height): none 8x270 vertical ->
-     this rule keeps the id one line (72x15 on the widest case) and every
-     chip intact.
-
-     Two things this rule set has to get right beyond the id:
-     - the chips take a FULL line (flex: 1 0 100%) and must therefore be sent
-       after the id/name with order:1; without it the chevron, which is the
-       row's last child, is pushed onto a line of its own at the far LEFT
-       (measured: chevron 237px from the right edge = flush left, the orphaned
-       arrow the first cut of this rule produced).
-     - the chevron then needs margin-left:auto to stay flush right on the
-       first line (measured 10px from the edge on every row).
-     Rejected alternatives: min-width:0 + flex:1 1 auto on the wrapper alone
-     still left the id crushed at 44x60 vertical; white-space:nowrap on the id
-     kept it unreadably narrow at 44px; truncating the over-long chip
-     (white-space:nowrap + ellipsis on the chip) hid the reasoning summary
-     entirely - the user needs to see which levels a model offers.
-     Scoped to the settings dialog and the plugin's own class prefix; the
-     whole file is mobile-gated, so desktop never sees it. */
-  [aria-modal="true"] [class*="Qzh-QG_rowHeader"] {
-    flex-wrap: wrap !important;
-  }
-  [aria-modal="true"] [class*="Qzh-QG_chips"] {
-    order: 1 !important;
-    flex: 1 0 100% !important;
-    min-width: 0 !important;
-    justify-content: flex-start !important;
-  }
-  /* NOTE the :not() guard below: [class*="..._chip"] is a SUBSTRING match and
-     also hits the wrapper ("..._chips" contains "..._chip"), which would put
-     max-width/overflow-wrap on the container too. Exclude the wrapper by its
-     own overlapping prefix, the way this file's other _stat / _header families
-     do (pitfall: 哈希子串). */
-  [aria-modal="true"] [class*="Qzh-QG_chip"]:not([class*="Qzh-QG_chips"]) {
-    max-width: 100%;
-    overflow-wrap: anywhere;
-  }
-  [aria-modal="true"] [class*="Qzh-QG_modelId"] {
-    min-width: 0 !important;
-  }
-  [aria-modal="true"] [class*="Qzh-QG_modelName"] {
-    min-width: 0 !important;
-  }
-  [aria-modal="true"] [class*="Qzh-QG_rowHeader"] > svg {
-    margin-left: auto !important;
-  }
-
   /* ---------- dsh-web-ui polish: explorer sheet ----------
      The aionui explorer was designed for a desktop side column: compact the
      header, search box and tree rows so a phone shows more entries, and pad
@@ -4702,23 +4859,14 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
   }
 
   /* ---------- dsh-web-ui polish: drawer footer ----------
-     The single injected footer action (the session-log download) becomes a
-     full-width pill instead of a text-width capsule. */
-
-  /* The official footerActions row also hosts the remote-web-ui entry
-     row (two icon buttons); without wrapping the two groups squeeze each
-     other on one line. Wrap so each group gets its own full-width row. */
+     The official footerActions row also hosts the remote-web-ui entry row
+     (two icon buttons) and the usage/balance badge; without wrapping the
+     groups squeeze each other on one line. Wrap so each group gets its own
+     row. (The plugin's own footer pill was removed on 2026-10-18 — the
+     session-log entry now lives in the drawer brand row.) */
   [data-mobile-nav="frame"] [class*="_footerActions"] {
     flex-wrap: wrap !important;
     gap: 6px !important;
-  }
-  [data-mobile-nav="drawer-actions"] {
-    width: 100% !important;
-  }
-  [data-mobile-nav="drawer-actions"] > button {
-    flex: 1 1 0 !important;
-    padding: 0 8px !important;
-    white-space: nowrap !important;
   }
 
   /* ---------- dsh-web-ui polish: floating pet ----------
@@ -5411,6 +5559,57 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
      不会把表格撑到无法阅读的宽度。
      平板（768–1023）与桌面不动 —— 店主明确「平板不用」（对齐上游 768px
      分档边界，与 layout.css.ts 的手机档写法一致）。 */
+  /* @patch
+     id: ofm-mobile-cost-ceiling
+     for: dsh-our-free-model 2.0.0 的 ofm_ 私有类名（毛玻璃表面 + 极光层 + 装饰动画）
+     why: 上游把设置页做成一张超长 backdrop-filter 大面 + 常驻全屏极光，插件侧没有手机档成本降级，本插件只能用自己的手机档样式兜
+     until: 上游自己给手机档出成本降级（或拿掉极光层与 blur 表面）——届时本块整节删除
+     test: tests/our-free-model-cost.test.ts
+  */
+  /* ---------- dsh-our-free-model: mobile cost ceiling ----------
+     该插件设置页在手机上卡顿掉帧。实测数字、驱动限制与验证方法见
+     docs/maintenance/pitfalls.md「第三方成本上限」——这里只记为什么这么写。
+
+     选择器用裸的 ofm_ 前缀类名，不加任何祖先锚。设置页经 createPortal 挂到
+     document.body，[data-mobile-nav="frame"] 后代选择器一个都不命中；而
+     .ofm_scrim 与 .ofm_toast 也 portal 到 body，锚 .ofm_root 同样漏。前缀是
+     本插件独占（宿主与全仓 0 命中），锚根买不到隔离，只赔掉 portal 出去的那几块。
+
+     只砍装饰，且按「遮罩 vs 表面」分两组——同一个「去 blur」动作，两类需要相反
+     的补法：表面按半透明设计，只摘 filter 会让页面从下面透出来，故补不透明底；
+     .ofm_scrim 是蒙层，补底等于把整页涂黑，故只摘 filter。
+
+     带状态的动画一律保留（loading 骨架、池子 busy/over 点、状态点、进度条、
+     aria-busy 按钮）。.ofm_scanline 看着像装饰，实则挂在登录等待提示上，上游
+     自己的 prefers-reduced-motion 块也不杀它。
+
+     本块在顶层手机档（≤1023px + pointer: coarse），触屏平板也吃到——有意为之：
+     这是成本修复不是布局修复，与屏宽无关。 */
+  .ofm_aurora {
+    display: none !important;
+  }
+  .ofm_wave,
+  .ofm_bubble,
+  .ofm_fish,
+  .ofm_tankrays {
+    animation: none !important;
+  }
+  .ofm_nav,
+  .ofm_glass,
+  .ofm_hero,
+  .ofm_panel,
+  .ofm_ann,
+  .ofm_modal,
+  .ofm_toast {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: var(--dsw-alias-bg-layer-2, #fff) !important;
+  }
+  .ofm_scrim {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
   @media (max-width: 767px) and (pointer: coarse) {
     [data-mobile-nav="frame"] .md-table-wide {
       overflow-x: auto !important;
@@ -5427,6 +5626,101 @@ exports.COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
     [data-mobile-nav="frame"] .md-table-wide > table td {
       min-width: 4.5em !important;
     }
+  }
+
+  /* @patch
+     id: ofm-toast-above-drawer
+     for: dsh-our-free-model 2.0.0 的 .ofm_toasts（公告 toast，portal 到 document.body）
+     why: 该插件把 toast 钉在 z-index 1200 并自称浮在所有层之上，但本插件移动抽屉是 1300、遮罩 1250、宿主原生侧栏 1100 —— 打开抽屉时整条 toast 既不可见也不可点，插件侧没有可调的层级接口
+     until: 上游把 toast 抬到宿主弹层之上（1400+）或宿主提供官方通知层 —— 届时本块删除
+     test: tests/our-free-model-toast-layer.test.ts
+  */
+  /* ---------- dsh-our-free-model: announcement toast above the drawer ----------
+     2026-10-17 店主报障：打开侧边栏时左下角的官方推送消息被抽屉挡住。
+     实测（390×844 触屏仿真）：toast .ofm_toasts rect(18,738,354×88) z1200；
+     本插件 backdrop z1250、抽屉列 z1300 ⇒ elementFromPoint(195,780) 命中抽屉
+     里的 Usage/Balance 按钮、(330,780) 命中遮罩 —— 整条与点击一起没了。
+
+     选择器用 body 直子锚：插件 toastHost() 把 .ofm_toasts 挂在 document.body
+     （不存在才建），.ofm_ 前缀又是本插件独占（宿主与全仓 0 命中，见上一节），
+     所以这层锚既精确又不会误伤。
+
+     1310 的取值：高于抽屉 1300（否则被盖），低于本插件自己的弹层 1400 与
+     file-share toast 1500（公告 toast 不该压过模态）。桌面档没有抽屉，问题
+     只在手机档出现，规则因此留在本顶层手机媒体查询内。
+
+     代价（店主 2026-10-17 选定 A 方案时知情）：toast 通栏 354px 比抽屉 280px
+     宽，浮起后会压住抽屉底部约 88px（用户行/设置按钮区）约 10 秒（插件
+     holdMs 默认 10000），期间那几颗按钮点不到 —— 这是「推送可见」与「抽屉
+     底部可点」的二选一，本次选了前者。 */
+  body > .ofm_toasts {
+    z-index: 1310 !important;
+  }
+}
+
+/* ---------- session inspector: the disclosure triangles are too small ----------
+   2026-10-20 店主报障：手机端「会话数据诊断」面板（宿主实验插件
+   dsh-experimental-session-inspector）里那些深色小三角太小、点不准。
+
+   三处 disclosure 不是一个东西，得分开打：
+   A 表格「类型」列里的行展开箭头 —— 16px 宽、11px 的 ▸/▾ 文本按钮，
+     组件自己只给了 width:16px，没有 height/line-height，实际可点面 ≈16×13px，
+     而它紧贴「选中该行」的类型文本按钮（同一 td 内相邻），手机上很容易点错。
+   B 「原始数据」JSON 树每层 —— 原生 details/summary 的 UA marker，
+     宿主只设了 cursor:pointer，没有任何尺寸声明，随 root 的 11px 字号一起小。
+   C 面板顶部「原始数据 ▾」—— 原生 select 的 UA 箭头，同样 11px。
+   行高 30px 是宿主虚拟化的常量（client.js 里 size/estimateSize 与 sticky 偏移
+   多处写死 30，且没有 measureElement），所以只放大控件本身，绝不改行高。 */
+@media (max-width: 1023px) and (pointer: coarse) {
+  /* @patch
+     id: session-inspector-disclosure-size
+     for: @deepseek-ai/dsh-experimental-session-inspector 0.2.1-rc.2（CSS 模块哈希前缀 GTtnTq）
+     why: 树行展开箭头只有 16×≈13px、字号 11px，低于触控下限，且与相邻的「选中该行」按钮动作不同
+     until: 宿主把 GTtnTq_disclosure 提到 ≥24px，或换成可缩放图标并自带内边距
+     test: tests/css-rules.test.ts
+  */
+  /* A：行箭头。22px 正好等于行内容盒（30px 行高 − 上下 4px 内边距），
+     不会撑高行、也不会打乱虚拟化的行位置模型。 */
+  [class*="GTtnTq_root"] [class*="_disclosure"][aria-expanded] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+  }
+  /* B：JSON 树的原生 marker。字段名的缩进槽是 16px（ul 的 padding-inline-start），
+     15px 字形正好卡进槽里，放大不会把字段名右移。 */
+  [class*="GTtnTq_objectTree"] details > summary::marker {
+    font-size: 15px !important;
+  }
+  /* C：顶部模式选择器（原生 select）。不在虚拟化区域里，可以直接长高。 */
+  [class*="GTtnTq_modeSelector"] {
+    font-size: 13px !important;
+    padding: 4px 6px !important;
+    min-height: 32px !important;
+  }
+  /* D：吸顶祖先行（顶部那一群灰色行）在快速滑动时错乱/拖影。
+     宿主给它们是 position:sticky + 灰底，而整张表是 border-collapse:collapse ——
+     Chromium 里「sticky 的 <tr> + 合并边框」会逐帧重算行盒，甩动时就撕开。
+     两刀都只动呈现、不动布局：①把合并边框换成 separate + 0 间距（每行只有一条
+     border-bottom，视觉与合并边框一致，但行盒不再是合并边框模型）；②给 sticky
+     行独立合成层，吸顶位移整块平移，不再每帧重绘整行。
+     计时器/虚拟区间仍归宿主，这里不碰 scrollTop 与 overflow-anchor。 */
+  /* @patch
+     id: session-inspector-sticky-flicker
+     for: @deepseek-ai/dsh-experimental-session-inspector 0.2.1-rc.2（GTtnTq_table / GTtnTq_sticky）
+     why: sticky 的 <tr> 叠在 border-collapse:collapse 表格上，快速滑动时吸顶祖先行被逐帧重算行盒，出现撕裂/拖影
+     until: 宿主把表格改成 border-collapse:separate，或不再用 sticky <tr> 表达祖先上下文
+     test: tests/css-rules.test.ts
+  */
+  [class*="GTtnTq_table"] {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+  [class*="GTtnTq_table"] [class*="GTtnTq_sticky"] {
+    will-change: transform !important;
   }
 }
 
@@ -5710,20 +6004,26 @@ exports.MISC_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
      inherit none from the card, and an unselectable contenteditable cannot
      host a caret or a paste on WebKit. Dialogs and text fields portalled
      into the drawer DOM (settings sheet) are re-enabled the same way, so
-     their values stay copyable. Scope: the conversation header is the
-     header inside the [data-phase] root (chat content never renders one
-     there), and the anchor stays the DESCENDANT form on purpose: 0.2.0-rc.2
-     (live-host probe 2026-10-07) renders an unclassed wrapper <div> between
-     .wSkVaW_root[data-phase] and <header class="wSkVaW_header">, so the
-     child-combinator form this rule used to carry matched 0 elements - the
-     title bar kept user-select:auto and a drag-select up over it still ended
-     in the header title span (4391 selected chars, opening with the title /
-     mode / tab labels). On the composer side only the input card
-     ([data-composer-card], host marker since 0.1.2) and the plugin stats
-     row - the dock above the card (todo card, approval / ask-question
-     panels) is reply content and stays copyable. */
+     their values stay copyable. Scope: the conversation header is the host
+     header inside the [data-phase] root, anchored to the HOST HEADER CLASS
+     (header.wSkVaW_header) rather than to a bare header - a bare header also
+     hits every other <header> under [data-phase], and the ask-question card
+     (dsh-client-ui-user-questions QuestionComposer) renders its own
+     <header class="Mbwy4a_header"> in composerSeat with the question text
+     as the heading. A bare header made that text unselectable, so the
+     question could not be long-press-copied (2026-10-20, same anchor rule
+     as the layout.css.ts header block; the dock above the input card is
+     reply content and must stay copyable). The anchor stays the DESCENDANT
+     form on purpose: 0.2.0-rc.2 (live-host probe 2026-10-07) renders an
+     unclassed wrapper <div> between .wSkVaW_root[data-phase] and
+     <header class="wSkVaW_header">, so the child-combinator form this rule
+     used to carry matched 0 elements - the title bar kept user-select:auto
+     and a drag-select up over it still ended in the header title span (4391
+     selected chars, opening with the title / mode / tab labels). On the
+     composer side only the input card ([data-composer-card], host marker
+     since 0.1.2) and the plugin stats row. */
   [data-mobile-nav="frame"] > :first-child,
-  [data-mobile-nav="frame"] [data-phase] header,
+  [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header,
   [data-mobile-nav="frame"] [data-composer-card],
   [data-mobile-nav="stats"],
   [data-mobile-nav="fab"],
@@ -5736,7 +6036,7 @@ exports.MISC_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
   [data-mobile-nav="frame"] > :first-child [role="dialog"],
   [data-mobile-nav="frame"] > :first-child input,
   [data-mobile-nav="frame"] > :first-child textarea,
-  [data-mobile-nav="frame"] [data-phase] header input {
+  [data-mobile-nav="frame"] [data-phase] header.wSkVaW_header input {
     -webkit-user-select: text !important;
     user-select: text !important;
   }
@@ -5809,8 +6109,8 @@ exports.MISC_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
   [data-mobile-nav="fab"],
   [data-mobile-nav="backdrop"],
   [data-mobile-nav="session-log"],
-  [data-mobile-nav="preview-full-toggle"],
-  [data-mobile-nav="drawer-actions"] {
+  [data-mobile-nav="session-log-wrap"],
+  [data-mobile-nav="preview-full-toggle"] {
     display: none !important;
   }
 }
@@ -6226,6 +6526,7 @@ exports.zh = {
     'open': '打开目录',
     'close': '收起目录',
     'backdrop': '点击关闭目录',
+    'back': '返回',
     'backToConversation': '返回会话',
     'sessionLog': '导出会话日志',
     'files': '文件浏览',
@@ -6250,6 +6551,7 @@ exports.en = {
     'open': 'Open directory',
     'close': 'Close directory',
     'backdrop': 'Click to close directory',
+    'back': 'Back',
     'backToConversation': 'Back to conversation',
     'sessionLog': 'Session log',
     'files': 'Files',
@@ -6712,14 +7014,30 @@ function createStatsLineTask() {
     // 单独提出来是要让快路径的身份校验与 measureRing 用**同一条**判据 —— 两处漂移就会漏掉
     // 被 React 换掉的那个环（见 ringIdentitySettled）。
     const isRingCandidate = (child, stats) => !child.contains(stats) && /\d\s*%/.test(child.textContent ?? '');
+    // 环坐在统计条**所在的同一行**（dock）里，但中间隔着几层包装并不固定：0.1.7–0.2.0 的
+    // 统计条是 bOPqQW_root，外面还套着 slot 包装层（固定两级上溯刚好落到 dock）；0.2.1 把
+    // 统计条拆成两个 slot 条目、没有共同 _root，标记落在 slot 包装本身，固定两级就越过 dock
+    // 指到 composer 根，环永远找不到（实测 0.2.1-rc.1：dock 里 ring 明明在，measureRing 返回 null）。
+    // 所以按「谁的 children 里有环候选」向上找，包装层几层都不影响。
+    // 必须封顶在 composerStack：不封顶会一路扫到 body，而会话正文里带「50%」的块正好是
+    // isRingCandidate 的形状（不含 stats、文本有百分比），宿主结构再变一次就会把消息区
+    // 当成环、把 composer 根当成 dock 去叠绝对定位。
+    const locateRing = (stats) => {
+        const stack = stats.closest('[class*="_composerStack"]');
+        for (let node = stats.parentElement; node !== null; node = node.parentElement) {
+            const ring = [...node.children].find((child) => isRingCandidate(child, stats));
+            if (ring !== undefined)
+                return { dock: node, ring };
+            if (node === stack)
+                break;
+        }
+        return null;
+    };
     const measureRing = (stats) => {
-        const holder = stats.parentElement;
-        const dock = holder === null ? null : holder.parentElement;
-        if (dock === null)
+        const located = locateRing(stats);
+        if (located === null)
             return null;
-        const ring = [...dock.children].find((child) => isRingCandidate(child, stats));
-        if (ring === undefined)
-            return null;
+        const { dock, ring } = located;
         const row = document.querySelector('[data-composer-card] [class*="_row"] [class*="_trailing"]');
         if (row === null)
             return null;
@@ -6840,12 +7158,11 @@ function createStatsLineTask() {
      * 漏洞也堵上（那时旧版同样看不出来，只是没人碰过）。
      */
     const ringIdentitySettled = (stats) => {
-        const holder = stats.parentElement;
-        const dock = holder === null ? null : holder.parentElement;
+        const located = locateRing(stats);
         // 认不出 dock（宿主结构变了）：宁可不 skip。
-        if (dock === null)
+        if (located === null)
             return false;
-        return [...dock.children].find((child) => isRingCandidate(child, stats)) === foldedRing;
+        return located.ring === foldedRing;
     };
     const mark = () => {
         // Keyboard open/close and viewport rotations relayout the composer without
@@ -6951,42 +7268,51 @@ function createStatsLineTask() {
         const stack = document.querySelector('[class*="_composerStack"]');
         if (stack === null)
             return;
-        for (const root of stack.querySelectorAll('[class*="_root"]')) {
-            // The status row lives inside the composer stack. The query is already
-            // scoped to the stack, so every candidate is inside it by construction —
-            // message-area blocks that mention turns/steps never enter this loop. (A
-            // `stack.contains(root)` guard stood here and its comment claimed to skip
-            // those blocks; it was unreachable.)
-            // The todo plan strip also lives in the composer stack and its root
-            // ends in _root. Its items may legitimately contain "步"/"steps" in
-            // their text, so never mistake it (or any interactive dock panel)
-            // for the stats strip.
-            if (root.matches('[data-testid="todo-panel"]'))
-                continue;
-            // Dock panels are skipped by never marking a candidate whose buttons are
-            // actionable controls. 0.1.5 renders the status row ITSELF as two
-            // popover buttons (bOPqQW_pill, aria-haspopup="dialog"), so an
-            // "any button" guard excluded the one row this task exists to mark
-            // (measured: bOPqQW_root rejected solely by hasButton, marker count 0).
-            // Every popover button counts as a status widget: the composer's real
-            // controls (model bar, context meter) carry no metrics text and are
-            // filtered by the text test above, and a panel with an actionable button
-            // still fails here.
-            const buttons = root.querySelectorAll('button');
-            if (buttons.length > 0 && ![...buttons].every((button) => button.getAttribute('aria-haspopup') !== null))
-                continue;
-            const text = root.textContent ?? '';
-            if (!/(turns|steps|\bLLM\b|轮|步)/.test(text))
-                continue;
-            // Composer card must never be mistaken for the status strip; exclude
-            // its input region across both composer DOMs (textarea / Lexical
-            // contentEditable marked data-composer-input).
-            if (root.querySelector('textarea, [data-composer-input]') !== null)
-                continue;
-            root.setAttribute('data-mobile-nav', 'stats');
-            moveTps(root);
-            moveRing(root);
-            return;
+        // 候选集分两档，**先旧代后新代**：0.1.5–0.2.0 的统计条是 `bOPqQW_root`，`_root` 档命中，
+        // 标记落在统计条自身（历代验收过的几何）。0.2.1 把 StatsPills 拆成 activity/usage 两个
+        // slot 条目，渲染进同一个 slot 包装（`[data-slot]`，无 class），composerStack 内再没有共同
+        // 的 `_root`——只认 `_root` 时四个候选（输入卡 / Full access / 模型名 / 环）全被下面的判据
+        // 筛掉，标记永远打不上，整条 stats 与环的 CSS 集体哑火。
+        // 两档分开查而不是合成一条选择器：`querySelectorAll` 按文档序返回，而 slot 包装在旧代里是
+        // 统计条的**祖先**，合成一条会让标记从 `bOPqQW_root` 挪到外层包装，改掉旧代几何。
+        for (const selector of ['[class*="_root"]', '[data-slot]']) {
+            for (const root of stack.querySelectorAll(selector)) {
+                // The status row lives inside the composer stack. The query is already
+                // scoped to the stack, so every candidate is inside it by construction —
+                // message-area blocks that mention turns/steps never enter this loop. (A
+                // `stack.contains(root)` guard stood here and its comment claimed to skip
+                // those blocks; it was unreachable.)
+                // The todo plan strip also lives in the composer stack and its root
+                // ends in _root. Its items may legitimately contain "步"/"steps" in
+                // their text, so never mistake it (or any interactive dock panel)
+                // for the stats strip.
+                if (root.matches('[data-testid="todo-panel"]'))
+                    continue;
+                // Dock panels are skipped by never marking a candidate whose buttons are
+                // actionable controls. 0.1.5 renders the status row ITSELF as two
+                // popover buttons (bOPqQW_pill, aria-haspopup="dialog"), so an
+                // "any button" guard excluded the one row this task exists to mark
+                // (measured: bOPqQW_root rejected solely by hasButton, marker count 0).
+                // Every popover button counts as a status widget: the composer's real
+                // controls (model bar, context meter) carry no metrics text and are
+                // filtered by the text test above, and a panel with an actionable button
+                // still fails here.
+                const buttons = root.querySelectorAll('button');
+                if (buttons.length > 0 && ![...buttons].every((button) => button.getAttribute('aria-haspopup') !== null))
+                    continue;
+                const text = root.textContent ?? '';
+                if (!/(turns|steps|\bLLM\b|轮|步)/.test(text))
+                    continue;
+                // Composer card must never be mistaken for the status strip; exclude
+                // its input region across both composer DOMs (textarea / Lexical
+                // contentEditable marked data-composer-input).
+                if (root.querySelector('textarea, [data-composer-input]') !== null)
+                    continue;
+                root.setAttribute('data-mobile-nav', 'stats');
+                moveTps(root);
+                moveRing(root);
+                return;
+            }
         }
     };
     // Scope decision: TPS readout updates are text mutations in the composer
@@ -7103,7 +7429,7 @@ let fadeHook = null;
  * already existed as a mount animation). */
 const BACKDROP_FADE_MS = 200;
 /** The FAB's second face: an arrow, shown while a sidebar panel owns the main
- * area (see the panelViewOpen note in the task body). */
+ * area — both the subpage 「返回」 and the panel-root 「返回会话」 modes. */
 const FAB_BACK_ICON = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="18" height="18">' +
     '<path d="M9.8 3.4 5.2 8l4.6 4.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>' +
     '</svg>';
@@ -7114,8 +7440,9 @@ const FAB_DRAWER_ICON = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"
  * @param t - our dictionary (the `NS` locale namespace, i18n/locales.ts).
  * @param toggleSidebar - opens/closes the drawer.
  * @param panelExit - the sidebar-panel exit face (panel-exit.ts). The FAB is the
- *   screen's only control while a panel owns the main area — the header toggle
- *   does not render there — so it doubles as 「返回会话」. Null on a host that
+ *   screen's only full-size control while a panel owns the main area — the
+ *   header toggle does not render there — so it also steps back: one host view
+ *   level on a panel subpage, out of the panel at its root. Null on a host that
  *   cannot select panels (rc.6), where it stays a plain drawer button.
  */
 function createOverlayTask(t, toggleSidebar, panelExit) {
@@ -7140,37 +7467,47 @@ function createOverlayTask(t, toggleSidebar, panelExit) {
     };
     const heroPhase = () => document.querySelector('[data-phase="active"]') === null;
     /**
-     * The FAB has two faces. While a sidebar panel owns the main area it reads as
-     * 「返回会话」 and leaves the panel; everywhere else it opens the drawer.
+     * The FAB does one job per view. While a sidebar panel owns the main area it
+     * steps back through the panel and everywhere else it opens the drawer.
      *
-     * It matters because the FAB is the ONLY control on screen there: the panel
-     * replaces the conversation, so the header (and with it the drawer toggle)
-     * does not render, and a panel's own page head carries no way back either.
-     * Same button, same corner — only its meaning follows the view.
+     * It matters because the FAB is the ONLY full-size control on screen there:
+     * the panel replaces the conversation, so the header (and with it the drawer
+     * toggle) does not render. A panel subpage does ship the host's own
+     * 「返回上一级」 control (moreBack / crumb), but it sits in the same top-left
+     * corner and is geometrically covered by the FAB — so the FAB has to be the
+     * one that climbs a level.
      */
     const onFabClick = (event) => {
         if (panelExit !== null && panelExit.panelOpen()) {
             event.preventDefault();
             event.stopPropagation();
-            panelExit.exit();
+            // One level, not the whole panel: on a plugin subpage this clicks the
+            // host's own 「返回上一级」 (see back in panel-exit.ts).
+            panelExit.back();
             return;
         }
         toggleSidebar();
     };
-    /** Icon and accessible name follow the view so the button never reads as a
-     * mystery control. Idempotent: ensure() runs on every mutation burst. */
+    /**
+     * Icon and accessible name follow the view so the button never reads as a
+     * mystery control. Three states, two icons: open-drawer (no panel),
+     * back-level (panel subpage — same arrow, named 「返回」, because it climbs a
+     * host view level and does not leave the panel) and exit-panel (panel root —
+     * named 「返回会话」). Idempotent: ensure() runs on every mutation burst.
+     */
     const syncFab = () => {
         if (fab === null)
             return;
-        const exiting = panelExit !== null && panelExit.panelOpen();
-        const mode = exiting ? 'exit-panel' : 'open-drawer';
+        const onPanel = panelExit !== null && panelExit.panelOpen();
+        const onSubpage = onPanel && panelExit !== null && panelExit.subpageOpen();
+        const mode = onSubpage ? 'back-level' : onPanel ? 'exit-panel' : 'open-drawer';
         if (fab.dataset.mobileNavFabMode === mode)
             return;
         fab.dataset.mobileNavFabMode = mode;
-        const label = t(exiting ? 'backToConversation' : 'open');
+        const label = onSubpage ? t('back') : onPanel ? t('backToConversation') : t('open');
         fab.setAttribute('aria-label', label);
         fab.title = label;
-        fab.innerHTML = exiting ? FAB_BACK_ICON : FAB_DRAWER_ICON;
+        fab.innerHTML = onPanel ? FAB_BACK_ICON : FAB_DRAWER_ICON;
     };
     return {
         name: 'overlay-backdrop-fab',
@@ -7297,6 +7634,573 @@ function createFileViewerMarkerTask() {
         },
         dispose: () => {
             (0, frame_ts_1.getFrame)()?.removeAttribute('data-file-viewer-open');
+        },
+    };
+}
+};
+__modules["core/sessions-compat.js"] = function (require, module, exports) {
+"use strict";
+// Sessions service shape drifted in 0.1.6-alpha.2 (audit doc §10.1): a2
+// removed `ISessions.open`/`clear` and `SessionListState.current` /
+// `currentAddress`, moving selection to per-session `retainedBy` counters
+// (upstream reads it as
+// `Object.values(byId).find(s => (s.retainedBy.mainView ?? 0) > 0)?.id`).
+// These helpers let call sites stay compile-green against rc.2 typings while
+// degrading explicitly on an a2 host instead of throwing or silently dying.
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DELETE_VERIFY_INTERVAL_MS = exports.DELETE_VERIFY_ATTEMPTS = void 0;
+exports.currentSessionIdOf = currentSessionIdOf;
+exports.sessionsCanClear = sessionsCanClear;
+exports.sessionsCanOpen = sessionsCanOpen;
+exports.verifySessionDeleted = verifySessionDeleted;
+/** The current session id: rc.2's `current` field when present, else the a2
+ *  main-view-retained session. Undefined when the shape matches neither. */
+function currentSessionIdOf(list) {
+    if (typeof list !== 'object' || list === null)
+        return undefined;
+    const snapshot = list;
+    if (typeof snapshot.current === 'string')
+        return snapshot.current;
+    for (const key in snapshot.byId) {
+        const summary = snapshot.byId[key];
+        // for-in guarantees the key exists, not the value — an explicitly
+        // undefined property still reaches the guard below.
+        if (summary === undefined)
+            continue;
+        const mainView = summary.retainedBy?.mainView;
+        if (typeof mainView === 'number' && mainView > 0 && typeof summary.id === 'string')
+            return summary.id;
+    }
+    return undefined;
+}
+/** a2 removed `clear()` (selection lifecycle moved to the retain model). */
+function sessionsCanClear(sessions) {
+    return typeof sessions?.clear === 'function';
+}
+/** a2 removed `open()`; callers must degrade (armNav fallback in
+ *  phone-chrome) instead of throwing inside the capture pointerup listener. */
+function sessionsCanOpen(sessions) {
+    return typeof sessions?.open === 'function';
+}
+/** How many times an unanswered delete request is re-checked against the list. */
+exports.DELETE_VERIFY_ATTEMPTS = 4;
+/** Delay between two re-checks of the session list. */
+exports.DELETE_VERIFY_INTERVAL_MS = 350;
+/**
+ * Decide whether a session delete landed even though no HTTP response arrived.
+ *
+ * The delete route is the plugin's only REST call, and the host half deployed
+ * on DSHA aborts its reply AFTER the handler already moved the session into the
+ * trash: the browser rejects the fetch with `TypeError: Failed to fetch`
+ * (`net::ERR_EMPTY_RESPONSE`) for a delete that DID happen. Reporting that as a
+ * failure is a lie the user has to work around, so the session list — not the
+ * fetch promise — is the judge: re-read it a bounded number of times and only
+ * conclude failure when the id survives every attempt.
+ *
+ * @param deps - list accessors plus the injected wait.
+ * @returns true as soon as the id is gone, false when it survives the budget.
+ */
+async function verifySessionDeleted(deps) {
+    const attempts = deps.attempts ?? exports.DELETE_VERIFY_ATTEMPTS;
+    const intervalMs = deps.intervalMs ?? exports.DELETE_VERIFY_INTERVAL_MS;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+        try {
+            await deps.refresh?.();
+        }
+        catch {
+            // A failed refresh is not an answer; the snapshot below still is.
+        }
+        if (!deps.listed())
+            return true;
+        if (attempt + 1 < attempts)
+            await deps.sleep(intervalMs);
+    }
+    return !deps.listed();
+}
+};
+__modules["effects/drawer-session-log.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createDrawerSessionLogTask = createDrawerSessionLogTask;
+const sessions_compat_ts_1 = require("./core/sessions-compat.js");
+const locales_ts_1 = require("./i18n/locales.js");
+const frame_ts_1 = require("./platform/frame.js");
+/**
+ * 16px download outline glyph: the host's own `IconDownloadOutlineRegular`
+ * artwork (three stroked paths), inlined because this node is built without
+ * React (the host icon components are React-only).
+ */
+const DOWNLOAD_SVG = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">'
+    + '<path d="M8 1.95317V10.0469" stroke="currentColor" stroke-width="1"/>'
+    + '<path d="M4.25 6.29688L8 10.0469L11.75 6.29688" stroke="currentColor" stroke-width="1"/>'
+    + '<path d="M1.5 10.0469V13.158C1.5 13.3937 1.60536 13.6198 1.79289 13.7865C1.98043 13.9532 2.23478 14.0469 2.5 14.0469H13.5C13.7652 14.0469 14.0196 13.9532 14.2071 13.7865C14.3946 13.6198 14.5 13.3937 14.5 13.158V10.0469" stroke="currentColor" stroke-width="1"/>'
+    + '</svg>';
+/**
+ * The drawer's brand-row export icon (replaces the footer pill; issue #225).
+ *
+ * The task is scoped to tree changes (`*`) because React may recreate the
+ * host's logo row on any sidebar re-render; `ensure()` re-mounts the wrapper
+ * idempotently. The button never sits directly in the row (see `mount()`).
+ * `dispose()` (mobile breakpoint teardown or task removal) unsubscribes and
+ * removes the node.
+ *
+ * @param ctx - client root context: locale, sessions list and the host's
+ *   session-log download service.
+ * @returns the reconciler task.
+ */
+function createDrawerSessionLogTask(ctx) {
+    const t = ctx.locale.bind(locales_ts_1.NS);
+    const sessionId = () => (0, sessions_compat_ts_1.currentSessionIdOf)(ctx.sessions.list.getSnapshot());
+    let wrapper = null;
+    let button = null;
+    let unsubscribe = null;
+    /** Mirror "no current session" into the native disabled state. */
+    const syncDisabled = () => {
+        if (button === null)
+            return;
+        button.disabled = sessionId() === undefined;
+    };
+    const onClick = () => {
+        const id = sessionId();
+        if (id === undefined)
+            return;
+        ctx.sessionLogDownload.download(id);
+    };
+    /** The drawer's brand row. Scoped to the sidebar column first: the shell
+     *  frame is the mobile branch only, but the column keeps the lookup off any
+     *  future logo row outside the drawer. */
+    const logoRow = () => {
+        const frame = (0, frame_ts_1.getFrame)();
+        if (frame === null)
+            return null;
+        return frame.querySelector('[class*="sidebarCol"] [class*="logoRow"]')
+            ?? frame.querySelector('[class*="logoRow"]');
+    };
+    /**
+     * Mount the wrapper as a direct (non-button) child of the logo row.
+     *
+     * The third-party `@linxin666/dsh-web-all` responsive layer stamps the LAST
+     * direct `<button>` of the logo row as `data-dsh-responsive-part="sidebar-toggle"`
+     * (its own source: `querySelectorAll(':scope > button, :scope > [role="button"]')`
+     * then `.item(length - 1)`) and its dismiss shim clicks that node to close the
+     * drawer. A button appended directly to the row is adopted instead: measured
+     * 2026-10-18, the icon computed `display:none` and an outside tap would fire
+     * the export. Keeping the button nested one level down in a `<span>` hides it
+     * from the `:scope > button` selector without depending on the host toggle's
+     * class (which may change per host generation).
+     */
+    const mount = (row, target) => {
+        if (target.parentElement !== row)
+            row.appendChild(target);
+    };
+    return {
+        name: 'drawer-session-log',
+        scopes: ['*'],
+        ensure: () => {
+            const row = logoRow();
+            if (row === null)
+                return;
+            if (button === null) {
+                wrapper = document.createElement('span');
+                wrapper.dataset.mobileNav = 'session-log-wrap';
+                button = document.createElement('button');
+                button.type = 'button';
+                button.dataset.mobileNav = 'session-log';
+                button.setAttribute('aria-label', t('sessionLog'));
+                button.title = t('sessionLog');
+                button.innerHTML = DOWNLOAD_SVG;
+                button.addEventListener('click', onClick);
+                wrapper.appendChild(button);
+                unsubscribe = ctx.sessions.list.subscribe(() => { syncDisabled(); });
+            }
+            if (wrapper !== null)
+                mount(row, wrapper);
+            syncDisabled();
+        },
+        dispose: () => {
+            unsubscribe?.();
+            unsubscribe = null;
+            wrapper?.remove();
+            wrapper = null;
+            button = null;
+        },
+    };
+}
+};
+__modules["core/image-zoom-core.js"] = function (require, module, exports) {
+"use strict";
+// image-zoom-core.ts — DOM-free math for the image lightbox zoom.
+//
+// Deliberately ZERO imports and no DOM globals: the lightbox effect
+// (effects/image-lightbox-zoom.ts) owns the listeners and the CSS transform,
+// this module owns only the numbers, so node:test can pin the geometry with
+// no browser. Conventions used by every function here:
+//  - x/y are CSS translate values in the image's own coordinate space, i.e.
+//    the translate3d() the effect writes before scale(s);
+//  - the image is rendered with transform-origin 50% 50%, so a point p given
+//    relative to the image centre lands at (x + s * p, y + s * p);
+//  - an "anchor" is such a point in that same centre-relative space (the
+//    effect converts a screen-space midpoint by subtracting the image's
+//    untransformed centre before calling zoomAround);
+//  - scale is clamped to [MIN_SCALE, MAX_SCALE]; at MIN_SCALE the image is
+//    centred again, so no translation may survive.
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DOUBLE_TAP_SCALE = exports.MAX_SCALE = exports.MIN_SCALE = void 0;
+exports.clampScale = clampScale;
+exports.identityZoom = identityZoom;
+exports.zoomAround = zoomAround;
+exports.clampTranslation = clampTranslation;
+exports.pinchFactor = pinchFactor;
+exports.doubleTapTarget = doubleTapTarget;
+exports.MIN_SCALE = 1;
+exports.MAX_SCALE = 4;
+exports.DOUBLE_TAP_SCALE = 2.5;
+/** Clamp a raw scale factor into the supported range (NaN collapses to 1:1). */
+function clampScale(n) {
+    if (Number.isNaN(n))
+        return exports.MIN_SCALE;
+    return Math.min(exports.MAX_SCALE, Math.max(exports.MIN_SCALE, n));
+}
+/** The neutral 1:1 state. A fresh object every call: callers may hold it. */
+function identityZoom() {
+    return { scale: exports.MIN_SCALE, x: 0, y: 0 };
+}
+/**
+ * Scale by `factor` while keeping `anchor` (centre-relative, see the header)
+ * at the same screen position. The new translation is derived from the fixed
+ * point relation x' + s' * p = x + s * p, so no iteration or accumulated
+ * drift is involved. Clamping to MIN_SCALE recentres the image; clamping to
+ * MAX_SCALE keeps the anchored relation at the clamped scale.
+ */
+function zoomAround(state, factor, anchor) {
+    if (!Number.isFinite(factor) || factor <= 0)
+        return { ...state };
+    if (!(state.scale > 0))
+        return identityZoom();
+    const nextScale = clampScale(state.scale * factor);
+    if (nextScale === exports.MIN_SCALE)
+        return identityZoom();
+    const ratio = nextScale / state.scale;
+    return {
+        scale: nextScale,
+        x: anchor.x - (anchor.x - state.x) * ratio,
+        y: anchor.y - (anchor.y - state.y) * ratio,
+    };
+}
+/**
+ * Keep a zoomed image from being dragged off its viewport. The allowance per
+ * axis is half of the overflow the current scale creates, so the image edge
+ * can reach the viewport edge but never pass it. A 1:1 image cannot move at
+ * all. `viewport` is the visible box the image is allowed to travel within
+ * (the effect passes the visible viewport size, not a cached box).
+ */
+function clampTranslation(state, viewport) {
+    const scale = clampScale(state.scale);
+    if (scale === exports.MIN_SCALE)
+        return identityZoom();
+    const width = Number.isFinite(viewport.width) && viewport.width > 0 ? viewport.width : 0;
+    const height = Number.isFinite(viewport.height) && viewport.height > 0 ? viewport.height : 0;
+    const boundX = ((scale - 1) * width) / 2;
+    const boundY = ((scale - 1) * height) / 2;
+    const x = Number.isFinite(state.x) ? Math.min(boundX, Math.max(-boundX, state.x)) : 0;
+    const y = Number.isFinite(state.y) ? Math.min(boundY, Math.max(-boundY, state.y)) : 0;
+    return { scale, x, y };
+}
+/**
+ * Ratio between two pinch spans, each given as the vector between the two
+ * touches (p2 - p1). A degenerate previous span (both fingers on one point)
+ * returns 1 instead of dividing by zero.
+ */
+function pinchFactor(prev, next) {
+    const from = Math.hypot(prev.x, prev.y);
+    const to = Math.hypot(next.x, next.y);
+    if (from === 0)
+        return 1;
+    if (!Number.isFinite(from) || !Number.isFinite(to))
+        return 1;
+    return to / from;
+}
+/** The double-tap step: 1:1 zooms to DOUBLE_TAP_SCALE, anything else resets. */
+function doubleTapTarget(state) {
+    return state.scale <= exports.MIN_SCALE ? { scale: exports.DOUBLE_TAP_SCALE, x: 0, y: 0 } : identityZoom();
+}
+};
+__modules["effects/image-lightbox-zoom.js"] = function (require, module, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createImageLightboxZoomTask = createImageLightboxZoomTask;
+const image_zoom_core_ts_1 = require("./core/image-zoom-core.js");
+/**
+ * Image lightbox zoom (dsh-client-ui-primitives ImageLightbox).
+ *
+ * Background: the host lightbox (a body-portal div[role=dialog][aria-modal]
+ * whose stage holds an img + a close button) ships no zoom at all, while the
+ * page-level touch-action in layout.css.ts grants pinch-zoom to the document.
+ * So a two-finger gesture over the image used to zoom the whole WebView. This
+ * effect gives the IMAGE its own transform and keeps the browser gesture out
+ * of the lightbox layer:
+ *  - the dialog root carries data-mobile-nav="image-lightbox" while open;
+ *  - only the img gets translate3d(x,y,0) scale(s) (never zoom:, never the
+ *    standalone scale property), with transform-origin 50% 50%;
+ *  - pointer events, gesturestart and touchmove are attached to the dialog
+ *    root ONLY. Never document: cdp-zoom-probe A5 dispatches gesturestart on
+ *    document and the #45 contract requires it not to be prevented; a
+ *    document-level listener here would turn that probe red and kill page
+ *    pinch on every other surface.
+ * The math lives in core/image-zoom-core.ts (DOM-free, unit-tested); this
+ * module owns listeners and the transform string only.
+ *
+ * Lifecycle: a ReconcilerTask (scopes ['*']) so the full-tree observer wakes
+ * it when the portal mounts/unmounts and when the mobile breakpoint
+ * deactivates. Everything it creates lives in this factory closure, so the
+ * dispose() path strips every listener, attribute and inline style with no
+ * module-level state left behind. A host generation that changes the portal
+ * shape simply stops being detected (lazy deactivation) instead of throwing.
+ */
+function createImageLightboxZoomTask() {
+    let root = null;
+    let image = null;
+    let zoom = (0, image_zoom_core_ts_1.identityZoom)();
+    const pointers = new Map();
+    let pan = null;
+    let pinch = null;
+    let lastTap = null;
+    const viewport = () => ({
+        width: window.innerWidth,
+        height: window.innerHeight,
+    });
+    /** The portal root this effect recognises: a body child dialog whose stage
+     *  holds the preview image as a direct child. Settings and other modals are
+     *  direct body children too, hence the img shape test rather than "first". */
+    const findLightbox = () => {
+        for (const candidate of document.body.querySelectorAll(':scope > [role="dialog"][aria-modal="true"]')) {
+            if (!(candidate instanceof HTMLElement))
+                continue;
+            const found = candidate.querySelector(':scope > :first-child > img');
+            if (found instanceof HTMLImageElement)
+                return { root: candidate, image: found };
+        }
+        return null;
+    };
+    const clearImage = () => {
+        if (image === null)
+            return;
+        image.style.transform = '';
+        image.style.transformOrigin = '';
+        image.style.willChange = '';
+        image = null;
+    };
+    const detach = () => {
+        if (root !== null) {
+            root.removeEventListener('pointerdown', onPointerDown);
+            root.removeEventListener('pointermove', onPointerMove);
+            root.removeEventListener('pointerup', onPointerUp);
+            root.removeEventListener('pointercancel', onPointerCancel);
+            root.removeEventListener('gesturestart', onGestureStart);
+            root.removeEventListener('touchmove', onTouchMove);
+            if (root.getAttribute('data-mobile-nav') === 'image-lightbox') {
+                root.removeAttribute('data-mobile-nav');
+            }
+        }
+        clearImage();
+        pointers.clear();
+        pan = null;
+        pinch = null;
+        lastTap = null;
+        zoom = (0, image_zoom_core_ts_1.identityZoom)();
+        root = null;
+    };
+    /** untransformed image centre in viewport coordinates (the transform's
+     *  scale is about the centre, so only the translate has to be undone). */
+    const baseCentre = () => {
+        if (image === null)
+            return { x: 0, y: 0 };
+        const rect = image.getBoundingClientRect();
+        return { x: rect.left + rect.width / 2 - zoom.x, y: rect.top + rect.height / 2 - zoom.y };
+    };
+    const paint = () => {
+        if (image === null)
+            return;
+        image.style.transform = 'translate3d(' + zoom.x + 'px, ' + zoom.y + 'px, 0) scale(' + zoom.scale + ')';
+    };
+    const startPinch = () => {
+        const points = [...pointers.values()];
+        const first = points[0];
+        const second = points[1];
+        if (first === undefined || second === undefined)
+            return;
+        const startMid = { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
+        const centre = baseCentre();
+        pinch = {
+            startSpan: { x: second.x - first.x, y: second.y - first.y },
+            startMid,
+            startZoom: { ...zoom },
+            anchor: { x: startMid.x - centre.x, y: startMid.y - centre.y },
+        };
+        pan = null;
+    };
+    const onPointerDown = (event) => {
+        if (event.pointerType === 'mouse')
+            return;
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (pointers.size >= 2) {
+            startPinch();
+            return;
+        }
+        pan = {
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startY: event.clientY,
+            originX: zoom.x,
+            originY: zoom.y,
+            moved: false,
+            startedOnImage: event.target === image,
+        };
+    };
+    const onPointerMove = (event) => {
+        if (!pointers.has(event.pointerId))
+            return;
+        const point = { x: event.clientX, y: event.clientY };
+        pointers.set(event.pointerId, point);
+        if (pointers.size >= 2) {
+            if (pinch === null) {
+                startPinch();
+                return;
+            }
+            const points = [...pointers.values()];
+            const first = points[0];
+            const second = points[1];
+            if (first === undefined || second === undefined)
+                return;
+            const mid = { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
+            const factor = (0, image_zoom_core_ts_1.pinchFactor)(pinch.startSpan, { x: second.x - first.x, y: second.y - first.y });
+            const scaled = (0, image_zoom_core_ts_1.zoomAround)(pinch.startZoom, factor, pinch.anchor);
+            zoom = (0, image_zoom_core_ts_1.clampTranslation)({
+                scale: scaled.scale,
+                x: scaled.x + (mid.x - pinch.startMid.x),
+                y: scaled.y + (mid.y - pinch.startMid.y),
+            }, viewport());
+            paint();
+            return;
+        }
+        if (pan === null || pan.pointerId !== event.pointerId || !pan.startedOnImage)
+            return;
+        const dx = point.x - pan.startX;
+        const dy = point.y - pan.startY;
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4)
+            pan.moved = true;
+        zoom = (0, image_zoom_core_ts_1.clampTranslation)({ scale: zoom.scale, x: pan.originX + dx, y: pan.originY + dy }, viewport());
+        paint();
+    };
+    const onPointerUp = (event) => {
+        if (!pointers.delete(event.pointerId))
+            return;
+        if (pointers.size >= 2) {
+            startPinch();
+            return;
+        }
+        if (pointers.size === 1) {
+            // One finger lifted first: the remaining finger keeps panning from the
+            // current zoom instead of jumping back to its pre-pinch origin.
+            const remaining = [...pointers.entries()][0];
+            pinch = null;
+            pan = null;
+            if (remaining !== undefined) {
+                const [id, point] = remaining;
+                pan = {
+                    pointerId: id,
+                    startX: point.x,
+                    startY: point.y,
+                    originX: zoom.x,
+                    originY: zoom.y,
+                    moved: true,
+                    startedOnImage: true,
+                };
+            }
+            return;
+        }
+        const tap = pan;
+        pan = null;
+        pinch = null;
+        if (tap === null || tap.pointerId !== event.pointerId || !tap.startedOnImage || tap.moved) {
+            lastTap = null;
+            return;
+        }
+        const at = Date.now();
+        if (lastTap !== null
+            && at - lastTap.at <= 320
+            && Math.hypot(event.clientX - lastTap.x, event.clientY - lastTap.y) <= 28) {
+            zoom = (0, image_zoom_core_ts_1.clampTranslation)((0, image_zoom_core_ts_1.doubleTapTarget)(zoom), viewport());
+            lastTap = null;
+            paint();
+            return;
+        }
+        lastTap = { at, x: event.clientX, y: event.clientY };
+    };
+    const onPointerCancel = (event) => {
+        pointers.delete(event.pointerId);
+        if (pointers.size < 2)
+            pinch = null;
+        if (pointers.size === 0) {
+            pan = null;
+            lastTap = null;
+        }
+    };
+    // iOS gesture events bubble from the touched element; keeping this on the
+    // dialog root stops the WebView's own pinch but leaves every other surface
+    // (and the document-level #45 contract) untouched.
+    const onGestureStart = (event) => {
+        event.preventDefault();
+    };
+    // Pointer-events belt and braces: some WebViews still deliver TouchEvents
+    // first. Two touches on the lightbox are always the image pinch, never a
+    // page pinch, so the fallback cancels the default only then.
+    const onTouchMove = (event) => {
+        if (event.touches.length > 1)
+            event.preventDefault();
+    };
+    const attach = (nextRoot, nextImage) => {
+        root = nextRoot;
+        image = nextImage;
+        zoom = (0, image_zoom_core_ts_1.identityZoom)();
+        pointers.clear();
+        pan = null;
+        pinch = null;
+        lastTap = null;
+        root.setAttribute('data-mobile-nav', 'image-lightbox');
+        image.style.transformOrigin = '50% 50%';
+        image.style.willChange = 'transform';
+        root.addEventListener('pointerdown', onPointerDown);
+        root.addEventListener('pointermove', onPointerMove);
+        root.addEventListener('pointerup', onPointerUp);
+        root.addEventListener('pointercancel', onPointerCancel);
+        root.addEventListener('gesturestart', onGestureStart);
+        root.addEventListener('touchmove', onTouchMove, { passive: false });
+    };
+    return {
+        name: 'image-lightbox-zoom',
+        scopes: ['*'],
+        ensure: () => {
+            const found = findLightbox();
+            if (found === null) {
+                detach();
+                return;
+            }
+            if (root === found.root) {
+                if (image !== found.image) {
+                    clearImage();
+                    image = found.image;
+                    zoom = (0, image_zoom_core_ts_1.identityZoom)();
+                    image.style.transformOrigin = '50% 50%';
+                    image.style.willChange = 'transform';
+                }
+                return;
+            }
+            detach();
+            attach(found.root, found.image);
+        },
+        dispose: () => {
+            detach();
         },
     };
 }
@@ -7642,11 +8546,12 @@ const overlay_backdrop_fab_ts_1 = require("./effects/overlay-backdrop-fab.js");
  * experiment rolled back) — this value.
  * Safety at this width: the release classification (0.16×w travel OR
  * 0.45px/ms velocity) still gates the commit, so widening cannot open on a
- * tap; vertical strokes reset at axis lock (≤8px of prevented movement) and
- * hand scrolling back; strokes beginning inside genuinely horizontally
- * scrollable containers are excluded from the zone entirely — see
- * findHorizontalScroller (at 45% the stats line / message code blocks sit
- * well inside the strip, so that guard is load-bearing).
+ * tap; vertical strokes never reach the touchmove preventDefault, so their
+ * native scroll is untouched (see onTouchMove — the cancel is only allowed
+ * after the horizontal axis lock); strokes beginning inside genuinely
+ * horizontally scrollable containers are excluded from the zone entirely —
+ * see findHorizontalScroller (at 45% the stats line / message code blocks
+ * sit well inside the strip, so that guard is load-bearing).
  */
 const START_ZONE_RATIO = 0.45;
 /**
@@ -9027,27 +9932,16 @@ function installSidebarSwipe(ctx, filesToggle) {
             if (document.hidden)
                 abortStroke(ctx);
         };
-        // Edge-touch priority (iOS UIScreenEdgePanGestureRecognizer semantics):
-        // a stroke that began inside the left-edge start zone must never be
-        // claimed by native scrolling. touch-action: pan-y already forbids the
-        // browser from panning it horizontally; this preventDefault (passive:
-        // false) additionally stops the vertical-scroll claim, so the pointer
-        // event stream reaches the gesture layer intact on browsers where the
-        // scroller wins the race (iOS Safari in particular — headless cannot
-        // reproduce that behavior). Vertical-dominant strokes abandon the
-        // gesture (reset() clears trackingPointer), so scrolling resumes for
-        // touches that were never swipes. Strokes starting inside a genuinely
-        // horizontally scrollable container never reach this state at all
-        // (beginStroke rejects them via findHorizontalScroller), so their
-        // native horizontal pan is never prevented.
-        //
-        // Multi-touch is the one case that must never be prevented: two fingers
-        // on the screen mean a pinch, and preventDefault on those touchmoves
-        // cancels the browser's zoom gesture. The pointerdown guard above
-        // already abandons the stroke when a second finger lands; this is the
-        // belt-and-braces path for engines that hand the gesture to the
-        // compositor without delivering a second pointerdown (#46 real-device
-        // report: pinch-out zoomed but pinch-in would not zoom back).
+        // Edge-touch priority, from the AXIS LOCK onward only: once the stroke is
+        // known horizontal, preventDefault (passive:false) stops the browser from
+        // claiming it as a scroll, keeping the pointer stream intact (iOS
+        // UIScreenEdgePanGestureRecognizer semantics). Before the lock the handler
+        // must stay out of the way entirely: canceling a touchmove suppresses the
+        // touch point's default action for the WHOLE gesture (Touch Events
+        // cancelability), and WebKit does not resume scrolling after reset() —
+        // preventing here made both 45% start zones dead for scrolling on iOS
+        // (#222). Multi-touch is never prevented: two fingers mean a pinch, and
+        // the pointerdown guard above plus this check hand it back (#46).
         const onTouchMove = (event) => {
             if (trackingPointer === 0)
                 return;
@@ -9055,6 +9949,8 @@ function installSidebarSwipe(ctx, filesToggle) {
                 abortStroke(ctx);
                 return;
             }
+            if (!tracking)
+                return;
             event.preventDefault();
         };
         document.addEventListener('pointerdown', onPointerDown, true);
@@ -9186,10 +10082,10 @@ function installOverlayInteractions(ctx) {
                 return false;
             return target.closest(exports.TAP_CLOSE_NAV_SELECTOR) !== null;
         };
-        // DSHA_SESSION_INTERACTION_V1：宿主把「单击=选中、双击=打开」拆成了两步
-        // （data-dsha-session-select 标记 + dsha-session-open 事件）。上游的
-        // 「点行即关抽屉」会在第一次单击就把抽屉收掉，双击永远到不了。
-        // 这些行改由 dsha-session-open 事件关闭（见下方 document 监听）。
+        // DSHA_SESSION_INTERACTION_V4：有效的 touch/pen/mouse 单击由宿主打开会话。
+        // data-dsha-session-select 标记的行等待真实 dsha-session-open 事件关闭抽屉。
+        // 不在 pointerup 提前收起，避免吞掉浏览器随后派发的原始 click。
+        // 关闭依据是宿主已经打开会话的事实（见下方 document 监听）。
         // 非 DSHA 宿主没有这个标记，这一条天然不命中。
         // 豁免只属于点行关抽屉的两个调用方（click / pointerup），不得回流进
         // 长按武装门，否则 DSHA 行长按开不了 ⋯ 菜单（#82）。
@@ -9205,10 +10101,10 @@ function installOverlayInteractions(ctx) {
         let navSignatureAtArm = '';
         let navObserver = null;
         let navTimer = null;
-        /** Swallow the host's title double-click rename: on touch a double *tap*
-         *  means "open the session" (DSHA's own two-tap detection sits on the row's
-         *  click handler), and letting the browser's `dblclick` reach the title would
-         *  open the host's rename dialog on that same gesture. Capture phase on
+        /** Swallow the host's title double-click rename: repeated touch taps already
+         *  use the host's normal session-open path. Letting the browser's `dblclick`
+         *  reach the title would also open the rename dialog on that gesture.
+         *  Keep the original click handling unchanged. Capture phase on
          *  `document`, so the event never reaches React's root container. Only real
          *  (trusted) events are swallowed — nothing here dispatches a synthetic
          *  dblclick since the long-press rename was dropped (2026-10-07). Armed only
@@ -9356,7 +10252,7 @@ function installOverlayInteractions(ctx) {
                     toggleSidebar();
                 return;
             }
-            // DSHA_SESSION_INPUT_V3：保留原始点击，实际打开仍由 dsha-session-open 关闭抽屉。
+            // DSHA_SESSION_INPUT_V4：保留原始点击，实际打开仍由 dsha-session-open 关闭抽屉。
             // A touch row-tap owns the close (pointerup or the navigation observer);
             // let the row's click reach React without toggling the drawer twice.
             if (performance.now() - lastTouchNavAt < 500)
@@ -9429,8 +10325,8 @@ function installOverlayInteractions(ctx) {
             // closing here would retract the drawer before the browser dispatches
             // the tap's click, and the target's onClick would never run.
         };
-        // DSHA 宿主在「真正打开会话」时才派发 dsha-session-open（单击只选中），
-        // 所以抽屉的关闭挂在这个事实上，而不是挂在点击上。
+        // DSHA V4 有效单击打开会话后派发 dsha-session-open；
+        // 抽屉只在打开事实到达时关闭，保留原始 click 与行标记豁免。
         const onDshaSessionOpen = () => {
             if (drawerOpen())
                 toggleSidebar();
@@ -9470,6 +10366,8 @@ const stats_line_ts_1 = require("./effects/stats-line.js");
 const preview_fullscreen_ts_1 = require("./effects/preview-fullscreen.js");
 const overlay_backdrop_fab_ts_1 = require("./effects/overlay-backdrop-fab.js");
 const file_viewer_compat_ts_1 = require("./effects/file-viewer-compat.js");
+const drawer_session_log_ts_1 = require("./effects/drawer-session-log.js");
+const image_lightbox_zoom_ts_1 = require("./effects/image-lightbox-zoom.js");
 const drawer_close_ts_1 = require("./effects/drawer-close.js");
 let reconcilerInstalled = false;
 let reconcileTasksRegistered = false;
@@ -9575,6 +10473,8 @@ function registerReconcileTasks(ctx, panelExit) {
         addReconcilerTask((0, overlay_backdrop_fab_ts_1.createOverlayTask)(t, () => (0, drawer_close_ts_1.toggleDrawer)(ctx), panelExit)),
         addReconcilerTask(panelExit.task),
         addReconcilerTask((0, file_viewer_compat_ts_1.createFileViewerMarkerTask)()),
+        addReconcilerTask((0, drawer_session_log_ts_1.createDrawerSessionLogTask)(ctx)),
+        addReconcilerTask((0, image_lightbox_zoom_ts_1.createImageLightboxZoomTask)()),
     ];
     return () => {
         for (const remove of removeTasks)
@@ -9608,8 +10508,18 @@ const IOS_MARKER = 'data-mobile-nav-ios';
  * user pinch but other engines honor them, so writing them would only take
  * zoom away from Android/DSHA; the iOS focus-zoom fix is the >=16px field
  * floor (data-mobile-nav-ios), not a zoom ban (#45).
+ *
+ * `interactive-widget=resizes-content`（2026-10-18 补）：手机上「键盘弹起时整页被
+ * 顶上去、顶栏出屏」不是本插件的布局 bug，而是 Chrome for Android 的键盘视口模型——
+ * 该 flag 缺省即 `resizes-visual`，只缩**视觉**视口，布局视口（`100%` / `100dvh`
+ * 跟着的那个）仍是整屏高，浏览器为了露出被聚焦的输入框把整页往上平移。本仓所有
+ * 键盘测量都是在 Android WebView（`adjustResize`，键盘缩**布局**视口）上取的，那台
+ * 引擎没有这个问题；显式要 `resizes-content` 就是让 Chromium 浏览器回到同一模型：
+ * `100dvh` / `innerHeight` / frame 全都等于可见区，页面不再平移。不认这个值的引擎
+ * （iOS Safari）会忽略它，行为与改动前一致——iOS 的键盘模型仍由
+ * composer-keyboard-lift.ts 兜。
  */
-const VIEWPORT_CONTENT = 'width=device-width, initial-scale=1, viewport-fit=cover';
+const VIEWPORT_CONTENT = 'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content';
 /**
  * CSS custom property carrying the viewport height WITHOUT the soft keyboard
  * (px), maintained by `syncStableViewportHeight()` in this module. Mobile
@@ -9680,62 +10590,52 @@ function preserveViewportMeta() {
     };
 }
 /** The keyboard-less viewport height (STABLE_VIEWPORT_VAR). */
-// 插入固定 3.1.0 viewport-meta 的函数；不重复扣原生已消费的 IME/insets。
 function syncStableViewportHeight() {
     const root = document.documentElement;
-    let stableVh = 0, stableWidth = 0, stableValue = '';
-    let lastVisibleVh = '', lastViewportTop = '', syncWidth = -1;
-    let syncTimer = 0, syncRaf = 0, disposed = false;
-    const writeViewport = () => {
-        if (disposed) return;
-        const height = window.innerHeight, width = window.innerWidth, visible = window.visualViewport;
-        const nextVh = `${Math.max(1, Math.min(height, visible?.height ?? height))}px`;
-        const nextTop = `${visible?.offsetTop ?? 0}px`;
-        if (nextVh !== lastVisibleVh) {
-            lastVisibleVh = nextVh;
-            root.style.setProperty('--dsha-mobile-visible-vh', nextVh);
-        }
-        if (nextTop !== lastViewportTop) {
-            lastViewportTop = nextTop;
-            root.style.setProperty('--dsha-mobile-viewport-top', nextTop);
-        }
+    let stableVh = 0;
+    let stableWidth = 0;
+    // Writing a custom property on :root invalidates style for the WHOLE
+    // document, so the value is compared before the property is touched: a
+    // width change that leaves the height alone (split-screen resize, a
+    // rotation that lands back on the same height) used to re-run the document
+    // style pass for an identical string. Measured 2026-10-09 on Android 16
+    // WebView: the monotonic rule above already suppresses every keyboard
+    // driven write (the keyboard only lowers the height, and a lower height
+    // never passes the growth test), so no per-frame dedup is needed here —
+    // this guard only removes the redundant identical writes.
+    let stableValue = '';
+    const syncStableViewport = () => {
+        const height = window.innerHeight;
+        const width = window.innerWidth;
+        const visible = window.visualViewport;
+        const available = Math.max(1, Math.min(height, visible?.height ?? height));
+        const visibleValue = `${available}px`;
+        const topValue = `${visible?.offsetTop ?? 0}px`;
+        if (root.style.getPropertyValue('--dsha-mobile-visible-vh') !== visibleValue)
+            root.style.setProperty('--dsha-mobile-visible-vh', visibleValue);
+        if (root.style.getPropertyValue('--dsha-mobile-viewport-top') !== topValue)
+            root.style.setProperty('--dsha-mobile-viewport-top', topValue);
         if (stableVh === 0 || height > stableVh || width !== stableWidth) {
             stableVh = height;
             stableWidth = width;
             const next = `${height}px`;
-            if (next !== stableValue) { stableValue = next; root.style.setProperty(exports.STABLE_VIEWPORT_VAR, next); }
+            if (next !== stableValue) {
+                stableValue = next;
+                root.style.setProperty(exports.STABLE_VIEWPORT_VAR, next);
+            }
         }
     };
-    const syncViewport = () => {
-        if (disposed) return;
-        const width = window.innerWidth;
-        if (width !== syncWidth) {
-            syncWidth = width;
-            if (syncTimer) { clearTimeout(syncTimer); syncTimer = 0; }
-            if (syncRaf) { cancelAnimationFrame(syncRaf); syncRaf = 0; }
-            writeViewport();
-            return;
-        }
-        if (syncTimer) clearTimeout(syncTimer);
-        syncTimer = setTimeout(() => {
-            syncTimer = 0;
-            if (disposed || syncRaf) return;
-            syncRaf = requestAnimationFrame(() => { syncRaf = 0; writeViewport(); });
-        }, 150);
-    };
-    syncViewport();
-    window.addEventListener('resize', syncViewport);
-    window.visualViewport?.addEventListener('resize', syncViewport);
-    window.visualViewport?.addEventListener('scroll', syncViewport);
+    syncStableViewport();
+    window.addEventListener('resize', syncStableViewport);
+    window.visualViewport?.addEventListener('resize', syncStableViewport);
+    window.visualViewport?.addEventListener('scroll', syncStableViewport);
     return () => {
-        disposed = true;
-        if (syncTimer) clearTimeout(syncTimer);
-        if (syncRaf) cancelAnimationFrame(syncRaf);
-        window.removeEventListener('resize', syncViewport);
-        window.visualViewport?.removeEventListener('resize', syncViewport);
-        window.visualViewport?.removeEventListener('scroll', syncViewport);
+        window.removeEventListener('resize', syncStableViewport);
+        window.visualViewport?.removeEventListener('resize', syncStableViewport);
+        window.visualViewport?.removeEventListener('scroll', syncStableViewport);
         root.style.removeProperty('--dsha-mobile-visible-vh');
         root.style.removeProperty('--dsha-mobile-viewport-top');
+        stableValue = '';
         root.style.removeProperty(exports.STABLE_VIEWPORT_VAR);
     };
 }
@@ -9853,8 +10753,10 @@ let frameControllerInstalled = false;
  * Phone chrome: KEEP the system status bar (no fullscreen) and make it
  * blend into the page. On narrow screens:
  * - The viewport meta is OWNED by the plugin while armed (viewport-meta.ts):
- *   width=device-width, initial-scale=1, viewport-fit=cover, re-asserted on
- *   every host rewrite, node replacement, or late injection, so
+ *   width=device-width, initial-scale=1, viewport-fit=cover,
+ *   interactive-widget=resizes-content (keyboard shrinks the layout viewport
+ *   on Chromium instead of panning the page), re-asserted on every host
+ *   rewrite, node replacement, or late injection, so
  *   env(safe-area-inset-top) stays the real status-bar / notch height
  *   instead of silently going stale when the host touches the meta. No zoom
  *   tokens here: iOS 10+ ignores them for user pinch but other engines
@@ -12062,7 +12964,8 @@ const sessions_compat_ts_1 = require("./core/sessions-compat.js");
 const composer_keyboard_guard_ts_1 = require("./effects/composer-keyboard-guard.js");
 const breakpoints_ts_1 = require("./platform/breakpoints.js");
 /**
- * Mobile guard: entering a session must not raise the soft keyboard by itself.
+ * Mobile guard: entering a session — or coming back from a main-slot panel —
+ * must not raise the soft keyboard by itself.
  *
  * `dsh-client-ui-conversation`'s InputBar focuses the Lexical editor from a
  * passive effect keyed on `[locked, sessionId, editor]` — every session switch
@@ -12088,6 +12991,13 @@ const breakpoints_ts_1 = require("./platform/breakpoints.js");
  * observer re-shadows the freshly mounted `[data-composer-input]` inside the
  * window; arming also shadows an already-present input for switches that
  * reuse the element.
+ *
+ * 2026-10-20 (店主报障)：退出插件面板回会话时也会弹键盘。同一台机器上的成因是
+ * 同一个：面板占住主区时会话被卸载，退场（panel-exit 挂 data-mobile-panel-exit，
+ * 220ms 动画后才 selectPanel）结束时 InputBar 重新挂载，它的挂载期聚焦又跑了一遍。
+ * 退场标记由 panel-exit 在动画开始前就挂上，早于会话重挂载，所以这层只需要在
+ * MutationObserver 里看到该标记出现时顺手开同一个窗口；其余机制（影子 + focusin
+ * 兜底 + 点编辑面提前收窗）完全复用，不新增第二套 focus 拦截。
  *
  * 2026-09-29 headless correction (issue #140 verification run): the shadow
  * alone is NOT sufficient. When the InputBar remounts for the new session,
@@ -12117,6 +13027,16 @@ const breakpoints_ts_1 = require("./platform/breakpoints.js");
 const FOCUS_GUARD_WINDOW_MS = 800;
 /** The Lexical editing surface — the only element whose autofocus we swallow. */
 const COMPOSER_INPUT_SELECTOR = '[data-composer-input]';
+/** Frame marker panel-exit sets before it starts leaving (see effects/panel-exit.ts). */
+const PANEL_EXIT_ATTR = 'data-mobile-panel-exit';
+/**
+ * Synchronous companion event, dispatched by panel-exit the moment the marker
+ * lands. The marker alone is too late: the InputBar remounts and focuses inside
+ * the commit's synchronous layout-effect phase, i.e. before an observer
+ * microtask can open the window (the same 2026-09-29 measurement quoted in the
+ * header). The event opens the window first, the marker stays as the backstop.
+ */
+const PANEL_EXIT_EVENT = 'dsh-mobile-panel-exit';
 /**
  * Keep the session-switch autofocus from raising the soft keyboard, on the
  * mobile breakpoint only.
@@ -12154,6 +13074,7 @@ function installSessionFocusGuard(ctx) {
                 },
             });
         };
+        const hasPanelExitMarker = () => document.querySelector(`[data-mobile-nav="frame"][${PANEL_EXIT_ATTR}]`) !== null;
         const arm = () => {
             restore();
             windowOpen = true;
@@ -12164,7 +13085,14 @@ function installSessionFocusGuard(ctx) {
         };
         // Session switches remount the InputBar: catch the freshly mounted editor
         // inside the window. Microtask timing beats the host's passive effect.
+        // The same observer watches the panel-exit marker: a panel occupies the
+        // main slot while open, so leaving it remounts the InputBar and re-runs its
+        // mount-time focus. Arm on the marker's arrival — it lands before the panel
+        // actually leaves (panel-exit animates first, then selectPanel), so the
+        // window is already open when the conversation remounts.
         const observer = new MutationObserver(() => {
+            if (!windowOpen && hasPanelExitMarker())
+                arm();
             if (!windowOpen)
                 return;
             const el = document.querySelector(COMPOSER_INPUT_SELECTOR);
@@ -12203,313 +13131,26 @@ function installSessionFocusGuard(ctx) {
             lastSessionId = current;
             arm();
         });
-        observer.observe(document.documentElement, { childList: true, subtree: true });
+        const onPanelExit = () => {
+            if (!windowOpen)
+                arm();
+        };
+        observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: [PANEL_EXIT_ATTR],
+        });
+        document.addEventListener(PANEL_EXIT_EVENT, onPanelExit);
         document.addEventListener('pointerdown', onPointerDown, true);
         document.addEventListener('focusin', onFocusIn, true);
         return () => {
             unsubscribe();
             observer.disconnect();
+            document.removeEventListener(PANEL_EXIT_EVENT, onPanelExit);
             document.removeEventListener('pointerdown', onPointerDown, true);
             document.removeEventListener('focusin', onFocusIn, true);
             restore();
-        };
-    });
-}
-};
-__modules["effects/reasoning-defaults.js"] = function (require, module, exports) {
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AUTO_REASONING_EFFORTS = exports.DEFAULT_REASONING_EFFORTS = exports.LLM_PI_AI_ENTRY = void 0;
-exports.reasoningEffortDecision = reasoningEffortDecision;
-exports.planReasoningEffortFill = planReasoningEffortFill;
-exports.installReasoningDefaults = installReasoningDefaults;
-const breakpoints_ts_1 = require("./platform/breakpoints.js");
-/** Loader entry id whose config owns `llm-pi-ai.providers`. */
-exports.LLM_PI_AI_ENTRY = 'llm-pi-ai';
-/**
- * Levels added to a hand-declared model that declares none — the UNION of the
- * classic OpenAI trio (`low`/`medium`/`high`) and the DeepSeek/kimi/GLM family
- * (`low`/`high`/`max`), plus `off` (`null` = omit the parameter). Kept identical
- * to the host twin's set; `src/reasoning-effort.ts` documents why the union is
- * the factory default and why `minimal`/`xhigh` stay out.
- */
-exports.DEFAULT_REASONING_EFFORTS = Object.freeze({
-    off: null,
-    low: 'low',
-    medium: 'medium',
-    high: 'high',
-    max: 'max',
-});
-/**
- * The `auto` 档: the plugin's name for 「不干预」 — leave the model's
- * `reasoningEfforts` ABSENT so it keeps its own / the catalog's capability and
- * the composer shows the host's provider-default choice.
- *
- * NOT a host value; never write this string into the profile. The host's level
- * enum is closed — `THINKING_LEVELS`, `@deepseek-ai/dsh-llm-pi-ai:lib/index.js:
- * 296-304` = `off` / `minimal` / `low` / `medium` / `high` / `xhigh` / `max`,
- * used as the `reasoningEfforts` dict KEY type (`:1001`) and the profile
- * `reasoning` type (`:1029`) — and it has no `auto` (the `"auto"` at `:1040` is
- * `transport`'s). Hard-writing the string is refused by the schema; the host's
- * own word for 「不写档位」 is the absent field (`resolveModelReasoning`,
- * `:566-570`). `src/reasoning-effort.ts` carries the full evidence trail — the
- * two halves cannot share a module (see the header above), so this constant and
- * {@link reasoningEffortDecision} are duplicated there on purpose and held in
- * step by `tests/reasoning-defaults-parity.test.ts`.
- */
-exports.AUTO_REASONING_EFFORTS = 'auto';
-/** How long one remote settings call may take before the pass gives up. */
-const REMOTE_TIMEOUT_MS = 15_000;
-/**
- * Bound one remote call.
- *
- * `running` is cleared in `finally`, so a promise that never settles (a silent
- * carrier, a host stuck mid-write) would otherwise disable every later pass —
- * the 10s sweep included. Bounding the call keeps the fill recoverable; a write
- * that lands after its timeout is harmless, the next pass finds nothing to do.
- */
-function withTimeout(promise, ms) {
-    return new Promise((resolvePromise, reject) => {
-        const timer = setTimeout(() => { reject(new Error(`settings remote did not answer within ${ms}ms`)); }, ms);
-        promise.then((value) => { clearTimeout(timer); resolvePromise(value); }, (error) => { clearTimeout(timer); reject(error instanceof Error ? error : new Error(String(error))); });
-    });
-}
-/** Narrow one unknown value to a plain object (arrays excluded). */
-function isRecord(value) {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-/** Whether a model entry already carries a level set (possibly `false`). */
-function hasLevels(entry) {
-    return isRecord(entry) && entry.reasoningEfforts !== undefined;
-}
-/**
- * One layer's answer to "does this model take a reasoning-effort parameter?".
- *
- * `compat.supportsReasoningEffort` is a host schema field a route AND a model
- * entry may set (`@deepseek-ai/dsh-llm-pi-ai:lib/index.js:966`, offered for the
- * completion protocols at `:382`); pi-ai uses it as the gate that decides
- * whether the effort reaches the wire at all
- * (`@earendil-works/pi-ai:dist/api/openai-completions.js:622,712`). Within one
- * layer the model's own switch wins over its route's (`dsh-llm-pi-ai:lib/
- * index.js:617-625` merges route first, then model). Identical to the host
- * twin's private helper; kept in step by the parity table.
- */
-function layerTakesReasoningEffort(modelCompat, routeCompat) {
-    const model = isRecord(modelCompat) ? modelCompat.supportsReasoningEffort : undefined;
-    if (typeof model === 'boolean')
-        return model;
-    const route = isRecord(routeCompat) ? routeCompat.supportsReasoningEffort : undefined;
-    return typeof route === 'boolean' ? route : undefined;
-}
-/**
- * Decide which 档 one model entry belongs to: `auto` (leave it alone) or `fill`.
- *
- * `auto` covers exactly the entries this feature must not touch: a non-object
- * entry; an entry that already states its capability on its own or through a
- * lower layer (the host's `reasoningEfforts: false`, `dsh-llm-pi-ai:lib/
- * index.js:1008` → `{ reasoning: false }` at `:570`, is its sanctioned spelling
- * of 「不参与思考档位」); and an entry whose `supportsReasoningEffort` is `false`
- * in either layer — filling that one offers the composer levels the model
- * refuses, and the request path throws `UNSUPPORTED_REASONING_EFFORT`
- * (`:1705-1709`). A layer that says nothing never forces `auto`.
- *
- * Same rules as the host twin (`src/reasoning-effort.ts`), which documents the
- * full evidence trail; the two are held in step by
- * `tests/reasoning-defaults-parity.test.ts`.
- */
-function reasoningEffortDecision(entry, resolvedEntry, userProfile, resolvedProfile) {
-    if (!isRecord(entry))
-        return exports.AUTO_REASONING_EFFORTS;
-    if (hasLevels(entry) || hasLevels(resolvedEntry))
-        return exports.AUTO_REASONING_EFFORTS;
-    const user = layerTakesReasoningEffort(entry.compat, isRecord(userProfile) ? userProfile.compat : undefined);
-    const resolved = layerTakesReasoningEffort(isRecord(resolvedEntry) ? resolvedEntry.compat : undefined, isRecord(resolvedProfile) ? resolvedProfile.compat : undefined);
-    if (user === false || resolved === false)
-        return exports.AUTO_REASONING_EFFORTS;
-    return 'fill';
-}
-/**
- * Plan the default-level fill for one `llm-pi-ai` section. Neither argument is
- * mutated. `resolved` decides where a level set is missing, `user` supplies what
- * may be written.
- */
-function planReasoningEffortFill(resolved, user) {
-    const ops = [];
-    let filled = 0;
-    let auto = 0;
-    if (!isRecord(user) || !isRecord(user.providers))
-        return { ops, filled, auto };
-    const resolvedProviders = isRecord(resolved) && isRecord(resolved.providers) ? resolved.providers : {};
-    for (const [route, userProfile] of Object.entries(user.providers)) {
-        if (!isRecord(userProfile))
-            continue;
-        const resolvedProfile = isRecord(resolvedProviders[route]) ? resolvedProviders[route] : undefined;
-        if (Array.isArray(userProfile.models)) {
-            const userModels = userProfile.models;
-            const resolvedModels = resolvedProfile !== undefined && Array.isArray(resolvedProfile.models) ? resolvedProfile.models : [];
-            let changed = 0;
-            const models = [];
-            for (const [index, entry] of userModels.entries()) {
-                const resolvedEntry = resolvedModels[index];
-                const decision = reasoningEffortDecision(entry, resolvedEntry, userProfile, resolvedProfile);
-                if (decision === 'fill' && isRecord(entry)) {
-                    models.push({ ...entry, reasoningEfforts: { ...exports.DEFAULT_REASONING_EFFORTS } });
-                    changed += 1;
-                    continue;
-                }
-                models.push(entry);
-                // Count only what the `auto` 档 saves from a write: an entry that lacks
-                // levels everywhere AND says it takes none. A declared set was never a
-                // candidate, and a non-object entry is not a model at all — the host
-                // half books those under `unresolved`, which this half does not track,
-                // so both halves must agree on NOT counting them here
-                // (`tests/reasoning-defaults-parity.test.ts` compares this number).
-                if (isRecord(entry) && !hasLevels(entry) && !hasLevels(resolvedEntry))
-                    auto += 1;
-            }
-            if (changed > 0) {
-                ops.push({ op: 'set', path: ['providers', route, 'models'], value: models });
-                filled += changed;
-            }
-            continue;
-        }
-    }
-    for (const [route, userProfile] of Object.entries(user.providers)) {
-        if (!isRecord(userProfile) || !isRecord(userProfile.modelOverrides))
-            continue;
-        const resolvedProfile = isRecord(resolvedProviders[route]) ? resolvedProviders[route] : undefined;
-        const resolvedOverrides = resolvedProfile !== undefined && isRecord(resolvedProfile.modelOverrides)
-            ? resolvedProfile.modelOverrides
-            : undefined;
-        for (const [id, entry] of Object.entries(userProfile.modelOverrides)) {
-            const resolvedOverride = resolvedOverrides?.[id];
-            if (reasoningEffortDecision(entry, resolvedOverride, userProfile, resolvedProfile) !== 'fill') {
-                // Record-only, exactly like the host twin's override branch.
-                if (isRecord(entry) && !hasLevels(entry) && !hasLevels(resolvedOverride))
-                    auto += 1;
-                continue;
-            }
-            ops.push({
-                op: 'set',
-                path: ['providers', route, 'modelOverrides', id, 'reasoningEfforts'],
-                value: { ...exports.DEFAULT_REASONING_EFFORTS },
-            });
-            filled += 1;
-        }
-    }
-    return { ops, filled, auto };
-}
-/** Read the settings remote lazily, tolerating host shapes without it. */
-function settingsRemoteOf(ctx) {
-    const value = ctx.get?.('remote.settings');
-    if (!isRecord(value))
-        return undefined;
-    const describe = value.describe;
-    const mutate = value.mutate;
-    if (typeof describe !== 'function' || typeof mutate !== 'function')
-        return undefined;
-    return value;
-}
-/** Read the host-event gateway lazily, tolerating host shapes without it. */
-function remoteEventsOf(ctx) {
-    // ONLY `ctx.get(name)` may reach a service outside this plugin's `inject`
-    // list. A property read (`ctx.remote`) throws
-    // `cannot get property "remote" without inject` from the client runtime's
-    // service proxy — and that read runs inside `apply()`, so the throw fails the
-    // WHOLE client entry activation ("Failed to load plugins / dsh-web-mobile:
-    // failed", 2026-10-07 hot-load incident). `get` reads the registry without the
-    // inject requirement, which is how the settings remote above is reached too.
-    let candidate;
-    try {
-        candidate = ctx.get?.('remote');
-    }
-    catch {
-        // A host whose context refuses the lookup must not fail activation either.
-        return undefined;
-    }
-    if (isRecord(candidate) && typeof candidate.$on === 'function')
-        return candidate;
-    return undefined;
-}
-/**
- * Install the browser-half fill: one attempt at install, one short retry (the
- * remote may not have answered the first describe yet), a slow sweep for edits
- * nobody re-describes, and an immediate pass on the `llm-pi-ai` document event.
- */
-function installReasoningDefaults(ctx) {
-    (0, breakpoints_ts_1.installMobileEffect)(ctx, 'dsh-web-mobile: reasoning level defaults', () => {
-        const context = ctx;
-        let running = false;
-        // Set by the disposer (plugin unload, or the breakpoint dropping back to
-        // desktop): every step below re-checks it, so a resuming await stays zero-write.
-        let disposed = false;
-        const warn = (message) => {
-            context.logger?.warn?.(message);
-        };
-        const fill = () => {
-            if (disposed || running)
-                return;
-            const remote = settingsRemoteOf(context);
-            if (remote === undefined)
-                return;
-            running = true;
-            void (async () => {
-                try {
-                    const described = await withTimeout(remote.describe(), REMOTE_TIMEOUT_MS);
-                    if (disposed)
-                        return;
-                    if (described?.ok !== true)
-                        return;
-                    const namespaces = isRecord(described.value) ? described.value.namespaces : undefined;
-                    if (!Array.isArray(namespaces))
-                        return;
-                    const section = namespaces.find((row) => isRecord(row) && row.ns === exports.LLM_PI_AI_ENTRY);
-                    if (section === undefined)
-                        return;
-                    const plan = planReasoningEffortFill(section.value, section.user);
-                    if (plan.ops.length === 0)
-                        return;
-                    const revision = typeof section.revision === 'number' ? section.revision : undefined;
-                    if (disposed)
-                        return;
-                    const response = await withTimeout(remote.mutate(exports.LLM_PI_AI_ENTRY, plan.ops, revision), REMOTE_TIMEOUT_MS);
-                    if (response?.ok !== true) {
-                        warn('dsh-web-mobile: the host refused the reasoning-level fill');
-                    }
-                }
-                catch (error) {
-                    warn(`dsh-web-mobile: reasoning-level fill failed: ${error instanceof Error ? error.message : String(error)}`);
-                }
-                finally {
-                    running = false;
-                }
-            })();
-        };
-        const retry = setTimeout(fill, 2_000);
-        const sweep = setInterval(fill, 10_000);
-        fill();
-        // Host event, therefore the remote gateway — never the client-local bus.
-        // The whole wiring is best-effort: this effect is an optimization over the
-        // 10s sweep, so NOTHING here may throw out of `apply()` (a throwing entry
-        // activation takes the entire plugin down on the page).
-        let off;
-        try {
-            off = remoteEventsOf(context)?.$on?.('settings/document-updated', (...args) => {
-                // The payload is the changed namespace; a payload-less emit still counts
-                // (the fill only writes when a level set is actually missing).
-                if (args.length === 0 || args[0] === exports.LLM_PI_AI_ENTRY)
-                    fill();
-            });
-        }
-        catch (error) {
-            warn(`dsh-web-mobile: reasoning-level document event unavailable: ${error instanceof Error ? error.message : String(error)}`);
-        }
-        return () => {
-            disposed = true;
-            clearTimeout(retry);
-            clearInterval(sweep);
-            if (typeof off === 'function')
-                off();
         };
     });
 }
@@ -12828,10 +13469,10 @@ const EDGE = 8;
  * 浮层落位纯核（无 DOM，2026-10-13 抽出并导出，好让数值被测试钉住）：
  * 锚点上方优先 8px，放不下就翻到下方，最后夹进可见带、四舍五入到整像素。
  *
- * 为什么是「带」而不是「视口高」：键盘弹起时只缩**视觉**视口（本仓 viewport meta 没有
- * interactive-widget，即默认 resizes-visual），`getBoundingClientRect()` 与
- * `position: fixed` 的 top/left 都仍是 layout 视口坐标 —— 所以锚点盒与返回的 top/left
- * 都**不需要**换算，只有「夹进哪一段」得用视觉视口那一段（见 `visibleBand()`）。
+ * 为什么是「带」而不是「视口高」：`getBoundingClientRect()` 与 `position: fixed` 的
+ * top/left 都是 layout 视口坐标，与视觉视口可能只差一个平移（iOS 键盘滚动模型，Safari
+ * 不认 `interactive-widget`；Chromium 自 2026-10-18 起键盘缩 layout 视口，两条通道重合）
+ * —— 锚点盒与返回值都**不需要**换算，只有「夹进哪一段」得用视觉视口那一段（`visibleBand()`）。
  * @param anchor - 锚点（回形针）盒，layout 视口坐标。
  * @param own - 浮层自身尺寸。
  * @param band - 可见带，layout 视口坐标。
@@ -14085,10 +14726,26 @@ const breakpoints_ts_1 = require("./platform/breakpoints.js");
  * Three exits, roughly in the order a phone user reaches for them:
  *  1. the system back key / back gesture (popstate) — the returned task
  *  2. tapping the already-selected panel row again — installPanelRowExit
- *  3. the top-left FAB, which reads as 「返回会话」 while a panel owns the main
- *     area — see createOverlayTask in overlay-backdrop-fab.ts
+ *  3. the top-left FAB, which reads as 「返回会话」 at the panel root and as
+ *     「返回」 on a panel subpage — see createOverlayTask in
+ *     overlay-backdrop-fab.ts
  *
  * All three funnel through the same `exit`, so they cannot drift apart.
+ *
+ * Panels can have SUBPAGES (2026-10: the plugin manager's 「更多」 list and its
+ * three detail roots). Those are component state inside the panel — they add no
+ * history entry and expose no service face — but the host does render its own
+ * 「返回上一级」 control for them (list: the moreBack button in the more head;
+ * detail: the crumb button). So the FAB and the system back go through back
+ * first: click that host control one level at a time, and only fall back to
+ * exit when no subpage control is on screen. Without it a single back press
+ * on a detail page closed the whole panel.
+ *
+ * History entries are pushed BEFORE a back press and never after one: this
+ * WebView drops a pushState issued in the same task as a same-document
+ * traversal (measured 2026-10-20 three ways). The panel pushes one entry for
+ * itself and one more for each subpage level it descends into, so every back
+ * press merely consumes an entry that is already there.
  */
 /**
  * The host marks the SELECTED sidebar panel row with `aria-current="page"`.
@@ -14124,6 +14781,8 @@ function panelViewOpen() {
 }
 /** Marker set on the frame while the incoming conversation fades in. */
 const PANEL_EXIT_ATTR = 'data-mobile-panel-exit';
+/** Synchronous companion of the marker, for the composer focus guard. */
+const PANEL_EXIT_EVENT = 'dsh-mobile-panel-exit';
 /** Safety net: clears the marker if the reveal animation never fires. */
 const PANEL_EXIT_FALLBACK_MS = 2000;
 /** The frozen panel snapshot that slides back out (see `exit`). */
@@ -14140,6 +14799,28 @@ const PANEL_GHOST_MS = 280;
  * row is active, so it can never pick up conversation content.
  */
 const PANEL_ELEMENT_SELECTOR = '[data-mobile-nav="frame"] [class*="_centerCol"] > * > *';
+/* @patch
+   id: plugin-panel-subpage-back
+   for: 0.1.6-alpha.2 宿主的插件管理页子页：列表「更多」头的 button class 含 _moreBack，三种详情根（data-plugin-detail / data-plugin-item-detail / data-plugin-row-detail）里的 crumb button class 含 _crumb
+   why: 宿主的「返回上一级」只是组件闭包里的 setView({kind:"list"}) 与 DetailTop 的 onBack，没有公开服务面；而子页是同一个 store 的 view 状态，不产生 history entry —— 只能点宿主自己的控件，不能替它改状态
+   until: 宿主把面板子页的返回暴露成 ctx.layout / panel 服务上的公开动作，或子页自己进 history
+   test: tests/panel-exit-animation.test.ts
+*/
+/**
+ * The host's own 「返回上一级」 control while a plugin-panel subpage is open.
+ *
+ * Comma-merged because the three detail roots are siblings, not one family:
+ * builtin detail (data-plugin-detail), official item detail
+ * (data-plugin-item-detail) and market row detail (data-plugin-row-detail)
+ * each get their own crumb. Anchors are host data-* markers / hashed-class
+ * SUBSTRINGS only (the repo forbids suffix matching: [class*="_crumb"]
+ * deliberately also excludes the crumbIcon svg because it is not a button).
+ * Scoped to section[data-plugin-panel] so no other panel's crumb can match.
+ */
+const PANEL_SUBPAGE_BACK = 'section[data-plugin-panel] button[class*="_moreBack"],' +
+    'section[data-plugin-panel] [data-plugin-detail] button[class*="_crumb"],' +
+    'section[data-plugin-panel] [data-plugin-item-detail] button[class*="_crumb"],' +
+    'section[data-plugin-panel] [data-plugin-row-detail] button[class*="_crumb"]';
 /**
  * Leave the panel: freeze the panel into a plugin-owned snapshot that slides back
  * out to the side, and let the conversation come back on the SAME tick
@@ -14291,6 +14972,21 @@ function createPanelExit(layout) {
         return el instanceof HTMLElement ? el : null;
     }
     /**
+     * The host's own subpage back control, or null at the panel root. Queried
+     * live on every call: the subpage is host component state, so the control
+     * appears and disappears without any URL or marker of ours changing.
+     */
+    function subpageControl() {
+        if (!panelOwnsMainArea())
+            return null;
+        const el = document.querySelector(PANEL_SUBPAGE_BACK);
+        return el instanceof HTMLElement ? el : null;
+    }
+    /** Whether a subpage (not the panel root) is on screen right now. */
+    function subpageOpen() {
+        return subpageControl() !== null;
+    }
+    /**
      * Freeze the outgoing panel into an inert clone that can slide away.
      *
      * An older snapshot of ours is dropped through `finishGhost()` — this
@@ -14322,6 +15018,12 @@ function createPanelExit(layout) {
         const frame = (0, frame_ts_1.getFrame)();
         if (frame !== null)
             frame.setAttribute(PANEL_EXIT_ATTR, '');
+        // Synchronous heads-up for the composer focus guard
+        // (effects/session-focus-guard.ts): leaving a panel remounts the InputBar,
+        // and the host's mount-time focus runs inside the commit's synchronous
+        // layout-effect phase — earlier than any MutationObserver microtask. A
+        // custom event is the only decoupled way to open that window in time.
+        document.dispatchEvent(new CustomEvent(PANEL_EXIT_EVENT));
         const panel = panelElement();
         ghost = panel === null ? null : freezePanel(panel);
         // Commit on this very tick — the whole point of the snapshot is that the
@@ -14354,6 +15056,28 @@ function createPanelExit(layout) {
         }
     };
     /**
+     * Leave ONE level. A plugin-panel subpage has its own 「返回上一级」 control
+     * owned by the host; clicking it is the only available API (the host keeps
+     * that view in component state and publishes no service). At the panel root
+     * there is no such control, so this is exactly exit.
+     *
+     * Same guards as exit: a tap that lands while the panel is already leaving,
+     * or after teardown, must be a no-op rather than a second swap.
+     */
+    const back = () => {
+        if (disposed || !supported || leaving)
+            return;
+        const control = subpageControl();
+        if (control !== null) {
+            // No marker, no history work: the panel is still open and its single
+            // armed history entry stays valid. The host re-renders the previous view
+            // and the next back call re-queries.
+            control.click();
+            return;
+        }
+        exit();
+    };
+    /**
      * Teardown: the plugin may be unloaded (or the breakpoint flipped) while an
      * exit is in flight, and nothing of ours may survive it — not the marker, not
      * the timers, not a snapshot still covering the screen. Both halves are
@@ -14367,9 +15091,11 @@ function createPanelExit(layout) {
     }
     return {
         exit,
+        back,
         supported,
         panelOpen: panelOwnsMainArea,
-        task: createPanelBackExitTask(exit, supported),
+        subpageOpen,
+        task: createPanelBackExitTask(exit, supported, back, subpageControl),
         dispose,
     };
 }
@@ -14394,9 +15120,21 @@ function createPanelExit(layout) {
  * @param exitPanel - the shared exit action.
  * @param supported - false on hosts with no panel-selection API; the task then
  *   never arms a history entry at all.
+ * @param backOneLevel - the shared one-level action (the FAB's too): click the
+ *   host's own subpage back control, or leave the panel when none is on screen.
+ * @param subpageOpen - whether that host control is on screen right now. A
+ *   panel subpage gets no history entry of its own, so a back press there must
+ *   climb the host view and RE-ARM the entry it just consumed.
  */
-function createPanelBackExitTask(exitPanel, supported) {
-    let armed = false;
+function createPanelBackExitTask(exitPanel, supported, backOneLevel, subpageControl) {
+    /** Entry for the panel itself: the press that consumes it leaves the panel. */
+    let rootArmed = false;
+    /** Entries pre-pushed for host subpage levels — one per level we descend. */
+    let extraArmed = 0;
+    /** Which host back control is on screen; its level tells us where we are. */
+    let lastControl = null;
+    /** Set by a popstate climb so ensure() does not arm for the level it just left. */
+    let justClimbed = false;
     let listening = false;
     let selfBackPending = false;
     let selfBackTimer = null;
@@ -14419,14 +15157,52 @@ function createPanelBackExitTask(exitPanel, supported) {
             clearSelfBack();
         }
     }
+    /** Add one poppable entry (no URL change). False when the frame refuses it. */
+    function pushEntry() {
+        try {
+            history.pushState({ mobilePanelExit: true }, '');
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }
+    function armRoot() {
+        if (!supported || rootArmed)
+            return;
+        if (pushEntry())
+            rootArmed = true;
+    }
+    function armExtra() {
+        if (!supported)
+            return;
+        if (pushEntry())
+            extraArmed += 1;
+    }
+    /** Deeper control = deeper host view. 0 = panel root, 1 = more list, 2 = detail. */
+    function levelOf(control) {
+        if (control === null)
+            return 0;
+        return control.className.includes('_moreBack') ? 1 : 2;
+    }
     function onPopState() {
         if (selfBackPending) {
             clearSelfBack();
             return;
         }
-        if (!armed)
+        // LIFO: the per-level entries sit above the panel entry, so the top one is
+        // an extra entry while any remain.
+        if (extraArmed > 0)
+            extraArmed -= 1;
+        else if (rootArmed)
+            rootArmed = false;
+        else
             return;
-        armed = false;
+        if (panelViewOpen() && subpageControl() !== null) {
+            justClimbed = true;
+            backOneLevel();
+            return;
+        }
         if (panelViewOpen())
             exitPanel();
     }
@@ -14445,35 +15221,53 @@ function createPanelBackExitTask(exitPanel, supported) {
     return {
         name: 'panel-back-exit',
         scopes: ['*'],
+        /*
+         * Entries are pushed BEFORE a back press, never after: this WebView drops a
+         * pushState issued in the same task as a same-document traversal (measured
+         * 2026-10-20 three ways — inside popstate, from the reconciler rAF right
+         * after it, and from a setTimeout(0) task). So the panel pushes one entry
+         * for itself, and one more for every host subpage level it descends into;
+         * a back press then merely consumes what is already there.
+         */
         ensure: () => {
             if (!supported)
                 return;
             listen();
-            if (panelViewOpen()) {
-                if (armed)
-                    return;
-                armed = true;
-                try {
-                    // Second argument empty: add a poppable entry without touching the URL.
-                    history.pushState({ mobilePanelExit: true }, '');
+            if (!panelViewOpen()) {
+                if (rootArmed) {
+                    rootArmed = false;
+                    selfBack();
                 }
-                catch {
-                    // Sandboxed frames refuse pushState; give up on this exit rather than
-                    // breaking anything else.
-                    armed = false;
-                }
+                lastControl = null;
+                justClimbed = false;
                 return;
             }
-            if (armed) {
-                armed = false;
+            armRoot();
+            const control = subpageControl();
+            const previous = levelOf(lastControl);
+            const current = levelOf(control);
+            if (current === previous)
+                return;
+            const climbed = justClimbed;
+            justClimbed = false;
+            lastControl = control;
+            if (current > previous) {
+                if (!climbed)
+                    armExtra();
+                return;
+            }
+            // Went up without a back press (host crumb or the FAB): give back the
+            // entry that level was holding.
+            if (!climbed && extraArmed > 0) {
+                extraArmed -= 1;
                 selfBack();
             }
         },
         dispose: () => {
             unlisten();
             clearSelfBack();
-            if (armed) {
-                armed = false;
+            if (rootArmed) {
+                rootArmed = false;
                 selfBack();
             }
         },
@@ -14679,7 +15473,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.inject = void 0;
 exports.apply = apply;
 const MobileNavToggle_tsx_1 = require("./components/MobileNavToggle.js");
-const MobileDrawerFooter_tsx_1 = require("./components/MobileDrawerFooter.js");
 const ComposerFileButton_tsx_1 = require("./components/ComposerFileButton.js");
 const open_files_panel_ts_1 = require("./components/open-files-panel.js");
 const index_ts_1 = require("./styles/index.js");
@@ -14701,7 +15494,6 @@ const model_menu_keyboard_guard_ts_1 = require("./effects/model-menu-keyboard-gu
 const plugin_card_tap_ts_1 = require("./effects/plugin-card-tap.js");
 const installed_list_ts_1 = require("./effects/installed-list.js");
 const session_focus_guard_ts_1 = require("./effects/session-focus-guard.js");
-const reasoning_defaults_ts_1 = require("./effects/reasoning-defaults.js");
 const aionui_compat_ts_1 = require("./effects/aionui-compat.js");
 const composer_paste_guard_ts_1 = require("./effects/composer-paste-guard.js");
 const composer_file_picker_ts_1 = require("./effects/composer-file-picker.js");
@@ -14870,7 +15662,6 @@ function apply(ctx) {
     // shadow-focus window per observed session switch swallows that one
     // autofocus; real taps are unaffected.
     (0, session_focus_guard_ts_1.installSessionFocusGuard)(ctx);
-    (0, reasoning_defaults_ts_1.installReasoningDefaults)(ctx);
     // Multi-line paste after an IME commit keeps only the first line (host
     // Lexical routes Android's insertText paste through the text-insertion
     // command). Re-dispatch those as a paste event; mobile-only.
@@ -14899,29 +15690,9 @@ function apply(ctx) {
             toggleSidebar: () => ctx.layout.toggleSidebar(),
         }),
     }, MobileNavToggle_tsx_1.MobileNavToggle));
-    // Session log download, relocated from the session header to the drawer
-    // footer on mobile (the header capsule is hidden by CSS). The footer's
-    // Files action was removed on 2026-09-17 — see
-    // docs/specs/2026-09-17-sidebar-files-coexistence-design.md.
-    //
-    // Footer stacking relies on the list-slot sort by (priority, order):
-    // dsh-remote-web-ui leaves it unset (default 0, its two icon buttons stay
-    // on top) and dsh-usage-stats uses 10. Order 5 keeps the session-log pill
-    // directly under the icon row with the usage/balance badge below it —
-    // instead of a tie at 10 where registration order could wedge the badge
-    // between the icons and the pill.
-    ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
-        name: 'sidebar.footer.action',
-        id: 'mobile-nav-session-log',
-        order: 5,
-        locale: locales_ts_1.NS,
-        inject: () => ({
-            // The component's internal id is a plain string (slot runtime typing);
-            // the host-generation brand boundary lives here and only here, hence
-            // the double assertion (string and Branded<'SessionId'> do not overlap).
-            downloadSessionLog: (sessionId) => ctx.sessionLogDownload.download(sessionId),
-        }),
-    }, MobileDrawerFooter_tsx_1.MobileDrawerFooter));
+    // Session log download lives in the drawer brand row as an icon (issue #225):
+    // the reconciler task in effects/drawer-session-log.ts injects it there, so
+    // the drawer footer no longer carries a plugin row.
     // Composer file entry (0.1.6 host): the host deleted the paperclip attach
     // button, leaving the 「文件」row inside the "+" listbox as the only file
     // entry. Re-add a permanent one in the host's own conversation.input.left

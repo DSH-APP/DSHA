@@ -7,8 +7,7 @@ import sys
 import zipfile
 from pathlib import Path
 from recovery_apk_assets import archive_locations
-from recovery_runtime_overlay import TARGETS as BROWSER_TARGETS, INPUT_ASSETS
-from native_runtime_proof import recovery_launcher_hashes, infer_flavor
+from recovery_runtime_overlay import TARGETS as BROWSER_TARGETS, INPUT_ASSETS, CAPSULE_DEPENDENCIES
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -39,6 +38,19 @@ def verify_overlay_inputs(apk,descriptor):
         require((hash_entry(apk,'assets/'+name)==inputs[name]), 'RECOVERY_OVERLAY_INPUT_HASH')
 
 
+def verify_capsule_dependencies(apk, descriptor):
+    rows = descriptor.get('capsuleDependencies')
+    require(isinstance(rows, list) and len(rows) == len(CAPSULE_DEPENDENCIES), 'RECOVERY_DEPENDENCY_COUNT')
+    proofs = {row['path']: row for row in descriptor['files']}
+    for row, (asset, target) in zip(rows, CAPSULE_DEPENDENCIES.items()):
+        require(row['asset'] == asset and row['path'] == target, 'RECOVERY_DEPENDENCY_PATH')
+        require(row['sha256'] == hash_entry(apk, 'assets/' + asset), 'RECOVERY_DEPENDENCY_HASH')
+        require(0 < row['bytes'] <= 1024 * 1024 and row['bytes'] == apk.getinfo('assets/' + asset).file_size,
+                'RECOVERY_DEPENDENCY_SIZE')
+        require(proofs.get(target) == {key: row[key] for key in ('path', 'sha256', 'bytes')},
+                'RECOVERY_DEPENDENCY_PROOF')
+
+
 def verify(path):
     lock=json.loads((ROOT/'tools/recovery-runtime/lock.json').read_text(encoding='utf8'))
     with zipfile.ZipFile(path) as apk:
@@ -53,8 +65,8 @@ def verify(path):
             require((hash_entry(apk,'assets/'+name)==sha), 'RECOVERY_PROFILE')
         verify_overlays(apk,descriptor)
         verify_overlay_inputs(apk,descriptor)
-        flavor=infer_flavor(apk)
-        require(descriptor['launcherHashes']==recovery_launcher_hashes(ROOT), 'RECOVERY_CURRENT_LAUNCHER_PROOF')
+        verify_capsule_dependencies(apk,descriptor)
+        flavor='low' if 'lib/arm64-v8a/libproot_legacy.so' in apk.namelist() else 'standard'
         for name,sha in descriptor['launcherHashes'][flavor].items():
             require((hash_entry(apk,'lib/arm64-v8a/'+name)==sha), 'RECOVERY_LAUNCHER')
         for name in ('recovery-web-integration/manifest.json',

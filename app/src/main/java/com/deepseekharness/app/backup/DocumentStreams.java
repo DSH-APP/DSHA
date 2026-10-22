@@ -123,65 +123,6 @@ public final class DocumentStreams {
 
   public static OutputStream output(ContentResolver resolver, Uri uri, BackupControl control)
       throws IOException {
-    return output(resolver, uri, control, null);
-  }
-
-  public static String objectIdentity(ContentResolver resolver, Uri uri, BackupControl control)
-      throws IOException {
-    CancellationSignal signal = new CancellationSignal();
-    AutoCloseable opening = onCancel(control, signal::cancel);
-    try {
-      control.check();
-      try (AssetFileDescriptor descriptor = resolver.openAssetFileDescriptor(uri, "r", signal)) {
-        if (descriptor == null) throw new IOException("SAF_OBJECT_IDENTITY_UNAVAILABLE");
-        var stat =
-            android.system.Os.fstat(descriptor.getParcelFileDescriptor().getFileDescriptor());
-        control.check();
-        return android.system.OsConstants.S_ISREG(stat.st_mode)
-            ? "FILE:" + stat.st_dev + ":" + stat.st_ino
-            : "";
-      } catch (android.system.ErrnoException unavailable) {
-        throw new IOException("SAF_OBJECT_IDENTITY_UNAVAILABLE", unavailable);
-      }
-    } catch (IOException | RuntimeException failure) {
-      throw exportOpenFailure(control, failure, "SAF_OBJECT_IDENTITY_UNAVAILABLE");
-    } finally {
-      closeQuietly(opening);
-    }
-  }
-
-  public static OutputStream checkedOutput(
-      ContentResolver resolver, Uri uri, String expectedIdentity, BackupControl control)
-      throws IOException {
-    if (expectedIdentity == null || expectedIdentity.isEmpty())
-      throw new IOException("SAF_OBJECT_IDENTITY_UNAVAILABLE");
-    try {
-      return output(resolver, uri, control, expectedIdentity);
-    } catch (IOException failure) {
-      throw exportOpenFailure(control, failure, "SAF_OUTPUT_UNSUPPORTED");
-    }
-  }
-
-  private static IOException exportOpenFailure(
-      BackupControl control, Exception failure, String unsupported) throws IOException {
-    IOException mapped = io(control, failure);
-    switch (BackupErrorCode.from(mapped)) {
-      case "CANCELLED":
-      case "NO_SPACE":
-      case "PERMISSION_DENIED":
-      case "SAF_PERMISSION_REVOKED":
-      case "SAF_OBJECT_IDENTITY_UNAVAILABLE":
-      case "SAF_OUTPUT_OBJECT_CHANGED":
-      case "SAF_OUTPUT_RANGE_UNCONFIRMED":
-        return mapped;
-      default:
-        return new IOException(unsupported, mapped);
-    }
-  }
-
-  private static OutputStream output(
-      ContentResolver resolver, Uri uri, BackupControl control, String expectedIdentity)
-      throws IOException {
     CancellationSignal signal = new CancellationSignal();
     AutoCloseable opening = onCancel(control, signal::cancel);
     AssetFileDescriptor descriptor = null;
@@ -189,26 +130,8 @@ public final class DocumentStreams {
     AutoCloseable writing = null;
     try {
       control.check();
-      descriptor =
-          resolver.openAssetFileDescriptor(uri, expectedIdentity == null ? "w" : "rw", signal);
+      descriptor = resolver.openAssetFileDescriptor(uri, "w", signal);
       if (descriptor == null) throw new IOException("SAF_WRITE_FAILED");
-      if (expectedIdentity != null) {
-        try {
-          var stat =
-              android.system.Os.fstat(descriptor.getParcelFileDescriptor().getFileDescriptor());
-          String identity =
-              android.system.OsConstants.S_ISREG(stat.st_mode)
-                  ? "FILE:" + stat.st_dev + ":" + stat.st_ino
-                  : "";
-          if (!expectedIdentity.equals(identity) || stat.st_size != 0)
-            throw new IOException("SAF_OUTPUT_OBJECT_CHANGED");
-          if (descriptor.getStartOffset() != 0
-              || descriptor.getDeclaredLength() != AssetFileDescriptor.UNKNOWN_LENGTH)
-            throw new IOException("SAF_OUTPUT_RANGE_UNCONFIRMED");
-        } catch (android.system.ErrnoException unknown) {
-          throw new IOException("SAF_OUTPUT_OBJECT_CHANGED", unknown);
-        }
-      }
       stream = descriptor.createOutputStream();
       OutputStream owned = stream;
       AssetFileDescriptor asset = descriptor;
@@ -280,7 +203,7 @@ public final class DocumentStreams {
     return query(resolver, uri, columns, control, false);
   }
 
-  /** 上传显示名是可选元数据；null 游标不改变备份查询必须可读的既有语义。 */
+  /** A missing upload display name is optional; backup metadata remains required. */
   public static Cursor optionalQuery(
       ContentResolver resolver, Uri uri, String[] columns, BackupControl control)
       throws IOException {

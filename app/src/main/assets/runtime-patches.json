@@ -1,16 +1,49 @@
 {
   "schema": 1,
-  "dshVersion": "0.2.0-rc.2",
+  "dshVersion": "0.2.1-rc.2",
   "active": [
+    {
+      "asset": "permission-full-access-patch.json"
+    },
+    {
+      "asset": "retire-guarded-preset-patch.json"
+    },
+    {
+      "asset": "startup-mcp-timing-patch.json",
+      "module": "@deepseek-ai/dsh-mcp-client/lib/index.js",
+      "markers": [
+        "DSHA_STARTUP_MCP_TIMING_V1"
+      ]
+    },
+    {
+      "asset": "welcome-notice-patch.json",
+      "markers": [
+        "DSHA_WELCOME_NOTICE_RC2_V1",
+        "DSHA_WELCOME_STORE_RC2_V3"
+      ]
+    },
     {
       "asset": "composer-enter-patch.json",
       "module": "@deepseek-ai/dsh-client-ui-conversation/lib/client.js"
     },
     {
+      "asset": "conversation-stream-cancel-patch.json",
+      "markers": [
+        "DSHA_STREAM_CANCEL_SIGNAL_RC2_V1"
+      ]
+    },
+    {
+      "asset": "deepseek-stream-cancel-patch.json",
+      "markers": [
+        "DSHA_DEEPSEEK_BODY_CANCEL_RC2_V1"
+      ]
+    },
+    {
       "asset": "session-interaction-patch.json",
       "module": "@deepseek-ai/dsh-client-ui-workspace/lib/client.js",
       "markers": [
-        "DSHA_SESSION_INTERACTION_V2",
+        "DSHA_SESSION_INTERACTION_V4",
+        "DSHA_SESSION_SINGLE_ACTIVATE_V4",
         "dsha-session-open"
       ]
     },
@@ -103,6 +136,119 @@
       "markers": [
         "DSHA_REQUIRED_POLICY_V1"
       ]
+    },
+    {
+      "asset": "retired-market-optional-patch.json",
+      "module": "@deepseek-ai/dsh-app-boot/lib/index.js",
+      "markers": [
+        "DSHA_RETIRED_MARKET_OPTIONAL_V1"
+      ]
+    },
+    {
+      "asset": "retired-market-catalog-patch.json",
+      "module": "@deepseek-ai/dsh-plugin-manager/lib/index.js",
+      "markers": [
+        "DSHA_RETIRED_MARKET_CATALOG_V1"
+      ]
+    },
+    {
+      "asset": "auto-review-native-disabled-patch.json",
+      "module": "@deepseek-ai/dsh-plugin-manager/lib/index.js",
+      "markers": [
+        "DSHA_AUTO_REVIEW_NATIVE_DISABLED_V1"
+      ]
+    },
+    {
+      "asset": "deepseek-native-oauth-patch.json",
+      "module": "@deepseek-ai/dsh-client-ui-settings-account/lib/client.js",
+      "markers": [
+        "DSHA_NATIVE_OAUTH_NAVIGATION_V1"
+      ]
+    },
+    {
+      "asset": "directory-picker-service-patch.json",
+      "module": "@deepseek-ai/dsh-api-workspace-controller/lib/index.js",
+      "markers": [
+        "DSHA_DIRECTORY_PICKER_INDEPENDENT_LIFETIME_V1"
+      ]
+    },
+    {
+      "asset": "file-upload-resolver-lifecycle-patch.json",
+      "module": "@deepseek-ai/dsh-client-file-upload/lib/index.js",
+      "markers": [
+        "DSHA_FILE_UPLOAD_RESOLVER_LIFETIME_V1"
+      ]
+    },
+    {
+      "asset": "config-editor-lock-order-patch.json",
+      "markers": [
+        "DSHA_CONFIG_EDITOR_LOCK_ORDER_V1"
+      ]
+    },
+    {
+      "asset": "plugin-manager-pending-patch.json",
+      "markers": [
+        "DSHA_PLUGIN_PENDING_V2",
+        "DSHA_PLUGIN_PENDING_VIEW_V2",
+        "DSHA_PLUGIN_REFRESH_REUSE_V1",
+        "DSHA_PLUGIN_REFRESH_BARRIER_V1"
+      ]
+    },
+    {
+      "asset": "agent-preset-pending-patch.json",
+      "markers": [
+        "DSHA_PRESET_PENDING_V2",
+        "DSHA_PRESET_POST_WRITE_READ_V1",
+        "DSHA_PRESET_PENDING_VIEW_V2"
+      ]
+    },
+    {
+      "asset": "plugin-inventory-entries-patch.json",
+      "markers": [
+        "DSHA_PLUGIN_ENTRIES_PROJECTION_V1"
+      ]
+    },
+    {
+      "asset": "plugin-manager-entries-patch.json",
+      "markers": [
+        "DSHA_PLUGIN_LIST_ENTRIES_ONLY_V1"
+      ]
+    },
+    {
+      "asset": "plugin-inventory-management-patch.json",
+      "markers": [
+        "DSHA_PLUGIN_MANAGEMENT_PROJECTION_V1"
+      ]
+    },
+    {
+      "asset": "plugin-inventory-management-host-codec-patch.json",
+      "markers": [
+        "DSHA_PLUGIN_MANAGEMENT_HOST_CODEC_V1"
+      ]
+    },
+    {
+      "asset": "plugin-inventory-management-remote-codec-patch.json",
+      "markers": [
+        "DSHA_PLUGIN_MANAGEMENT_REMOTE_CODEC_V1"
+      ]
+    },
+    {
+      "asset": "plugin-inventory-management-api-codec-patch.json",
+      "markers": [
+        "DSHA_PLUGIN_MANAGEMENT_API_CODEC_V1"
+      ]
+    },
+    {
+      "asset": "plugin-manager-management-probe-patch.json",
+      "markers": [
+        "DSHA_PLUGIN_MANAGEMENT_PROBE_V1"
+      ]
+    },
+    {
+      "asset": "plugin-bundle-proof-workers-patch.json",
+      "markers": [
+        "DSHA_PLUGIN_BUNDLE_READ_WORKERS_V2"
+      ]
     }
   ],
   "specialized": [
@@ -124,6 +270,10 @@
     {
       "asset": "web-integration/tooltip-patch.json",
       "reason": "Old 0.1.5 component replacement preserved as history. Current rc2 interaction/entry recipes retain the upstream Tooltip and add dismissal only."
+    },
+    {
+      "asset": "lexical-claim-patch.json",
+      "reason": "Reviewed 0.2.1 atomic CommandChipNode replaces the old splitText/TOKEN_STYLE transform; exact raw retirement proof remains required, with materialized-node patch preserved."
     }
   ]
 }

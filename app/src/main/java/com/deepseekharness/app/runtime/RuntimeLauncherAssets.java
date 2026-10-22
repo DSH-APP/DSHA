@@ -24,7 +24,7 @@ final class RuntimeLauncherAssets {
       if (fs.stat(parent).type.equals("MISSING")) fs.directory(parent);
       if (!fs.stat(parent).type.equals("DIRECTORY")) throw new IOException("LAUNCHER_ASSET_ROOT");
       Map<String, byte[]> bytes = new LinkedHashMap<>();
-      for (String name : List.of("bridge-token-compat.cjs"))
+      for (String name : List.of("bridge-token-compat.cjs", "native-consent.cjs"))
         try (InputStream input = context.getAssets().open(name);
             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
           byte[] buffer = new byte[4096];

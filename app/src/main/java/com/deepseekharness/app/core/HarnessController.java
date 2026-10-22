@@ -69,6 +69,41 @@ public class HarnessController {
     return web.isWebRunning();
   }
 
+  /** 只读恢复已有实例的连接；不启动后端或重放业务。 */
+  public void restoreRunningWebSession(Runnable completed) {
+    web.restoreRunningWebSession(completed);
+  }
+
+  public boolean isRestoringWebSession() {
+    return web.isRestoringWebSession();
+  }
+
+  public boolean needsWebSessionRestore() {
+    return web.needsWebSessionRestore();
+  }
+
+  public boolean hasUnresolvedWebSession() {
+    return web.hasUnresolvedWebSession();
+  }
+
+  public void refreshRecoveredWebSession() {
+    web.refreshRecoveredWebSession();
+  }
+
+  public void requestWebSessionRecheck(Runnable completed) {
+    web.requestWebSessionRecheck(completed);
+  }
+
+  public boolean isWebSessionRetained(
+      com.deepseekharness.app.util.PreviewPageSession.Identity expected) {
+    return web.isWebSessionRetained(expected);
+  }
+
+  public boolean isWebSessionExited(
+      com.deepseekharness.app.util.PreviewPageSession.Identity expected) {
+    return web.isWebSessionExited(expected);
+  }
+
   public boolean isWebStoppedForMaintenance() throws IOException {
     return web.isWebStoppedForMaintenance();
   }
@@ -125,6 +160,29 @@ public class HarnessController {
     return web.startWebSafely(status);
   }
 
+  /** A queued visible-page request cannot supersede a later Stop or another start. */
+  public boolean startWebIfUnchanged(
+      long expectedGeneration, boolean manual, Consumer<String> status) {
+    return web.startWebIfUnchanged(expectedGeneration, manual, status);
+  }
+
+  public com.deepseekharness.app.util.WebStartProtection webStartProtection() {
+    return web.startProtection();
+  }
+
+  public boolean startProtectedWeb(
+      com.deepseekharness.app.util.WebStartProtection.Ticket ticket,
+      boolean safe,
+      boolean recover,
+      Consumer<String> status) {
+    return web.startProtectedWeb(ticket, safe, recover, status);
+  }
+
+  /** Pure intent/session state only; it never probes or signals a process. */
+  public boolean requiresRuntimeProtection() {
+    return web.requiresRuntimeProtection();
+  }
+
   public boolean restartWebAutomatically(long expectedGeneration, Consumer<String> status) {
     return web.restartWebAutomatically(expectedGeneration, status);
   }
@@ -143,6 +201,10 @@ public class HarnessController {
 
   public void stopWeb(Consumer<String> status) {
     web.stopWeb(status);
+  }
+
+  public void stopWebIfUnchanged(long generation) {
+    web.stopWebIfUnchanged(generation);
   }
 
   /** Candidate held by one native confirmation; it cannot be reused after any new Web intent. */
@@ -188,6 +250,11 @@ public class HarnessController {
 
   public void recoverWeb(boolean safe, String disabledPlugin, Consumer<String> status) {
     web.recoverWeb(safe, disabledPlugin, status);
+  }
+
+  public boolean recoverWebIfUnchanged(
+      long expectedGeneration, boolean safe, String disabledPlugin, Consumer<String> status) {
+    return web.recoverWebIfUnchanged(expectedGeneration, safe, disabledPlugin, status);
   }
 
   public void failedWebPage(long generation, String reason) {
@@ -260,33 +327,6 @@ public class HarnessController {
 
   /** Detects the private LAN IPv4 address used by the sharing entry point. */
   public static String getLanAddress() {
-    try {
-      String fallback = null;
-      java.util.Enumeration<java.net.NetworkInterface> nis =
-          java.net.NetworkInterface.getNetworkInterfaces();
-      while (nis != null && nis.hasMoreElements()) {
-        java.net.NetworkInterface ni = nis.nextElement();
-        if (!ni.isUp() || ni.isLoopback()) continue;
-        String ifName = ni.getName() == null ? "" : ni.getName();
-        boolean wifiLike =
-            ifName.startsWith("wlan")
-                || ifName.startsWith("eth")
-                || ifName.startsWith("radio")
-                || ifName.startsWith("wifi");
-        java.util.Enumeration<java.net.InetAddress> as = ni.getInetAddresses();
-        while (as.hasMoreElements()) {
-          java.net.InetAddress a = as.nextElement();
-          if (!(a instanceof java.net.Inet4Address) || a.isLoopbackAddress()) continue;
-          String ip = a.getHostAddress();
-          if (ip != null && com.deepseekharness.app.util.LanAddressPolicy.privateIpv4(ip)) {
-            if (fallback == null) fallback = ip;
-            if (wifiLike) return ip; // 目标网卡命中，直接返回
-          }
-        }
-      }
-      return fallback;
-    } catch (Exception ignored) {
-    }
-    return null;
+    return com.deepseekharness.app.util.LanAddressPolicy.currentPrivateAddress();
   }
 }

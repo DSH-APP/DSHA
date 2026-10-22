@@ -72,15 +72,6 @@ class FormatTreeTests(unittest.TestCase):
             with self.assertRaises(tree.TreeFormatError):
                 tree.declared_files(manifest)
 
-    def test_owned_cold_tools_fixture_has_an_inventory_and_package_batch(self):
-        fixture = self.root / "tools/fixtures/cold-tools/ColdToolsBuild.java"
-        fixture.parent.mkdir(parents=True)
-        fixture.write_text("class ColdToolsBuild {}\n", encoding="utf-8")
-        name = fixture.relative_to(self.root).as_posix()
-        self.assertIn(name, tree.inventory(self.root))
-        self.assertEqual(("tools", "fixtures/cold-tools"), tree.batch_key(name))
-        self.assertEqual([(("tools", "fixtures/cold-tools"), [name])], tree.package_batches([name]))
-
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -53,14 +53,14 @@
 ```xml
 <instrumentation
     android:name="com.deepseekharness.app.core.MaintenanceFixtureInstrumentation"
-    android:targetPackage="com.dsh.client"
+    android:targetPackage="dsh.android.client"
     android:functionalTest="true" />
 ```
 
 完整用例（设备操作由主线程执行）：
 
 ```text
-am instrument -w -e case all com.dsh.client/com.deepseekharness.app.core.MaintenanceFixtureInstrumentation
+am instrument -w -e case all dsh.android.client/com.deepseekharness.app.core.MaintenanceFixtureInstrumentation
 ```
 
 快速运行边界用例：`case runtime`，仅创建小型专属文件，验证旧后台任务拒绝、异步终端拒绝、同步嵌套保留、维护期间新任务拒绝和 launcher 退出谓词，不解压 assets。首次安装用例：`case fresh`，从 linux 不存在开始，直接校验真实 WebProcessManager.stop 不创建目录，再经 BackupTask→runDataTask→rebuild 完成真实 assets 初始化。`case failure` 和 `case all` 同样先跑首次安装完整链及 runtime 用例，all 额外执行真实维护重建、恢复、预览锁与结果持久化检查。

@@ -18,6 +18,11 @@ public final class BrowserConversationRoute {
 
   private BrowserConversationRoute() {}
 
+  static int taskId() {
+    var owner = browser.get();
+    return owner == null || owner.isFinishing() || owner.isDestroyed() ? -1 : owner.getTaskId();
+  }
+
   public static Intent conversation(
       Context context, long generation, String instance, String session) {
     PreviewPageSession.Identity current =

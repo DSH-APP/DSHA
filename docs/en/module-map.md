@@ -1,0 +1,26 @@
+# Current modules and state ownership
+
+This map describes actual responsibilities and state ownership in the maintained source. A package-import graph is not the complete runtime architecture. Use the current report linked by [README](../../README.en.md) for delivered identity and executed scope.
+
+Read the [handoff guide](handoff.md), then the [engineering standard](engineering-standard.md) / [historical ADR 0001](adr/0001-build154-boundaries.md), then [CONTRIBUTING](../../CONTRIBUTING.en.md). Historical audit copies are retained through their [preservation inventory](../audits/build154/history-document-sources.json); their old “current” headings do not override the production ownership described here.
+
+| Boundary | Production entry points / collaborators | State owned |
+|---|---|---|
+| Composition root and application state | DshaApp, ApplicationOwner, HarnessSessionState, RuntimeHostPorts | The application owns the sole Web generation, queue, stop intent, and service slots. This App instance explicitly injects platform ports; there is no global shared registry. |
+| Web compatibility facade and lifecycle | HarnessController, WebLifecycleController | The facade preserves existing APIs. The lifecycle executor performs startup, stop, and state transitions using the same HarnessSessionState. |
+| Startup and output | StartupPipeline, WebOutputSession | Ordered preparation, current-process output, authentication, and EOF; reports to the orchestrator through narrow ports. |
+| Startup platform actions and configuration | StartupEnvironmentActions, HostConfigService, WebReadyTasks | Narrow platform adapters for host recovery, plugins, and configuration snapshots; native configuration transactions and post-readiness tasks, without a second Web state. |
+| LAN authentication and process leases | LanAuthBridge, WebProcessSession | Captured generation, URL, and actual port; revalidation after HTTP outside the lock; exact launcher handle and bridge lease. |
+| Commands and environment | ProotBootstrap, RuntimeLauncher, LaunchSpec, RuntimeTools | Immutable command inputs, a common environment, managed assets, and the patch chain. |
+| Exit | WebStopCoordinator, WebProcessManager, TerminalSessionOwner | Birth identity, session, and actual exit evidence; unknown outcomes retain the barrier. |
+| Cold installation / rebuild | ColdInstallTransaction, ColdBundleTransaction, ColdBundleExtractor, ColdToolsInstaller, EnvironmentRebuildTransaction | Candidate environments, managed extraction, and tool installation. Cold-install selection rolls back with root publication; the host layer protects personal data during rebuild. |
+| Data and backup | backup host file layer, HostDataTransaction, NativeBackupJobs, MaintenanceDataSnapshot.capture/restore | Scope, authentication/digests, numbered slots, data generations, and read/write transactions. Base rebuild does not silently fall back to Python backup from a damaged guest. |
+| Maintenance UI adaptation | MaintenanceUiPorts, DataProtectionService, DshaApp | The backup layer requests maintenance state and notifications; the composition root assembles real UI destinations. Backup/runtime code does not directly reference UI classes. |
+| Plugins | PluginInstallJournals, plugin-transactions.py, plugin archive graph | Original/candidate switching, actual dependencies, and the user's enable/disable intent. |
+| Browser and bridge | WebPageScripts, GeckoPreviewActivity, HttpShellService | Current page, origin, generation, authentication, and capability grants; no second runtime state. |
+| Independent emergency runtime | RecoveryController, RecoveryRuntime, RecoveryStoragePlan, RecoveryRepairBroker | An independent root and HOME, five controlled tools, atomic records through the safe file layer, explicit publication with retained originals, and native-confirmed repair leases. |
+| Deployment and historical isolation | asset-deployment.json, prepare-standard-assets.py, prepare-recovery-assets.py | Complete license/plugin/extension members and explicit source-to-physical mappings; retired sources stay out of the APK. |
+
+The main strengths are separation of managed runtime components from user data, reversible host transactions, an independent emergency root, and process-identity protection. Complexity primarily comes from Android file aliases, the proot/proroot paths, historical formats, and browser lifecycles. Cross-language contracts still connect Java, Python, and Node. Constrain them with locks, proofs of actual content, and behavior tests rather than copied constants.
+
+This work continues to extract real execution collaborators and instance-owned platform ports; it does not mean every historical coupling has disappeared. Android coordination adapters still connect backup and core. The actual frozen edge inventory is `tools/architecture-backup-core-baseline.json`; the boundary check permits only reductions and does not prove that every dependency has been inverted. Host tests, platform compilation, phone lifecycle, hidden APIs, persistent-disk power loss, and external services provide different evidence. Reconstruct current software work and missing evidence from the current itemized receipts, not cached old ledgers or class line counts.

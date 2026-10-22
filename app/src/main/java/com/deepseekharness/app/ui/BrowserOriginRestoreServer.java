@@ -45,7 +45,7 @@ final class BrowserOriginRestoreServer implements AutoCloseable {
       throws Exception {
     this(
         new AndroidBackupFileSystem(),
-        context.getFilesDir(),
+        privateFiles(context),
         checkedPort(port),
         targetBase,
         asset(context, "app-integration/browser-origin-restore.html")
@@ -57,6 +57,57 @@ final class BrowserOriginRestoreServer implements AutoCloseable {
         captured,
         finished,
         randomSecret());
+  }
+
+  private static File privateFiles(Context context) throws IOException {
+    var information = context.getApplicationInfo();
+    if (information == null || information.dataDir == null)
+      throw new IOException("COLD_PACKAGE_HOST_ROOT");
+    return privateFiles(
+        new AndroidBackupFileSystem(), new File(information.dataDir), context.getFilesDir());
+  }
+
+  /** Resolve only Android's declared app-data alias; writable descendants retain NOFOLLOW. */
+  static File privateFiles(BackupFileSystem fs, File applicationData, File frameworkFiles)
+      throws IOException {
+    var host =
+        com.deepseekharness.app.util.ColdInstallPackages.bindPrivateFiles(
+            fs, applicationData, frameworkFiles);
+    host.verify(fs);
+    return host.files;
+  }
+
+  /** Only fixed public codes cross into diagnostics; messages may contain private paths or tokens. */
+  static String failureCode(Throwable failure) {
+    String code = failure.getMessage();
+    if (code != null
+        && Set.of(
+                "COLD_PACKAGE_HOST_ROOT",
+                "COLD_PACKAGE_FILES_LINK_OR_MISSING",
+                "COLD_PACKAGE_HOST_ROOT_CHANGED",
+                "PARENT_LINK",
+                "PARENT_LINK_OR_MISSING",
+                "UNSAFE_ROOT",
+                "UNSAFE_HOST_PATH",
+                "PERMISSION_DENIED",
+                "NO_SPACE",
+                "SOURCE_CHANGED",
+                "RESTORE_CANCELLED",
+                "RESTORE_PREVIEW_CLOSE_UNCONFIRMED",
+                "RESTORE_PORT",
+                "RESTORE_PORT_OR_NONCE",
+                "RESTORE_TARGET",
+                "RESTORE_BUDGET_CATALOGUE",
+                "RESTORE_BUDGET_UNKNOWN_RECORD",
+                "RESTORE_BUDGET_MEMBERS",
+                "RESTORE_BUDGET_UNKNOWN_MEMBER",
+                "RESTORE_BUDGET_STORAGE",
+                "RESTORE_BUDGET_ACTIVE_RECORDS")
+            .contains(code)) return code;
+    if (failure instanceof BindException) return "RESTORE_PORT_OCCUPIED";
+    if (failure instanceof FileNotFoundException) return "RESTORE_ASSET_UNAVAILABLE";
+    if (failure instanceof SecurityException) return "PERMISSION_DENIED";
+    return "RESTORE_PREPARE_FAILED";
   }
 
   /** Host seam: real sockets/parser/persistence, explicit file/syscall adapter and monotonic clock. */

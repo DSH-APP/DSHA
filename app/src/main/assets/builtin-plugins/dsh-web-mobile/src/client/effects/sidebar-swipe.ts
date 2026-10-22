@@ -69,11 +69,12 @@ import { fadeOverlayOut } from './overlay-backdrop-fab.ts'
  * experiment rolled back) — this value.
  * Safety at this width: the release classification (0.16×w travel OR
  * 0.45px/ms velocity) still gates the commit, so widening cannot open on a
- * tap; vertical strokes reset at axis lock (≤8px of prevented movement) and
- * hand scrolling back; strokes beginning inside genuinely horizontally
- * scrollable containers are excluded from the zone entirely — see
- * findHorizontalScroller (at 45% the stats line / message code blocks sit
- * well inside the strip, so that guard is load-bearing).
+ * tap; vertical strokes never reach the touchmove preventDefault, so their
+ * native scroll is untouched (see onTouchMove — the cancel is only allowed
+ * after the horizontal axis lock); strokes beginning inside genuinely
+ * horizontally scrollable containers are excluded from the zone entirely —
+ * see findHorizontalScroller (at 45% the stats line / message code blocks
+ * sit well inside the strip, so that guard is load-bearing).
  */
 const START_ZONE_RATIO = 0.45
 
@@ -1533,33 +1534,23 @@ export function installSidebarSwipe(ctx: ClientContext, filesToggle: () => boole
       if (document.hidden) abortStroke(ctx)
     }
 
-    // Edge-touch priority (iOS UIScreenEdgePanGestureRecognizer semantics):
-    // a stroke that began inside the left-edge start zone must never be
-    // claimed by native scrolling. touch-action: pan-y already forbids the
-    // browser from panning it horizontally; this preventDefault (passive:
-    // false) additionally stops the vertical-scroll claim, so the pointer
-    // event stream reaches the gesture layer intact on browsers where the
-    // scroller wins the race (iOS Safari in particular — headless cannot
-    // reproduce that behavior). Vertical-dominant strokes abandon the
-    // gesture (reset() clears trackingPointer), so scrolling resumes for
-    // touches that were never swipes. Strokes starting inside a genuinely
-    // horizontally scrollable container never reach this state at all
-    // (beginStroke rejects them via findHorizontalScroller), so their
-    // native horizontal pan is never prevented.
-    //
-    // Multi-touch is the one case that must never be prevented: two fingers
-    // on the screen mean a pinch, and preventDefault on those touchmoves
-    // cancels the browser's zoom gesture. The pointerdown guard above
-    // already abandons the stroke when a second finger lands; this is the
-    // belt-and-braces path for engines that hand the gesture to the
-    // compositor without delivering a second pointerdown (#46 real-device
-    // report: pinch-out zoomed but pinch-in would not zoom back).
+    // Edge-touch priority, from the AXIS LOCK onward only: once the stroke is
+    // known horizontal, preventDefault (passive:false) stops the browser from
+    // claiming it as a scroll, keeping the pointer stream intact (iOS
+    // UIScreenEdgePanGestureRecognizer semantics). Before the lock the handler
+    // must stay out of the way entirely: canceling a touchmove suppresses the
+    // touch point's default action for the WHOLE gesture (Touch Events
+    // cancelability), and WebKit does not resume scrolling after reset() —
+    // preventing here made both 45% start zones dead for scrolling on iOS
+    // (#222). Multi-touch is never prevented: two fingers mean a pinch, and
+    // the pointerdown guard above plus this check hand it back (#46).
     const onTouchMove = (event: TouchEvent): void => {
       if (trackingPointer === 0) return
       if (event.touches.length !== 1 || !event.cancelable || document.hidden) {
         abortStroke(ctx)
         return
       }
+      if (!tracking) return
       event.preventDefault()
     }
 

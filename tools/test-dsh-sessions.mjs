@@ -11,7 +11,7 @@ import { createRequire } from 'node:module';
 const runtime = testRuntime('raw');
 const require = createRequire(join(runtime, 'package.json'));
 const { Context } = await import(pathToFileURL(require.resolve('@deepseek-ai/cordis')));
-const { default: Jsonl } = await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-session-persistence-jsonl')));
+const Jsonl = await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-session-persistence-jsonl')));
 const { Session } = await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-session')));
 const { sessionFormatLogFilename } = await import(pathToFileURL(require.resolve('@deepseek-ai/dsh-session-format')));
 const { zstdCompressSync, constants } = await import('node:zlib');

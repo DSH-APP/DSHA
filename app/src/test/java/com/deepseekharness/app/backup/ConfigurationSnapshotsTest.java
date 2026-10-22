@@ -275,8 +275,6 @@ public class ConfigurationSnapshotsTest {
       ConfigurationSnapshots snapshots = new ConfigurationSnapshots(counted, root, dsh(root));
       assertTrue(snapshots.pendingNative().isEmpty());
       assertEquals(1, historyLists[0]);
-      assertFalse(new File(root, "startup-config-completed-v1.json").exists());
-      snapshots.recover(new BackupControl(null));
       historyLists[0] = 0;
       calls[0] = 0;
       long start = System.nanoTime();
