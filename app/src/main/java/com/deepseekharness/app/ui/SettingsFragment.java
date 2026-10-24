@@ -123,19 +123,25 @@ public class SettingsFragment extends Fragment {
     String[] optionValues = {
       com.deepseekharness.app.util.UiLanguagePreference.SYSTEM,
       com.deepseekharness.app.util.UiLanguagePreference.ZH,
-      com.deepseekharness.app.util.UiLanguagePreference.EN
+      com.deepseekharness.app.util.UiLanguagePreference.EN,
+      com.deepseekharness.app.util.UiLanguagePreference.AR
     };
     String[] optionLabels = {
-      com.deepseekharness.app.util.UiText.choose("跟随系统", "Follow system"),
-      com.deepseekharness.app.util.UiText.choose("简体中文", "Simplified Chinese"),
-      "English"
+      com.deepseekharness.app.util.UiText.choose("跟随系统", "Follow system", "اتّباع النظام"),
+      com.deepseekharness.app.util.UiText.choose("简体中文", "Simplified Chinese", "الصينية المبسّطة"),
+      "English",
+      com.deepseekharness.app.util.UiText.choose("العربية", "Arabic", "العربية")
     };
-    int checked = followSystem ? 0 : ("en".equals(preference) ? 2 : 1);
+    int checked =
+        followSystem ? 0 : ("en".equals(preference) ? 2 : ("ar".equals(preference) ? 3 : 1));
     // 摘要始终显示当前**生效**语言的名字：跟随系统时补上来由，用户一眼能看出实际结果。
     String currentLabel =
         "en".equals(effective)
-            ? com.deepseekharness.app.util.UiText.choose("English", "English")
-            : com.deepseekharness.app.util.UiText.choose("简体中文", "Simplified Chinese");
+            ? "English"
+            : ("ar".equals(effective)
+                ? com.deepseekharness.app.util.UiText.choose("العربية", "Arabic", "العربية")
+                : com.deepseekharness.app.util.UiText.choose(
+                    "简体中文", "Simplified Chinese", "الصينية المبسّطة"));
     String summary =
         followSystem
             ? com.deepseekharness.app.util.UiText.format("跟随系统 · %s", currentLabel)
