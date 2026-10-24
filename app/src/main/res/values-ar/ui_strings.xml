@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="ui_m0001" formatted="false">"تنزيل التحديث"</string>
+    <string name="ui_m0002" formatted="false">"حفظ الإعدادات"</string>
+    <string name="ui_m0003" formatted="false">"إلغاء الفحص"</string>
+    <string name="ui_m0005" formatted="false">"تشغيل"</string>
+    <string name="ui_m0006" formatted="false">"نسخ احتياطي وإعادة بناء"</string>
+    <string name="ui_m0007" formatted="false">"تشغيل آمن"</string>
+    <string name="ui_m0010" formatted="false">"بدء الاقتران"</string>
+    <string name="ui_m0011" formatted="false">"خيارات الاستعادة"</string>
+    <string name="ui_m0012" formatted="false">"العنوان والمنفذ يدويًا"</string>
+    <string name="ui_m0013" formatted="false">"إدارة الإضافات"</string>
+    <string name="ui_m0015" formatted="false">"تفويض Shizuku"</string>
+    <string name="ui_m0016" formatted="false">"الإضافات"</string>
+    <string name="ui_m0017" formatted="false">"غير مفحوص"</string>
+    <string name="ui_m0018" formatted="false">"التحقق من التحديثات"</string>
+    <string name="ui_m0020" formatted="false">"فاتح"</string>
+    <string name="ui_m0021" formatted="false">"الطرفية"</string>
+    <string name="ui_m0023" formatted="false">"الإعدادات"</string>
+    <string name="ui_m0024" formatted="false">"أدخل أمرًا واضغط Enter"</string>
+    <string name="ui_m0025" formatted="false">"لا توجد سجلات بعد."</string>
+    <string name="ui_m0026" formatted="false">"الاقتران والمنافذ"</string>
+    <string name="ui_m0030" formatted="false">"ADB متوقف. اتركه متوقفًا إن لم تستخدم التصحيح اللاسلكي."</string>
+    <string name="ui_m0031" formatted="false">"اقتران ADB اللاسلكي"</string>
+    <string name="ui_m0039" formatted="false">"Shizuku غير مُفوَّض"</string>
+    <string name="ui_m0046" formatted="false">"تنزيل السجلات"</string>
+    <string name="ui_m0047" formatted="false">"تنزيل سجلات الأخطاء"</string>
+    <string name="ui_m0050" formatted="false">"إيقاف"</string>
+    <string name="ui_m0053" formatted="false">"المستشعرات والمصباح"</string>
+    <string name="ui_m0054" formatted="false">"استخدام بيئة proroot"</string>
+    <string name="ui_m0055" formatted="false">"استخدام متصفح التوافق"</string>
+    <string name="ui_m0057" formatted="false">"استخدام تخطيط الويب لسطح المكتب"</string>
+    <string name="ui_m0060" formatted="false">"إصلاح الأدوات"</string>
+    <string name="ui_m0062" formatted="false">"السماح بصلاحية root"</string>
+    <string name="ui_m0063" formatted="false">"السماح بالوصول إلى الشبكة المحلية"</string>
+    <string name="ui_m0066" formatted="false">"السماح بالوصول إلى الموقع"</string>
+    <string name="ui_m0067" formatted="false">"حول"</string>
+    <string name="ui_m0078" formatted="false">"إلغاء المهمة"</string>
+    <string name="ui_m0079" formatted="false">"إلغاء العملية"</string>
+    <string name="ui_m0080" formatted="false">"حفظ باسم"</string>
+    <string name="ui_m0081" formatted="false">"إضافاتي فقط"</string>
+    <string name="ui_m0084" formatted="false">"إن انقطع الاتصال في الخلفية، اسمح لـ DSHA بالعمل في الخلفية وقلّل قيود البطارية. قد يوقفها جهازك مع ذلك. قبل إعادة الاتصال، فعّل «التصحيح اللاسلكي» ثم اضغط «التحقق من الاتصال»."</string>
+    <string name="ui_m0089" formatted="false">"التحقق من التحديثات عند التشغيل"</string>
+    <string name="ui_m0090" formatted="false">"تمكين وصول ADB إلى الجهاز (متوقف افتراضيًا)"</string>
+    <string name="ui_m0094" formatted="false">"عرض الإصدارات في المتصفح"</string>
+    <string name="ui_m0095" formatted="false">"فتح في المتصفح"</string>
+    <string name="ui_m0102" formatted="false">"نسخ"</string>
+    <string name="ui_m0103" formatted="false">"نسخ التقرير"</string>
+    <string name="ui_m0104" formatted="false">"الوضع الآمن: استعادة إضافات الطرف الثالث المفعّلة سابقًا"</string>
+    <string name="ui_m0106" formatted="false">"تثبيت إضافة"</string>
+    <string name="ui_m0107" formatted="false">"تثبيت التحديث"</string>
+    <string name="ui_m0109" formatted="false">"تصدير التقرير"</string>
+    <string name="ui_m0118" formatted="false">"افرض متصفح Gecko المضمّن إن عرض متصفح النظام صفحة فارغة أو كان غير متوافق. وإلا يختار التطبيق محركًا متوافقًا تلقائيًا. احفظ وأعد فتح المحادثة للتطبيق."</string>
+    <string name="ui_m0121" formatted="false">"عرض مخرجات الذكاء الاصطناعي في نافذة عائمة"</string>
+    <string name="ui_m0125" formatted="false">"فتح مدير Shizuku"</string>
+    <string name="ui_m0126" formatted="false">"فتح النسخ الاحتياطي والبيانات"</string>
+    <string name="ui_m0128" formatted="false">"إعدادات التصحيح اللاسلكي"</string>
+    <string name="ui_m0133" formatted="false">"متجر الإضافات"</string>
+    <string name="ui_m0134" formatted="false">"حالة عملية الإضافة. اضغط للتفاصيل."</string>
+    <string name="ui_m0135" formatted="false">"مدير الإضافات"</string>
+    <string name="ui_m0137" formatted="false">"رابط الإضافة أو اسم حزمة npm"</string>
+    <string name="ui_m0138" formatted="false">"ابحث في أسماء الإضافات أو أوصافها"</string>
+    <string name="ui_m0142" formatted="false">"طرفية جديدة"</string>
+    <string name="ui_m0145" formatted="false">"لا توجد طرفيات\nاضغط جديد لفتح طرفية"</string>
+    <string name="ui_m0146" formatted="false">"المزيد"</string>
+    <string name="ui_m0158" formatted="false">"اكتشاف الإضافات المثبَّتة"</string>
+    <string name="ui_m0159" formatted="false">"اكتشاف الإضافات"</string>
+    <string name="ui_m0164" formatted="false">"مسح"</string>
+    <string name="ui_m0170" formatted="false">"تفويض root والتحقق منه"</string>
+    <string name="ui_m0171" formatted="false">"قراءة الرسائل النصية"</string>
+    <string name="ui_m0173" formatted="false">"مستقر"</string>
+    <string name="ui_m0177" formatted="false">"بسيط"</string>
+    <string name="ui_m0178" formatted="false">"طرفية بسيطة"</string>
+    <string name="ui_m0179" formatted="false">"لصق الرابط"</string>
+    <string name="ui_m0181" formatted="false">"القراءة التلقائية لرمز الاقتران"</string>
+    <string name="ui_m0182" formatted="false">"أضف خطوات إعادة الإنتاج. لا تُدرج مفاتيح أو محادثات خاصة."</string>
+    <string name="ui_m0185" formatted="false">"فحص الرابط"</string>
+    <string name="ui_m0191" formatted="false">"إعدادات البطارية"</string>
+    <string name="ui_m0201" formatted="false">"الرجوع"</string>
+    <string name="ui_m0202" formatted="false">"العودة إلى البداية: الإضافات / التشغيل الآمن"</string>
+    <string name="ui_m0209" formatted="false">"إعادة الفحص"</string>
+    <string name="ui_m0211" formatted="false">"إعادة ضبط الإعدادات مع الاحتفاظ بالمحادثات"</string>
+    <string name="ui_m0212" formatted="false">"إعادة المحاولة"</string>
+    <string name="ui_m0215" formatted="false">"معاينة"</string>
+    <string name="ui_m0217" formatted="false">"التحقق من الاتصال"</string>
+    <string name="ui_m0218" formatted="false">"＋ جديد"</string>
+</resources>

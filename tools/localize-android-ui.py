@@ -84,9 +84,12 @@ def resources(messages):
             if node.attrib['name'] in by_id:used[node.attrib['name']]=by_id[node.attrib['name']]
     originals=ET.parse(ROOT/'app/src/main/res/values/strings.xml').getroot()
     english={node.attrib['name']:lookup[node.text] for node in originals if node.text in lookup}
-    for folder,items,field in [('values',used,'zh'),('values-en',dict(used,**english),'en')]:
+    for folder,items,field in [('values',used,'zh'),('values-en',dict(used,**english),'en'),
+                               ('values-ar',dict(used,**english),'ar')]:
         doc=ET.Element('resources')
-        for name,item in sorted(items.items()):ET.SubElement(doc,'string',name=name,formatted='false').text=resource_value(item[field])
+        for name,item in sorted(items.items()):
+            text=item.get(field) or item.get('en') or item['zh']
+            ET.SubElement(doc,'string',name=name,formatted='false').text=resource_value(text)
         ET.indent(doc,space='    ');target=ROOT/f'app/src/main/res/{folder}/ui_strings.xml';target.parent.mkdir(parents=True,exist_ok=True)
         ET.ElementTree(doc).write(target,encoding='utf-8',xml_declaration=True)
     print('XML language resources:',len(used),'+',len(english),'existing names')

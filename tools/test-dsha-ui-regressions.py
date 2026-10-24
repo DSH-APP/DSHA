@@ -85,13 +85,17 @@ class SystemLanguage(unittest.TestCase):
 
     def test_system_is_a_supported_value(self):
         self.assertIn('String SYSTEM = "system"', self.pref)
-        self.assertIn('return SYSTEM.equals(value) || ZH.equals(value) || EN.equals(value);', self.pref)
+        # ar 是新增的第四种显式语言，与 zh/en 同级。
+        self.assertIn(
+            'return SYSTEM.equals(value) || ZH.equals(value) || EN.equals(value) || AR.equals(value);',
+            self.pref)
 
     def test_resolve_prefers_explicit_choice(self):
         self.assertIn('return SYSTEM.equals(chosen) ? resolveLanguage(languageTag) : chosen;', self.pref)
 
     def test_non_chinese_falls_back_to_english(self):
-        # 只有中文落中文，其它语言（含无法识别）落英文
+        # 只有中文落中文、阿拉伯语落阿拉伯语，其它语言（含无法识别）落英文
+        self.assertIn('if (isArabic(languageTag)) return AR;', self.pref)
         self.assertIn('return isChinese(languageTag) ? ZH : EN;', self.pref)
 
     def test_ui_text_never_stores_system_as_a_render_language(self):
