@@ -40,6 +40,13 @@
 </tr>
 </table>
 
+<table>
+<tr>
+<td width="180"><a href="https://api-zeno.com"><img src="docs/sponsors/api-zeno.jpg" alt="API Zeno" width="150"></a></td>
+<td>Thanks to <a href="https://api-zeno.com">API-Zeno</a> for sponsoring this project! API-Zeno brings together mainstream AI models from China and abroad for learning, content creation, coding and more. The platform focuses on real-world experience, offering user guides, Q&A and technical support, and can be integrated into DSHA. New users get a ¥5 free credit on sign-up — come and try it!</td>
+</tr>
+</table>
+
 ---
 
 ## What this is

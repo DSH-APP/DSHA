@@ -39,6 +39,13 @@
 </tr>
 </table>
 
+<table>
+<tr>
+<td width="180"><a href="https://api-zeno.com"><img src="docs/sponsors/api-zeno.jpg" alt="API Zeno" width="150"></a></td>
+<td>感谢 <a href="https://api-zeno.com">API-Zeno</a> 赞助本项目！API-Zeno 汇集国内外主流 AI 模型，满足学习、创作、编程等需求。平台注重实际使用体验，提供操作指南、问题答疑与技术支持，支持在 DSHA 中接入使用。新用户注册即赠 5 元体验额度，欢迎体验！</td>
+</tr>
+</table>
+
 ---
 
 ## 这是什么
