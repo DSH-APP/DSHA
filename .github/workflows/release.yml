@@ -61,7 +61,7 @@ jobs:
           trap 'rm -f -- "$DSHA_KEYSTORE"' EXIT
           printf '%s' "$KEY_BASE64" | base64 --decode > "$DSHA_KEYSTORE"
           python3 tools/sign-release-apks.py --apks "$STANDARD_APK" "$LOW_APK" --output "$RUNNER_TEMP/signed-release" --java-home "$JAVA_HOME" --sdk "$ANDROID_HOME"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: SIGNED-HISTORICAL-CERTIFICATE
           path: ${{ runner.temp }}/signed-release
