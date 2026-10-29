@@ -16,37 +16,58 @@ def format_signature(value):
         index+=1
     return signature
 
+def write_map(name,pairs,lines):
+    """Emit one HashMap builder split into 80-entry chunks (keeps bytecode under the 64K method limit)."""
+    out=[f'private static Map<String,String> {name}() {{ Map<String,String> values=new HashMap<>();']
+    items=list(pairs.items())
+    for i in range(0,len(items),80):out.append(f'part{i//80}(values);')
+    out+=['return Collections.unmodifiableMap(values);','}']
+    for i in range(0,len(items),80):
+        out.append(f'private static void part{i//80}(Map<String,String> values) {{')
+        for zh,tr in items[i:i+80]:
+            out.append('values.put('+json.dumps(zh,ensure_ascii=False)+','+json.dumps(tr,ensure_ascii=False)+');')
+        out.append('}')
+    return out
+
 def generate(root,output):
     messages=json.loads((root/'tools/i18n/messages.json').read_text(encoding='utf-8'))
     translated=[item for item in messages if item['en']]
     for item in translated:
         if item.get('uiFormat') and format_signature(item['zh'])!=format_signature(item['en']):
             raise ValueError('UI_FORMAT_ARGUMENT_MISMATCH: '+item['id'])
+    # 阿拉伯语词条可选：有 ar 就并进目录，没有就回退英文（m0000 起逐步补齐）。
+    arabic=[item for item in translated if item.get('ar')]
+    for item in arabic:
+        if item.get('uiFormat') and format_signature(item['zh'])!=format_signature(item['ar']):
+            raise ValueError('UI_FORMAT_ARGUMENT_MISMATCH_AR: '+item['id'])
     unique={item['zh']:item['en'] for item in translated}
+    unique_ar={item['zh']:item['ar'] for item in arabic}
     lines=['package com.deepseekharness.app.util;','import java.util.*;',
            '/** 由 tools/prepare-ui-languages.py 生成，请修改文案目录。 */',
            'final class UiMessages {','static final Map<String,String> EN = build();',
-           'private static Map<String,String> build() { Map<String,String> values=new HashMap<>();']
-    pairs=list(unique.items())
-    for i in range(0,len(pairs),80):lines.append(f'part{i//80}(values);')
-    lines+=['return Collections.unmodifiableMap(values);','}']
-    for i in range(0,len(pairs),80):
-        lines.append(f'private static void part{i//80}(Map<String,String> values) {{')
-        for zh,en in pairs[i:i+80]:
-            lines.append('values.put('+json.dumps(zh,ensure_ascii=False)+','+json.dumps(en,ensure_ascii=False)+');')
-        lines.append('}')
+           'static final Map<String,String> AR = buildAr();',
+           '/** 按生效语言查字典；源语言（中文）返回 null 表示无需替换。 */',
+           'static String translate(String language,String value) {',
+           'if (value == null) return null;',
+           'if ("en".equals(language)) return EN.get(value);',
+           'if ("ar".equals(language)) { String hit = AR.get(value); return hit != null ? hit : EN.get(value); }',
+           'return null;',
+           '}']
+    lines+=write_map('build',unique,lines)
+    lines+=write_map('buildAr',unique_ar,lines)
     lines.append('static final String[][] FORMATS = new String[][] {')
     # 更完整的模板先匹配，避免“检查通过：%s”吞掉后面的另一段应用状态。
     formats=sorted((item for item in translated if item.get('uiFormat')),
                    key=lambda item:max(len(item['zh'].replace('%s','')),len(item['en'].replace('%s',''))),reverse=True)
     for item in formats:
-        lines.append('{'+json.dumps(item['zh'],ensure_ascii=False)+','+json.dumps(item['en'],ensure_ascii=False)+'},')
+        ar=item.get('ar') or item['en']
+        lines.append('{'+json.dumps(item['zh'],ensure_ascii=False)+','+json.dumps(item['en'],ensure_ascii=False)+','+json.dumps(ar,ensure_ascii=False)+'},')
     lines.append('};')
     lines.append('}')
     target=output/'com/deepseekharness/app/util/UiMessages.java';target.parent.mkdir(parents=True,exist_ok=True)
     value='\n'.join(lines)+'\n'
     if not matches_text(target,value,encoding='utf-8'):write_source_text(target,value,encoding='utf-8')
-    print(f'UI language catalog: {len(translated)}/{len(messages)} entries')
+    print(f'UI language catalog: {len(translated)}/{len(messages)} entries, arabic {len(arabic)}')
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--root',type=Path,default=Path(__file__).resolve().parents[1]);parser.add_argument('--output',type=Path,required=True)

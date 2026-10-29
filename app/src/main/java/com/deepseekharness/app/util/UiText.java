@@ -7,7 +7,7 @@ public final class UiText {
   private UiText() {}
 
   /**
-   * 设置渲染语言。只接受<strong>生效语言</strong> zh/en：{@code system} 等偏好值会被
+   * 设置渲染语言。只接受<strong>生效语言</strong> zh/en/ar：{@code system} 等偏好值会被
    * 解析成当前系统语言，避免把"跟随系统"当成第三种语言塞进渲染层（那会让 choose()
    * 永远走中文分支）。
    */
@@ -19,8 +19,26 @@ public final class UiText {
     return language;
   }
 
+  /** 当前生效语言是否从右到左书写（阿拉伯语）。 */
+  public static boolean isRtl() {
+    return UiLanguagePreference.isRtl(language);
+  }
+
+  /**
+   * 按当前语言选择文案。{@code arabic} 为空时回退英文，英文也为空时回退中文，
+   * 这样新增阿拉伯语词条前不会出现空白按钮。
+   */
+  public static String choose(String chinese, String english, String arabic) {
+    if (UiLanguagePreference.AR.equals(language)) {
+      if (arabic != null && !arabic.isEmpty()) return arabic;
+      return english == null ? chinese : english;
+    }
+    return UiLanguagePreference.EN.equals(language) ? english : chinese;
+  }
+
+  /** 双语调用点的兼容入口；阿拉伯语先查字典，查不到回退英文。 */
   public static String choose(String chinese, String english) {
-    return "en".equals(language) ? english : chinese;
+    return choose(chinese, english, null);
   }
 
   /** External/user text and protocol values must never be application translation keys. */
@@ -38,8 +56,8 @@ public final class UiText {
   }
 
   public static String text(String value) {
-    if (value == null || !"en".equals(language)) return value;
-    String translated = UiMessages.EN.get(value);
+    if (value == null) return null;
+    String translated = UiMessages.translate(language, value);
     return translated == null ? value : translated;
   }
 
@@ -62,7 +80,7 @@ public final class UiText {
   /** 这些前缀仍用于内部状态识别；只在应用状态控件的边界翻译。 */
   public static String status(String value) {
     String translated = text(value);
-    if (value == null || !value.equals(translated) || !"en".equals(language)) return translated;
+    if (value == null || !value.equals(translated) || isSourceLanguage()) return translated;
     for (String prefix : new String[] {"环境任务进行中：", "环境任务进行中", "重置失败："})
       if (value.startsWith(prefix)) return text(prefix) + text(value.substring(prefix.length()));
     return value;
@@ -70,7 +88,7 @@ public final class UiText {
 
   /** 仅翻译内置工具状态首行，下面的命令、路径和模型内容保持原样。 */
   public static String toolStatus(String value) {
-    if (value == null || !"en".equals(language)) return value;
+    if (value == null || isSourceLanguage()) return value;
     int line = value.indexOf('\n');
     String head = line < 0 ? value : value.substring(0, line),
         tail = line < 0 ? "" : value.substring(line);
@@ -79,5 +97,10 @@ public final class UiText {
     if (translated.equals(head) && head.startsWith("⚙ 正在使用 "))
       translated = text("⚙ 正在使用 ") + head.substring("⚙ 正在使用 ".length());
     return translated + tail;
+  }
+
+  /** 源语言（中文）不查字典，直接返回原串。 */
+  private static boolean isSourceLanguage() {
+    return !UiLanguagePreference.EN.equals(language) && !UiLanguagePreference.AR.equals(language);
   }
 }
