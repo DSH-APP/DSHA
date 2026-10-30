@@ -231,6 +231,62 @@ class PolicyTest(unittest.TestCase):
             with self.assertRaises(policy.Blocked): self.execute(self.plan('STOP', ['am', 'force-stop', 'example.other'], ['example.other']))
             self.no_mutations()
 
+    def test_grep_packed_pattern_file_cannot_skip_sensitive_guard(self):
+        protected = '/data/user/0/com.android.providers.telephony/databases/fixture.db'
+        for options in (['-f', protected], ['-f' + protected], ['-nf' + protected], ['-inf', protected]):
+            with self.subTest(options=options):
+                self.sent.clear()
+                with self.assertRaises(policy.Blocked):
+                    self.execute(self.plan('READ', ['grep', *options, '/data/local/tmp/input'], []))
+                self.assertFalse(any(sent.startswith('/system/bin/grep ') for sent in self.sent))
+
+    def test_grep_pattern_files_are_canonical_checked_and_plain_patterns_are_not_paths(self):
+        alias = '/data/local/tmp/patterns'
+        self.realpaths[alias] = '/data/user/0/com.android.providers.telephony/databases/fixture.db'
+        with self.assertRaises(policy.Blocked):
+            self.execute(self.plan('READ', ['grep', '-nf' + alias, '/data/local/tmp/input'], []))
+        self.assertIn('/system/bin/readlink -f -- ' + alias, self.sent)
+        self.assertFalse(any(sent.startswith('/system/bin/grep ') for sent in self.sent))
+        self.sent.clear()
+        self.execute(self.plan('READ', ['grep', '-ne-nf/not-a-file', '/data/local/tmp/中文 空格'], []))
+        self.assertEqual(2, len(self.sent))
+        self.assertEqual(['/system/bin/grep', '-ne-nf/not-a-file', '/data/local/tmp/中文 空格'],
+                         shlex.split(self.sent[-1]))
+
+    def test_grep_repeated_pattern_files_and_separator_keep_data_separate(self):
+        argv = ['grep', '-f', '/data/local/tmp/one', '-nf/data/local/tmp/two', '--',
+                '-nf-literal', '/data/local/tmp/input']
+        self.execute(self.plan('READ', argv, []))
+        self.assertEqual(['/system/bin/grep', *argv[1:]], shlex.split(self.sent[-1]))
+        self.assertEqual(5, len(self.sent))
+
+    def test_grep_unknown_or_missing_values_never_dispatch(self):
+        for argv in (['grep', '-nf'], ['grep', '-e'], ['grep', '--include'], ['grep', '-A'],
+                     ['grep', '-A2f/file', 'x'], ['grep', '--unknown=x', 'x', '/file']):
+            with self.subTest(argv=argv):
+                self.sent.clear()
+                with self.assertRaises(policy.Blocked): self.execute(self.plan('READ', argv, []))
+                self.assertEqual([], self.sent)
+
+    def test_recursive_grep_without_input_files_checks_current_directory(self):
+        for argv in (['grep', '-R', '-e', 'x'], ['grep', '-Rf/data/local/tmp/patterns']):
+            self.sent.clear()
+            with self.assertRaises(policy.Blocked): self.execute(self.plan('READ', argv, []))
+            self.assertIn('/system/bin/readlink -f -- .', self.sent)
+            self.assertFalse(any(sent.startswith('/system/bin/grep ') for sent in self.sent))
+
+    def test_grep_pattern_file_dash_is_canonical_checked_but_data_dash_is_stdin(self):
+        self.realpaths['-'] = '/data/user/0/com.android.providers.telephony/databases/fixture.db'
+        for options in (['-f', '-'], ['-f-'], ['-nf-']):
+            self.sent.clear()
+            with self.assertRaises(policy.Blocked):
+                self.execute(self.plan('READ', ['grep', *options, '/data/local/tmp/input'], []))
+            self.assertIn('/system/bin/readlink -f -- -', self.sent)
+            self.assertFalse(any(sent.startswith('/system/bin/grep ') for sent in self.sent))
+        self.sent.clear()
+        self.execute(self.plan('READ', ['grep', '-e', 'x', '-'], []))
+        self.assertEqual(['/system/bin/grep -e x -'], self.sent)
+
     def test_unknown_plan_never_dispatches(self):
         for plan in (None, {}, dict(version=1, kind='DENY'), dict(version=2, kind='READ')):
             with self.assertRaises(policy.Blocked): self.execute(plan)
