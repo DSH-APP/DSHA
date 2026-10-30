@@ -183,7 +183,11 @@ public final class DiagnosticActivity extends AppCompatActivity {
               }
             });
     repository.report.observe(
-        this, text -> ((TextView) findViewById(R.id.diagnostic_report)).setText(text));
+        this,
+        text -> {
+          ((TextView) findViewById(R.id.diagnostic_report)).setText(text);
+          updateFeedbackActions();
+        });
     repository.phase.observe(
         this,
         phase -> {
@@ -206,22 +210,33 @@ public final class DiagnosticActivity extends AppCompatActivity {
                     : com.deepseekharness.app.util.UiText.choose("准备检查", "Ready to check"));
             status.setText(com.deepseekharness.app.util.UiText.text("报告保留在本机，复制或导出后可用于反馈"));
           }
+          updateFeedbackActions();
         });
     repository.busy.observe(
         this,
         busy -> {
-          for (int id :
-              new int[] {
-                R.id.diagnostic_refresh,
-                R.id.diagnostic_repair,
-                R.id.diagnostic_copy,
-                R.id.diagnostic_export
-              }) findViewById(id).setEnabled(!busy);
+          for (int id : new int[] {R.id.diagnostic_refresh, R.id.diagnostic_repair})
+            findViewById(id).setEnabled(!busy);
+          updateFeedbackActions();
         });
     if (saved == null) {
       if (getIntent().getBooleanExtra("download_error_logs", false)) logs.download();
       // 首页先展示检查范围，由用户发起耗时探针。
     }
+  }
+
+  private void updateFeedbackActions() {
+    DiagnosticRepository.Phase phase = repository.phase.getValue();
+    String report = repository.report.getValue();
+    // 采集失败也必须允许反馈，但初始空报告和采集中间输出不能冒充完成报告。
+    boolean ready =
+        !Boolean.TRUE.equals(repository.busy.getValue())
+            && (phase == DiagnosticRepository.Phase.SUCCEEDED
+                || phase == DiagnosticRepository.Phase.FAILED)
+            && report != null
+            && !report.trim().isEmpty();
+    findViewById(R.id.diagnostic_copy).setEnabled(ready);
+    findViewById(R.id.diagnostic_export).setEnabled(ready);
   }
 
   /** Additional context is an explicit choice for this action and is never persisted. */
