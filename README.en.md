@@ -243,15 +243,17 @@ tools) and `dsh-auto-review` (official experimental Auto review entry).
 
 ## How this compares
 
-Running dsh on Android has two paths, each with real costs — describing them beats name-calling:
+Running dsh on Android has two paths, each with real costs — describing them beats name-calling. **The verdict first: the Termux path is the fastest.** No container layer, syscalls hit bionic directly, so compiles, dependency installs and heavy file I/O all run at native speed; the container path trades that performance away for a zero-command-line setup.
 
 | | **Container path** (DSHA's choice) | **Termux bootstrap path** |
 |---|---|---|
 | How | proot/proroot + full glibc rootfs | Termux packages running bare on Android's bionic |
 | Setup | Install one APK | Install Termux → type commands → build a toolchain |
 | Environment | Full Ubuntu — `apt` and native modules work | Needs per-package patches / rebuilds for bionic |
-| Overhead | Syscall and file-I/O translation overhead varies by device and workload | No container layer; theoretically fastest |
+| Performance | proroot removes the ptrace cost, but every path still goes through translation and file I/O still crosses the container layer — slower than bare metal under load | No container layer; syscalls go straight to bionic — **the fastest of the two** |
 | Sandboxing | Limited either way | Limited either way |
+
+So: for compile-heavy, dependency-heavy, long-I/O work, run the Termux build; for zero setup, no commands and a full Ubuntu, take the APK.
 
 ---
 
