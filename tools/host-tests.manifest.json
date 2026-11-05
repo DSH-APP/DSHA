@@ -2,6 +2,22 @@
   "schema": 1,
   "tests": [
     {
+      "path": "tools/test-diagnostic-feedback.py",
+      "stage": "fast",
+      "reason": "Executes current diagnostic feedback observers on a JVM with LiveData/UI doubles; no Android device, clipboard or SAF execution",
+      "args": [
+        "--jdk",
+        "{jdk}"
+      ],
+      "timeoutSeconds": 120,
+      "requires": [
+        "python39",
+        "jdk17"
+      ],
+      "environment": {},
+      "cli": "--jdk <JDK home>; compiles production observer bodies to Java 17"
+    },
+    {
       "path": "tools/test-proroot-compat.py",
       "stage": "fast",
       "reason": "Independent GNU ARM64 proxy identity and exact native dependency boundary; original five vendor ELFs unchanged",
