@@ -114,7 +114,16 @@ public final class DeviceShellPolicy {
     if (BLOCK.contains(name) || name.startsWith("mkfs.") || name.startsWith("fsck."))
       return deny(
           com.deepseekharness.app.util.UiText.format("禁止设备分区、SELinux、系统属性、挂载或刷机操作：%s", name));
-    if (READ.contains(name)) return plan(Kind.READ, args, Collections.emptyList());
+    if (READ.contains(name)) {
+      if (name.equals("grep")) {
+        try {
+          GrepReadPaths.collect(args);
+        } catch (IllegalArgumentException invalid) {
+          return deny(invalid.getMessage());
+        }
+      }
+      return plan(Kind.READ, args, Collections.emptyList());
+    }
     if (name.equals("content")) {
       try {
         SmsQuery.validate(args);
@@ -331,6 +340,8 @@ public final class DeviceShellPolicy {
   /** Paths read by a Root command or copied by Root must not expose SMS storage. */
   public static List<String> rootReadPaths(Plan plan) {
     if (plan == null) return Collections.emptyList();
+    if (plan.kind == Kind.READ && plan.command().equals("grep"))
+      return GrepReadPaths.collect(plan.argv);
     List<String> paths = new ArrayList<>();
     if (plan.kind == Kind.FILE && plan.command().equals("cp")) {
       for (int i = 0; i + 1 < plan.operands.size(); i++) paths.add(plan.operands.get(i));

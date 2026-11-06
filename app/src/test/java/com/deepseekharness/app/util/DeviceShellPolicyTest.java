@@ -348,6 +348,107 @@ public class DeviceShellPolicyTest {
   }
 
   @Test
+  public void grepCollectsPatternFilesFromPackedAndSeparateOptions() {
+    String sensitive = "/data/user/0/com.android.providers.telephony/databases/fixture.db";
+    for (String options :
+        new String[] {
+          "-f " + sensitive,
+          "-f" + sensitive,
+          "-nf" + sensitive,
+          "-inf " + sensitive,
+          "-n -f " + sensitive
+        }) {
+      var plan = DeviceShellPolicy.inspect("grep " + options + " /data/local/tmp/input");
+      assertTrue(options, plan.allowed());
+      assertEquals(
+          options,
+          java.util.List.of(sensitive, "/data/local/tmp/input"),
+          DeviceShellPolicy.rootReadPaths(plan));
+    }
+  }
+
+  @Test
+  public void grepPatternsAndFiltersAreNotFileResources() {
+    for (String options :
+        new String[] {
+          "-e '-nf/not-a-file'",
+          "-ne'-nf/not-a-file'",
+          "--include='*f*' -e x",
+          "-M '*.txt' -e x",
+          "-A2 -B 3 -m1 -e x"
+        }) {
+      var plan = DeviceShellPolicy.inspect("grep " + options + " '/data/local/tmp/中文 空格'");
+      assertTrue(options, plan.allowed());
+      assertEquals(
+          options,
+          java.util.List.of("/data/local/tmp/中文 空格"),
+          DeviceShellPolicy.rootReadPaths(plan));
+    }
+    assertEquals(
+        java.util.List.of("/data/local/tmp/input"),
+        DeviceShellPolicy.rootReadPaths(
+            DeviceShellPolicy.inspect("grep '/looks/like/path' /data/local/tmp/input")));
+  }
+
+  @Test
+  public void grepRepeatedPatternFilesAndSeparatorPreserveOperandMeaning() {
+    var plan =
+        DeviceShellPolicy.inspect(
+            "grep -f /data/local/tmp/one -nf/data/local/tmp/two -- -nf-literal /data/local/tmp/input");
+    assertTrue(plan.allowed());
+    assertEquals(
+        java.util.List.of(
+            "/data/local/tmp/one", "/data/local/tmp/two", "-nf-literal", "/data/local/tmp/input"),
+        DeviceShellPolicy.rootReadPaths(plan));
+    assertEquals(
+        java.util.List.of("-", "/data/local/tmp/input"),
+        DeviceShellPolicy.rootReadPaths(
+            DeviceShellPolicy.inspect("grep -f - -e x /data/local/tmp/input -")));
+  }
+
+  @Test
+  public void grepPatternFileDashIsLiteralButDataDashIsStdin() {
+    for (String options : new String[] {"-f -", "-f-", "-nf-"})
+      assertEquals(
+          options,
+          java.util.List.of("-", "/data/local/tmp/input"),
+          DeviceShellPolicy.rootReadPaths(
+              DeviceShellPolicy.inspect("grep " + options + " /data/local/tmp/input")));
+    assertEquals(
+        java.util.List.of(),
+        DeviceShellPolicy.rootReadPaths(DeviceShellPolicy.inspect("grep -e x -")));
+  }
+
+  @Test
+  public void grepRejectsUnverifiableOptionSyntax() {
+    for (String command :
+        new String[] {
+          "grep -nf",
+          "grep -e",
+          "grep --include",
+          "grep -A",
+          "grep -A2f/file x",
+          "grep --unknown=x x /file",
+          "grep -Q x /file"
+        })
+      assertEquals(command, DeviceShellPolicy.Kind.DENY, DeviceShellPolicy.inspect(command).kind);
+  }
+
+  @Test
+  public void recursiveGrepWithoutInputFilesChecksWorkingDirectory() {
+    assertEquals(
+        java.util.List.of("."),
+        DeviceShellPolicy.rootReadPaths(DeviceShellPolicy.inspect("grep -R -e x")));
+    assertEquals(
+        java.util.List.of("/data/local/tmp/patterns", "."),
+        DeviceShellPolicy.rootReadPaths(
+            DeviceShellPolicy.inspect("grep -Rf/data/local/tmp/patterns")));
+    assertEquals(
+        java.util.List.of(),
+        DeviceShellPolicy.rootReadPaths(DeviceShellPolicy.inspect("grep -e -R")));
+  }
+
+  @Test
   public void managedVirtualScreenProbeBindsFullBirthIdentityAndHasNoSignalArgument() {
     String apk = "/data/app/com.dsh.client/base.apk";
     String identity =
