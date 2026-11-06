@@ -113,6 +113,15 @@ export function installResponseCompression({ matches = () => true } = {}) {
     }
     function patchedWriteHead(...args) {
         flush(this);
+        // flush() may have just committed this response. Node's own
+        // compression middleware re-enters writeHead from end() while it still
+        // observes headersSent === false, so a deferred header write can be
+        // followed by a real one for the same reply. Forwarding that second
+        // call to the native writeHead throws ERR_HTTP_HEADERS_SENT, and the
+        // throw escapes the HTTP listener: the socket is destroyed with no
+        // reply, so the browser sees an empty response instead of the status.
+        // Reaching the wire is what this call wanted; stop here.
+        if (this.headersSent) return this;
         const raw = typeof args[1] === 'string' ? args[2] : args[1];
         // Raw header arrays, including duplicate headers, keep Node's exact path.
         if (Array.isArray(raw) || (raw !== undefined && (raw === null || typeof raw !== 'object')))
