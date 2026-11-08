@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import com.deepseekharness.app.util.BrowserTaskPolicy;
 import com.deepseekharness.app.util.PreviewPageSession;
@@ -24,6 +25,12 @@ final class BrowserTasks {
   private static Background dispatched;
 
   private BrowserTasks() {}
+
+  /** RecentTaskInfo.id is -1 for retained tasks that are no longer running. */
+  @SuppressWarnings("deprecation")
+  private static int recentTaskId(ActivityManager.RecentTaskInfo info) {
+    return Build.VERSION.SDK_INT >= 29 ? info.taskId : info.persistentId;
+  }
 
   static boolean launcher(Intent intent) {
     return intent != null
@@ -155,7 +162,7 @@ final class BrowserTasks {
           (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
       if (manager != null)
         for (ActivityManager.AppTask task : manager.getAppTasks())
-          if (task.getTaskInfo().id == owner.getTaskId()) {
+          if (recentTaskId(task.getTaskInfo()) == owner.getTaskId()) {
             task.startActivity(context, full, null);
             trace("DISPATCH_TASK");
             return true;
@@ -225,14 +232,14 @@ final class BrowserTasks {
         var info = task.getTaskInfo();
         choices.add(
             new BrowserTaskPolicy.Task(
-                info.id,
+                recentTaskId(info),
                 info.baseActivity != null
                     && context.getPackageName().equals(info.baseActivity.getPackageName())
                     && MainActivity.class.getName().equals(info.baseActivity.getClassName())));
       }
       int selected = BrowserTaskPolicy.nativeTask(choices, browserTask, preferredTask);
       for (ActivityManager.AppTask task : appTasks)
-        if (selected >= 0 && task.getTaskInfo().id == selected) {
+        if (selected >= 0 && recentTaskId(task.getTaskInfo()) == selected) {
           task.startActivity(context, homeIntent(context), null);
           return;
         }
@@ -254,7 +261,7 @@ final class BrowserTasks {
       if (manager != null)
         for (ActivityManager.AppTask task : manager.getAppTasks()) {
           var info = task.getTaskInfo();
-          if (info.id == activity.getTaskId()) {
+          if (recentTaskId(info) == activity.getTaskId()) {
             members = info.numActivities;
             break;
           }
