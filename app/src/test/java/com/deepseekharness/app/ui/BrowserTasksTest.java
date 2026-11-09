@@ -191,6 +191,8 @@ public final class BrowserTasksTest {
   private ActivityManager.AppTask task(int id, Class<?> root, int count) {
     var info = new ActivityManager.RecentTaskInfo();
     info.id = id;
+    info.persistentId = id;
+    if (android.os.Build.VERSION.SDK_INT >= 29) info.taskId = id;
     info.baseActivity = new ComponentName(context, root);
     info.numActivities = count;
     var task = ShadowAppTask.newInstance();
@@ -219,6 +221,33 @@ public final class BrowserTasksTest {
         Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP, intent.getFlags());
     assertFalse(Shadow.<ShadowAppTask>extract(webTask).isFinishedAndRemoved());
     assertFalse(Shadow.<ShadowAppTask>extract(nativeTask).isFinishedAndRemoved());
+  }
+
+  @Test
+  public void repeatedHomeReusesRetainedNativeTaskWhoseRunningIdIsAbsent() {
+    var nativeTask = task(3, MainActivity.class, 0);
+    nativeTask.getTaskInfo().id = -1;
+    var webTask = task(7, WebPreviewActivity.class, 3);
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(webTask, nativeTask));
+    for (int i = 0; i < 3; i++) {
+      context.starts.clear();
+      BrowserTasks.openMain(context);
+      Intent intent = opened();
+      assertEquals(0, intent.getFlags() & Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+      assertEquals(0, intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK);
+    }
+    assertFalse(Shadow.<ShadowAppTask>extract(webTask).isFinishedAndRemoved());
+    assertFalse(Shadow.<ShadowAppTask>extract(nativeTask).isFinishedAndRemoved());
+  }
+
+  @Test
+  public void emptyHostMatchesStableTaskIdBeforeApplyingSingletonRemovalRule() {
+    var browserTask = task(7, WebPreviewActivity.class, 1);
+    browserTask.getTaskInfo().id = -1;
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(browserTask));
+    var host = new Host();
+    assertTrue(BrowserTasks.finishEmptyHost(host));
+    assertTrue(host.removed);
   }
 
   @Test
