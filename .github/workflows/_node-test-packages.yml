@@ -5,16 +5,24 @@ name: "Node: co-installable test packages"
 # 签名固定：测试证书的 SHA-256 钉在 ci/test-signing.json，签名后必须与 out/test-cert.pem 的指纹一致；
 # require_pinned_cert=true 时钉文件为空直接失败，避免“看起来固定、实际每次换证书”。
 #
-# 安全边界：本节点只读取测试证书 Secrets（SUNSET_TEST_*），绝不引用正式发布证书（DSHA_*）；
-# 持测试证书的 job 不写任何 Gradle 共享缓存（gradle-cache: 'false'），私钥只在 RUNNER_TEMP 内，
-# if: always() 删除。正式 Release 的 build-signed 节点与本节点并行，互不传递 Secret。
+# 三种模式（调用方按需组合；默认 combined 与历史行为完全一致）：
+#   combined（默认）：构建未签名包 → 用测试证书签名 → 逐项校验 → 上传证据。
+#   unsigned_only=true：只构建未签名包并核验清单 / 确实未签名 / 受管资产，上传
+#     <artifact_prefix>-<variant>（未签名 APK / 清单 / 受管资产回执）。本模式不读取任何证书 Secrets，因此允许写 Gradle
+#     共享缓存（编译与签名的职责、凭据彻底分离）。
+#   unsigned_artifact_prefix=<name>：不再构建，下载同一 run 的未签名 artifact → 签名 → 校验；
+#     持证书的这一步不写任何共享缓存，也不运行 Gradle。
+#
+# 安全边界：证书模式（combined / unsigned_artifact_prefix）只读取测试证书 Secrets（SUNSET_TEST_*），
+# 绝不引用正式发布证书（DSHA_*）；私钥只在 RUNNER_TEMP 内，if: always() 删除。
 #
 # 调用方：
 #   - test-package-variants.yml：on demand 迭代；未配置测试证书时退化为一次性密钥（只能全新安装）。
-#   - release-production.yml：同 run 附带资产；require_configured_key=true，没有固定测试证书直接失败。
+#   - release-production.yml：同 run 附带资产；先无 Secrets 编译（unsigned_only），全部门禁通过后
+#     再用固定测试证书签名（require_configured_key=true），由 publish 合并证据后上传资产。
 #
 # 产物（每个 variant）：一份 evidence artifact（已签名 APK、build-info.json、SHA256SUMS、公开测试证书与
-# 校验回执）和一个未压缩的 APK artifact 供直接下载。正式 Release 由 publish 合并这些证据后上传资产。
+# 校验回执）和一个未压缩的 APK artifact 供直接下载；unsigned_only 模式只产出未签名交接 artifact。
 on:
   workflow_call:
     inputs:
@@ -87,6 +95,16 @@ on:
         required: false
         type: number
         default: 14
+      unsigned_only:
+        description: Only build the unsigned variant (no signing secrets) and upload a commit-bound handoff
+        required: false
+        type: boolean
+        default: false
+      unsigned_artifact_prefix:
+        description: Sign the unsigned artifact produced by the same run instead of building it (compile/sign split)
+        required: false
+        type: string
+        default: ''
     secrets:
       SUNSET_TEST_KEYSTORE_B64:
         description: Base64 PKCS12 test keystore (alias sunset-test); never the production certificate
@@ -98,7 +116,7 @@ permissions:
   contents: read
 jobs:
   package-tests:
-    name: Build, sign and verify ${{ matrix.variant }} test APK
+    name: ${{ inputs.unsigned_only && 'Build unsigned' || 'Sign and verify' }} ${{ matrix.variant }} test APK
     strategy:
       fail-fast: false
       matrix:
@@ -115,6 +133,9 @@ jobs:
       REQUIRE_TEST_KEY: ${{ inputs.require_configured_key && 'true' || 'false' }}
       REQUIRE_PINNED_CERT: ${{ inputs.require_pinned_cert && 'true' || 'false' }}
       APK_NAME_PREFIX: ${{ inputs.apk_name_prefix }}
+      UNSIGNED_ONLY: ${{ inputs.unsigned_only && 'true' || 'false' }}
+      UNSIGNED_ARTIFACT_PREFIX: ${{ inputs.unsigned_artifact_prefix }}
+      UNSIGNED_DIR: ${{ inputs.unsigned_artifact_prefix != '' && format('unsigned-{0}', matrix.variant) || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -125,18 +146,56 @@ jobs:
           set -eu
           case "$VARIANT" in test|debug|dev) ;; *) echo "unknown variant: $VARIANT"; exit 1 ;; esac
           case "$RELEASE_IDENTITY" in mod|upstream) ;; *) echo "unknown release identity: $RELEASE_IDENTITY"; exit 1 ;; esac
-      # 测试证书同样不写共享缓存：与正式签名节点保持同一策略。
+          if [ "$UNSIGNED_ONLY" = true ] && [ -n "$UNSIGNED_ARTIFACT_PREFIX" ]; then
+            echo 'unsigned_only 与 unsigned_artifact_prefix 互斥，不能同时设置'; exit 1
+          fi
+      # 只有「无证书的未签名编译」模式可以写共享缓存；签名模式（combined / prebuilt）一律 false。
       - uses: ./.github/actions/setup-toolchain
         with:
-          gradle-cache: 'false'
+          gradle-cache: ${{ (inputs.unsigned_only && 'true') || 'false' }}
       - uses: ./.github/actions/android-sdk
         with:
-          ndk: 'true'
+          # 纯签名模式不运行 Gradle，只需要 build-tools（aapt2 / apksigner）。
+          ndk: ${{ (inputs.unsigned_artifact_prefix == '' && 'true') || 'false' }}
       - uses: ./.github/actions/restore-handoff
         with:
           artifact: ${{ inputs.handoff }}
           fixture: ${{ inputs.fixture && 'true' || 'false' }}
+      - name: Download prebuilt unsigned ${{ matrix.variant }} package
+        if: ${{ inputs.unsigned_artifact_prefix != '' }}
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ inputs.unsigned_artifact_prefix }}-${{ matrix.variant }}
+          path: unsigned-${{ matrix.variant }}
+      - name: Verify prebuilt unsigned handoff binding
+        if: ${{ inputs.unsigned_artifact_prefix != '' }}
+        run: |
+          set -eu
+          python3 - <<'PYCODE'
+          import hashlib, json, os
+          from pathlib import Path
+          handoff = Path(os.environ['UNSIGNED_DIR'])
+          receipt = json.load(open(handoff / 'unsigned-receipt.json', encoding='utf-8'))
+          apks = sorted(handoff.glob('*-unsigned.apk'))
+          if len(apks) != 1 or receipt.get('schema') != 1 or receipt.get('signed') is not False:
+              raise SystemExit('UNSIGNED_HANDOFF_INVALID')
+          apk = apks[0]
+          if receipt.get('commit') != os.environ['GITHUB_SHA'] \
+                  or receipt.get('runId') != os.environ['GITHUB_RUN_ID'] \
+                  or receipt.get('runAttempt') != os.environ['GITHUB_RUN_ATTEMPT'] \
+                  or receipt.get('variant') != os.environ['VARIANT'] \
+                  or receipt.get('releaseIdentity') != os.environ['RELEASE_IDENTITY']:
+              raise SystemExit('UNSIGNED_HANDOFF_NOT_THIS_RUN')
+          if receipt.get('apkFile') != apk.name or receipt.get('apkSize') != apk.stat().st_size \
+                  or receipt.get('apkSha256') != hashlib.sha256(apk.read_bytes()).hexdigest():
+              raise SystemExit('UNSIGNED_HANDOFF_APK_MISMATCH')
+          for name in ('output-metadata.json', 'apk-managed-assets.txt'):
+              if not (handoff / name).is_file():
+                  raise SystemExit('UNSIGNED_HANDOFF_FILE_MISSING: ' + name)
+          print(json.dumps(receipt, ensure_ascii=False, indent=2))
+          PYCODE
       - name: Build unsigned ${{ matrix.variant }} package
+        if: ${{ inputs.unsigned_artifact_prefix == '' }}
         run: |
           set -eu
           chmod +x gradlew
@@ -151,7 +210,102 @@ jobs:
             ./gradlew :app:assembleStandardRelease -Pdsha.devPackage=true -Pdsha.unsignedPackage=true \
               "-Pdsha.identity=$RELEASE_IDENTITY" --no-daemon --max-workers=2
           fi
+      - name: Verify unsigned ${{ matrix.variant }} package and managed assets
+        if: ${{ inputs.unsigned_only }}
+        run: |
+          set -eu
+          python3 - <<'PYCODE'
+          import hashlib, json, os, re, subprocess
+          from pathlib import Path
+          variant = os.environ['VARIANT']
+          identity_name = os.environ['RELEASE_IDENTITY']
+          identity = json.load(open('ci/release-identity.' + identity_name + '.json', encoding='utf-8'))
+          buildtools = subprocess.check_output(
+              ['python3', 'tools/ci-toolchain.py', '--field', 'buildTools'], text=True).strip()
+          sdk = Path(os.environ.get('ANDROID_HOME') or os.environ.get('ANDROID_SDK_ROOT')
+                     or '/usr/local/lib/android/sdk')
+          aapt2 = sdk / 'build-tools' / buildtools / 'aapt2'
+          apksigner = sdk / 'build-tools' / buildtools / 'apksigner'
+          if variant == 'debug':
+              directory = Path('app/build/outputs/apk/standard/debug')
+              suffix, version_suffix, debuggable = '.debug', '-SunsetDebug', True
+          else:
+              directory = Path('app/build/outputs/apk/standard/release')
+              suffix, version_suffix, debuggable = identity['devSuffix'], '-SunsetDev', False
+          candidates = sorted(directory.glob('*-unsigned.apk'))
+          if len(candidates) != 1:
+              raise SystemExit('UNSIGNED_BUILD_APK_COUNT')
+          metadata = json.load(open(directory / 'output-metadata.json', encoding='utf-8'))['elements'][0]
+          handoff = Path('out/unsigned-handoff')
+          handoff.mkdir(parents=True, exist_ok=True)
+          apk = handoff / candidates[0].name
+          apk.write_bytes(candidates[0].read_bytes())
+          (handoff / 'output-metadata.json').write_bytes((directory / 'output-metadata.json').read_bytes())
+          badging = subprocess.check_output([str(aapt2), 'dump', 'badging', str(apk)], text=True)
+          package = re.search(r"^package: name='([^']+)'", badging, re.M).group(1)
+          code = int(re.search(r"versionCode='(\d+)'", badging).group(1))
+          version = re.search(r"versionName='([^']*)'", badging).group(1)
+          minimum = re.search(r"^(?:sdkVersion|minSdkVersion):'(\d+)'", badging, re.M)
+          if package != identity['packageName'] + suffix or not version.endswith(version_suffix):
+              raise SystemExit('UNSIGNED_BUILD_IDENTITY')
+          if debuggable != ('application-debuggable' in badging):
+              raise SystemExit('UNSIGNED_BUILD_DEBUGGABLE')
+          if minimum is None or int(minimum.group(1)) != 30 or "native-code: 'arm64-v8a'" not in badging:
+              raise SystemExit('UNSIGNED_BUILD_PLATFORM')
+          if code != metadata['versionCode'] or version != metadata['versionName']:
+              raise SystemExit('UNSIGNED_BUILD_VERSION')
+          verify = subprocess.run([str(apksigner), 'verify', '--verbose', str(apk)],
+                                  capture_output=True, text=True)
+          if verify.returncode == 0 or 'DOES NOT VERIFY' not in verify.stdout + verify.stderr:
+              raise SystemExit('UNSIGNED_BUILD_IS_SIGNED_OR_AMBIGUOUS')
+          managed = handoff / 'apk-managed-assets.txt'
+          managed.write_text(subprocess.check_output(
+              ['python3', 'tools/verify-apk-managed-assets.py', str(apk)], text=True), encoding='utf-8')
+          value = {
+              'schema': 1,
+              'kind': 'dsha-a-su-test-package-unsigned',
+              'commit': os.environ['GITHUB_SHA'],
+              'runId': os.environ['GITHUB_RUN_ID'],
+              'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'releaseIdentity': identity_name,
+              'variant': variant,
+              'packageName': package,
+              'versionCode': code,
+              'versionName': version,
+              'apkFile': apk.name,
+              'apkSize': apk.stat().st_size,
+              'apkSha256': hashlib.sha256(apk.read_bytes()).hexdigest(),
+              'metadataSha256': hashlib.sha256((handoff / 'output-metadata.json').read_bytes()).hexdigest(),
+              'managedAssetsSha256': hashlib.sha256(managed.read_bytes()).hexdigest(),
+              'signed': False,
+          }
+          (handoff / 'unsigned-receipt.json').write_text(
+              json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(value, ensure_ascii=False, indent=2))
+          PYCODE
+      - name: Upload unsigned ${{ matrix.variant }} handoff
+        if: ${{ inputs.unsigned_only }}
+        id: upload_unsigned
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ inputs.artifact_prefix }}-${{ matrix.variant }}
+          path: out/unsigned-handoff
+          if-no-files-found: error
+          retention-days: ${{ inputs.retention_days }}
+      - name: Show unsigned handoff
+        if: ${{ inputs.unsigned_only }}
+        env:
+          HANDOFF_URL: ${{ steps.upload_unsigned.outputs.artifact-url }}
+        run: |
+          {
+            echo "### $VARIANT 未签名编译交接（无证书 Secrets）"
+            echo
+            echo "Commit \`$GITHUB_SHA\` · 签名由全部门禁通过后的签名节点完成"
+            echo
+            echo "[未签名 APK、清单与受管资产回执]($HANDOFF_URL)"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Prepare configured or ephemeral test signing key
+        if: ${{ !inputs.unsigned_only }}
         env:
           CONFIGURED_TEST_KEYSTORE_B64: ${{ secrets.SUNSET_TEST_KEYSTORE_B64 }}
           CONFIGURED_TEST_PASSWORD: ${{ secrets.SUNSET_TEST_STORE_PASSWORD }}
@@ -191,6 +345,7 @@ jobs:
           printf 'TEST_KEY=%s\nTEST_STORE_PASSWORD=%s\nSIGNING_KEY_SOURCE=%s\n' \
             "$key" "$password" "$key_source" >> "$GITHUB_ENV"
       - name: Sign ${{ matrix.variant }} APK and verify identity
+        if: ${{ !inputs.unsigned_only }}
         id: sign
         run: |
           set -eu
@@ -199,9 +354,17 @@ jobs:
           apksigner="$sdk_root/build-tools/$buildtools/apksigner"
           aapt2="$sdk_root/build-tools/$buildtools/aapt2"
           shopt -s nullglob
-          if [ "$VARIANT" = debug ]; then
+          if [ -n "$UNSIGNED_DIR" ]; then
+            candidates=("$UNSIGNED_DIR"/*-unsigned.apk)
+            metadata="$UNSIGNED_DIR/output-metadata.json"
+          elif [ "$VARIANT" = debug ]; then
             candidates=(app/build/outputs/apk/standard/debug/*-unsigned.apk)
             metadata=app/build/outputs/apk/standard/debug/output-metadata.json
+          else
+            candidates=(app/build/outputs/apk/standard/release/*-unsigned.apk)
+            metadata=app/build/outputs/apk/standard/release/output-metadata.json
+          fi
+          if [ "$VARIANT" = debug ]; then
             version_suffix='-SunsetDebug'
             expected_suffix='.debug'
             expect_debuggable=1
@@ -212,8 +375,6 @@ jobs:
             expected_suffix=$(python3 tools/release-identity.py --identity "$RELEASE_IDENTITY" --field testSuffix)
             expect_debuggable=0
           else
-            candidates=(app/build/outputs/apk/standard/release/*-unsigned.apk)
-            metadata=app/build/outputs/apk/standard/release/output-metadata.json
             version_suffix='-SunsetDev'
             expected_suffix=$(python3 tools/release-identity.py --identity "$RELEASE_IDENTITY" --field devSuffix)
             expect_debuggable=0
@@ -260,14 +421,31 @@ jobs:
           python3 tools/verify-dsh-upgrade-apk.py "$apk" > out/apk-runtime-verification.txt
           python3 tools/verify-recovery-apk.py "$apk" > out/apk-recovery-verification.txt
           python3 tools/verify-third-party-apk.py "$apk" --output out/third-party-apk.json
-          python3 tools/verify-apk-managed-assets.py "$apk" > out/apk-managed-assets.txt
+          if [ -n "$UNSIGNED_DIR" ]; then
+            # 未签名阶段已在无 Secrets 的编译节点跑过受管资产门禁；这里证明签名没有改动载荷
+            # （除 META-INF/ 外每个成员的 CRC32 与大小一致），并把回执带进证据。
+            python3 - "${candidates[0]}" "$apk" <<'PYCODE'
+          import sys, zipfile
+          def payload(path):
+              with zipfile.ZipFile(path) as archive:
+                  return {info.filename: (info.CRC, info.file_size) for info in archive.infolist()
+                          if not info.filename.startswith('META-INF/')}
+          before, after = payload(sys.argv[1]), payload(sys.argv[2])
+          if before != after:
+              raise SystemExit('SIGNED_APK_PAYLOAD_CHANGED')
+          print('payload entries unchanged by signing:', len(before))
+          PYCODE
+            cp "$UNSIGNED_DIR/apk-managed-assets.txt" out/apk-managed-assets.txt
+          else
+            python3 tools/verify-apk-managed-assets.py "$apk" > out/apk-managed-assets.txt
+          fi
           if [ "$REQUIRE_TEST_KEY" = true ] && [ "$SIGNING_KEY_SOURCE" != configured-secret ]; then
             echo 'release-attached test package must be signed with the configured test certificate'; exit 1
           fi
           printf 'apk=%s\ncert=%s\npackage=%s\nmetadata=%s\n' \
             "$apk" "$cert" "$package" "$metadata" >> "$GITHUB_OUTPUT"
       - name: Remove test private key
-        if: always()
+        if: ${{ always() && !inputs.unsigned_only }}
         run: |
           python3 - <<'PYCODE'
           import os
@@ -279,6 +457,7 @@ jobs:
           key.unlink(missing_ok=True)
           PYCODE
       - name: Write commit-bound build receipt
+        if: ${{ !inputs.unsigned_only }}
         env:
           APK: ${{ steps.sign.outputs.apk }}
           CERT: ${{ steps.sign.outputs.cert }}
@@ -325,6 +504,7 @@ jobs:
           PYCODE
       # archive:false 只接受单文件，artifact 名使用实际文件名。
       - name: Upload signed APK without archiving
+        if: ${{ !inputs.unsigned_only }}
         id: upload_apk
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -333,6 +513,7 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ inputs.retention_days }}
       - name: Upload test package evidence
+        if: ${{ !inputs.unsigned_only }}
         id: upload_evidence
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -351,6 +532,7 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ inputs.retention_days }}
       - name: Show commit-bound download links
+        if: ${{ !inputs.unsigned_only }}
         env:
           APK_URL: ${{ steps.upload_apk.outputs.artifact-url }}
           EVIDENCE_URL: ${{ steps.upload_evidence.outputs.artifact-url }}

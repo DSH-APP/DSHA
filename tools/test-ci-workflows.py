@@ -67,13 +67,14 @@ class WorkflowGraph(unittest.TestCase):
                 self.assertNotIn("concurrency:", source)
                 self.assertIn("persist-credentials: false", source)
                 if path.name == "_node-test-packages.yml":
-                    # 测试包节点需要测试证书（SUNSET_TEST_*）；正式签名 Secrets 绝不进入，
-                    # 且与正式签名节点同策略，不写 Gradle 共享缓存。
+                    # 测试包节点需要测试证书（SUNSET_TEST_*）；正式签名 Secrets 绝不进入。
+                    # 只有不持证书的 unsigned_only 编译模式可以写 Gradle 共享缓存。
                     self.assertIn("SUNSET_TEST_KEYSTORE_B64", trigger)
                     self.assertIn("SUNSET_TEST_STORE_PASSWORD", trigger)
                     self.assertNotRegex(source, r"secrets\.DSHA_")
-                    self.assertIn("gradle-cache: 'false'", source)
+                    self.assertIn("gradle-cache: ${{ (inputs.unsigned_only && 'true') || 'false' }}", source)
                     self.assertNotIn("gradle-cache: 'true'", source)
+                    self.assertNotIn("gradle-cache: 'false'", source)
                 else:
                     self.assertNotIn("secrets.", source)
 
@@ -123,14 +124,22 @@ class ReleaseGraph(unittest.TestCase):
                 self.assertTrue(needs(block), name)
 
     def test_build_and_verification_use_only_the_selected_identity(self):
-        signed = self.jobs["build-signed"]
-        self.assertIn(f":app:assembleStandardRelease -Pdsha.identity={self.identity} ", signed)
-        self.assertIn(f"open('ci/release-identity.{self.identity}.json'", signed)
-        self.assertIn("${KEY_ALIAS:-" + self.expected["keyAlias"] + "}", signed)
-        self.assertIn(f"application-label:'{self.expected['appName']}'", signed)
-        self.assertIn("match.group(1) != identity['certificateSha256']", signed)
-        self.assertIn("if 'application-debuggable' in badging:", signed)
-        self.assertIn("version_name.endswith(('-test', '-SunsetTest', '-island'))", signed)
+        if self.workflow == "release-production.yml":
+            # 构建与签名拆成两个节点：assemble 在无 Secrets 的 build-unsigned 里，
+            # 身份 / 证书 / 签名方案由 sign-verify 调用的签名工具强制核对。
+            self.assertIn(f":app:assembleStandardRelease -Pdsha.identity={self.identity} ",
+                          self.jobs["build-unsigned"])
+            self.assertIn(f"--identity {self.identity}", self.jobs["sign-verify"])
+            self.assertIn("tools/sign-release-apks.py", self.jobs["sign-verify"])
+        else:
+            signed = self.jobs["build-signed"]
+            self.assertIn(f":app:assembleStandardRelease -Pdsha.identity={self.identity} ", signed)
+            self.assertIn(f"open('ci/release-identity.{self.identity}.json'", signed)
+            self.assertIn("${KEY_ALIAS:-" + self.expected["keyAlias"] + "}", signed)
+            self.assertIn(f"application-label:'{self.expected['appName']}'", signed)
+            self.assertIn("match.group(1) != identity['certificateSha256']", signed)
+            self.assertIn("if 'application-debuggable' in badging:", signed)
+            self.assertIn("version_name.endswith(('-test', '-SunsetTest', '-island'))", signed)
         tag = self.expected["tagPrefix"]
         self.assertIn(f"re.fullmatch(r'{tag}[0-9]+-[0-9]{{8}}-[0-9]{{6}}', tag)", self.jobs["bind"])
         self.assertIn(f"output.write('apk_name={self.expected['apkPrefix']}-'", self.jobs["bind"])
@@ -140,15 +149,19 @@ class ReleaseGraph(unittest.TestCase):
 
     def test_node_set_and_gates_before_signing(self):
         if self.workflow == "release-production.yml":
-            # 正式发布在同 run 附带 .debug / .dev 共存测试包（可 none），dry_run 时只出报告。
+            # 正式发布：先无 Secrets 构建（与门禁并行），全部门禁通过后再签名；
+            # 同 run 附带 .debug / .dev 共存测试包（可 none），dry_run 时只出报告。
             self.assertEqual(set(self.jobs), {"bind", "contracts", "java-format", "host-regression",
-                                              "inputs", "unit", "lint", "build-signed",
+                                              "inputs", "unit", "lint", "build-unsigned",
+                                              "sign-verify", "test-packages-unsigned",
                                               "test-packages", "publish", "dry-run-summary"})
             gates = {"bind", "contracts", "java-format", "host-regression", "inputs", "unit", "lint"}
-            self.assertEqual(needs(self.jobs["build-signed"]), gates)
-            self.assertEqual(needs(self.jobs["test-packages"]), gates)
-            self.assertEqual(needs(self.jobs["publish"]), {"bind", "build-signed", "test-packages"})
-            self.assertEqual(needs(self.jobs["dry-run-summary"]), {"bind", "build-signed", "test-packages"})
+            self.assertEqual(needs(self.jobs["build-unsigned"]), {"bind", "inputs"})
+            self.assertEqual(needs(self.jobs["test-packages-unsigned"]), {"bind", "inputs"})
+            self.assertEqual(needs(self.jobs["sign-verify"]), gates | {"build-unsigned"})
+            self.assertEqual(needs(self.jobs["test-packages"]), gates | {"test-packages-unsigned"})
+            self.assertEqual(needs(self.jobs["publish"]), {"bind", "sign-verify", "test-packages"})
+            self.assertEqual(needs(self.jobs["dry-run-summary"]), {"bind", "sign-verify", "test-packages"})
             for name in ("contracts", "java-format", "host-regression", "inputs"):
                 self.assertEqual(needs(self.jobs[name]), {"bind"}, name)
         else:
@@ -181,9 +194,10 @@ class ReleaseGraph(unittest.TestCase):
                 self.assertIn("${{ inputs.expected_sha }}", block)
 
     def test_secrets_and_write_permission_are_isolated(self):
+        signer = "sign-verify" if self.workflow == "release-production.yml" else "build-signed"
         for name, block in self.jobs.items():
             with self.subTest(job=name):
-                if name == "build-signed":
+                if name == signer:
                     self.assertIn("secrets.DSHA_KEYSTORE_B64", block)
                     self.assertNotIn("contents: write", block)
                     self.assertIn("gradle-cache: 'false'", block)
@@ -204,22 +218,37 @@ class ReleaseGraph(unittest.TestCase):
         self.assertEqual(re.findall(r"(?m)^\s+contents:\s*(\w+)", self.source), ["read", "write"])
 
     def test_managed_apk_asset_gate_runs_between_identity_and_build_evidence(self):
-        signed = self.jobs["build-signed"]
-        gate = signed.index("tools/verify-apk-managed-assets.py")
-        self.assertLess(
-            signed.index("Verify production APK identity and signing certificate"), gate)
-        self.assertLess(gate, signed.index("Package commit-bound build evidence"))
+        if self.workflow == "release-production.yml":
+            unsigned = self.jobs["build-unsigned"]
+            # 受管资产门禁只需要本次构建的生成资产目录，所以在无 Secrets 的未签名阶段运行，
+            # 且必须在交接给签名节点之前完成；签名后由载荷逐成员比对证明内容未被改动。
+            self.assertLess(unsigned.index("tools/sign-release-apks.py --check-only"),
+                            unsigned.index("tools/verify-apk-managed-assets.py"))
+            self.assertLess(unsigned.index("tools/verify-apk-managed-assets.py"),
+                            unsigned.index("Hand unsigned APK to the signing node"))
+            signed = self.jobs["sign-verify"]
+            self.assertNotIn("verify-apk-managed-assets.py", signed)
+            self.assertIn("tools/sign-release-apks.py --apk", signed)
+            self.assertLess(signed.index("Sign unsigned production APK and verify identity"),
+                            signed.index("Package commit-bound build evidence"))
+        else:
+            signed = self.jobs["build-signed"]
+            gate = signed.index("tools/verify-apk-managed-assets.py")
+            self.assertLess(
+                signed.index("Verify production APK identity and signing certificate"), gate)
+            self.assertLess(gate, signed.index("Package commit-bound build evidence"))
 
     def test_full_unit_tests_require_fixtures_with_one_fork(self):
         unit = self.jobs["unit"]
         self.assertIn("mode: full", unit)
         self.assertIn("require_fixtures: true", unit)
         self.assertIn("forks: 1", unit)
-        self.assertIn("verify-unit-results.py --mode full --require-fixtures", self.jobs["build-signed"])
+        signer = self.jobs["sign-verify" if self.workflow == "release-production.yml" else "build-signed"]
+        self.assertIn("verify-unit-results.py --mode full --require-fixtures", signer)
         self.assertIn("sunset_test: false", self.jobs["lint"])
 
     def test_key_cleanup_always_runs_and_no_key_is_uploaded(self):
-        block = self.jobs["build-signed"]
+        block = self.jobs["sign-verify" if self.workflow == "release-production.yml" else "build-signed"]
         cleanup = block.split("- name: Remove release private key", 1)[1].split("\n      - ", 1)[0]
         self.assertIn("if: always()", cleanup)
         self.assertIn("key.unlink(missing_ok=True)", cleanup)
@@ -257,23 +286,33 @@ class ProductionTestPackageAttachments(unittest.TestCase):
         self.assertIn("type: boolean", self.source)
         self.assertRegex(self.source, r"(?m)^        default: false$")
 
-    def test_test_packages_job_reuses_the_shared_node(self):
-        block = self.jobs["test-packages"]
-        self.assertIn("uses: ./.github/workflows/_node-test-packages.yml", block)
-        self.assertIn("inputs.test_packages != 'none'", block)
-        self.assertIn("ref: ${{ inputs.expected_sha }}", block)
-        self.assertIn("require_configured_key: true", block)
-        self.assertIn("artifact_prefix: release-test-package", block)
-        self.assertIn("apk_name_prefix: dsha-a-su", block)
-        self.assertIn("retention_days: 1", block)
-        self.assertIn("secrets.SUNSET_TEST_KEYSTORE_B64", block)
-        self.assertNotIn("secrets.DSHA_", block)
-        self.assertNotIn("contents: write", block)
+    def test_test_packages_jobs_split_compile_and_sign(self):
+        unsigned = self.jobs["test-packages-unsigned"]
+        self.assertIn("uses: ./.github/workflows/_node-test-packages.yml", unsigned)
+        self.assertIn("needs: [bind, inputs]", unsigned)
+        self.assertIn("unsigned_only: true", unsigned)
+        self.assertIn("fixture: false", unsigned)
+        self.assertIn("artifact_prefix: release-test-unsigned", unsigned)
+        self.assertIn("require_configured_key: false", unsigned)
+        self.assertNotIn("secrets.", unsigned)
+        self.assertNotIn("contents: write", unsigned)
+        signed = self.jobs["test-packages"]
+        self.assertIn("uses: ./.github/workflows/_node-test-packages.yml", signed)
+        self.assertIn("test-packages-unsigned", signed)
+        self.assertIn("require_configured_key: true", signed)
+        self.assertIn("artifact_prefix: release-test-package", signed)
+        self.assertIn("unsigned_artifact_prefix: release-test-unsigned", signed)
+        self.assertIn("fixture: true", signed)
+        self.assertIn("secrets.SUNSET_TEST_KEYSTORE_B64", signed)
+        self.assertNotIn("secrets.DSHA_", signed)
+        self.assertNotIn("contents: write", signed)
 
     def test_publish_skips_dry_run_and_merges_test_package_evidence(self):
         publish = self.jobs["publish"]
         self.assertIn("!inputs.dry_run", publish)
-        self.assertIn("(needs.test-packages.result == 'success' || needs.test-packages.result == 'skipped')", publish)
+        # 只有 none 时的 skipped 可以放行；测试包节点失败导致的 skipped 必须挡住发布。
+        self.assertIn("needs.test-packages.result == 'success'", publish)
+        self.assertIn("(needs.test-packages.result == 'skipped' && inputs.test_packages == 'none')", publish)
         self.assertIn("pattern: release-test-package-evidence-*", publish)
         self.assertIn("release-test-packages.py merge", publish)
         self.assertIn('--requested "$TEST_PACKAGES"', publish)
@@ -292,7 +331,7 @@ class ProductionTestPackageAttachments(unittest.TestCase):
         self.assertNotIn("secrets.", summary)
 
     def test_test_package_evidence_tool_is_commit_bound_before_execution(self):
-        signed = self.jobs["build-signed"]
+        signed = self.jobs["sign-verify"]
         self.assertIn("testPackageEvidenceToolSha256", signed)
         self.assertIn("out/release-test-packages.py", signed)
         publish = self.jobs["publish"]
@@ -385,14 +424,20 @@ class SourceAndServices(unittest.TestCase):
     def test_shared_test_package_node_keeps_single_signing_path(self):
         source = text("_node-test-packages.yml")
         self.assertEqual(source.count('"$apksigner" sign'), 1)
-        self.assertIn("gradle-cache: 'false'", source)
+        # 只有无证书的 unsigned_only 编译模式允许写共享缓存；签名模式仍是 false。
+        self.assertIn("gradle-cache: ${{ (inputs.unsigned_only && 'true') || 'false' }}", source)
+        self.assertNotIn("gradle-cache: 'true'", source)
+        self.assertIn("if: ${{ !inputs.unsigned_only }}", source)
+        self.assertIn("unsigned_artifact_prefix", source)
+        self.assertIn("SIGNED_APK_PAYLOAD_CHANGED", source)
+        self.assertIn("payload entries unchanged by signing", source)
         self.assertIn("require_configured_key", source)
         self.assertIn("SUNSET_TEST_KEYSTORE_B64 is required", source)
         self.assertNotIn("gh release", source)
         self.assertNotIn("contents: write", source)
         self.assertIn("permissions:\n  contents: read", source)
         cleanup = source.split("- name: Remove test private key", 1)[1].split("\n      - ", 1)[0]
-        self.assertIn("if: always()", cleanup)
+        self.assertIn("always()", cleanup)
         self.assertIn("key.unlink(missing_ok=True)", cleanup)
         for step in source.split("\n      - "):
             if "actions/upload-artifact@" in step:
@@ -435,6 +480,98 @@ class SourceAndServices(unittest.TestCase):
         self.assertIn("schedule:", source)
         self.assertIn("tools/ci-assets.py", source)
         self.assertNotIn("upload-artifact", source)
+
+
+class ProductionSplitRelease(unittest.TestCase):
+    """build-unsigned / sign-verify 拆分：凭据、缓存与证据边界。"""
+
+    def setUp(self):
+        self.source = text("release-production.yml")
+        self.jobs = jobs(self.source)
+
+    def test_unsigned_builders_hold_no_secrets_and_use_the_gradle_cache(self):
+        self.assertIn("gradle-cache: 'true'", self.jobs["build-unsigned"])
+        for name in ("build-unsigned", "test-packages-unsigned"):
+            block = self.jobs[name]
+            with self.subTest(job=name):
+                self.assertNotIn("secrets.", block)
+                self.assertNotIn("contents: write", block)
+                self.assertNotIn('"$apksigner" sign', block)
+
+    def test_signing_nodes_are_the_only_secret_holders_and_do_not_cache(self):
+        # 正式签名节点就地禁止共享缓存；测试包是复用节点调用，缓存策略由 _node-test-packages.yml
+        # 的 unsigned_only 条件保证（见 WorkflowGraph 的断言）。
+        self.assertIn("gradle-cache: 'false'", self.jobs["sign-verify"])
+        self.assertNotIn("contents: write", self.jobs["sign-verify"])
+        self.assertIn("secrets.DSHA_KEYSTORE_B64", self.jobs["sign-verify"])
+        self.assertNotIn("secrets.DSHA_", self.jobs["test-packages"])
+        self.assertIn("secrets.SUNSET_TEST_KEYSTORE_B64", self.jobs["test-packages"])
+        self.assertNotIn("contents: write", self.jobs["test-packages"])
+
+    def test_sign_verify_consumes_a_commit_bound_unsigned_artifact(self):
+        block = self.jobs["sign-verify"]
+        self.assertIn("name: release-unsigned-apk", block)
+        self.assertIn("UNSIGNED_HANDOFF_NOT_THIS_RUN", block)
+        self.assertIn("unsigned-receipt.json", block)
+        self.assertIn("tools/sign-release-apks.py --apk", block)
+        self.assertLess(block.index("Verify unsigned handoff binding"),
+                        block.index("Sign unsigned production APK and verify identity"))
+
+    def test_unsigned_stage_verifies_manifest_and_assets_before_signing(self):
+        block = self.jobs["build-unsigned"]
+        self.assertIn("--check-only", block)
+        self.assertIn("verify-apk-managed-assets.py", block)
+        self.assertLess(block.index("--check-only"), block.index("verify-apk-managed-assets.py"))
+        self.assertLess(block.index("verify-apk-managed-assets.py"),
+                        block.index("Hand unsigned APK to the signing node"))
+
+    def test_evidence_zip_no_longer_duplicates_the_apk(self):
+        block = self.jobs["sign-verify"]
+        files = [line for line in block.splitlines() if line.strip().startswith("files = [")]
+        self.assertEqual(len(files), 1)
+        self.assertNotIn("APK_NAME", files[0])
+        self.assertIn("apk-signing.json", files[0])
+        self.assertIn("names = [os.environ['APK_NAME'], 'dsha-a-su-build-evidence.zip', 'build-info.json']",
+                      block)
+        self.assertIn("hashlib.sha256((Path('out') / name).read_bytes()).hexdigest()", block)
+
+    def test_signing_tool_pins_certificate_schemes_and_payload(self):
+        tool = (ROOT / "tools/sign-release-apks.py").read_text(encoding="utf-8")
+        self.assertIn("PUBLISH_CERTIFICATE_MISMATCH", tool)
+        self.assertIn("SIGNED_CERTIFICATE_MISMATCH", tool)
+        self.assertIn("require_schemes", tool)
+        self.assertIn("SIGNED_APK_PAYLOAD_CHANGED", tool)
+        self.assertIn("--v1-signing-enabled", tool)
+        self.assertIn("--v2-signing-enabled", tool)
+        self.assertIn("--v3-signing-enabled", tool)
+        self.assertIn("UNSIGNED_APK_IS_SIGNED", tool)
+        self.assertIn("ONLY_UNSIGNED_INPUT", tool)
+        self.assertIn("RELEASE_SIGNING_ENV_MISSING", tool)
+        self.assertIn("VERIFY_MIN_SDK", tool)
+
+
+class AndroidSdkAction(unittest.TestCase):
+    def test_preinstalled_packages_skip_download_and_install_is_bounded(self):
+        source = (ACTIONS / "android-sdk/action.yml").read_text(encoding="utf-8")
+        self.assertIn("platforms/$platform/android.jar", source)
+        self.assertIn("build-tools/$buildtools/aapt2", source)
+        self.assertIn("ndk/$ndk/source.properties", source)
+        self.assertIn("Pkg.Revision", source)
+        self.assertIn("timeout 600", source)
+        self.assertIn('"$attempt" -ge 2', source)
+        self.assertIn("sdkmanager 失败或超时", source)
+        self.assertIn("已预装", source)
+
+
+class InputsNpmCache(unittest.TestCase):
+    def test_runtime_rebuild_reuses_lock_keyed_npm_cache(self):
+        source = text("_node-inputs.yml")
+        self.assertIn("actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9", source)
+        self.assertIn("dsha-dsh-runtime-npm-${{ runner.os }}-${{ hashFiles('tools/dsh-runtime/package-lock.json') }}",
+                      source)
+        self.assertIn('prepare-dsh-runtime.py --cache "$RUNNER_TEMP/dsha-npm-cache"', source)
+        self.assertIn("retention-days: 1", source)
+        self.assertIn("compression-level: 0", source)
 
 
 if __name__ == "__main__":

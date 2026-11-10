@@ -1,8 +1,8 @@
 name: DSHA Android SDK
-description: 按 ci/toolchain.lock.json 安装 platform / build-tools（可选 NDK）。
+description: 按 ci/toolchain.lock.json 安装 platform / build-tools（可选 NDK）；镜像已预装时跳过下载。
 inputs:
   ndk:
-    description: Also install the locked NDK
+    description: Also require the locked NDK
     required: false
     default: 'false'
 runs:
@@ -16,15 +16,56 @@ runs:
         set -eu
         platform=$(python3 tools/ci-toolchain.py --field androidPlatform)
         buildtools=$(python3 tools/ci-toolchain.py --field buildTools)
-        packages=("platforms;$platform" "build-tools;$buildtools")
-        if [ "$WITH_NDK" = true ]; then
-          packages+=("ndk;$(python3 tools/ci-toolchain.py --field ndk)")
-        fi
+        ndk=$(python3 tools/ci-toolchain.py --field ndk)
         # 托管 runner 不一定把 sdkmanager 放进 PATH；从 SDK 根目录解析。
         sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
         sdkmanager_bin="$sdk_root/cmdline-tools/latest/bin/sdkmanager"
         if [ ! -x "$sdkmanager_bin" ]; then
           sdkmanager_bin=$(find "$sdk_root" -path '*/cmdline-tools/*/bin/sdkmanager' | head -1)
         fi
+        # ubuntu-24.04 镜像已预装 android-37.0 与 build-tools 36.0.0（见 runner-images
+        # Ubuntu2404-Readme），但 NDK 只有 27.x / 29 / 30，26.3 仍需下载。先按实际文件判定
+        # 需求，避免每次都联网询问 sdkmanager；缺失项才安装。
+        packages=()
+        if [ -f "$sdk_root/platforms/$platform/android.jar" ]; then
+          echo "platforms;$platform 已预装，跳过下载"
+        else
+          packages+=("platforms;$platform")
+        fi
+        if [ -x "$sdk_root/build-tools/$buildtools/aapt2" ] && [ -x "$sdk_root/build-tools/$buildtools/apksigner" ]; then
+          echo "build-tools;$buildtools 已预装，跳过下载"
+        else
+          packages+=("build-tools;$buildtools")
+        fi
+        if [ "$WITH_NDK" = true ]; then
+          if grep -qs "^Pkg.Revision *= *$ndk\$" "$sdk_root/ndk/$ndk/source.properties"; then
+            echo "ndk;$ndk 已预装，跳过下载"
+          else
+            packages+=("ndk;$ndk")
+          fi
+        fi
+        if [ "${#packages[@]}" -eq 0 ]; then
+          echo "locked Android SDK packages already present"
+          exit 0
+        fi
         test -x "$sdkmanager_bin"
-        "$sdkmanager_bin" "${packages[@]}"
+        # build353 第 2 次 run 的 sdkmanager 曾卡住 44 分钟：单次下载限时 10 分钟、最多 2 次，
+        # 失败后复核实际文件，避免半截安装被后续 Gradle 当成可用环境。
+        attempt=1
+        while :; do
+          if timeout 600 "$sdkmanager_bin" "${packages[@]}"; then
+            break
+          fi
+          if [ "$attempt" -ge 2 ]; then
+            echo "::error::sdkmanager 失败或超时，已尝试 $attempt 次：${packages[*]}"
+            exit 1
+          fi
+          attempt=$((attempt + 1))
+          echo "::warning::sdkmanager 第 $((attempt - 1)) 次失败或超时，重试（$attempt/2）"
+          sleep 5
+        done
+        test -f "$sdk_root/platforms/$platform/android.jar"
+        test -x "$sdk_root/build-tools/$buildtools/aapt2"
+        if [ "$WITH_NDK" = true ]; then
+          grep -qs "^Pkg.Revision *= *$ndk\$" "$sdk_root/ndk/$ndk/source.properties"
+        fi

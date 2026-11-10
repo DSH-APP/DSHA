@@ -27,7 +27,7 @@
 | 签名方案 | v1 + v2 + v3 | 身份文件 `schemes`（兼容入口 `ci/release-identity.json` 一致） |
 | 最低系统 | Android 11（API 30）/ arm64-v8a | `app/build.gradle` `minSdk` / `abiFilters` |
 
-`ci/release-identity.json` 保留为 Mod 身份的兼容入口（本地交付脚本 `sign-release-apks.py`、`verify-stability.py`、`generate-release-manifest.py`、`check-release-prerequisites.py` 等仍读取它）。它的 `packageName`、`certificateSha256`、`schemes` 必须与 `release-identity.mod.json` 一致，由 `python3 tools/release-identity.py --check` 与 `tools/test-release-identity.py` 强制核对；这些本地脚本只服务 Mod 身份。
+`ci/release-identity.json` 保留为 Mod 身份的兼容入口（本地交付脚本 `verify-stability.py`、`generate-release-manifest.py`、`check-release-prerequisites.py` 等仍读取它）。它的 `packageName`、`certificateSha256`、`schemes` 必须与 `release-identity.mod.json` 一致，由 `python3 tools/release-identity.py --check` 与 `tools/test-release-identity.py` 强制核对；这些本地脚本只服务 Mod 身份。发布签名工具 `tools/sign-release-apks.py` 经 `release-identity.py` 读取 mod 身份文件（与兼容入口同源核对），并新增未签名输入的清单 / “确实未签名” / 签名后载荷逐成员一致的检查；CI 的 `build-unsigned` → `sign-verify` 两段式见 [CI 构建与发布](ci-release.md)。
 
 ```bash
 python3 tools/release-identity.py --identity upstream --field packageName   # 读取单个字段

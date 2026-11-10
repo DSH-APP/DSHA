@@ -3240,7 +3240,19 @@
       "args": [],
       "timeoutSeconds": 60,
       "environment": {},
-      "reason": "Static Actions node graph: pinned external actions, read-only reusable nodes, release gates before signing, secrets only in the sign node, write permission only in publish"
+      "reason": "Static Actions node graph: pinned external actions, read-only reusable nodes, build-unsigned / sign-verify split with production secrets only in the signing node, unsigned handoff bound to commit/run with payload equality after signing, test-package compile/sign modes, evidence without a duplicated APK, write permission only in publish"
+    },
+    {
+      "path": "tools/test-release-signing.py",
+      "stage": "fast",
+      "requires": [
+        "python39"
+      ],
+      "args": [],
+      "timeoutSeconds": 60,
+      "environment": {},
+      "reason": "Release signing tool pure contracts: unsigned manifest (package / version / minSdk 30 / arm64 / non-debuggable / no test identity), apksigner verify must reject the unsigned input, payload member CRC/size equality excluding META-INF, v1+v2+v3 scheme and certificate pin, source-vs-metadata version binding; no keystore, signing, network or Android SDK",
+      "cli": "no arguments; module-level pure functions only"
     },
     {
       "path": "tools/test-release-identity.py",
