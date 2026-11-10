@@ -1,4 +1,4 @@
-"""发布身份解析：默认 mod、显式 upstream、未知值报错；Gradle 与 Python 解析规则一致。"""
+"""发布身份解析：默认 upstream（官方发行）、显式 mod、未知值报错；Gradle 与 Python 解析规则一致。"""
 import contextlib
 import importlib.util
 import io
@@ -26,15 +26,15 @@ def run(*argv):
 
 
 class Resolution(unittest.TestCase):
-    def test_default_is_mod(self):
+    def test_default_is_upstream(self):
         for name in (None, ""):
             value = identity.load(name)
-            self.assertEqual(value["identity"], "mod")
-            self.assertEqual(value["packageName"], "io.github.sunsetrne.dsha")
-            self.assertEqual(value["certificateSha256"], MOD_CERT)
+            self.assertEqual(value["identity"], "upstream")
+            self.assertEqual(value["packageName"], "dsh.android.client")
+            self.assertEqual(value["certificateSha256"], UPSTREAM_CERT)
             self.assertEqual((value["appName"], value["keyAlias"], value["testSuffix"], value["devSuffix"]),
-                             ("DSH-A-Su", "dsha-a-su", ".test", ".dev"))
-        self.assertEqual(run("--field", "packageName"), (0, "io.github.sunsetrne.dsha", ""))
+                             ("DSHA", "androiddebugkey", ".SunsetRNE", ".SunsetDev"))
+        self.assertEqual(run("--field", "packageName"), (0, "dsh.android.client", ""))
 
     def test_upstream_branch(self):
         value = identity.load("upstream")
@@ -43,7 +43,7 @@ class Resolution(unittest.TestCase):
         self.assertEqual((value["appName"], value["keyAlias"], value["testSuffix"], value["devSuffix"], value["tagPrefix"]),
                          ("DSHA", "androiddebugkey", ".SunsetRNE", ".SunsetDev", "dsha-build"))
         self.assertEqual((value["repository"], value["ref"], value["privateRepository"]),
-                         ("ym2025szz/DSHA-prerelase", "refs/heads/codex/prerelease-190", True))
+                         ("DSH-APP/DSHA", "refs/heads/main", False))
         self.assertEqual(run("--identity", "upstream", "--field", "keyAlias"), (0, "androiddebugkey", ""))
 
     def test_unknown_value_is_rejected_without_fallback(self):
@@ -94,8 +94,8 @@ class GradleContract(unittest.TestCase):
         names = re.search(r"def releaseIdentityNames = \[([^\]]+)\]", self.gradle)
         self.assertIsNotNone(names)
         self.assertEqual(tuple(re.findall(r"'([^']+)'", names.group(1))), identity.IDENTITIES)
-        self.assertIn("(project.findProperty('dsha.identity') ?: 'mod')", self.gradle)
-        self.assertEqual(identity.DEFAULT, "mod")
+        self.assertIn("(project.findProperty('dsha.identity') ?: 'upstream')", self.gradle)
+        self.assertEqual(identity.DEFAULT, "upstream")
         self.assertIn('throw new GradleException("UNKNOWN_RELEASE_IDENTITY', self.gradle)
         self.assertIn('rootProject.file("ci/release-identity.${releaseIdentityName}.json")', self.gradle)
 
