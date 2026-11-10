@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <b>English</b> · <a href="README.md">简体中文</a> · <a href="CHANGELOG.md">Changelog</a> · <a href="docs/security-model.md">Security model</a> · <a href="AGENTS.md">AGENTS.md (for AI / developers)</a>
+  <b>English</b> · <a href="README.md">简体中文</a> · <a href="https://dsha.cc">dsha.cc</a> · <a href="CHANGELOG.md">Changelog</a> · <a href="docs/security-model.md">Security model</a> · <a href="AGENTS.md">AGENTS.md (for AI / developers)</a>
 </p>
 
 > 🤖 The next AI / developer should read **[AGENTS.md](AGENTS.md)** first (project layout, startup contract, known traps) instead of scanning the whole tree.
@@ -62,6 +62,8 @@ Current stable **[v0.2.2 · build357](https://github.com/DSH-APP/DSHA/releases/t
 
 [Download APK](https://github.com/DSH-APP/DSHA/releases/latest) · SHA-256 and the full source archive are in that release's assets · [download verification](docs/download-verification.md)
 
+Assets: `dsha-0.2.2.apk`, `dsha-0.2.2.apk.sha256`, `DSHA-0.2.2-20261111.0200-source.zip` and its `.sha256`; release notes and build receipts in the [v0.2.2 release](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.2).
+
 ### Getting started
 
 1. Install the APK matching your signing identity; the first launch unpacks and verifies the offline environment (time depends on device I/O).
@@ -105,6 +107,7 @@ Current stable **[v0.2.2 · build357](https://github.com/DSH-APP/DSHA/releases/t
 | Capability | Details |
 |---|---|
 | proroot / proot | Stable proot by default; proroot selectable in "Configuration", compatibility varies by device |
+| Performance evidence | Same-device samples only; device, cache and plugin state dominate — see [performance notes](docs/performance-startup-20261022.md). Not a general engine ranking |
 | Bounded fallback | If proroot exits before authentication with no plugin fault, proot is retried exactly once after the guest is confirmed gone; slow startups never trigger it |
 | Node.js 24 + pnpm 10.34.5 | Same runtime as upstream, pinned with the package |
 | Split updates | Ubuntu and the dsh runtime are separate APK assets; cold install unpacks both, partial updates only read the dsh bundle |
@@ -134,7 +137,7 @@ The agent calls these through the local `127.0.0.1:3090` bridge (token-gated; `/
 | Capability | Details |
 |---|---|
 | Screen control | **Accessibility service, no ADB needed**: structured dumps with tappable bounds, tap by text or coordinates, input, keys, swipe, screenshots to PNG |
-| Independent virtual screen | Standard / Android 11+; authorize ADB, Shizuku or Root first, then create the screen on the virtual-screen page. Accessibility alone does not create it — see [architecture](docs/virtual-screen-architecture.md) |
+| Independent virtual screen (experimental) | Standard / Android 11+; authorize ADB, Shizuku or Root first, then create the screen on the virtual-screen page. Accessibility alone does not create it — see [architecture](docs/virtual-screen-architecture.md) |
 | Privileged physical screen (experimental) | Phase A: operate the physical main display through the managed `app_process` entry; off by default, revocable, valid only during the current phone task. Enable under "Device permissions → privileged execution"; see [core notes](docs/privileged-screen-core.md) |
 | ADB over Wi-Fi | Built-in wireless pairing (TLS 1.3-PSK + SPAKE2) and keepalive, **no Shizuku required**; reconnects after reboot |
 | Shizuku / Root | Alternative device command channels, under the same command allowlist as ADB |
@@ -266,24 +269,44 @@ There are two ways to run dsh on Android; each has a cost, and spelling them out
 Data: the actual location is shown in "Data & backup → storage guide"; legacy `Documents/dshdata` is still read.
 API keys are protected by Android Keystore; local keys and automatic copies are not guaranteed to survive uninstall. Ports and authentication are documented in [ports and networking](docs/ports-and-networking.md).
 
-## ADB Wi-Fi pairing (device shell)
+## Device channels: ADB / Shizuku / Root
 
-Once paired, the agent can operate the phone directly, **without Shizuku**. Full channel documentation in [docs/device-channels.md](docs/device-channels.md).
+For device commands the agent picks a single usable channel in the order **Root → Shizuku → ADB** (with Android 17+ and a verified ADB connection, ADB comes before Shizuku). Once chosen, a failure never replays on another channel. All three share the same command allowlist, while Android system grants and DSHA grants are checked separately. Full semantics in [docs/device-channels.md](docs/device-channels.md).
 
-**First pairing (about a minute)**
+### ADB Wi-Fi pairing (recommended, no Shizuku)
+
+Once paired, the agent can operate the phone directly, **without Shizuku and without ROOT**.
 
 1. Settings → "About phone" → tap "Build number" 7 times to enable Developer options
 2. Developer options → enable "Wireless debugging"
 3. Enter "Wireless debugging" → "Pair device with pairing code", note the **IP:port** and the **6-digit code**
 4. Back in DSHA → "Device permissions" → enter them → pair
 
-> The pairing code requires Android 11+. On older systems use the Shizuku / Root channel, or just the accessibility capabilities (reading the screen, tapping and typing need no pairing at all).
+> The pairing code requires Android 11+. From Android 17 on, a verified ADB connection is preferred over Shizuku.
 
 If wireless debugging isn't on yet, "verify existing connection" can prepare the bundled offline dependencies; `ADB_OFFLINE_READY` only means the dependencies are ready. You still need to turn on wireless debugging and pair or verify the connection.
 
 **After pairing**: DSHA maintains the connection itself (keepalive + reconnect) and restores it after a reboot; nothing more to do.
 
 **Verify**: run `adb shell id` in the built-in terminal; `uid=2000(shell)` means it worked.
+
+### Shizuku (or the compatible manager Stellar)
+
+If you don't want wireless debugging, use the Shizuku channel:
+
+1. Install [Shizuku](https://shizuku.rikka.app/) or a manager compatible with the Shizuku protocol such as [Stellar](https://github.com/roro2239/Stellar), then start the service there (with Stellar, also enable its "Shizuku compatibility layer").
+2. Back in DSHA → "Device permissions" → grant Shizuku, then allow DSHA in the manager's dialog.
+3. Verify: Shizuku shows connected in DSHA and `id` returns `uid=2000(shell)`.
+
+Standard API 13.1.5 / compatible API 12.2.0. A manager grant does not mean the execution service is ready; reconnects, timeouts and failures have their own budgets, and an unknown result is never replayed on another channel. Shizuku does not run SMS queries and does not carry relaxed-tier raw root commands.
+
+### Root
+
+Requires a real working `su` on the device (Magisk / KernelSU, …). Enable the Root switch under "Device permissions" and grant it; Root additionally has **strict / relaxed / fully relaxed** command tiers, which only affect what is blocked when running as root. The SMS gate stays in all three tiers.
+
+### Accessibility alone is enough for screen control
+
+Screen dumps, taps, typing, swipes and screenshots rely entirely on the accessibility service and **need no pairing at all**; only virtual screens, SMS reading and device commands require the channels above.
 
 ## Building from source
 

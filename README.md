@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <a href="README.en.md">English</a> · <b>简体中文</b> · <a href="CHANGELOG.md">更新记录</a> · <a href="docs/security-model.md">安全模型</a> · <a href="AGENTS.md">AGENTS.md（给 AI / 开发者）</a>
+  <a href="README.en.md">English</a> · <b>简体中文</b> · <a href="https://dsha.cc">官网 dsha.cc</a> · <a href="CHANGELOG.md">更新记录</a> · <a href="docs/security-model.md">安全模型</a> · <a href="AGENTS.md">AGENTS.md（给 AI / 开发者）</a>
 </p>
 
 > 🤖 下一个 AI / 开发者请先读 **[AGENTS.md](AGENTS.md)**（项目结构、启动契约、踩过的坑），不要先全库扫描。
@@ -62,6 +62,8 @@ DeepSeek Harness（`@deepseek-ai/dsh`）是 DeepSeek 官方的 agent harness，�
 
 [下载 APK](https://github.com/DSH-APP/DSHA/releases/latest) · SHA-256 与完整源码包见该 Release 的资产列表 · [下载校验](docs/download-verification.md)
 
+资产：`dsha-0.2.2.apk`、`dsha-0.2.2.apk.sha256`、`DSHA-0.2.2-20261111.0200-source.zip`、同名 `.sha256`；发布说明与构建回执见 [v0.2.2 Release](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.2)。
+
 ### 开始使用
 
 1. 安装对应签名的 APK，首次启动解压并校验内置离线环境（耗时取决于设备 I/O）。
@@ -105,6 +107,7 @@ DeepSeek Harness（`@deepseek-ai/dsh`）是 DeepSeek 官方的 agent harness，�
 | 能力 | 说明 |
 |---|---|
 | proroot / proot 双运行时 | 默认稳定的 proot；可在「配置」选择 proroot，实际兼容结果依机型 |
+| 性能证据 | 有同台有限样本，设备、缓存和插件状态影响明显；见[性能记录](docs/performance-startup-20261022.md)，不作为普遍引擎排名 |
 | 有限兼容回退 | proroot 在鉴权前明确退出且无插件故障时，确认 guest 退出后仅重试一次 proot；慢启动不触发回退 |
 | Node.js 24 + pnpm 10.34.5 | 与上游一致的运行环境，随包锁版本 |
 | 分包更新 | Ubuntu 与 dsh 运行时在 APK 内分包；冷安装两份都解压，局部更新只读 dsh 包 |
@@ -134,7 +137,7 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 | 能力 | 说明 |
 |---|---|
 | 屏幕操作 | **无障碍服务实现，不需要 ADB**：读屏结构化输出（带可点击区域坐标）、按文字 / 坐标点按、输入、按键、滑动、截屏存 PNG |
-| 独立虚拟屏 | Standard / Android 11+，先授权 ADB、Shizuku 或 Root 任一通道，再到虚拟屏页面创建屏幕；仅开启无障碍不会创建虚拟屏，详见[架构说明](docs/virtual-screen-architecture.md) |
+| 独立虚拟屏（实验） | Standard / Android 11+，先授权 ADB、Shizuku 或 Root 任一通道，再到虚拟屏页面创建屏幕；仅开启无障碍不会创建虚拟屏，详见[架构说明](docs/virtual-screen-architecture.md) |
 | 实体屏特权执行（实验） | Phase A：复用受管 `app_process` 入口操作实体主屏，默认关闭、可撤销、仅当前手机任务期间有效；需在「设备能力授权 → 特权执行」原生开启，详见[核心说明](docs/privileged-screen-core.md) |
 | ADB 无线直连 | 内置无线配对（TLS 1.3-PSK + SPAKE2）与保活，**不需要 Shizuku**，重启手机自动恢复 |
 | Shizuku / Root 通道 | 备用设备命令通道，与 ADB 同受命令白名单约束 |
@@ -266,24 +269,44 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 数据：实际位置以「数据与备份 → 存储指南」为准；旧 `Documents/dshdata` 数据继续兼容读取。
 API key 由 Android Keystore 保护，本机密钥与自动副本不保证卸载后存续。端口与鉴权细节见[端口专页](docs/ports-and-networking.md)。
 
-## ADB 无线配对（设备 Shell 能力）
+## 设备通道：ADB / Shizuku / Root
 
-配好之后 agent 就能直接操作这台手机，**不需要 Shizuku**。完整通道说明见 [docs/device-channels.md](docs/device-channels.md)。
+Agent 执行设备命令时按 **Root → Shizuku → ADB** 的顺序选一次可用通道（Android 17+ 且 ADB 已验证时 ADB 先于 Shizuku），选中后失败不换通道重放；三条通道共用同一套命令白名单，Android 系统授权与 DSHA 授权分别校验。完整语义见 [docs/device-channels.md](docs/device-channels.md)。
 
-**首次配对（约 1 分钟）**
+### ADB 无线配对（推荐，不需要 Shizuku）
+
+配好之后 agent 就能直接操作这台手机，**不需要 Shizuku、不需要 ROOT**。
 
 1. 系统设置 →「关于手机」→ 连点「版本号」7 次开启开发者选项
 2. 开发者选项 → 打开「无线调试」
 3. 进入「无线调试」→「使用配对码配对设备」，记下 **IP:端口** 与 **6 位配对码**
-4. 回到 DSHA →「设备能力授权」页 → 填入 → 配对
+4. 回到 DSHA →「设备能力授权」→ 填入 → 配对
 
-> 无线调试的配对码需要 Android 11+；老系统可走 Shizuku / Root 通道，或直接用无障碍能力（读屏、点按、输入不需要任何配对）。
+> 配对码需要 Android 11+；Android 17 起，已验证的 ADB 连接会优先于 Shizuku 被选中。
 
-无线调试尚未开启时，「验证已有连接」可以先准备内置离线依赖；出现 `ADB_OFFLINE_READY` 仅表示依赖就绪。之后仍需打开无线调试并完成配对或连接验证。
+无线调试尚未开启时，「验证已有连接」可以先准备内置离线依赖；出现 `ADB_OFFLINE_READY` 仅表示依赖就绪，之后仍需打开无线调试并完成配对或连接验证。
 
 **配对之后**：DSHA 自己维护连接（保活 + 重连），重启手机后也会自动恢复，不用再操作。
 
 **验证**：内置终端里跑 `adb shell id`，输出 `uid=2000(shell)` 即成功。
+
+### Shizuku（或兼容管理器 Stellar）
+
+不想开无线调试时可以走 Shizuku 通道：
+
+1. 安装 [Shizuku](https://shizuku.rikka.app/) 或兼容 Shizuku 协议的管理器 [Stellar](https://github.com/roro2239/Stellar)，并在管理器里启动服务（用 Stellar 时还需开启「Shizuku 兼容层」）。
+2. 回到 DSHA →「设备能力授权」→ 授权 Shizuku，在管理器的授权弹窗中允许 DSHA。
+3. 验证：DSHA 中的 Shizuku 状态显示已连接，执行 `id` 返回 `uid=2000(shell)`。
+
+标准 API 13.1.5 / 兼容 API 12.2.0。管理器已授权不等于执行服务已就绪；断连重连、超时与失败各有独立预算，结果未知时不换通道重放。Shizuku 不执行短信查询，也不承接放宽档的 root 原始命令。
+
+### Root
+
+需要设备上真实可用的 su（Magisk / KernelSU 等）。在「设备能力授权」打开 Root 开关并授权后可用；Root 另有 **严格 / 放宽 / 完全放宽** 三档命令拦截，只影响以 root 身份执行时的拦截强度，短信闸门三档都保留。
+
+### 只开无障碍也可以
+
+读屏、点按、输入、滑动、截屏完全依赖无障碍服务，**不需要任何配对**；只有虚拟屏、短信读取和设备命令这类能力才需要上面的通道。
 
 ## 从源码构建
 
