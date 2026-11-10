@@ -29,7 +29,7 @@ on:
         description: Build targets
         required: false
         type: choice
-        options: [all, debug, dev, prod-unsigned]
+        options: [all, test, debug, dev, prod-unsigned]
         default: all
       run_unit_tests:
         description: Run complete fixed-input unit tests before packaging
@@ -38,6 +38,11 @@ on:
         default: true
       quick:
         description: Skip full unit tests and runtime patch-chain checks for fast dev iteration
+        required: false
+        type: boolean
+        default: false
+      publish:
+        description: Publish the signed packages as a prerelease (requires the configured, pinned test certificate)
         required: false
         type: boolean
         default: false
@@ -109,7 +114,7 @@ jobs:
       && (needs.unit.result == 'success' || needs.unit.result == 'skipped')
     uses: ./.github/workflows/_node-test-packages.yml
     with:
-      variants: ${{ inputs.targets == 'all' && 'debug+dev' || inputs.targets }}
+      variants: ${{ inputs.targets == 'all' && 'test+debug+dev' || inputs.targets }}
       release_identity: ${{ inputs.identity || 'mod' }}
       handoff: ${{ needs.inputs.outputs.artifact }}
       fixture: true
@@ -117,7 +122,8 @@ jobs:
       asset_format: ${{ needs.inputs.outputs.format }}
       unit_tests_run: ${{ inputs.run_unit_tests && !inputs.quick }}
       patch_chains_run: ${{ !inputs.quick }}
-      require_configured_key: false
+      require_configured_key: ${{ inputs.publish }}
+      require_pinned_cert: ${{ inputs.publish }}
       artifact_prefix: test-package
       apk_name_prefix: dsha
       retention_days: 14
@@ -261,4 +267,61 @@ jobs:
             echo "Commit \`$GITHUB_SHA\` · package \`$PACKAGE\`"
             echo
             echo "[APK]($APK_URL) · [回执]($EVIDENCE_URL)"
+          } >> "$GITHUB_STEP_SUMMARY"
+  publish:
+    name: Publish signed test packages as a prerelease
+    needs: [package-tests]
+    if: >-
+      !cancelled()
+      && inputs.publish
+      && needs.package-tests.result == 'success'
+      && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download signed packages from this run
+        run: |
+          set -eu
+          mkdir -p out bundles
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --pattern 'test-package-evidence-*' --dir out
+      - name: Collect APKs and write checksums
+        run: |
+          set -eu
+          shopt -s nullglob
+          for dir in out/*; do
+            [ -d "$dir" ] || continue
+            for apk in "$dir"/*.apk; do cp "$apk" "bundles/$(basename "$apk")"; done
+          done
+          test "$(find bundles -name '*.apk' | wc -l)" -ge 1
+          (cd bundles && sha256sum ./*.apk > SHA256SUMS)
+          cat bundles/SHA256SUMS
+      - name: Create prerelease with the packages
+        run: |
+          set -eu
+          tag="test-build-${GITHUB_RUN_NUMBER}-$(date -u +%Y%m%d-%H%M%S)"
+          cat > notes.md <<EOF
+          手动构建的测试包（非正式发布）。
+
+          - commit: \`$GITHUB_SHA\`
+          - run: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          - identity: \`${{ inputs.identity }}\` · targets: \`${{ inputs.targets }}\`
+          - 签名：固定测试证书（ci/test-signing.json 钉住指纹；与正式证书不同）
+          - 覆盖升级：同一测试证书签名的包可互相覆盖安装；不同包名互不影响。
+          EOF
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --prerelease --title "DSHA test packages ${GITHUB_RUN_NUMBER}" --notes-file notes.md
+          gh release upload "$tag" --repo "$GITHUB_REPOSITORY" bundles/*.apk bundles/SHA256SUMS --clobber
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json tagName,isPrerelease,assets \
+            --jq '{tag:.tagName,prerelease:.isPrerelease,assets:[.assets[].name]}'
+      - name: Summarize
+        run: |
+          {
+            echo "### 测试包已发布为 prerelease"
+            echo
+            echo "commit \`$GITHUB_SHA\` · 产物见 Release 资产（APK + SHA256SUMS）。"
           } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "keyAlias": "sunset-test",
+  "certificateSha256": "4739949238b1c61345a23e66c5021d67beec42c520dbe1a8a22ac86ad5f8e5e1",
+  "distinguishedName": "CN=DSHA Test Package (NOT FOR RELEASE), O=SunsetRNE, C=CN",
+  "note": "固定测试包签名证书：私钥只在 GitHub Secrets SUNSET_TEST_KEYSTORE_B64，仓库内只保留公开证书与指纹；轮换用 tools/test-signing.py --bootstrap --write-pin"
+}

@@ -312,17 +312,25 @@ class SourceAndServices(unittest.TestCase):
         source = text("test-package-variants.yml")
         graph = jobs(source)
         self.assertEqual(set(graph), {"contracts", "inputs", "patch-chains", "unit", "lint",
-                                      "package-tests", "package-prod-unsigned"})
+                                      "package-tests", "package-prod-unsigned", "publish"})
         package_tests = graph["package-tests"]
         self.assertIn("uses: ./.github/workflows/_node-test-packages.yml", package_tests)
-        self.assertIn("variants: ${{ inputs.targets == 'all' && 'debug+dev' || inputs.targets }}", package_tests)
-        self.assertIn("require_configured_key: false", package_tests)
+        self.assertIn("variants: ${{ inputs.targets == 'all' && 'test+debug+dev' || inputs.targets }}", package_tests)
+        self.assertIn("require_configured_key: ${{ inputs.publish }}", package_tests)
+        self.assertIn("require_pinned_cert: ${{ inputs.publish }}", package_tests)
         self.assertIn("SUNSET_TEST_KEYSTORE_B64: ${{ secrets.SUNSET_TEST_KEYSTORE_B64 }}", package_tests)
         self.assertNotIn('"$apksigner" sign', source)
         self.assertNotIn("DSHA_KEYSTORE", source)
-        self.assertNotIn("gh release", source)
-        self.assertNotIn("contents: write", source)
         self.assertIn("permissions:\n  contents: read", source)
+        publish = graph["publish"]
+        self.assertIn("needs: [package-tests]", publish)
+        self.assertIn("inputs.publish", publish)
+        self.assertIn("contents: write", publish)
+        self.assertNotIn("secrets.", publish)
+        self.assertNotIn('"$apksigner" sign', publish)
+        self.assertIn("gh run download", publish)
+        self.assertIn("gh release create", publish)
+        self.assertIn("sha256sum", publish)
         prod = graph["package-prod-unsigned"]
         self.assertIn("-Pdsha.unsignedPackage=true", prod)
         self.assertNotIn('"$apksigner" sign', prod)
@@ -331,6 +339,7 @@ class SourceAndServices(unittest.TestCase):
 
     def test_shared_test_package_node_signs_only_with_the_test_certificate(self):
         source = text("_node-test-packages.yml")
+        self.assertIn("-Pdsha.sunsetTest=true -Pdsha.unsignedPackage=true", source)
         self.assertIn("-Pdsha.debugPackage=true -Pdsha.unsignedPackage=true", source)
         self.assertIn("-Pdsha.devPackage=true -Pdsha.unsignedPackage=true", source)
         self.assertIn("SUNSET_TEST_KEYSTORE_B64", source)
@@ -338,6 +347,30 @@ class SourceAndServices(unittest.TestCase):
         self.assertIn('test "$cert" != "$production"', source)
         self.assertIn('test "$cert" != "$upstream"', source)
         self.assertIn("application-debuggable", source)
+        # 固定测试签名：签名证书必须与 ci/test-signing.json 的指纹一致；发布模式下缺钉直接失败。
+        self.assertIn("tools/test-signing.py --check-pem out/test-cert.pem --require-pinned", source)
+        self.assertIn("REQUIRE_PINNED_CERT", source)
+
+    def test_test_signing_pin_is_distinct_and_matches_the_public_certificate(self):
+        pin = json.loads((ROOT / "ci/test-signing.json").read_text(encoding="utf-8"))
+        self.assertEqual(pin["schema"], 1)
+        self.assertEqual(pin["keyAlias"], "sunset-test")
+        self.assertRegex(pin["certificateSha256"], r"[a-f0-9]{64}")
+        for name in ("mod", "upstream"):
+            identity = json.loads((ROOT / f"ci/release-identity.{name}.json").read_text(encoding="utf-8"))
+            self.assertNotEqual(pin["certificateSha256"], identity["certificateSha256"])
+        result = subprocess.run([sys.executable, str(ROOT / "tools/test-signing.py"),
+                                 "--check-pem", str(ROOT / "docs/test-signing/test-cert.pem"),
+                                 "--require-pinned"], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        rejected = subprocess.run(
+            [sys.executable, str(ROOT / "tools/test-signing.py"), "--check-pem",
+             str(ROOT / "LICENSE"), "--require-pinned"], capture_output=True, text=True)
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn("TEST_", rejected.stderr)
+
+    def test_shared_test_package_node_keeps_single_signing_path(self):
+        source = text("_node-test-packages.yml")
         self.assertEqual(source.count('"$apksigner" sign'), 1)
         self.assertIn("gradle-cache: 'false'", source)
         self.assertIn("require_configured_key", source)

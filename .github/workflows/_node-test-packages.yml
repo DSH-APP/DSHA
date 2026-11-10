@@ -1,6 +1,9 @@
 name: "Node: co-installable test packages"
 
-# 可复用节点（workflow_call）：按 matrix 构建、用独立测试证书签名并逐项校验 .debug / .dev 共存测试包。
+# 可复用节点（workflow_call）：按 matrix 构建、用固定测试证书签名并逐项校验 .test / .debug / .dev 共存测试包。
+#
+# 签名固定：测试证书的 SHA-256 钉在 ci/test-signing.json，签名后必须与 out/test-cert.pem 的指纹一致；
+# require_pinned_cert=true 时钉文件为空直接失败，避免“看起来固定、实际每次换证书”。
 #
 # 安全边界：本节点只读取测试证书 Secrets（SUNSET_TEST_*），绝不引用正式发布证书（DSHA_*）；
 # 持测试证书的 job 不写任何 Gradle 共享缓存（gradle-cache: 'false'），私钥只在 RUNNER_TEMP 内，
@@ -21,7 +24,7 @@ on:
         type: string
         default: ''
       variants:
-        description: 'debug+dev (default) | debug | dev'
+        description: 'debug+dev (default) | test | debug | dev | test+debug+dev | all'
         required: false
         type: string
         default: debug+dev
@@ -64,6 +67,11 @@ on:
         required: false
         type: boolean
         default: false
+      require_pinned_cert:
+        description: Fail unless the signing certificate matches the SHA-256 pinned in ci/test-signing.json
+        required: false
+        type: boolean
+        default: false
       artifact_prefix:
         description: Artifact name prefix; must be unique within the calling run
         required: false
@@ -94,7 +102,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(inputs.variants == 'debug+dev' && '["debug","dev"]' || format('["{0}"]', inputs.variants)) }}
+        variant: ${{ fromJSON(inputs.variants == 'all' && '["test","debug","dev"]' || inputs.variants == 'test+debug+dev' && '["test","debug","dev"]' || inputs.variants == 'debug+dev' && '["debug","dev"]' || format('["{0}"]', inputs.variants)) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
@@ -105,6 +113,7 @@ jobs:
       RELEASE_IDENTITY: ${{ inputs.release_identity }}
       VARIANT: ${{ matrix.variant }}
       REQUIRE_TEST_KEY: ${{ inputs.require_configured_key && 'true' || 'false' }}
+      REQUIRE_PINNED_CERT: ${{ inputs.require_pinned_cert && 'true' || 'false' }}
       APK_NAME_PREFIX: ${{ inputs.apk_name_prefix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -114,7 +123,7 @@ jobs:
       - name: Validate requested variant
         run: |
           set -eu
-          case "$VARIANT" in debug|dev) ;; *) echo "unknown variant: $VARIANT"; exit 1 ;; esac
+          case "$VARIANT" in test|debug|dev) ;; *) echo "unknown variant: $VARIANT"; exit 1 ;; esac
           case "$RELEASE_IDENTITY" in mod|upstream) ;; *) echo "unknown release identity: $RELEASE_IDENTITY"; exit 1 ;; esac
       # 测试证书同样不写共享缓存：与正式签名节点保持同一策略。
       - uses: ./.github/actions/setup-toolchain
@@ -134,6 +143,9 @@ jobs:
           python3 tools/release-identity.py --check --identity "$RELEASE_IDENTITY" >/dev/null
           if [ "$VARIANT" = debug ]; then
             ./gradlew :app:assembleStandardDebug -Pdsha.debugPackage=true -Pdsha.unsignedPackage=true \
+              "-Pdsha.identity=$RELEASE_IDENTITY" --no-daemon --max-workers=2
+          elif [ "$VARIANT" = test ]; then
+            ./gradlew :app:assembleStandardRelease -Pdsha.sunsetTest=true -Pdsha.unsignedPackage=true \
               "-Pdsha.identity=$RELEASE_IDENTITY" --no-daemon --max-workers=2
           else
             ./gradlew :app:assembleStandardRelease -Pdsha.devPackage=true -Pdsha.unsignedPackage=true \
@@ -193,6 +205,12 @@ jobs:
             version_suffix='-SunsetDebug'
             expected_suffix='.debug'
             expect_debuggable=1
+          elif [ "$VARIANT" = test ]; then
+            candidates=(app/build/outputs/apk/standard/release/*-unsigned.apk)
+            metadata=app/build/outputs/apk/standard/release/output-metadata.json
+            version_suffix='-SunsetTest'
+            expected_suffix=$(python3 tools/release-identity.py --identity "$RELEASE_IDENTITY" --field testSuffix)
+            expect_debuggable=0
           else
             candidates=(app/build/outputs/apk/standard/release/*-unsigned.apk)
             metadata=app/build/outputs/apk/standard/release/output-metadata.json
@@ -232,6 +250,12 @@ jobs:
           PYCODE
           )
           test "$pem_cert" = "$cert"
+          # 固定测试证书：签名证书必须与 ci/test-signing.json 的指纹一致（发布/固定模式缺钉直接失败）。
+          if [ "$REQUIRE_PINNED_CERT" = true ]; then
+            python3 tools/test-signing.py --check-pem out/test-cert.pem --require-pinned
+          else
+            python3 tools/test-signing.py --check-pem out/test-cert.pem
+          fi
           python3 tools/verify-dsh-upgrade-apk.py "$apk" > out/apk-runtime-verification.txt
           python3 tools/verify-recovery-apk.py "$apk" > out/apk-recovery-verification.txt
           python3 tools/verify-third-party-apk.py "$apk" --output out/third-party-apk.json

@@ -174,6 +174,8 @@ jobs:
           test -n "$cert"
           test "$cert" != "$production"
           test "$cert" != "$upstream"
+          # 固定测试证书：签名证书必须与 ci/test-signing.json 的指纹一致（空钉仅允许一次性构建）。
+          python3 tools/test-signing.py --check-pem out/test-cert.pem
           python3 tools/verify-dsh-upgrade-apk.py "$apk" > out/apk-runtime-verification.txt
           python3 tools/verify-recovery-apk.py "$apk" > out/apk-recovery-verification.txt
           python3 tools/verify-third-party-apk.py "$apk" --output out/third-party-apk.json
