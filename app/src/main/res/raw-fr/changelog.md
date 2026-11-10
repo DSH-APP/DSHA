@@ -1,4 +1,4 @@
-# DSHA 0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1 / build356
+# DSHA 0.2.2-20261111.0200-dsh0.2.2-rc.1 / build357
 
 - Correction de mise en page de build355 (T143 v3, `d3c07b4f8`) : le paquet officiel build355 contenait en réalité la première mise en page T143 (une seule carte avec les deux entrées côte à côte et l'ancien espacement de la page Réglages) ; cette version la remplace par la v3 que l'utilisateur a confirmée sur l'aperçu build353 `.debug`. Seuls deux fichiers de mise en page changent — `app/src/main/res/layout/fragment_settings.xml` et `plugin_list_footer.xml` — sans Java, sans clé de texte et sans changer le comportement au toucher.
 - Espace supérieur de la page Réglages resserré : le grand titre « Réglages » de la page ayant disparu, le `paddingTop` du conteneur passe de `shell_page_top` à `shell_section_margin` (10dp) et le premier `ShellSectionLabel` perd `layout_marginTop="@dimen/shell_section_gap"` (24dp) ; le premier groupe n'empile donc plus deux espaces et rejoint directement l'en-tête de page de la coque.

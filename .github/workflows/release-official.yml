@@ -21,6 +21,11 @@ on:
         description: Exact 40-character source commit to verify and publish
         required: true
         type: string
+      publish:
+        description: Create the tag and Release; false only builds and uploads the signed bundle
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -72,7 +77,11 @@ jobs:
           if identity['repository'] != os.environ['GITHUB_REPOSITORY'] or identity['ref'] != os.environ['GITHUB_REF']:
               raise SystemExit('RELEASE_IDENTITY_NOT_UPSTREAM')
           with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
-              output.write('apk_name=dsha-' + expected[:8] + '.apk\n')
+              gradle = open('app/build.gradle', encoding='utf-8').read()
+              match = re.search(r"ext\.dshaApkNameVersion = '([0-9A-Za-z.\-]+)'", gradle)
+              if not match:
+                  raise SystemExit('APK_NAME_VERSION_MISSING')
+              output.write('apk_name=dsha-' + match.group(1) + '.apk\n')
           PYCODE
       # 在任何构建前拒绝已存在的 tag；publish 节点创建前会再查一次。
       - name: Refuse an existing release tag before building
@@ -339,14 +348,14 @@ jobs:
               encoding='utf-8')
           Path('out/release-notes.md').write_text(
               notes.read_text(encoding='utf-8')
-              + '\n\n## CI 构建与校验\n\n'
+              + '\n\n<details>\n<summary>构建与校验信息</summary>\n\n'
               + f"- 源码 commit：`{os.environ['GITHUB_SHA']}`\n"
               + f"- Actions run：`{os.environ['GITHUB_RUN_ID']}`（attempt {os.environ['GITHUB_RUN_ATTEMPT']}）\n"
               + f"- APK：`{os.environ['APK_NAME']}`，{apk.stat().st_size} 字节，SHA-256 `{value['apkSha256']}`\n"
               + f"- 包名 / versionCode / versionName：`{value['packageName']}` / {value['versionCode']} / `{value['versionName']}`\n"
               + f"- 证书 SHA-256：`{cert}`（由 `apksigner` 从成品读取，与 ci/release-identity.upstream.json 一致）\n"
               + f"- 固定输入 bundle SHA-256：`{os.environ['ASSET_SHA']}`\n"
-              + "- 完整单测、Lint、Java 格式与源码门禁均在本 run 内执行；安装前请先校验 SHA-256 与证书。\n",
+              + "- 完整单测、Lint、Java 格式与源码门禁均在本 run 内执行；安装前请先校验 SHA-256 与证书。\n\n</details>\n",
               encoding='utf-8')
           Path('out/build-code.txt').write_text(code, encoding='utf-8')
           print(apk.stat().st_size, value['apkSha256'])
@@ -383,8 +392,9 @@ jobs:
           retention-days: 1
 
   publish:
-    name: Publish verified tag and prerelease
+    name: Publish verified tag and Release
     needs: [bind, build-signed]
+    if: inputs.publish
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -423,7 +433,7 @@ jobs:
             echo 'release tag already exists'; exit 1
           fi
           gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$EXPECTED_SHA" \
-            --prerelease --title "DSHA ${RELEASE_TAG#v} (build${BUILD_CODE})" --notes-file out/release-notes.md
+            --title "DSHA ${RELEASE_TAG#v} (build${BUILD_CODE})" --latest --notes-file out/release-notes.md
           gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
             "out/$APK_NAME" out/dsha-build-evidence.zip out/build-info.json out/SHA256SUMS
           gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json tagName,isPrerelease,assets,url

@@ -1,6 +1,6 @@
 # DSHA 现行构建说明
 
-> 当前身份（build356）：`DSHA` / `dsh.android.client` / `0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1` / versionCode 356。
+> 当前身份（build356）：`DSHA` / `dsh.android.client` / `0.2.2-20261111.0200-dsh0.2.2-rc.1` / versionCode 357。
 > 单一 Standard 变体：minSdk 30（Android 11+）、arm64-v8a、系统 WebView。原 `low`/GeckoView 兼容线与独立上岛包已删除。
 > 签名：历史 E7E3 发布证书（SHA-256 `e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5`），覆盖升级沿用原包名；Mod 自有 A4B0 证书只服务历史共存包。
 > 固定构建输入：公开仓库预发布 Release 资产，SHA-256 锁定；流程见 [docs/fixed-build-inputs.md](docs/fixed-build-inputs.md)。

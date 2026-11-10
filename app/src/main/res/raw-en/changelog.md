@@ -1,4 +1,4 @@
-# DSHA 0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1 / build356
+# DSHA 0.2.2-20261111.0200-dsh0.2.2-rc.1 / build357
 
 - build355 layout correction (T143 v3, `d3c07b4f8`): the build355 release actually shipped the first T143 layout (one shared card side by side and the old settings spacing); this build switches it to the v3 the user confirmed on the build353 `.debug` preview package. Only two layout files change — `app/src/main/res/layout/fragment_settings.xml` and `plugin_list_footer.xml` — with no Java, no string keys and no click behaviour changes.
 - Settings page top gap tightened: now that the in-page "Settings" heading is gone, the container `paddingTop` moves from `shell_page_top` to `shell_section_margin` (10dp) and the first `ShellSectionLabel` drops its `layout_marginTop="@dimen/shell_section_gap"` (24dp), so the first group no longer stacks two gaps and meets the shell page header directly.
