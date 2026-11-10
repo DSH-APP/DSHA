@@ -54,10 +54,14 @@ class LanguageDiscoverability(unittest.TestCase):
         self.assertIn('@+id/settings_language', read('app/src/main/res/layout/fragment_settings.xml'))
 
     def test_language_dialog_offers_follow_system(self):
-        self.assertIn('UiLanguagePreference.SYSTEM', self.settings,
+        # 方案 A：设置页只负责打开 LanguagePicker，选项网格在 LanguagePicker 内构建。
+        self.assertIn('LanguagePicker.show(', self.settings, "设置页语言入口必须打开语言选择弹窗")
+        picker = read('app/src/main/java/com/deepseekharness/app/ui/LanguagePicker.java')
+        self.assertIn('UiLanguagePreference.SYSTEM', picker,
                       "语言对话框必须提供「跟随系统」选项")
-        self.assertIn('"English"', self.settings,
-                      "语言选项必须有原样 English（不翻译），保证任何语言下都认得出")
+        self.assertIn('UiLanguagePreference.nativeName', picker,
+                      "语言选项必须以自身语言名称呈现，保证任何语言下都认得出")
+        self.assertIn('"English"', read('app/src/main/java/com/deepseekharness/app/util/UiLanguagePreference.java'))
 
     def test_preference_key_matches_history(self):
         # 不能改历史 SharedPreferences 键名，否则老用户语言丢失
@@ -78,25 +82,26 @@ class PluginRecyclerSetup(unittest.TestCase):
         self.assertIn('inflate(R.layout.plugin_list_footer, list, false)', src)
 
 class SystemLanguage(unittest.TestCase):
-    """默认跟随系统：非中文系统落英文；显式选择优先。"""
+    """默认跟随系统并保留十种支持的语言；显式选择优先。"""
 
     def setUp(self):
         self.pref = read('app/src/main/java/com/deepseekharness/app/util/UiLanguagePreference.java')
 
     def test_system_is_a_supported_value(self):
         self.assertIn('String SYSTEM = "system"', self.pref)
-        self.assertIn('return SYSTEM.equals(value) || ZH.equals(value) || EN.equals(value);', self.pref)
+        self.assertIn('return SYSTEM.equals(value) || isSupportedLanguage(value);', self.pref)
+        self.assertIn('List.of(ZH, ZH_HANT, EN, RU, JA, KO, AR, PT, LA, FR)', self.pref)
 
     def test_resolve_prefers_explicit_choice(self):
         self.assertIn('return SYSTEM.equals(chosen) ? resolveLanguage(languageTag) : chosen;', self.pref)
 
-    def test_non_chinese_falls_back_to_english(self):
-        # 只有中文落中文，其它语言（含无法识别）落英文
-        self.assertIn('return isChinese(languageTag) ? ZH : EN;', self.pref)
+    def test_unavailable_languages_fall_back_to_english(self):
+        self.assertIn('String available = canonicalLanguage(languageTag);', self.pref)
+        self.assertIn('return available == null ? EN : available;', self.pref)
 
     def test_ui_text_never_stores_system_as_a_render_language(self):
         ui = read('app/src/main/java/com/deepseekharness/app/util/UiText.java')
-        # 渲染层只应看到 zh/en；system 必须被解析掉，否则 choose() 永远走中文分支
+        # 渲染层只应看到支持的实际语言；system 必须先被解析掉。
         self.assertRegex(ui, r'language\s*=\s*UiLanguagePreference\.resolve\(\s*value\s*,\s*SystemLanguage\.tag\(\s*\)\s*\)\s*;')
         self.assertNotIn('language=UiLanguagePreference.normalize(value)', ui)
 
@@ -122,10 +127,24 @@ class NotificationClickable(unittest.TestCase):
         m = re.search(r'private PendingIntent agentNotificationIntent\(\)\s*\{(.*?)\n    \}', self.shell, re.S)
         self.assertIsNotNone(m, "找不到 agentNotificationIntent")
         body = m.group(1)
-        self.assertIn('ui.MainActivity.class', body)
+        self.assertIn('ui.MainActivity.navigationIntent(ctx)', body)
         self.assertIn('open_web', body, "通知点击应请求直接进入 Web 会话，而不是只停在启动页")
         self.assertIn('FLAG_IMMUTABLE', body, "Android 12+ 要求 PendingIntent 显式指定可变性")
-        self.assertIn('FLAG_ACTIVITY_CLEAR_TOP', body)
+        main = read('app/src/main/java/com/deepseekharness/app/ui/MainActivity.java')
+        route = re.search(r'public static Intent navigationIntent\(Context ctx\)\s*\{(.*?)\n  \}', main, re.S)
+        self.assertIsNotNone(route, '通知必须经过现有 Main 导航入口')
+        self.assertIn('BrowserTasks.navigationIntent(ctx)', route.group(1))
+        self.assertIn('FLAG_ACTIVITY_NEW_TASK', route.group(1))
+        tasks = read('app/src/main/java/com/deepseekharness/app/ui/BrowserTasks.java')
+        target = re.search(r'static Intent navigationIntent\(Context context\)\s*\{(.*?)\n  \}', tasks, re.S)
+        self.assertIsNotNone(target, '共享导航必须指定 Main 目标')
+        self.assertIn('MainActivity.class', target.group(1))
+        self.assertIn('FLAG_ACTIVITY_REORDER_TO_FRONT', target.group(1))
+        self.assertIn('FLAG_ACTIVITY_SINGLE_TOP', target.group(1))
+        for destructive in ('FLAG_ACTIVITY_CLEAR_TOP', 'FLAG_ACTIVITY_CLEAR_TASK',
+                            'FLAG_ACTIVITY_MULTIPLE_TASK', 'FLAG_ACTIVITY_NEW_DOCUMENT'):
+            self.assertNotIn(destructive, body + route.group(1) + target.group(1),
+                             '通知复用 Main 时不能清掉浏览器或强制新建任务')
 
     def test_auto_enter_judges_by_auth_url_not_by_failure_message(self):
         # getWebAuthFailure() 是「最近一次鉴权结果消息」，初始值与成功值都非 null
@@ -142,9 +161,9 @@ class NotificationClickable(unittest.TestCase):
         main = read('app/src/main/java/com/deepseekharness/app/ui/MainActivity.java')
         register = re.search(r'consumeOpenWeb\(\s*getIntent\(\s*\)\s*\)\s*;', main)
         select = re.search(
-            r'nav\.setSelectedItemId\(\s*'
-            r'(?:!controller\.hasUnresolvedWebSession\(\s*\)\s*&&\s*)?'
-            r'getIntent\(\s*\)\.getBooleanExtra\(\s*"open_plugins"', main)
+            r'nav\.setSelectedItemId\(\s*[^;]*?'
+            r'getIntent\(\s*\)\.getBooleanExtra\(\s*"open_plugins"'
+            r'[^;]*?\?\s*R\.id\.nav_plugins\s*:\s*R\.id\.nav_launch\s*\);', main)
         self.assertIsNotNone(register, 'open_web 标记必须在 onCreate 登记')
         self.assertIsNotNone(select, '初始导航仍须按 open_plugins 选择')
         self.assertLess(register.start(), select.start(),

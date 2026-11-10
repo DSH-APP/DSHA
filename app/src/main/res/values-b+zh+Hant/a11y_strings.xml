@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 無障礙服務宣告：所有變體包共用同一 service 宣告，標籤隨實際應用名區分。 -->
+<resources>
+    <string name="accessibility_service_label" formatted="false">"DSH-A-Su 螢幕控制"</string>
+    <string name="accessibility_desc" formatted="false">"兩個用途：① 自動讀取系統「無線偵錯」的配對碼；② 讓 AI 助手讀取螢幕、點按、輸入、按鍵、截圖以操作手機。DSH-A-Su 不做背景螢幕記錄，只在助手請求時讀取當下螢幕。"</string>
+</resources>

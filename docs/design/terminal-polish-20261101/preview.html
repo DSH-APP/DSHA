@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>终端页面与侧栏精修 · 预览 v4</title>
+<style>
+/* 1px = 1dp。设备框按截图实测（约 630×1008dp 竖屏 / 1008×630dp 横屏）还原后缩放；细节区为 1:1。 */
+:root {
+  --sans: Roboto, "Liberation Sans", "Noto Sans", Arial, "WenQuanYi Micro Hei", "Noto Sans CJK SC", sans-serif;
+  --mono: "Droid Sans Mono", "DejaVu Sans Mono", "Liberation Mono", monospace;
+  /* 终端与快捷键托盘：明暗主题都保持深色，只有侧栏跟随主题。 */
+  --term-surface: #000000;
+  --term-fg: #E4E8F0;
+  --tray: #0A0D13;
+  --tray-line: #1A212C;
+  --key: #1C2430;
+  --key-hi: rgba(255,255,255,.06);
+  --key-edge: #04060A;
+  --key-press: #2B3546;
+  --key-fn: #161D28;
+  --key-text: #E8ECF3;
+  --key-sym: #C9D2DF;
+  --key-ctl: #A9C4F7;
+  --key-cap: #7F8BA0;
+  --led-off: #354152;
+  --led-on: #8AB4FF;
+  --latch: #172A47;
+}
+body.light {
+  --panel: #FFFFFF; --panel-card: #F7F9FD; --text: #152033; --text-strong: #0D1727;
+  --muted: #59657A; --faint: #7A879C; --line: #DFE6F0; --line-strong: #C6D2E4;
+  --accent: #1E50D0; --accent-bg: #E8EFFF; --accent-soft: #DBE7FF; --accent-line: #B9CCF4;
+  --raised: #EEF2F8; --tile: #F1F4F9; --tile-press: #E6EBF3; --card: #FFFFFF;
+  --danger: #A93B43; --danger-soft: #FBEBEC; --danger-line: #EFCDD0;
+  --primary: #1E50D0; --on-primary: #FFFFFF; --scrim: rgba(9,16,30,.5);
+  --drawer-edge: transparent; --drawer-shadow: 10px 0 30px rgba(9,16,30,.22);
+}
+body.dark {
+  --panel: #0B0F16; --panel-card: #10151E; --text: #E4E8F0; --text-strong: #F2F5FA;
+  --muted: #9DA8BB; --faint: #7C8AA0; --line: #1E2735; --line-strong: #2E3B4F;
+  --accent: #8AB4FF; --accent-bg: #13233C; --accent-soft: #1B3050; --accent-line: #2C4C7C;
+  --raised: #151C27; --tile: #141B25; --tile-press: #1B2431; --card: #1A2230;
+  --danger: #E08A8A; --danger-soft: #2C1A1C; --danger-line: #4E2A2E;
+  --primary: #6AA4FF; --on-primary: #081428; --scrim: rgba(0,0,0,.62);
+  --drawer-edge: #1E2735; --drawer-shadow: none;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; padding: 28px 32px 56px; background: #E9EDF3; color: #152033; font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+body.dark { background: #171B22; color: #E4E8F0; }
+h1 { font-size: 22px; margin: 0 0 6px; }
+h2 { font-size: 15px; margin: 40px 0 14px; }
+.lead { margin: 0 0 18px; color: #59657A; font-size: 14px; line-height: 1.6; max-width: 1100px; }
+body.dark .lead { color: #9DA8BB; }
+.toolbar { display: flex; gap: 10px; margin-bottom: 26px; flex-wrap: wrap; }
+.toolbar button { font: inherit; font-size: 13px; padding: 8px 14px; border-radius: 10px; cursor: pointer; border: 1px solid #C6D2E4; background: #fff; color: #152033; }
+body.dark .toolbar button { background: #151C27; color: #E4E8F0; border-color: #2E3B4F; }
+.toolbar button.on { background: #1E50D0; color: #fff; border-color: #1E50D0; }
+
+.grid { display: flex; gap: 34px; flex-wrap: wrap; align-items: flex-start; }
+.shot { display: flex; flex-direction: column; gap: 10px; }
+.shot > .cap { font-size: 13px; font-weight: 700; }
+.shot > .cap span { font-weight: 400; color: #7A879C; margin-left: 6px; }
+.z-p { zoom: .56; } .z-l { zoom: .62; }
+
+/* ---------- 设备 ---------- */
+.device { position: relative; overflow: hidden; background: var(--term-surface); border-radius: 26px; box-shadow: 0 0 0 10px #0F131A, 0 24px 60px rgba(10,20,40,.32); display: flex; flex-direction: column; }
+.portrait { width: 630px; height: 1008px; } .landscape { width: 1008px; height: 630px; }
+.statusbar { height: 38px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 26px; color: #fff; font-size: 15px; font-weight: 500; }
+.statusbar i { font-style: normal; letter-spacing: 3px; opacity: .8; }
+.terminal { flex: 1; padding: 6px 4px; color: var(--term-fg); font-family: var(--mono); font-size: 15px; position: relative; }
+.cursor { display: inline-block; width: 8px; height: 17px; background: var(--term-fg); vertical-align: -3px; margin-left: 4px; }
+.gesture { height: 14px; flex: none; display: flex; justify-content: center; align-items: center; background: var(--tray); }
+.gesture::before { content: ""; width: 210px; height: 4px; border-radius: 4px; background: #E4E8F0; opacity: .85; }
+.ball { position: absolute; right: 16px; width: 40px; height: 40px; border-radius: 50%; background: #fff; color: #152033; display: grid; place-items: center; font: 700 13px var(--mono); border: 1px solid #C6D2E4; }
+
+/* ---------- 快捷键托盘 ---------- */
+.tray { flex: none; background: var(--tray); border-top: 1px solid var(--tray-line); padding: 5px 4px 3px; }
+.keyrow { display: flex; height: 48px; }
+/* 触控格 48dp 不变；可见键帽在格内四边各缩 2dp → 键缝 4dp。 */
+.key { flex: 1 1 0; min-width: 0; height: 48px; padding: 2px; cursor: pointer; user-select: none; }
+.key > b {
+  width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: 8px; background: var(--key); color: var(--key-text);
+  box-shadow: inset 0 1px 0 var(--key-hi), 0 1px 0 var(--key-edge);
+  font: 500 15px/1 var(--sans); letter-spacing: .1px; transition: background .07s ease;
+}
+.key:active > b, .key.pressed > b { background: var(--key-press); }
+/* 功能键（Esc/Tab/Ctrl/Alt/Home/End）底色略深一档：同一排里自然分出功能区与字符区。 */
+.key.fn > b { background: var(--key-fn); }
+.key.fn:active > b, .key.fn.pressed > b { background: var(--key-press); }
+.key.arrow > b { font-size: 18px; font-weight: 400; }
+.key.ksym > b { font: 400 17px/1 var(--mono); color: var(--key-sym); }
+.key.ctl > b { font: 500 15px/1 var(--mono); color: var(--key-ctl); letter-spacing: .5px; }
+.key > b small { display: none; margin-top: 4px; font: 500 10px/1 var(--sans); color: var(--key-cap); letter-spacing: .3px; }
+body.captions .key.ctl > b small { display: block; }
+body.captions .key.ctl > b { font-size: 14px; }
+/* 修饰键：键帽底部 14×3dp 指示条，熄灭 / 点亮，代替 v1 的角点。 */
+.key.mod > b { font-weight: 700; padding-bottom: 3px; }
+.key.mod > b::after { content: ""; position: absolute; bottom: 6px; left: 50%; width: 14px; height: 3px; margin-left: -7px; border-radius: 2px; background: var(--led-off); }
+.key.mod.latched > b { background: var(--latch); color: var(--led-on); box-shadow: inset 0 0 0 1px rgba(138,180,255,.55); }
+.key.mod.latched > b::after { background: var(--led-on); box-shadow: 0 0 6px rgba(138,180,255,.8); }
+
+/* ---------- 侧栏 ---------- */
+.overlay { position: absolute; inset: 38px 0 0 0; display: flex; }
+.overlay .scrim { flex: 1; background: var(--scrim); }
+.drawer { height: 100%; background: var(--panel); color: var(--text); display: flex; flex-direction: column; box-shadow: var(--drawer-shadow); border-right: 1px solid var(--drawer-edge); }
+.portrait .drawer { width: 330px; } .landscape .drawer { width: 290px; }
+
+.dh { display: flex; align-items: center; gap: 12px; padding: 16px 10px 14px 16px; }
+.ident { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--accent-bg); color: var(--accent); }
+.dh .t { flex: 1; min-width: 0; }
+.dh .t b { display: block; font-size: 19px; font-weight: 700; color: var(--text-strong); }
+.dh .t small { display: block; margin-top: 3px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.round { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none; color: var(--muted); cursor: pointer; }
+.round:hover { background: var(--raised); }
+
+.create { margin: 0 14px 16px; height: 52px; border-radius: 14px; background: var(--primary); color: var(--on-primary); display: flex; align-items: center; gap: 12px; padding: 0 16px 0 11px; cursor: pointer; }
+body.light .create { box-shadow: 0 8px 18px -10px rgba(30,80,208,.7); }
+.create .chip { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.18); }
+body.dark .create .chip { background: rgba(8,20,40,.12); }
+.create b { flex: 1; font-size: 15px; font-weight: 700; letter-spacing: .2px; }
+.create .hint { font-size: 12px; opacity: .78; }
+
+.list { flex: 1; overflow: hidden; padding: 0 10px 12px; }
+.gh { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 8px; color: var(--muted); }
+.gh b { flex: 1; font-size: 13px; font-weight: 700; color: var(--text); }
+.gh b em { font-style: normal; font-weight: 400; color: var(--faint); margin-left: 4px; }
+.count { min-width: 22px; height: 20px; padding: 0 7px; border-radius: 999px; display: grid; place-items: center; background: var(--raised); color: var(--muted); font-size: 11.5px; font-weight: 700; }
+.row { position: relative; display: flex; align-items: center; min-height: 56px; border-radius: 12px; margin: 2px 0 6px; padding: 0 4px 0 10px; }
+.row.active { background: var(--accent-bg); }
+.row.active::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; border-radius: 0 3px 3px 0; background: var(--accent); }
+.glyph { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; flex: none; background: var(--raised); color: var(--muted); }
+.row.active .glyph { background: var(--card); color: var(--accent); }
+body.light .row.active .glyph { box-shadow: 0 1px 2px rgba(16,24,40,.08); }
+.nm { flex: 1; min-width: 0; margin-left: 11px; display: flex; align-items: center; gap: 8px; }
+.nm.stack { flex-direction: column; align-items: flex-start; gap: 5px; margin-left: 6px; }
+.nm b { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; }
+.row.active .nm b { color: var(--accent); }
+.state { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px 0 8px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--raised); color: var(--muted); }
+.state::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.state.run { background: var(--card); color: var(--accent); }
+body.dark .state.run { background: var(--accent-soft); }
+.row-acts { display: flex; gap: 2px; }
+/* 行内动作：48dp 触控格内的 34dp 圆形视觉按钮；当前行用卡片底，让它们像按钮而不是散落的线稿。 */
+.mini { width: 44px; height: 48px; display: grid; place-items: center; cursor: pointer; }
+.mini span { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
+.row.active .mini span { background: var(--card); }
+body.light .row.active .mini span { box-shadow: 0 1px 2px rgba(16,24,40,.08); }
+.mini:hover span { color: var(--text); }
+
+.empty { margin: 2px 0 8px; height: 60px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: var(--faint); border: 1px dashed var(--line-strong); border-radius: 12px; }
+
+.foot { background: var(--panel-card); border-top: 1px solid var(--line); padding: 12px 14px 14px; }
+.sum { display: flex; align-items: center; gap: 10px; height: 44px; margin: -4px 0 6px; padding-left: 2px; }
+.sum .s { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; color: var(--muted); }
+.sum .s b { font-size: 13.5px; font-weight: 700; color: var(--text); margin-right: 6px; }
+.endall { height: 34px; display: inline-flex; align-items: center; gap: 6px; padding: 0 13px 0 10px; border-radius: 999px; flex: none; background: var(--danger-soft); color: var(--danger); font-size: 13px; font-weight: 700; box-shadow: inset 0 0 0 1px var(--danger-line); cursor: pointer; white-space: nowrap; }
+.acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+/* 底部动作：无描边的柔和填充块 + 强调色线性图标。v1 的 12 个彩色小方块太碎，这里只保留图标本身的颜色。 */
+.act { height: 50px; border-radius: 12px; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: var(--tile); font-size: 13.5px; font-weight: 500; color: var(--text); cursor: pointer; white-space: nowrap; overflow: hidden; }
+.act svg { color: var(--accent); flex: none; }
+.act:hover, .act.pressed { background: var(--tile-press); }
+.dense .act { height: 46px; font-size: 13px; gap: 8px; padding: 0 10px; }
+.note { margin-top: 12px; text-align: center; font-size: 11.5px; color: var(--faint); }
+
+/* ---------- 细节区 1:1 ---------- */
+.detail { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+.strip { width: 630px; background: #000; border-radius: 14px; overflow: hidden; }
+.strip .tray { border-top: 0; }
+.mini-drawer { width: 330px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(10,20,40,.18); }
+.mini-drawer .drawer { height: auto; border-right: 0; box-shadow: none; }
+.mini-drawer .list { flex: none; }
+.legend { font-size: 12px; color: #7A879C; margin: 8px 2px 0; }
+
+.notes { max-width: 1240px; margin-top: 38px; display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; }
+.card { background: #fff; border-radius: 14px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(16,24,40,.06); }
+body.dark .card { background: #151C27; }
+.card h3 { margin: 0 0 8px; font-size: 14px; }
+.card ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.75; color: #3B4659; }
+body.dark .card ul { color: #B9C3D3; }
+
+/* ---------- v3 侧栏：再减一层 ---------- */
+.dh.v3 { gap: 10px; padding: 14px 8px 12px 16px; }
+.dh.v3 .t b { font-size: 19px; }
+.round.danger { color: var(--danger); }
+.round.danger:hover { background: var(--danger-soft); }
+.create.v3 { margin: 0 14px 14px; }
+.list.v3 { padding: 0 10px 10px; }
+.gh.v3 { height: 32px; padding: 0 10px; margin-top: 4px; }
+.gh.v3 b { font-size: 12.5px; letter-spacing: .4px; color: var(--muted); }
+.gh.v3 b em { margin-left: 6px; font-weight: 400; color: var(--faint); }
+.gh.v3 .n { font-size: 12px; font-weight: 700; color: var(--faint); min-width: 16px; text-align: right; }
+.row.v3 { min-height: 54px; margin: 0 0 4px; }
+.row.v3 .nm { gap: 8px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: none; box-shadow: inset 0 0 0 1.5px var(--faint); }
+.dot.on { background: #2FA36B; box-shadow: 0 0 0 3px rgba(47,163,107,.16); }
+body.dark .dot.on { background: #5CC98F; box-shadow: 0 0 0 3px rgba(92,201,143,.16); }
+.empty.v3 { height: 40px; margin: 0 0 4px; border: 0; justify-content: flex-start; padding-left: 10px; font-size: 13px; color: var(--faint); }
+.foot.v3 { background: var(--panel); border-top: 1px solid var(--line); padding: 12px 14px 14px; }
+.foot.v3 .act { background: var(--tile); }
+
+/* ---------- v4 ---------- */
+.list.v4 { padding-top: 2px; }
+.dot.idle { background: var(--accent); box-shadow: none; }
+.dot.warn { background: #C98A12; box-shadow: none; }
+body.dark .dot.warn { background: #E5C07B; }
+.dim { position: absolute; inset: 0; background: rgba(9,16,30,.55); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.dlg-solo .dlg { box-shadow: 0 12px 34px rgba(10,20,40,.18); }
+.dlg { width: 440px; border-radius: 26px; background: var(--panel); color: var(--text); padding: 24px 20px 14px; box-shadow: 0 24px 60px rgba(0,0,0,.35); }
+body.dark .dlg { background: #121823; }
+.dlg-h { padding: 0 6px 16px; }
+.dlg-h b { display: block; font-size: 21px; font-weight: 700; color: var(--text-strong); }
+.dlg-h small { display: block; margin-top: 6px; font-size: 13px; color: var(--muted); }
+.opt { display: flex; align-items: center; gap: 14px; min-height: 72px; padding: 12px 14px; border-radius: 16px; background: var(--tile); margin-bottom: 8px; cursor: pointer; }
+.opt:hover { background: var(--tile-press); }
+.oi { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; flex: none; background: var(--accent-bg); color: var(--accent); }
+.oi.brand { background: var(--card); color: var(--accent); box-shadow: inset 0 0 0 1px var(--line); }
+.ot { flex: 1; min-width: 0; }
+.ot b { display: block; font-size: 15.5px; font-weight: 700; color: var(--text); }
+.ot small { display: block; margin-top: 4px; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.tag { flex: none; font-size: 11.5px; font-weight: 700; color: var(--accent); background: var(--accent-bg); padding: 3px 9px; border-radius: 999px; }
+.dlg-b { display: flex; justify-content: flex-end; padding: 8px 4px 0; }
+.tbtn { height: 40px; padding: 0 18px; display: inline-flex; align-items: center; border-radius: 999px; font-size: 14px; font-weight: 700; color: var(--accent); cursor: pointer; }
+.tbtn.strong { background: var(--primary); color: var(--on-primary); }
+.hl { display: flex; flex-direction: column; gap: 14px; padding: 2px 6px 4px; }
+.hi { display: flex; gap: 12px; align-items: flex-start; }
+.hic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; background: var(--accent-bg); color: var(--accent); }
+.hi b { display: block; font-size: 14.5px; font-weight: 700; color: var(--text); }
+.hi small { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+.legend2 { margin: 16px 6px 4px; padding: 12px 14px; border-radius: 14px; background: var(--tile); display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.legend2 span { display: inline-flex; align-items: center; gap: 7px; }
+</style>
+</head>
+<body class="light">
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-term" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-prompt" viewBox="0 0 24 24"><path d="M5 7l5 5-5 5M12 18h7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="M14.5 5.5l4 4M5 19l1-4.2L15.8 5a1.9 1.9 0 012.7 0l.5.5a1.9 1.9 0 010 2.7L9.2 18z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5M6.5 9.5V19h11V9.5M10 19v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M18 7h2M4 12h3M11 12h9M4 17h11M19 17h1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-kbd" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 10h.01M10 10h.01M13 10h.01M16 10h.01M7 13h.01M17 13h.01M9.5 14.5h5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5M12 8h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 15V6a2 2 0 012-2h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="9" y="9" width="6" height="6" rx="1.2" fill="currentColor"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5l2.1 5.4 5.4 2.1-5.4 2.1L12 18.5l-2.1-5.4L4.5 11l5.4-2.1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M18.5 16v4M16.5 18h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 13l2.5-7h11L20 13v5H4zM4 13h4.5l1 2h5l1-2H20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<h1>终端页面与侧栏精修 · 预览 v4</h1>
+<p class="lead">v4：PTY / 简易两个分组合并成一个会话列表，按创建先后排列，类型只由左侧图标区分；新建会话改为三张类型卡片；说明改为分段图标列表并附状态点图例（原先底部那句说明与摘要并入这里）。</p>
+<div class="toolbar">
+  <button id="bLight" class="on" onclick="setTheme('light')">侧栏浅色</button>
+  <button id="bDark" onclick="setTheme('dark')">侧栏夜间</button>
+  <button id="bCap" onclick="toggleCaptions()">控制键副标签（可选）</button>
+</div>
+
+<div class="grid">
+  <div class="shot">
+    <div class="cap">① 全屏终端<span>竖屏 · 默认两排键位</span></div>
+    <div class="z-p"><div class="device portrait">
+      <div class="statusbar"><span>18:58</span><i>•••</i><span>100</span></div>
+      <div class="terminal">root@localhost:~#<span class="cursor"></span><div class="ball" style="top:500px">&gt;_</div></div>
+      <div class="tray" data-keys="latch"></div><div class="gesture"></div>
+    </div></div>
+  </div>
+  <div class="shot">
+    <div class="cap">② 会话侧栏<span>竖屏抽屉 · 完整文字</span></div>
+    <div class="z-p"><div class="device portrait">
+      <div class="statusbar"><span>18:58</span><i>•••</i><span>100</span></div>
+      <div class="terminal">root@localhost:~#<span class="cursor"></span></div>
+      <div class="tray" data-keys></div><div class="gesture"></div>
+      <div class="overlay"><div class="drawer" data-drawer="wide"></div><div class="scrim"></div></div>
+    </div></div>
+  </div>
+  <div class="shot">
+    <div class="cap">③ 横屏<span>短窗 · 短文字 · 名称与状态上下排</span></div>
+    <div class="z-l"><div class="device landscape">
+      <div class="statusbar"><span>18:59</span><i>•••</i><span>100</span></div>
+      <div class="terminal" style="padding-left:298px">root@localhost:~#<span class="cursor"></span></div>
+      <div class="tray" data-keys style="margin-left:290px"></div><div class="gesture" style="margin-left:290px"></div>
+      <div class="overlay"><div class="drawer" data-drawer="dense"></div></div>
+    </div></div>
+  </div>
+</div>
+
+
+<h2>弹窗 · 新建终端会话 / 说明</h2>
+<div class="grid">
+  <div class="shot">
+    <div class="cap">④ 新建终端会话<span>三种类型卡片 · 点卡片直接新建</span></div>
+    <div class="z-p"><div class="device portrait">
+      <div class="statusbar"><span>18:58</span><i>•••</i><span>100</span></div>
+      <div class="terminal">root@localhost:~#<span class="cursor"></span></div>
+      <div class="tray" data-keys></div><div class="gesture"></div>
+      <div class="dim"><div class="dlg">
+        <div class="dlg-h"><b>新建终端会话</b><small>选择类型，会话在后台独立运行</small></div>
+        <div class="opt">
+          <span class="oi"><svg width="22" height="22"><use href="#i-term"/></svg></span>
+          <span class="ot"><b>PTY 终端</b><small>完整交互终端，支持 vim、top、补全与颜色</small></span>
+          <span class="tag">常用</span>
+        </div>
+        <div class="opt">
+          <span class="oi"><svg width="22" height="22"><use href="#i-prompt"/></svg></span>
+          <span class="ot"><b>简易终端</b><small>按行执行命令，适合读屏与粘贴长命令</small></span>
+        </div>
+        <div class="opt">
+          <span class="oi brand"><svg width="22" height="22"><use href="#i-spark"/></svg></span>
+          <span class="ot"><b>DSH CLI</b><small>在新 PTY 中直接启动 DSH 命令行</small></span>
+        </div>
+        <div class="dlg-b"><span class="tbtn">取消</span></div>
+      </div></div>
+    </div></div>
+  </div>
+  <div class="shot">
+    <div class="cap">⑤ 说明<span>分段图标列表 · 状态点图例</span></div>
+    <div class="z-p"><div class="device portrait">
+      <div class="statusbar"><span>18:58</span><i>•••</i><span>100</span></div>
+      <div class="terminal">root@localhost:~#<span class="cursor"></span></div>
+      <div class="tray" data-keys></div><div class="gesture"></div>
+      <div class="dim"><div class="dlg">
+        <div class="dlg-h"><b>终端会话</b></div>
+        <div class="hl">
+          <div class="hi"><span class="hic"><svg width="18" height="18"><use href="#i-home"/></svg></span><span><b>返回不结束进程</b><small>返回或回到主界面只关闭页面，会话继续在后台运行。</small></span></div>
+          <div class="hi"><span class="hic"><svg width="18" height="18"><use href="#i-x"/></svg></span><span><b>结束需确认</b><small>会话行的 × 结束单个进程；标题栏的停止图标结束全部。两者都会先确认，再逐个核验退出。</small></span></div>
+          <div class="hi"><span class="hic"><svg width="18" height="18"><use href="#i-pen"/></svg></span><span><b>重命名</b><small>铅笔图标修改会话名，不影响正在运行的命令。</small></span></div>
+          <div class="hi"><span class="hic"><svg width="18" height="18"><use href="#i-kbd"/></svg></span><span><b>快捷键</b><small>长按底部任一快捷键可自定义；Ctrl / Alt 点一下锁定一次，指示条亮起即生效。</small></span></div>
+        </div>
+        <div class="legend2">
+          <span><i class="dot on"></i>运行中</span>
+          <span><i class="dot idle"></i>空闲</span>
+          <span><i class="dot warn"></i>待核验</span>
+          <span><i class="dot off"></i>已退出</span>
+        </div>
+        <div class="dlg-b"><span class="tbtn strong">知道了</span></div>
+      </div></div>
+    </div></div>
+  </div>
+</div>
+
+<h2>细节 1:1</h2>
+<div class="detail">
+  <div>
+    <div class="strip"><div class="tray" data-keys="demo"></div></div>
+    <div class="legend">状态示例：Ctrl 已锁定（指示条点亮）· Tab 按下态 · 功能键底色深一档 · ^C/^D/^Z 等宽淡蓝 · 符号等宽</div>
+  </div>
+  <div class="mini-drawer"><div class="drawer" data-drawer="wide" data-pressed="1"></div></div>
+</div>
+
+<h2>弹窗 1:1</h2>
+<div class="detail"><div class="dlg-solo"><div class="dlg">
+        <div class="dlg-h"><b>新建终端会话</b><small>选择类型，会话在后台独立运行</small></div>
+        <div class="opt">
+          <span class="oi"><svg width="22" height="22"><use href="#i-term"/></svg></span>
+          <span class="ot"><b>PTY 终端</b><small>完整交互终端，支持 vim、top、补全与颜色</small></span>
+          <span class="tag">常用</span>
+        </div>
+        <div class="opt">
+          <span class="oi"><svg width="22" height="22"><use href="#i-prompt"/></svg></span>
+          <span class="ot"><b>简易终端</b><small>按行执行命令，适合读屏与粘贴长命令</small></span>
+        </div>
+        <div class="opt">
+          <span class="oi brand"><svg width="22" height="22"><use href="#i-spark"/></svg></span>
+          <span class="ot"><b>DSH CLI</b><small>在新 PTY 中直接启动 DSH 命令行</small></span>
+        </div>
+        <div class="dlg-b"><span class="tbtn">取消</span></div>
+      </div></div><div class="dlg-solo"><div class="dlg">
+        <div class="dlg-h"><b>终端会话</b></div>
+        <div class="hl">
+          <div class="hi"><span class="hic"><svg width="18" height="18"><use href="#i-home"/></svg></span><span><b>返回不结束进程</b><small>返回或回到主界面只关闭页面，会话继续在后台运行。</small></span></div>
+          <div class="hi"><span class="hic"><svg width="18" height="18"><use href="#i-x"/></svg></span><span><b>结束需确认</b><small>会话行的 × 结束单个进程；标题栏的停止图标结束全部。两者都会先确认，再逐个核验退出。</small></span></div>
+          <div class="hi"><span class="hic"><svg width="18" height="18"><use href="#i-pen"/></svg></span><span><b>重命名</b><small>铅笔图标修改会话名，不影响正在运行的命令。</small></span></div>
+          <div class="hi"><span class="hic"><svg width="18" height="18"><use href="#i-kbd"/></svg></span><span><b>快捷键</b><small>长按底部任一快捷键可自定义；Ctrl / Alt 点一下锁定一次，指示条亮起即生效。</small></span></div>
+        </div>
+        <div class="legend2">
+          <span><i class="dot on"></i>运行中</span>
+          <span><i class="dot idle"></i>空闲</span>
+          <span><i class="dot warn"></i>待核验</span>
+          <span><i class="dot off"></i>已退出</span>
+        </div>
+        <div class="dlg-b"><span class="tbtn strong">知道了</span></div>
+      </div></div></div>
+<div class="notes">
+  <div class="card">
+    <h3>混合会话列表</h3>
+    <ul>
+      <li>去掉“PTY 交互 / 简易 按行”分组标题和计数，只留一个列表，按创建先后排列。</li>
+      <li>类型靠左侧图标区分（终端框 = PTY，&gt;_ = 简易），名称本身也带类型。</li>
+      <li>只高亮当前显示的那个会话；状态点：绿 = 运行中，蓝 = 空闲，黄 = 待核验 / 待清理，空心 = 已退出。</li>
+      <li>空列表只显示一行“暂无会话，点上方新建”。</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>新建终端会话</h3>
+    <ul>
+      <li>从纯文字列表改为三张卡片：图标 + 名称 + 一句用途说明，点卡片直接新建。</li>
+      <li>PTY 标“常用”；DSH CLI 写明“在新 PTY 中启动”，避免误会成第三种终端。</li>
+      <li>仍用 DshaDialogBuilder 自定义内容，可滚动，适配短屏与大字体。</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>说明</h3>
+    <ul>
+      <li>标题改为“终端会话”；一段长文拆成四条：返回不结束进程、结束需确认、重命名、快捷键。</li>
+      <li>侧栏删掉的文字（底部说明、统计、“运行中”胶囊）都由这里的状态点图例兜底。</li>
+      <li>“抽屉 / 内联 / 工作台常驻”这类布局解释删掉：用户看得见，不需要读。</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const ROWS = [
+  [["Esc","fn"],["Tab","fn"],["Ctrl","fn mod"],["Alt","fn mod"],["←","arrow"],["↓","arrow"],["↑","arrow"],["→","arrow"]],
+  [["^C","ctl","中断"],["^D","ctl","结束"],["^Z","ctl","挂起"],["Home","fn"],["End","fn"],["|","ksym"],["/","ksym"],["-","ksym"]],
+];
+const icon = (id, s = 18) => `<svg width="${s}" height="${s}"><use href="#${id}"/></svg>`;
+document.querySelectorAll("[data-keys]").forEach(tray => {
+  const mode = tray.dataset.keys;
+  tray.innerHTML = ROWS.map(r => `<div class="keyrow">${r.map(([l, c, cap]) => {
+    let cls = c;
+    if ((mode === "latch" || mode === "demo") && l === "Ctrl") cls += " latched";
+    if (mode === "demo" && l === "Tab") cls += " pressed";
+    return `<div class="key ${cls}"><b>${l}${cap ? `<small>${cap}</small>` : ""}</b></div>`;
+  }).join("")}</div>`).join("");
+});
+function row(active, glyph, name, state, dense) {
+  return `<div class="row v3 ${active ? "active" : ""}">
+      <div class="glyph">${icon(glyph, 17)}</div>
+      <div class="nm"><b>${name}</b><i class="dot ${state}"></i></div>
+      <div class="row-acts"><div class="mini"><span>${icon("i-pen", 17)}</span></div><div class="mini"><span>${icon("i-x", 17)}</span></div></div>
+    </div>`;
+}
+function drawer(mode, pressed) {
+  const dense = mode === "dense";
+  const acts = dense
+    ? [["键盘","i-kbd"],["粘贴","i-copy"],["聚焦输入","i-prompt"],["显示","i-sliders"],["主界面","i-home"],["说明","i-info"]]
+    : [["显示键盘","i-kbd"],["粘贴文本","i-copy"],["回到输入","i-prompt"],["显示设置","i-sliders"],["返回主界面","i-home"],["说明","i-info"]];
+  return `
+  <div class="dh v3" ${dense ? 'style="padding-top:8px;padding-bottom:6px"' : ""}>
+    <div class="ident">${icon("i-term", 20)}</div>
+    <div class="t"><b>会话</b></div>
+    <div class="round danger" title="结束全部会话">${icon("i-stop", 19)}</div>
+    <div class="round">${icon("i-x", 20)}</div>
+  </div>
+  <div class="create v3"><div class="chip">${icon("i-plus", 18)}</div><b>新建终端会话</b></div>
+  <div class="list v3 v4">
+    ${row(true, "i-term", "PTY 1", "on", dense)}
+    ${row(false, "i-term", "DSH CLI", "on", dense)}
+    ${row(false, "i-prompt", "简易 1", "idle", dense)}
+    ${row(false, "i-term", "PTY 2", "off", dense)}
+  </div>
+  <div class="foot v3 ${dense ? "dense" : ""}">
+    <div class="acts">${acts.map(([t, i], n) => `<div class="act ${pressed && n === 0 ? "pressed" : ""}">${icon(i, dense ? 17 : 19)}${t}</div>`).join("")}</div>
+  </div>`;
+}
+document.querySelectorAll("[data-drawer]").forEach(d => d.innerHTML = drawer(d.dataset.drawer, d.dataset.pressed));
+function setTheme(t) {
+  const cap = document.body.classList.contains("captions");
+  document.body.className = t + (cap ? " captions" : "");
+  bLight.classList.toggle("on", t === "light"); bDark.classList.toggle("on", t === "dark");
+}
+function toggleCaptions() { bCap.classList.toggle("on", document.body.classList.toggle("captions")); }
+document.querySelectorAll(".key.mod").forEach(k => k.addEventListener("click", () => k.classList.toggle("latched")));
+</script>
+</body>
+</html>

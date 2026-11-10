@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 弹窗里选项与说明条目的图标块：强调浅底、无描边、12dp 圆角。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/terminal_accent_bg" />
+    <corners android:radius="12dp" />
+</shape>

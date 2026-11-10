@@ -1,0 +1,6 @@
+# DSHA launch target bundle patch: one row. The host half registers an authenticated
+# route that reads/writes the native entry target; the browser half (package.json
+# dsh.client) renders the card in this bundle's plugin page.
+- insert:
+    - id: dsh-launch-target
+      name: 'dsh-launch-target'

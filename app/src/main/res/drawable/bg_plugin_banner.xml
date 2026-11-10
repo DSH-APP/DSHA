@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 安全模式警示条：底色固定 shell_warn_soft。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_warn_soft" />
+    <corners android:radius="@dimen/radius_control" />
+</shape>

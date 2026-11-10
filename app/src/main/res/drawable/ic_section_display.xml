@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UI v5 方案 A：设置子页分组标题前的 16dp 图标（包装 @drawable/ic_terminal_display，颜色由 drawableTint 决定）。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="16dp" android:height="16dp" android:drawable="@drawable/ic_terminal_display" />
+</layer-list>

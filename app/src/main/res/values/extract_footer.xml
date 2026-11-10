@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 运行环境维护页底栏（ExtractActivity）。只服务这一页，不改全局 Shell 按钮尺寸。 -->
+<resources>
+    <dimen name="extract_primary_height">48dp</dimen>
+    <dimen name="extract_link_icon">16dp</dimen>
+    <dimen name="extract_chip_radius">12dp</dimen>
+
+    <!-- 次要入口：独立描边小按钮，触控高度 44dp；强调态背景与颜色由 ExtractFooter 按状态切换。 -->
+    <style name="ExtractLinkButton" parent="ShellTextButton">
+        <item name="android:minHeight">@dimen/touch_min</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:background">@drawable/bg_extract_chip</item>
+        <item name="android:textSize">12.5sp</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:drawablePadding">5dp</item>
+        <item name="android:lineSpacingMultiplier">0.95</item>
+    </style>
+
+</resources>

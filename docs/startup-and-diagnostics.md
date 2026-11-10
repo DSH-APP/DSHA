@@ -1,6 +1,8 @@
 # 启动、恢复工作台与诊断导出
 
-> 核验日期：2026-10-21。按本工作树 build190/F13 的入口与数据流核验，F10 `087724c` 及 F11 保留参考历史归属。本页更新只核对源码，未运行构建、软件测试、设备、模型对话或长时验收；最终版本、正式执行数量和发布状态以 [README](../README.md) 及其本批交付记录为准；[F12记录](releases/v0.2.1-rc.2-build190-fix12-20261021.md)保留已发布历史归属。 本批最终软件与产物范围由[F13记录](releases/v0.2.1-rc.2-build190-fix13-20261021.md)统一填写；本文不预填最终版本或正式总数。
+> 2026-10-23 build191修订：CAS改专用轻入口与FD安全扫描，仍固定proot并完整扫描；分段计时只作诊断，不替代唯一回执和退出证明。`backendReadyMs`记录实际官方鉴权接受，`browserReadyMs`记录首次有效网页ready；`elapsedMs`在ready/失败/停止后冻结，`runElapsedMs`另记运行代次时长。ready后的真实错误保留为运行期记录，不复制关键词推测的`RELATED_PLUGIN_LOG`或触发已就绪代次的启动失败。准入/排队另有观察，trace仍从`diagnostics.begin`开始；接入旧Web的0ms不是新启动测速。[本轮实现、模块检查与最终待验范围](releases/v0.2.1-rc.2-build191-startup-20261023.md)优先于下方F13说明。
+
+> 核验基线：2026-10-21（原于 build190/F13 入口与数据流核对）。当前身份为 build356 / DSH 0.2.2-rc.1 / 单一 Standard；F10–F13 记录属于历史，不代表本版。本页更新只核对源码，未运行设备、模型对话或长时验收；最终版本、软件与 APK 结果见 [README](../README.md) 与本轮 CI / Release 回执，本文不预填测试总数。
 
 先在 Main 判断失败发生在哪一层，再选择检查、恢复或导出。环境就绪、后端鉴权、网页就绪分别有自己的证据；某一层完成不能替代后一层。安装操作见[安装与维护](install-and-maintenance.md)，配置修复见[配置快照](config-snapshots.md)。
 
@@ -8,16 +10,19 @@
 
 | 入口/状态 | 当前行为 | 失败或限制 |
 |---|---|---|
-| 未完成欢迎 | Main 和恢复工作台先进入 Welcome，再到环境准备 | “跳过介绍”仍进入准备页，不绕过环境合同 |
-| 环境未就绪或维护未完成 | Main 转入安装/维护页 | 有明确受限入口时可看原生工具；不把受限进入等同 Web 正常 |
+| 未完成欢迎 | Main 和恢复工作台先进入 OnboardingActivity（欢迎 → 用途 → 授权 → 完成） | 授权可跳过；完成前不进入 Main，不绕过环境合同 |
+| 环境未就绪或维护未完成 | Main 整屏进入运行环境维护页；未完成维护事务或未关闭的隔离试运行现场先“恢复中断维护” | 用户显式选择后才进入受限主界面；受限入口不写就绪标记，终端、Web 与插件执行仍过环境门禁 |
+| 覆盖更新 | Main 整屏进入运行环境维护页（新版式阶段条与阶段列表），同一候选只自动尝试一次；成功且就绪后进入主界面，不自动启动 Web | 自动路径不写 `limited_entry`；维护后未就绪时停留在维护页 |
 | 首次准备完成 | 先显示 Main，再异步提交一次正常 Web 启动 | 手动 Start/Stop 可覆盖尚在排队的首次请求；旋转不重复提交 |
 | Web 启动中 | 当前运行代次记录阶段、时间线和插件观察 | 60 秒提示不是强杀时限；慢启动、超时和未知执行不自动重放业务 |
 | 已捕获后端鉴权地址 | 后端输出提供当前本机服务地址与鉴权资料 | 不等于网页 bundle、插件或页面已经就绪 |
 | 网页已就绪 | 当前页面观察器报告 ready，写入启动状态 | 仍不证明未使用的插件、外部模型或所有设备能力成功 |
 
-入口为[MainActivity](../app/src/main/java/com/deepseekharness/app/ui/MainActivity.java)、[WelcomeActivity](../app/src/main/java/com/deepseekharness/app/ui/WelcomeActivity.java)、[FirstRunWebStart](../app/src/main/java/com/deepseekharness/app/ui/FirstRunWebStart.java)。[StartupPipeline](../app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java)处理正常启动准备，[StartupDiagnostics](../app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java)整合后端与网页观察。页面事件仍校验宿主、运行代次、当前同源文档、nonce 与顺序，见[StartupPageGate](../app/src/main/java/com/deepseekharness/app/util/StartupPageGate.java)；nonce 不是同源脚本之间的安全隔离。
+覆盖安装后“旧树 + 新 APK”的展示层判定、自动开始安全门禁与 Web 启动准入见[覆盖升级、运行时维护与插件依赖契约](overwrite-upgrade-and-maintenance.md)；本页只描述启动状态分层，不替代该契约。
 
-停止与重启必须遵循真实进程身份及退出屏障；不能按端口、名字或裸 PID 强杀。proroot 鉴权前明确失败后的窄回退条件见[运行引擎](runtime-engines.md)，不能把慢启动和插件错误当成换引擎重放理由。
+入口为[MainActivity](../app/src/main/java/com/deepseekharness/app/ui/MainActivity.java)、[OnboardingActivity](../app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java)、[ExtractActivity](../app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java)（维护详情）与[FirstRunWebStart](../app/src/main/java/com/deepseekharness/app/ui/FirstRunWebStart.java)。[StartupPipeline](../app/src/main/java/com/deepseekharness/app/core/StartupPipeline.java)处理正常启动准备，[StartupDiagnostics](../app/src/main/java/com/deepseekharness/app/core/StartupDiagnostics.java)整合后端与网页观察。页面事件仍校验宿主、运行代次、当前同源文档、nonce 与顺序，见[StartupPageGate](../app/src/main/java/com/deepseekharness/app/util/StartupPageGate.java)；nonce 不是同源脚本之间的安全隔离。
+
+停止与重启必须遵循真实进程身份及退出屏障；不能按端口、名字或裸 PID 强杀。proroot 鉴权前明确失败后的窄回退条件见[运行引擎](runtime-engines.md)，不能把慢启动和插件错误当成换引擎重放理由。用户手点维护时由维护动作自行完成停止（普通停止未确认时按身份核验升级一次强制结束，见契约 I9），**不需要**用户先进入受限主界面手动停止再回来更新。
 
 ## 宿主重建与网页首次说明
 
@@ -42,7 +47,7 @@ F13的软件负控使用F12实际编译类复现了两项行为：一次后台�
 
 [WebSessionRecheck](../app/src/main/java/com/deepseekharness/app/core/WebSessionRecheck.java)与[生命周期控制器](../app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java)对前后台请求合并异步复核，不在UI线程读proc或等待HTTP。UNKNOWN恢复必须仍为同一个record/generation/instance/实际port/auth URL，重新取得内核观察、真实HTTP鉴权及第二次内核观察；全部有效才创建新的`AgentTaskRegistration`对象并通知原页面继续。它使用该记录原有taskToken/nonce，旧registration永久revoke，旧row/queued票据不复活；不重新提交对话、stop票、后台启动或已派发业务。
 
-Standard的[WebPreviewActivity](../app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java)和Low的[GeckoPreviewActivity](../app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java)保留原页面/会话等待同身份核验，而不把null ready直接当实例结束。UNKNOWN有覆盖页面的原生状态面板，并停用WebView交互或Gecko active状态；文件、麦克风、IME等Native入口仍只接受严格ready identity。展示身份只用于保留页面，不是额外授权，也不承诺冻结全部JS、后端RPC或Node业务；既有合法后端工作不会为此被杀掉或重放。定向JVM/Robolectric正控与F12旧编译类负控已完成；Standard实际Activity的onCreate/GEN路由/newIntent、同DOM多次恢复、新Blob writer及Service WakeLock在Robo夹具内验证。Low只完成编译和源码审查，没有完整Gecko Activity回归。完整双版Gradle与最终APK由负责人另做；系统后台保活、故障手机、真实账号/模型及全设备效果仍需各自实测，本页不宣布故障手机已经恢复正常。
+Standard 的 [WebPreviewActivity](../app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java) 保留原页面/会话等待同身份核验，而不把 null ready 直接当实例结束。UNKNOWN 有覆盖页面的原生状态面板，并停用 WebView 交互；文件、麦克风、IME 等 Native 入口仍只接受严格 ready identity。展示身份只用于保留页面，不是额外授权，也不承诺冻结全部 JS、后端 RPC 或 Node 业务；既有合法后端工作不会为此被杀掉或重放。定向 JVM/Robolectric 正控与 F12 旧编译类负控已完成；Standard 实际 Activity 的 onCreate/GEN 路由/newIntent、同 DOM 多次恢复、新 Blob writer 及 Service WakeLock 在 Robo 夹具内验证。build209 起 low/Gecko 兼容线已删除，不再有双版 Gradle 或 Gecko Activity 回归可做；完整单 Standard Gradle 与最终 APK 由负责人另做。系统后台保活、故障手机、真实账号/模型及全设备效果仍需各自实测，本页不宣布故障手机已经恢复正常。
 
 后端鉴权与网页挂载仍分层。startup观察器晚注入、首次说明或空会话尚无composer时，只用锁定rc2实际布局的`shell-bottom`与`shell-overlay`组合确认挂载，任意非空root不够。首次说明只在官方Host配置的真实视图确认精确`welcomeNoticeVersion`已持久化后结束，不以按钮点击、mutate调用已返回或任意非空值代替确认。
 
@@ -90,7 +95,22 @@ F12对应的两网页内核真实Host负控覆盖了失败响应先到、后台�
 | 仅本次附加说明 | 当前动作勾选后，仅包含用户主动填写的文本 | 不持久化或恢复该选择；上限 32768 字符；不自动捕获业务正文 |
 | 复制/导出文本诊断 | 用户主动选择后输出当前报告及说明 | 脱敏是有限格式规则，公开反馈前仍应查看内容 |
 
-默认故障包不采集原始进程输出、对话正文、凭据或完整异常链；已经轮换的历史不能重建。[DiagnosticExportArchive](../app/src/main/java/com/deepseekharness/app/backup/DiagnosticExportArchive.java)限制最多 32 项、单项 256 KiB、总内容预算 1 MiB，标准 tar/gzip 封装并含逐项 SHA-256。当前没有自动上传报告。
+默认故障包不采集原始进程输出、对话正文、凭据或完整异常链；已经轮换的历史不能重建。[DiagnosticExportArchive](../app/src/main/java/com/deepseekharness/app/backup/DiagnosticExportArchive.java)限制最多 32 项、单项 256 KiB、总内容预算 1 MiB，标准 tar/gzip 封装并含逐项 SHA-256。当前没有自动上传报告。测试包另有一个更宽上限的反馈导出（见下节），正式故障包的 1 MiB 路径保持不放宽。
+
+### 测试包反馈导出（.test / .debug / .dev）
+
+测试包（`-Pdsha.sunsetTest=true`、`-Pdsha.debugPackage=true` 或 `-Pdsha.devPackage=true`）在自检页「反馈」卡内额外显示「导出反馈日志（测试包）」；正式包 `BuildConfig.TEST_PACKAGE=false`，该行与分隔线保持隐藏，正式故障包的数量、单文件与总量上限都不变。入口只由构建变体开关决定，不按包名或运行时状态猜测。
+
+导出的 `DSHA-feedback-…tar.gz` 由[TestPackageFeedbackExporter](../app/src/main/java/com/deepseekharness/app/core/TestPackageFeedbackExporter.java)在本机一次性生成，可「另存为…」（SAF `ACTION_CREATE_DOCUMENT`，写后回读字节校验）或「分享…」（只交给系统分享目标，不经过网络、不自动上传）：
+
+| 来源 | 内容 | 边界 |
+|---|---|---|
+| 本进程 logcat | `logcat -d --pid=<自己的 pid> -v threadtime`；只读本进程 | 失败或无权限时降级为空，原因写入 manifest；最多最近 256 KiB |
+| 本应用私有记录 | `last-startup-failure.log`、`diagnostic-events*.txt`、`cold-install-diagnostics.txt`、`startup-history/` 最近 5 条、`maintenance/<uuid>` 最近 3 条、`runtime-health/` 最近 3 条 | 逐文件 ≤256 KiB（小型记录 64 KiB） |
+| DSH / 宿主 | rootfs 内 `root/dsh-web.log`、`root/dsh-lan.log`、`repair-builtin.log`，插件事务 `plugin-install-operations/` 最近 3 条与完成证明 | 逐文件尾部有界；只读现有路径，不新建日志来源 |
+| 设备与环境 | `device.json`：机型/品牌/ABI/系统版本/安全补丁、locale、包名与版本、`TEST_PACKAGE`、已装或随包 runtime descriptor 的 `runtimeId`、运行方式、uptime、启动/维护/应急状态 | 不采集 IMEI、序列号、账号或 API key |
+
+收集器 [FeedbackCapture](../app/src/main/java/com/deepseekharness/app/util/FeedbackCapture.java) 与[DiagnosticExportArchive](../app/src/main/java/com/deepseekharness/app/backup/DiagnosticExportArchive.java)的参数化上限为最多 48 项、单项 ≤256 KiB、总量 ≤8 MiB；来源不存在、越出私有根、软链或读取失败只记入 manifest 的 `capture` 段，不阻断整包。所有文本统一经 [SensitiveData](../app/src/main/java/com/deepseekharness/app/util/SensitiveData.java) 规则脱敏，包内 `README.txt` 与 `manifest.json` 的 `capture` 段写明来源、边界与「可能仍含个人信息，请自行决定是否上传」。自由格式日志和自定义头字段仍可能包含脱敏规则覆盖不到的信息，分享前应人工检查；应用本身不建立上传连接。
 
 ## 记录的限额与解读
 
@@ -105,4 +125,4 @@ F12对应的两网页内核真实Host负控覆盖了失败响应先到、后台�
 
 ## 修改与验证入口
 
-关联测试为[FirstRunWebStartTest](../app/src/test/java/com/deepseekharness/app/ui/FirstRunWebStartTest.java)、[WebLifecycleResponsivenessTest](../app/src/test/java/com/deepseekharness/app/core/WebLifecycleResponsivenessTest.java)、[StartupRecoveryLifecycleTest](../app/src/test/java/com/deepseekharness/app/core/StartupRecoveryLifecycleTest.java)、[StartupDiagnosticsTest](../app/src/test/java/com/deepseekharness/app/core/StartupDiagnosticsTest.java)、[DiagnosticHistoryTest](../app/src/test/java/com/deepseekharness/app/core/DiagnosticHistoryTest.java)、[DiagnosticExportArchiveTest](../app/src/test/java/com/deepseekharness/app/backup/DiagnosticExportArchiveTest.java)。本文仅核对链接与实现，未重新运行这些测试。
+关联测试为[FirstRunWebStartTest](../app/src/test/java/com/deepseekharness/app/ui/FirstRunWebStartTest.java)、[WebLifecycleResponsivenessTest](../app/src/test/java/com/deepseekharness/app/core/WebLifecycleResponsivenessTest.java)、[StartupRecoveryLifecycleTest](../app/src/test/java/com/deepseekharness/app/core/StartupRecoveryLifecycleTest.java)、[StartupDiagnosticsTest](../app/src/test/java/com/deepseekharness/app/core/StartupDiagnosticsTest.java)、[DiagnosticHistoryTest](../app/src/test/java/com/deepseekharness/app/core/DiagnosticHistoryTest.java)、[DiagnosticExportArchiveTest](../app/src/test/java/com/deepseekharness/app/backup/DiagnosticExportArchiveTest.java)、[DiagnosticExportArchiveLimitsTest](../app/src/test/java/com/deepseekharness/app/backup/DiagnosticExportArchiveLimitsTest.java)、[FeedbackCaptureTest](../app/src/test/java/com/deepseekharness/app/util/FeedbackCaptureTest.java)、[BoundedByteTailTest](../app/src/test/java/com/deepseekharness/app/util/BoundedByteTailTest.java)、[DiagnosticActivityRenderingTest](../app/src/test/java/com/deepseekharness/app/ui/DiagnosticActivityRenderingTest.java)。本文仅核对链接与实现，未重新运行这些测试。

@@ -224,9 +224,11 @@ public final class RecoveredLanAuthTest {
       assertTrue(LanProxyService.setDshAuthCookie(COOKIE, generation));
       token = LanProxyService.getLanToken(null);
       Class<?> runType = Class.forName(LanProxyService.class.getName() + "$ProxyRun");
-      var constructor = runType.getDeclaredConstructor(long.class, long.class, int.class);
+      var constructor =
+          runType.getDeclaredConstructor(long.class, long.class, int.class, String.class);
       constructor.setAccessible(true);
-      run = constructor.newInstance(1L, generation, listener.getLocalPort());
+      String verifier = com.deepseekharness.app.util.LanPassword.create("fixture-password");
+      run = constructor.newInstance(1L, generation, listener.getLocalPort(), verifier);
       var server = runType.getDeclaredField("server");
       server.setAccessible(true);
       server.set(run, listener);

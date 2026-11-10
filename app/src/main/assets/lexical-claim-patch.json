@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
   "retired": true,
   "reason": "Upstream replaced claim text styling with atomic CommandChipNode. Do not reapply the retired splitText/TOKEN_STYLE transform.",
-  "sourceSha256": "8554738cbeeb5218ad1bfa4773ef094363b066d052a1893d7a96797c5bc33a63",
+  "sourceSha256": "9a37949cc76603ea3a965ce4d0d6ca65885de4a9808345c38748e595ac396378",
   "patches": []
 }

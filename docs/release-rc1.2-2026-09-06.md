@@ -5,7 +5,7 @@
 
 ## 交付
 
-两版 APK 和对应 `.apk.sha256` 均位于 `F:\DSHA_RESTART\release`，历史版本保留。
+两版 APK 和对应 `.apk.sha256` 均位于 `<local-workspace>`，历史版本保留。
 
 | 文件 | 字节数 | SHA-256 |
 |---|---:|---|

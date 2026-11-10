@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-reduced="false">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>DSHA · 版本更新页压缩（交互原型）</title>
+  <style>
+    /* ============================================================
+       UI v5 设计 token 离线副本（同 plugin-card-20261101），只用于本预览。
+       ============================================================ */
+    :root {
+      color-scheme: light;
+      --page: #e9eef6; --bg: #f3f6fb; --surface: #fcfdff; --raised: #e7edf6;
+      --line: rgba(29, 58, 96, .075); --line-2: rgba(29, 58, 96, .145);
+      --text: #18273f; --text-2: #50617a; --muted: #5a6b86;
+      --accent: #1e50d0; --accent-soft: rgba(30, 80, 208, .08); --on-accent: #ffffff;
+      --good: #287453; --good-soft: rgba(40, 116, 83, .10);
+      --warn: #8c600d; --warn-soft: rgba(140, 96, 13, .10);
+      --bad: #af404b; --bad-soft: rgba(175, 64, 75, .10);
+      --bezel: #1b2333; --fold: rgba(220, 40, 40, .55);
+      --shadow: 0 18px 50px rgba(17, 32, 62, .14); --shadow-soft: 0 2px 8px rgba(17, 32, 62, .08);
+      --sans: system-ui, -apple-system, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --ease: cubic-bezier(.22, 1, .36, 1);
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --page: #070a10; --bg: #0b0f16; --surface: #131923; --raised: #1b2432;
+      --line: rgba(203, 220, 255, .07); --line-2: rgba(203, 220, 255, .13);
+      --text: #edf1f7; --text-2: #b0bbcc; --muted: #8895aa;
+      --accent: #6aa4ff; --accent-soft: rgba(106, 164, 255, .08); --on-accent: #091729;
+      --good: #93ccaf; --good-soft: rgba(147, 204, 175, .10);
+      --warn: #e4be83; --warn-soft: rgba(228, 190, 131, .10);
+      --bad: #eea3a6; --bad-soft: rgba(238, 163, 166, .10);
+      --bezel: #2a3446; --shadow: 0 18px 50px rgba(0, 0, 0, .5); --shadow-soft: 0 2px 8px rgba(0, 0, 0, .35);
+    }
+    [data-reduced="true"] *, [data-reduced="true"] *::before, [data-reduced="true"] *::after { transition: none !important; animation: none !important; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { background: var(--page); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+    button, input, select { font: inherit; color: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    /* ---------------- 设计台外壳（不属于 App） ---------------- */
+    .top { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 16px; background: var(--page); border-bottom: 1px solid var(--line-2); }
+    .top h1 { margin: 0 6px 0 0; font-size: 15px; font-weight: 650; }
+    .top h1 small { font-weight: 450; color: var(--muted); margin-left: 6px; font-size: 12px; }
+    .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--raised); }
+    .seg button { min-height: 32px; padding: 0 10px; border: 0; border-radius: 8px; background: none; color: var(--text-2); font-size: 12.5px; font-weight: 500; cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-soft); }
+    .chk { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: 12.5px; color: var(--text-2); cursor: pointer; }
+    .chk input { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; }
+
+    .stage { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; max-width: 1640px; margin: 0 auto; padding: 20px; align-items: start; }
+    .device-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; overflow-x: auto; padding: 4px 4px 24px; }
+    /* 尺寸按 dp：手机 360×780，平板竖屏 800×1280 等比 0.85，平板横屏 1280×800 等比 0.9 */
+    .device { --dw: 360px; --dh: 780px; position: relative; flex: none; width: var(--dw); height: var(--dh); overflow: hidden; border: 10px solid var(--bezel); border-radius: 36px; background: var(--bg); box-shadow: var(--shadow); }
+    .device[data-device="tablet-p"] { --dw: 680px; --dh: 1088px; border-radius: 28px; }
+    .device[data-device="tablet-l"] { --dw: 1152px; --dh: 720px; border-radius: 28px; }
+    .device.is-short { --dh: 620px; }
+    .device[data-device="tablet-p"].is-short { --dh: 860px; }
+    .device[data-device="tablet-l"].is-short { --dh: 600px; }
+    .metric { font-size: 12.5px; color: var(--text-2); text-align: center; }
+    .metric b { color: var(--text); font-variant-numeric: tabular-nums; }
+    .metric .ok { color: var(--good); } .metric .no { color: var(--bad); }
+
+    .inspector { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 68px; max-height: calc(100vh - 88px); overflow: auto; padding-bottom: 8px; }
+    .panel { background: var(--surface); border: 1px solid var(--line-2); border-radius: 16px; padding: 14px 16px; }
+    .panel h2 { margin: 0 0 10px; font-size: 13.5px; font-weight: 650; }
+    .panel p, .panel li { font-size: 12.5px; line-height: 1.6; color: var(--text-2); }
+    .panel ul { margin: 0; padding-left: 18px; }
+    .panel p { margin: 0 0 8px; }
+    .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+    .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); grid-column: span 2; }
+    .field select { min-height: 34px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--bg); color: var(--text); font-size: 12.5px; }
+    .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .btns button { min-height: 34px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--bg); color: var(--text); font-size: 12.5px; cursor: pointer; }
+    .btns button.primary { background: var(--accent); border-color: transparent; color: var(--on-accent); }
+    table.spec { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table.spec th, table.spec td { text-align: left; vertical-align: top; padding: 6px 6px 6px 0; border-top: 1px solid var(--line); line-height: 1.5; color: var(--text-2); }
+    table.spec th { color: var(--muted); font-weight: 500; }
+    .panel code { font-family: var(--mono); font-size: 11px; color: var(--accent); overflow-wrap: anywhere; }
+
+    body[data-device^="tablet"] .stage { grid-template-columns: 1fr; }
+    body[data-device^="tablet"] .inspector { position: static; max-height: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); align-items: start; }
+    @media (max-width: 1100px) { .stage { grid-template-columns: 1fr; } .inspector { position: static; max-height: none; } }
+    @media (max-width: 760px) {
+      .stage { padding: 0; gap: 0; } .device-wrap { padding: 0 0 12px; }
+      .device[data-device="phone"] { width: 100%; height: min(88vh, var(--dh)); border: 0; border-radius: 0; box-shadow: none; }
+      .inspector { padding: 16px; } .top { position: static; }
+    }
+
+    /* ---------------- App 屏幕 ---------------- */
+    .screen { --fs: 1; position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg); color: var(--text); font-size: calc(14px * var(--fs)); }
+    .sbar { flex: none; height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; }
+    .appbar { flex: none; display: flex; align-items: center; gap: 4px; min-height: 56px; padding: 0 12px 0 4px; }
+    .appbar h2 { margin: 0; font-size: calc(18px * var(--fs)); font-weight: 650; }
+    .icon-btn { display: grid; place-items: center; width: 48px; height: 48px; border: 0; border-radius: 14px; background: none; color: var(--text); cursor: pointer; }
+    .icon-btn:hover { background: var(--accent-soft); }
+    .scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 16px 24px; position: relative; }
+    .col { width: 100%; max-width: 640px; margin: 0 auto; }
+    .fold { position: absolute; left: 0; right: 0; height: 0; border-top: 2px dashed var(--fold); pointer-events: none; z-index: 5; }
+    .fold span { position: absolute; right: 6px; top: -17px; font-size: 10px; color: var(--fold); font-weight: 600; }
+
+    /* 主卡：版本 + 通道 + 状态 + 主操作 */
+    .card { border-radius: 20px; border: 1px solid var(--line); background: var(--surface); }
+    .hero { padding: 16px; }
+    .hero-top { display: flex; align-items: center; gap: 12px; }
+    .glyph { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--raised); color: var(--accent); }
+    .hero-id { flex: 1; min-width: 0; }
+    .hero-name { margin: 0; font-size: calc(16px * var(--fs)); font-weight: 650; line-height: 1.3; }
+    .hero-ver { display: inline-flex; align-items: center; gap: 4px; margin: 2px 0 0 -6px; padding: 2px 6px; min-height: 28px; border: 0; border-radius: 8px; background: none; color: var(--text-2); font-size: calc(13px * var(--fs)); font-variant-numeric: tabular-nums; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+    .hero-ver:hover { background: var(--accent-soft); color: var(--accent); }
+    .hero-ver svg { width: 14px; height: 14px; transition: transform .24s var(--ease); }
+    .hero-ver[aria-expanded="true"] svg { transform: rotate(180deg); }
+    .pill { flex: none; padding: 2px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: calc(11.5px * var(--fs)); font-weight: 600; line-height: 1.6; white-space: nowrap; }
+    .fullver { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 8px; margin-top: 10px; padding: 6px 4px 6px 12px; border-radius: 12px; background: var(--bg); }
+    .fullver dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: calc(12px * var(--fs)); }
+    .fullver dt { color: var(--muted); }
+    .fullver dd { margin: 0; font-family: var(--mono); overflow-wrap: anywhere; }
+    .copy { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; }
+    .copy:hover { background: var(--accent-soft); color: var(--accent); }
+    .copy svg { width: 16px; height: 16px; }
+    .hr { height: 1px; margin: 14px 0 10px; background: var(--line); }
+
+    .chan { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; min-height: 44px; }
+    .chan-label { color: var(--text-2); font-size: calc(13.5px * var(--fs)); }
+    .toggle { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--raised); }
+    .toggle button { min-height: 38px; min-width: 76px; padding: 0 14px; border: 0; border-radius: 9px; background: none; color: var(--text-2); font-size: calc(13.5px * var(--fs)); font-weight: 550; cursor: pointer; }
+    .toggle button[aria-checked="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-soft); }
+    .toggle button:disabled { cursor: not-allowed; opacity: .5; }
+
+    .status { --tone: var(--muted); display: flex; align-items: flex-start; gap: 10px; margin-top: 8px; }
+    .status[data-tone="accent"] { --tone: var(--accent); } .status[data-tone="good"] { --tone: var(--good); }
+    .status[data-tone="warn"] { --tone: var(--warn); } .status[data-tone="bad"] { --tone: var(--bad); }
+    .dot { flex: none; width: 8px; height: 8px; margin-top: calc(7px * var(--fs)); border-radius: 50%; background: var(--tone); }
+    .status.is-busy .dot { animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: .3; transform: scale(.7); } }
+    .status { flex-wrap: wrap; }
+    .status-text { flex: 1 1 11em; min-width: 0; margin: 0; padding: 2px 0; font-size: calc(13.5px * var(--fs)); line-height: 1.5; user-select: text; overflow-wrap: anywhere; white-space: pre-line; }
+    .status[data-tone="bad"] .status-text { color: var(--bad); }
+    .link { flex: none; min-height: 32px; margin: -4px -8px 0 auto; padding: 0 8px; border: 0; border-radius: 9px; background: none; color: var(--accent); font-size: calc(13px * var(--fs)); font-weight: 600; cursor: pointer; }
+    .link:hover { background: var(--accent-soft); }
+
+    /* 当前实现对照用的细进度条 */
+    .bar { position: relative; height: 4px; border-radius: 999px; background: var(--raised); overflow: hidden; }
+    .bar i { position: absolute; inset: 0 auto 0 0; width: var(--p, 0%); border-radius: inherit; background: var(--accent); transition: width .35s var(--ease); }
+    .bar.is-ind i { width: 36%; animation: slide 1.1s var(--ease) infinite; }
+    @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(280%); } }
+
+    /* ============================================================
+       进度按钮：按钮本身就是进度条，宽高与位置始终不变。
+       data-mode：
+         idle  实心主按钮，可点（检查 / 下载 / 继续下载 / 安装）
+         sweep 浅色轨道 + 流动光带，不确定进度（检查中）
+         fill  浅色轨道 + 从左向右填充（下载中，--p 为百分比）
+         full  填满 + 微光，不确定进度（下载后核验 / 安装前重新校验）
+         wait  填满、静止、不可点（校验完成，等待返回页面）
+       文字用两层：底层深色、上层浅色并按 --p 裁切，跨过填充边界也看得清。
+       ============================================================ */
+    .pbtn { --p: 0%; position: relative; display: block; width: 100%; min-height: 48px; margin-top: 12px; padding: 0; border: 0; border-radius: 14px; overflow: hidden; isolation: isolate;
+      background: var(--accent); color: var(--on-accent); font-size: calc(15px * var(--fs)); font-weight: 650; text-align: center; cursor: pointer;
+      transition: background-color .32s var(--ease); }
+    .pbtn:not([data-mode="idle"]) { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--line-2); cursor: default; }
+    .pbtn .pf { position: absolute; inset: 0 auto 0 0; width: var(--p); background: var(--accent); z-index: -1; transition: width .4s var(--ease); }
+    .pbtn[data-mode="idle"] .pf, .pbtn[data-mode="sweep"] .pf { width: 0; }
+    .pbtn[data-mode="full"] .pf, .pbtn[data-mode="wait"] .pf { width: 100%; }
+    .pbtn .pl { display: flex; align-items: center; justify-content: center; min-height: 48px; padding: 8px 16px; font-variant-numeric: tabular-nums; }
+    .pbtn .pl.dark { color: var(--accent); }
+    .pbtn .pl.lite { position: absolute; inset: 0; color: var(--on-accent); clip-path: inset(0 calc(100% - var(--p)) 0 0); transition: clip-path .4s var(--ease); }
+    .pbtn[data-mode="idle"] .pl.dark { color: var(--on-accent); }
+    .pbtn[data-mode="idle"] .pl.lite, .pbtn[data-mode="sweep"] .pl.lite { display: none; }
+    .pbtn[data-mode="full"] .pl.lite, .pbtn[data-mode="wait"] .pl.lite { clip-path: inset(0 0 0 0); }
+    .pbtn[data-mode="sweep"]::after, .pbtn[data-mode="full"]::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; animation: sweep 1.3s var(--ease) infinite; }
+    .pbtn[data-mode="sweep"]::after { background: linear-gradient(90deg, transparent 0 30%, color-mix(in srgb, var(--accent) 22%, transparent) 50%, transparent 70% 100%); }
+    .pbtn[data-mode="full"]::after { z-index: 1; background: linear-gradient(90deg, transparent 0 35%, rgba(255, 255, 255, .22) 50%, transparent 65% 100%); }
+    @keyframes sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+    .pbtn[data-mode="wait"] { opacity: .72; }
+    .pbtn.no-tr, .pbtn.no-tr .pf, .pbtn.no-tr .pl { transition: none !important; }
+
+    /* 候选版本卡 */
+    .cand { margin-top: 12px; padding: 14px 16px 6px; }
+    .cand-head { display: flex; align-items: flex-start; gap: 12px; }
+    .cand-title { margin: 0; font-size: calc(15px * var(--fs)); font-weight: 650; }
+    .cand-meta { margin-top: 2px; color: var(--muted); font-size: calc(12px * var(--fs)); font-variant-numeric: tabular-nums; }
+    .cand-size { margin-left: auto; color: var(--text-2); font-size: calc(12.5px * var(--fs)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .notes { margin: 10px 0 0; padding-left: 18px; color: var(--text-2); font-size: calc(13px * var(--fs)); line-height: 1.55; }
+    .notes li + li { margin-top: 2px; }
+    .notes.is-clamp li:nth-child(n+4) { display: none; }
+    .cand-foot { display: flex; justify-content: flex-end; margin: 2px -8px 0 0; }
+    .textbtn { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 10px; border: 0; border-radius: 12px; background: none; color: var(--accent); font-size: calc(13.5px * var(--fs)); font-weight: 600; cursor: pointer; }
+    .textbtn:hover { background: var(--accent-soft); }
+    .textbtn svg { width: 16px; height: 16px; }
+
+    /* 管理列表 */
+    .sec { margin: 18px 4px 8px; color: var(--muted); font-size: calc(12.5px * var(--fs)); font-weight: 600; letter-spacing: .02em; }
+    .list { overflow: hidden; }
+    .row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px 12px; border: 0; background: none; color: var(--text); text-align: left; cursor: pointer; }
+    .row + .row { box-shadow: inset 0 1px 0 var(--line); }
+    .row:hover { background: var(--accent-soft); }
+    .row[aria-current="true"] { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+    .row .ri { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--raised); color: var(--accent); }
+    .row .ri svg { width: 18px; height: 18px; }
+    .row .rt { flex: 1; min-width: 0; }
+    .row .rn { font-size: calc(14.5px * var(--fs)); font-weight: 600; }
+    .row .rs { margin-top: 1px; color: var(--muted); font-size: calc(12px * var(--fs)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row .chev { color: var(--muted); width: 16px; height: 16px; }
+
+    /* 平板横屏双栏 */
+    .split { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(360px, 420px) 1px minmax(0, 1fr); }
+    .split > .divider { background: var(--line-2); }
+    .pane { padding: 4px 32px 28px; }
+    .pane-tabs { display: flex; gap: 4px; padding: 4px; margin-bottom: 18px; border-radius: 14px; background: var(--raised); max-width: 420px; }
+    .pane-tabs button { flex: 1; min-height: 40px; border: 0; border-radius: 10px; background: none; color: var(--text-2); font-size: calc(14px * var(--fs)); font-weight: 550; cursor: pointer; }
+    .pane-tabs button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-soft); }
+    .pane h3 { margin: 0; font-size: calc(21px * var(--fs)); font-weight: 650; }
+    .pane .sub { margin: 4px 0 16px; color: var(--muted); font-size: calc(13px * var(--fs)); }
+    .dl { display: grid; margin: 0 0 18px; padding: 2px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); max-width: 560px; }
+    .dl > div { display: grid; grid-template-columns: 7em 1fr; gap: 12px; align-items: center; min-height: 42px; padding: 6px 0; }
+    .dl > div + div { border-top: 1px solid var(--line); }
+    .dl dt { color: var(--muted); font-size: calc(12.5px * var(--fs)); }
+    .dl dd { margin: 0; font-size: calc(13px * var(--fs)); overflow-wrap: anywhere; }
+    .pane .notes { max-width: 68ch; font-size: calc(14px * var(--fs)); line-height: 1.7; }
+    .pane-h { margin: 0 0 4px; color: var(--muted); font-size: calc(12.5px * var(--fs)); font-weight: 600; }
+    .empty { padding: 56px 12px; text-align: center; color: var(--muted); font-size: calc(13.5px * var(--fs)); line-height: 1.6; }
+
+    /* ---------------- 当前实现（按 activity_update.xml 与截图还原） ---------------- */
+    .lg-title { margin: 6px 0 0; font-size: calc(26px * var(--fs)); font-weight: 700; }
+    .lg-intro { margin: 6px 0 18px; color: var(--text-2); font-size: calc(13px * var(--fs)); }
+    .lg-kv { padding: 16px; margin-bottom: 12px; }
+    .lg-kv > div { display: flex; align-items: center; gap: 12px; min-height: 38px; font-size: calc(12px * var(--fs)); }
+    .lg-kv span:first-child { flex: 1; color: var(--text-2); }
+    .lg-kv span:last-child { max-width: 230px; text-align: right; overflow-wrap: anywhere; }
+    .lg-label { margin: 10px 0 8px; font-size: calc(12px * var(--fs)); }
+    .lg-select { display: flex; align-items: center; width: 100%; height: 52px; padding: 0 18px; border: 1px solid var(--line-2); border-radius: 16px; background: var(--surface); font-size: calc(15px * var(--fs)); cursor: pointer; }
+    .lg-select span { flex: 1; text-align: center; }
+    .lg-select:disabled { color: var(--muted); cursor: not-allowed; }
+    .lg-status { margin-top: 12px; font-size: calc(12px * var(--fs)); line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+    .lg-bytes { margin-top: 8px; color: var(--muted); font-size: calc(12px * var(--fs)); }
+    .lg-btn { display: block; width: 100%; min-height: 52px; margin-top: 12px; border: 0; border-radius: 16px; background: var(--accent); color: var(--on-accent); font-size: calc(15px * var(--fs)); font-weight: 650; cursor: pointer; }
+    .lg-btn.is-2 { background: var(--surface); color: var(--text); border: 1px solid var(--line-2); margin-top: 8px; }
+    .lg-btn:disabled { background: var(--raised); color: var(--muted); border: 0; cursor: not-allowed; }
+    .lg-link { display: block; width: 100%; min-height: 48px; margin-top: 4px; border: 0; background: none; color: var(--accent); font-size: calc(15px * var(--fs)); cursor: pointer; }
+
+    /* ---------------- 弹层 / 对话框 / Toast ---------------- */
+    .overlay { position: absolute; inset: 0; z-index: 20; display: none; }
+    .overlay.is-on { display: block; }
+    .scrim { position: absolute; inset: 0; background: rgba(5, 10, 20, .42); animation: fade .2s ease; }
+    @keyframes fade { from { opacity: 0; } }
+    .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 84%; display: flex; flex-direction: column; padding: 8px 16px 14px; border-radius: 24px 24px 0 0; background: var(--surface); box-shadow: var(--shadow); animation: rise .28s var(--ease); font-size: calc(14px * var(--fs)); }
+    @keyframes rise { from { transform: translateY(40%); opacity: 0; } }
+    .device[data-device^="tablet"] .sheet { left: 50%; right: auto; bottom: auto; top: 50%; width: 480px; max-height: 80%; border-radius: 24px; transform: translate(-50%, -50%); animation: pop .22s var(--ease); }
+    @keyframes pop { from { opacity: 0; transform: translate(-50%, -46%); } }
+    .grip { flex: none; width: 36px; height: 4px; margin: 2px auto 10px; border-radius: 999px; background: var(--line-2); }
+    .device[data-device^="tablet"] .grip { display: none; }
+    .sheet h2 { margin: 6px 4px 2px; font-size: calc(17px * var(--fs)); }
+    .sheet .sub { margin: 0 4px 12px; color: var(--muted); font-size: calc(12.5px * var(--fs)); }
+    .sheet-body { flex: 1; min-height: 0; overflow: auto; padding: 0 4px; }
+    .sheet .dl { max-width: none; background: var(--bg); }
+    .sheet p.note { margin: 0 0 12px; color: var(--text-2); font-size: calc(12.5px * var(--fs)); line-height: 1.55; }
+    .sheet-acts { flex: none; display: flex; gap: 8px; margin-top: 12px; }
+    .sheet-acts button { flex: 1; min-height: 48px; border: 0; border-radius: 14px; background: var(--raised); color: var(--text); font-size: calc(14.5px * var(--fs)); font-weight: 600; cursor: pointer; }
+    .sheet-acts button.is-primary { background: var(--accent); color: var(--on-accent); }
+    .toast { position: absolute; left: 50%; bottom: 40px; z-index: 25; width: max-content; max-width: calc(100% - 40px); padding: 10px 16px; border-radius: 12px; background: var(--text); color: var(--bg); font-size: calc(13px * var(--fs)); transform: translate(-50%, 12px); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s var(--ease); }
+    .toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <h1>版本更新页压缩<small>交互原型 · 非 App 资源</small></h1>
+    <div class="seg" role="group" aria-label="方案"><button data-set="design" data-v="new">压缩方案</button><button data-set="design" data-v="legacy">当前实现</button></div>
+    <div class="seg" role="group" aria-label="设备"><button data-set="device" data-v="phone">手机 360</button><button data-set="device" data-v="tablet-p">平板竖屏</button><button data-set="device" data-v="tablet-l">平板横屏</button></div>
+    <div class="seg" role="group" aria-label="主题"><button data-set="theme" data-v="light">浅色</button><button data-set="theme" data-v="dark">夜间</button></div>
+    <div class="seg" role="group" aria-label="语言"><button data-set="lang" data-v="zh">中文</button><button data-set="lang" data-v="en">EN</button></div>
+    <div class="seg" role="group" aria-label="字体倍数"><button data-set="fs" data-v="1">1.0×</button><button data-set="fs" data-v="1.15">1.15×</button><button data-set="fs" data-v="1.3">1.3×</button></div>
+    <label class="chk"><input type="checkbox" data-flag="short">短屏</label>
+    <label class="chk"><input type="checkbox" data-flag="fold">首屏线</label>
+    <label class="chk"><input type="checkbox" data-flag="reduced">减弱动效</label>
+  </header>
+
+  <main class="stage">
+    <section class="device-wrap" aria-label="设备预览">
+      <div class="device" id="device" data-device="phone">
+        <div class="screen" id="screen"></div>
+        <div class="overlay" id="overlay"></div>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </div>
+      <div class="metric" id="metric"></div>
+    </section>
+
+    <aside class="inspector" aria-label="状态实验台与说明">
+      <section class="panel">
+        <h2>状态实验台</h2>
+        <p>直接跳到某个状态，或者在屏幕里点按钮跑完整流程：检查 → 下载 → 校验 → 安装。切换通道会自动重新检查，与 <code>UpdateEngine.setChannel</code> 一致。版本号与更新记录是示例数据。</p>
+        <div class="fgrid">
+          <label class="field">场景<select id="ins-scene">
+            <option value="never">尚未检查</option>
+            <option value="checking">CHECKING · 正在检查</option>
+            <option value="error">检查失败（截图 1）</option>
+            <option value="latest">已是最新（稳定版）</option>
+            <option value="found">发现候选版本</option>
+            <option value="downloading">DOWNLOADING · 46%</option>
+            <option value="paused">已取消下载，进度保留</option>
+            <option value="verifying">VERIFYING · 核验签名</option>
+            <option value="ready">下载及校验完成</option>
+            <option value="instVerify">安装前重新校验</option>
+            <option value="instPending">校验完成，等待返回</option>
+            <option value="instError">安装被阻止</option>
+          </select></label>
+          <label class="chk"><input type="checkbox" data-sim="failCheck">检查时网络失败</label>
+          <label class="chk"><input type="checkbox" data-sim="failInstall">安装时签名不符</label>
+        </div>
+        <div class="btns">
+          <button class="primary" id="ins-run">从头跑一遍</button>
+          <button id="ins-cancel">模拟通知栏「取消」</button>
+          <button id="ins-reset">重置</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>压缩点（相对截图里的 build245）</h2>
+        <table class="spec">
+          <thead><tr><th>现状</th><th>压缩方案</th></tr></thead>
+          <tbody>
+            <tr><td>工具栏标题 + 26sp 大标题 + 介绍，重复写了两遍“版本更新”</td><td>只保留工具栏标题，首屏大约多出 90dp</td></tr>
+            <tr><td>四行版本表，长版本名会折成两行</td><td>标题下一行只写 <code>0.2.1-rc.3 · build245</code>；完整版本名、版本码与 DSH 折叠，点开可看、可复制</td></tr>
+            <tr><td>通道用整行下拉框（<code>DshaSelectView</code>），另有一个隐藏的 <code>RadioGroup</code></td><td>和标签同一行的两段切换，直接复用 <code>update_channels</code>，忙碌时禁用</td></tr>
+            <tr><td>状态是游离的纯文字，进度条和字节数各占一行</td><td>状态点 + 文字放进主卡；主按钮本身就是进度条（同宽同高），百分比与字节数写在按钮里</td></tr>
+            <tr><td>检查、下载、安装、取消上下叠放，取消单独一行</td><td>只有一个进度按钮，原位切换：检查中流光 → 下载中从左填充 → 核验中填满微光 → 安装更新。页面不放取消，下载通知栏里仍有“取消”（<code>UpdateDownloadService</code>）；“重新检查”收成状态行末尾的文字链接</td></tr>
+            <tr><td>候选版本只有一行入口，记录要点开弹窗才能看</td><td>候选卡直接列出前 3 条记录和包大小，平板横屏改放在右栏</td></tr>
+            <tr><td>“在浏览器查看发布页”单独挂在页面底部</td><td>收进管理列表，作为第 4 行</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>平板交互（沿用插件页的双栏逻辑）</h2>
+        <ul>
+          <li>横屏（≥ 840dp）：左栏放主卡、候选摘要和管理列表，右栏显示“候选版本 / 本版本”的更新记录。点左栏的候选摘要或“本版本更新记录”，只切换右栏，选中行带强调边。</li>
+          <li>竖屏（600–839dp）：单栏，内容最宽 640dp 并居中；弹层改成居中对话框。</li>
+          <li>手机：单栏，弹层从底部升起。“查看完整记录”沿用 <code>CardSheet</code>。</li>
+          <li>受管运行时、兼容回退在三种尺寸下都沿用现有弹层和 <code>RuntimeRecoveryUi</code>。</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>落地思路（待确认）</h2>
+        <ul>
+          <li>只改界面层：<code>UpdateRepository</code>、<code>UpdateEngine</code> 和安装流程都不动。现有 view id 保留，<code>UpdateUi.render</code> 只调整可见性规则：<code>update_check</code> 在已有候选时隐藏，改由文字链接“重新检查”触发。</li>
+          <li>新增 <code>layout-w840dp/activity_update.xml</code> 做双栏；右栏的记录复用 <code>update_notes</code> 和 <code>bundledChangelog()</code>。</li>
+          <li>进度按钮在原生侧用一个 <code>FrameLayout</code>：背景 <code>LayerDrawable</code>（轨道 + <code>ClipDrawable</code> 填充，level = 百分比 × 100，用 <code>ObjectAnimator</code> 过渡），上面一层 <code>TextView</code>；替换现有 <code>update_progress</code>、<code>update_bytes</code> 与 <code>update_cancel</code>。</li>
+          <li>“主按钮该显示什么”可以抽成 <code>util/UpdateActionPolicy</code> 纯逻辑并配单测，覆盖上面 12 个场景。</li>
+          <li>颜色只用 <code>shell_*</code> token；按约定跑 <code>LayoutAuditInstrumentation</code>，覆盖中英文 × 日夜 × 短屏 × 1.3 倍字体。</li>
+        </ul>
+      </section>
+    </aside>
+  </main>
+
+<script>
+'use strict';
+const ICON = {
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  box: '<path d="M12 3 4 7v10l8 4 8-4V7z"/><path d="m4 7 8 4 8-4M12 11v10"/>',
+  doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+  history: '<path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4M12 8v4l3 2"/>',
+  ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  chev: '<path d="m9 6 6 6-6 6"/>',
+  down: '<path d="m6 9 6 6 6-6"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+  app: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 12h6M12 9v6"/>',
+};
+const ic = n => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICON[n]}</svg>`;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (s, r = document) => r.querySelector(s);
+const MiB = 1048576;
+
+/* 当前安装版本取自截图；候选版本为示例数据 */
+const APP = { name: '0.2.1-rc.3-20261101.1430-dsh0.2.1-rc.5-SunsetTest', label: '0.2.1-rc.3', code: 245, dsh: '0.2.1-rc.5', ubuntu: 'ubuntu-24.04-r5' };
+const CURRENT_NOTES = {
+  zh: ['插件卡片共用绑定：来源徽标、并排状态、底部更多弹层', '新增 Java 登记格式清单，按固定格式化器调整改动文件', '引导第 3 步授权页压缩为单列表，推荐项一屏可见', '修复助手输入法在平板横屏下遮挡发送按钮'],
+  en: ['Shared plugin card binding: source badge, inline status, bottom "More" sheet', 'Registered Java format list; changed files follow the pinned formatter', 'Onboarding step 3 permissions compacted into one list', 'Fixed the assistant IME covering Send in tablet landscape'],
+};
+const REL = {
+  preview: { version: '0.2.1-rc.4', code: 252, bytes: 187.4 * MiB, date: '2026-11-03',
+    notes: { zh: ['版本更新页压缩：版本、通道与状态合并为一张卡片', '平板横屏改为双栏，右栏显示候选与本版本记录', '下载取消后保留进度，返回页面可继续', '受管运行时更新计划补充实际差异说明', '修复长版本名在窄屏换行后与数值错位'],
+      en: ['Compact update page: version, channel and status in one card', 'Two-pane tablet landscape with candidate and current notes', 'Cancelled downloads keep progress and can resume', 'Managed runtime plan now lists actual differences', 'Fixed long version names misaligning on narrow screens'] } },
+  stable: null,
+};
+
+const S = {
+  design: 'new', device: 'phone', theme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+  lang: 'zh', fs: 1, short: false, fold: true, reduced: false,
+  channel: 'preview', stage: 'IDLE', msg: null, release: null, downloaded: 0, apk: false,
+  inst: { verifying: false, ready: false, error: null },
+  fullVer: false, pane: 'candidate', overlay: null, scene: 'found',
+  sim: { failCheck: false, failInstall: false },
+};
+const t = (zh, en) => (S.lang === 'zh' ? zh : en);
+const chanName = c => (c === 'preview' ? t('预览版', 'Preview') : t('稳定版', 'Stable'));
+const M = (zh, en, tone = 'muted') => ({ zh, en, tone });
+const msgText = m => (m ? t(m.zh, m.en) : '');
+const mib = b => (b / MiB).toFixed(1);
+
+/* ============================================================
+   模拟引擎：阶段与文案对齐 UpdateEngine / UpdateRepository
+   ============================================================ */
+let run = 0; // 改场景时递增，旧计时器自行作废
+const later = (ms, fn) => { const id = run; setTimeout(() => { if (id === run) { fn(); render(); } }, ms); };
+
+function check() {
+  if (pending()) return;
+  run++;
+  Object.assign(S, { stage: 'CHECKING', release: null, apk: false, downloaded: 0, msg: M(`正在检查${chanName(S.channel)}更新…`, `Checking ${chanName(S.channel)} updates…`, 'accent') });
+  S.inst.error = null;
+  render();
+  later(1300, () => {
+    S.stage = 'IDLE';
+    if (S.sim.failCheck) { S.msg = M('暂时无法确认更新：无法与更新服务建立安全连接，请切换网络或稍后重试', 'Could not confirm updates: no secure connection to the update service. Switch networks or retry later.', 'bad'); return; }
+    S.release = REL[S.channel];
+    S.msg = S.release
+      ? M(`发现${chanName(S.channel)} ${S.release.version}`, `${chanName(S.channel)} ${S.release.version} is available`, 'accent')
+      : M('当前已是最新版本', 'You are on the latest version', 'good');
+    if (S.release) S.pane = 'candidate';
+  });
+}
+function download() {
+  if (!S.release || S.stage !== 'IDLE') return;
+  run++;
+  S.stage = 'DOWNLOADING';
+  S.msg = M('正在下载，离开页面后继续', 'Downloading. Continues if you leave this page.', 'accent');
+  const tick = () => later(260, () => {
+    if (S.stage !== 'DOWNLOADING') return;
+    S.downloaded = Math.min(S.release.bytes, S.downloaded + S.release.bytes * 0.07);
+    if (S.downloaded < S.release.bytes) return tick();
+    S.stage = 'VERIFYING';
+    S.msg = M('正在核验包名、版本与签名…', 'Verifying package name, version and signature…', 'accent');
+    later(1100, () => { S.stage = 'IDLE'; S.apk = true; S.msg = M('下载及校验完成，点击「安装更新」继续', 'Downloaded and verified. Tap Install update to continue.', 'good'); });
+  });
+  render();
+  tick();
+}
+function cancel() {
+  run++;
+  if (S.stage === 'CHECKING') S.msg = M('已取消，可重新检查或下载', 'Cancelled. Check again or download.', 'muted');
+  else S.msg = M('已取消下载，进度已保留', 'Download cancelled. Progress kept.', 'warn');
+  S.stage = 'IDLE';
+  render();
+}
+function install() {
+  if (!S.apk || pending()) return;
+  run++;
+  S.inst = { verifying: true, ready: false, error: null };
+  render();
+  later(1000, () => {
+    if (S.sim.failInstall) { S.inst = { verifying: false, ready: false, error: M('签名与已安装版本不同，已阻止安装', 'Signature differs from the installed app. Install blocked.', 'bad') }; return; }
+    S.inst = { verifying: false, ready: true, error: null };
+    later(900, () => { S.inst.ready = false; toast(t('原型：此处打开系统安装器', 'Prototype: the system installer opens here')); });
+  });
+}
+const pending = () => S.inst.verifying || S.inst.ready;
+const busy = () => S.stage !== 'IDLE' || pending();
+
+/* 直接跳场景 */
+function scene(name) {
+  run++;
+  const r = REL.preview;
+  Object.assign(S, { channel: name === 'latest' ? 'stable' : 'preview', stage: 'IDLE', release: null, downloaded: 0, apk: false, inst: { verifying: false, ready: false, error: null }, scene: name });
+  const withRel = () => { S.release = r; };
+  switch (name) {
+    case 'never': S.msg = M('尚未检查更新', 'Not checked yet'); break;
+    case 'checking': S.stage = 'CHECKING'; S.msg = M('正在检查预览版更新…', 'Checking Preview updates…', 'accent'); break;
+    case 'error': S.msg = M('暂时无法确认更新：无法与更新服务建立安全连接，请切换网络或稍后重试', 'Could not confirm updates: no secure connection to the update service. Switch networks or retry later.', 'bad'); break;
+    case 'latest': S.msg = M('当前已是最新版本', 'You are on the latest version', 'good'); break;
+    case 'found': withRel(); S.msg = M(`发现预览版 ${r.version}`, `Preview ${r.version} is available`, 'accent'); break;
+    case 'downloading': withRel(); S.stage = 'DOWNLOADING'; S.downloaded = r.bytes * 0.46; S.msg = M('正在下载，离开页面后继续', 'Downloading. Continues if you leave this page.', 'accent'); break;
+    case 'paused': withRel(); S.downloaded = r.bytes * 0.38; S.msg = M('已取消下载，进度已保留', 'Download cancelled. Progress kept.', 'warn'); break;
+    case 'verifying': withRel(); S.stage = 'VERIFYING'; S.downloaded = r.bytes; S.msg = M('正在核验包名、版本与签名…', 'Verifying package name, version and signature…', 'accent'); break;
+    case 'ready': withRel(); S.downloaded = r.bytes; S.apk = true; S.msg = M('下载及校验完成，点击「安装更新」继续', 'Downloaded and verified. Tap Install update to continue.', 'good'); break;
+    case 'instVerify': withRel(); S.downloaded = r.bytes; S.apk = true; S.inst.verifying = true; S.msg = M('下载及校验完成，点击「安装更新」继续', 'Downloaded and verified.', 'good'); break;
+    case 'instPending': withRel(); S.downloaded = r.bytes; S.apk = true; S.inst.ready = true; S.msg = M('下载及校验完成，点击「安装更新」继续', 'Downloaded and verified.', 'good'); break;
+    case 'instError': withRel(); S.downloaded = r.bytes; S.apk = true; S.inst.error = M('签名与已安装版本不同，已阻止安装', 'Signature differs from the installed app. Install blocked.', 'bad'); S.msg = M('下载及校验完成，点击「安装更新」继续', 'Downloaded and verified.', 'good'); break;
+  }
+  if (S.release) S.pane = 'candidate'; else S.pane = 'current';
+  render();
+}
+
+/* ============================================================
+   状态推导：落地时对应 util/UpdateActionPolicy
+   ============================================================ */
+function view() {
+  const inst = S.inst, isPending = pending();
+  let status = msgText(S.msg), tone = S.msg ? S.msg.tone : 'muted';
+  if (isPending) { status = inst.verifying ? t('正在重新校验安装包…', 'Re-verifying the package…') : t('校验完成，返回此页面后继续安装', 'Verified. Return to this page to continue installing.'); tone = 'accent'; }
+  else if (inst.error) { status = msgText(S.msg) + '\n' + msgText(inst.error); tone = 'bad'; }
+  const working = S.stage !== 'IDLE';
+  const total = S.release ? S.release.bytes : 0;
+  const pct = total ? Math.round(S.downloaded / total * 100) : 0;
+  // 进度按钮：同一个位置、同一尺寸，只换模式与文字；页面不再提供取消（通知栏仍有）
+  let btn;
+  if (S.stage === 'CHECKING') btn = { mode: 'sweep', label: t('正在检查…', 'Checking…') };
+  else if (S.stage === 'DOWNLOADING') btn = { mode: 'fill', p: pct, label: `${pct}% · ${mib(S.downloaded)} / ${mib(total)} MiB` };
+  else if (S.stage === 'VERIFYING') btn = { mode: 'full', label: t('正在核验签名…', 'Verifying signature…') };
+  else if (inst.verifying) btn = { mode: 'full', label: t('正在重新校验…', 'Re-verifying…') };
+  else if (inst.ready) btn = { mode: 'wait', label: t('即将打开系统安装器', 'Opening system installer') };
+  else if (S.apk) btn = { mode: 'idle', act: 'install', label: t('安装更新', 'Install update') };
+  else if (S.release) btn = { mode: 'idle', act: 'download', label: S.downloaded > 0 ? t(`继续下载 · 已下载 ${pct}%`, `Resume download · ${pct}% done`) : t(`下载更新 · ${mib(total)} MiB`, `Download update · ${mib(total)} MiB`) };
+  else btn = { mode: 'idle', act: 'check', label: t('检查更新', 'Check for updates') };
+  if (btn.p == null) btn.p = btn.mode === 'full' || btn.mode === 'wait' ? 100 : 0;
+  return {
+    status, tone, working, pct, btn,
+    recheck: !!S.release && !working && !isPending,
+    chanLocked: busy(),
+  };
+}
+
+/* ============================================================
+   压缩方案
+   ============================================================ */
+const sbar = () => `<div class="sbar" aria-hidden="true"><span>21:20</span><span>VPN · 100%</span></div>`;
+const appbar = () => `<div class="appbar"><button class="icon-btn" data-act="back" aria-label="${t('返回', 'Back')}">${ic('back')}</button><h2>${t('版本更新', 'Updates')}</h2></div>`;
+
+function heroHTML() {
+  const v = view();
+  const toggle = ['stable', 'preview'].map(c => `<button role="radio" aria-checked="${S.channel === c}" data-act="channel" data-v="${c}" ${v.chanLocked ? 'disabled' : ''}>${chanName(c)}</button>`).join('');
+  return `<section class="card hero" aria-labelledby="hero-n">
+    <div class="hero-top">
+      <span class="glyph">${ic('app')}</span>
+      <div class="hero-id">
+        <h3 class="hero-name" id="hero-n">DSH-A-Su</h3>
+        <button class="hero-ver" data-act="fullver" aria-expanded="${S.fullVer}" aria-controls="fullver">${APP.label} · build${APP.code}${ic('down')}</button>
+      </div>
+      <span class="pill">${t('标准版', 'Standard')}</span>
+    </div>
+    ${S.fullVer ? `<div class="fullver" id="fullver"><dl>
+        <dt>${t('当前应用', 'App')}</dt><dd>${esc(APP.name)}</dd>
+        <dt>${t('版本码', 'Code')}</dt><dd>${APP.code}</dd>
+        <dt>DSH</dt><dd>${APP.dsh}</dd></dl>
+      <button class="copy" data-act="copyver" aria-label="${t('复制版本信息', 'Copy version info')}">${ic('copy')}</button></div>` : ''}
+    <div class="hr"></div>
+    <div class="chan"><span class="chan-label" id="chan-l">${t('更新通道', 'Channel')}</span>
+      <div class="toggle" role="radiogroup" aria-labelledby="chan-l">${toggle}</div></div>
+    <div class="status${v.working || pending() ? ' is-busy' : ''}" data-tone="${v.tone}">
+      <span class="dot" aria-hidden="true"></span>
+      <p class="status-text" aria-live="polite">${esc(v.status)}</p>
+      ${v.recheck ? `<button class="link" data-act="check">${t('重新检查', 'Check again')}</button>` : ''}
+    </div>
+    ${pbtnHTML(v.btn)}
+  </section>`;
+}
+
+/* 可点时是 button；进行中换成 progressbar（不可点、不可聚焦为按钮），尺寸与位置不变。
+   模板先写上一帧的模式与进度，render() 之后再切到新值，过渡才会发生。 */
+let pbPrev = null;
+function pbtnHTML(b) {
+  const prev = pbPrev || b;
+  const lbl = `<span class="pl dark">${esc(b.label)}</span><span class="pl lite" aria-hidden="true">${esc(b.label)}</span>`;
+  const common = `class="pbtn" data-m="primary" data-mode="${prev.mode}" style="--p:${prev.p}%" data-next-mode="${b.mode}" data-next-p="${b.p}"`;
+  if (b.act) return `<button ${common} data-act="${b.act}"><span class="pf" aria-hidden="true"></span>${lbl}</button>`;
+  const det = b.mode === 'fill';
+  return `<div ${common} role="progressbar" tabindex="-1" aria-label="${esc(b.label)}" aria-valuemin="0" aria-valuemax="100" ${det ? `aria-valuenow="${b.p}"` : ''}><span class="pf" aria-hidden="true"></span>${lbl}</div>`;
+}
+function settlePbtn() {
+  const el = $('#screen .pbtn');
+  if (!el) { pbPrev = null; return; }
+  const mode = el.dataset.nextMode, p = Number(el.dataset.nextP);
+  const from = el.dataset.mode;
+  // 下载完成进入核验（fill→full）、或回到可点（→idle）时不倒放进度
+  const jump = (from === 'fill' && mode !== 'fill') || (mode === 'idle' && from !== 'sweep');
+  if (jump) el.classList.add('no-tr');
+  void el.offsetWidth;
+  el.dataset.mode = mode;
+  el.style.setProperty('--p', p + '%');
+  if (jump) { void el.offsetWidth; el.classList.remove('no-tr'); }
+  pbPrev = { mode, p };
+}
+
+function candHTML() {
+  const r = S.release;
+  if (!r) return '';
+  const notes = r.notes[S.lang];
+  return `<section class="card cand" aria-labelledby="cand-t">
+    <div class="cand-head"><span class="glyph" style="width:36px;height:36px">${ic('box')}</span>
+      <div><h3 class="cand-title" id="cand-t">${chanName(S.channel)} ${r.version}</h3><div class="cand-meta">build${r.code} · ${r.date}</div></div>
+      <span class="cand-size">${mib(r.bytes)} MiB</span></div>
+    <ul class="notes is-clamp">${notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>
+    <div class="cand-foot"><button class="textbtn" data-act="notes-cand">${notes.length > 3 ? t(`查看全部 ${notes.length} 条`, `All ${notes.length} notes`) : t('查看更新记录', 'Release notes')}${ic('chev')}</button></div>
+  </section>`;
+}
+
+function manageHTML(split) {
+  const rows = [
+    ['runtime', 'box', t('更新受管运行时', 'Update managed runtime'), t('只更新随包组件，保留个人数据', 'Bundled components only; personal data stays')],
+    ['rollback', 'history', t('兼容运行时回退', 'Runtime rollback'), t('通过隔离试运行后再切换', 'Switches after an isolated trial')],
+    ['notes-cur', 'doc', t('本版本更新记录', 'What’s new in this build'), `${APP.label} · build${APP.code}`],
+    ['browser', 'ext', t('在浏览器查看发布页', 'Open releases in browser'), S.release ? `${chanName(S.channel)} ${S.release.version}` : 'GitHub Releases'],
+  ];
+  return `<div class="sec" id="mg-l">${t('管理', 'Manage')}</div>
+    <nav class="card list" aria-labelledby="mg-l" data-m="manage">${rows.map(([a, i, n, s]) =>
+      `<button class="row" data-act="${a}" ${split && a === 'notes-cur' ? `aria-current="${S.pane === 'current'}"` : ''}><span class="ri">${ic(i)}</span><span class="rt"><div class="rn">${n}</div><div class="rs">${esc(s)}</div></span>${ic(a === 'browser' ? 'ext' : 'chev').replace('<svg', '<svg class="chev"')}</button>`).join('')}</nav>`;
+}
+
+function candRowHTML() {
+  // 横屏左栏：候选只留一行摘要，全文在右栏
+  const r = S.release;
+  if (!r) return '';
+  return `<div class="sec">${t('候选版本', 'Candidate')}</div>
+    <div class="card list"><button class="row" data-act="pane-cand" aria-current="${S.pane === 'candidate'}"><span class="ri">${ic('box')}</span>
+      <span class="rt"><div class="rn">${chanName(S.channel)} ${r.version}</div><div class="rs">build${r.code} · ${mib(r.bytes)} MiB · ${r.date}</div></span>${ic('chev').replace('<svg', '<svg class="chev"')}</button></div>`;
+}
+
+function paneHTML() {
+  const r = S.release;
+  const tabs = `<div class="pane-tabs" role="tablist">
+    <button role="tab" aria-selected="${S.pane === 'candidate'}" data-act="pane-cand">${t('候选版本', 'Candidate')}</button>
+    <button role="tab" aria-selected="${S.pane === 'current'}" data-act="pane-cur">${t('本版本', 'This build')}</button></div>`;
+  if (S.pane === 'current') return tabs + `<h3>${APP.label} · build${APP.code}</h3><p class="sub">${t('随包更新记录 · 已安装', 'Bundled notes · installed')}</p>
+    <p class="pane-h">${t('更新内容', 'Changes')}</p><ul class="notes">${CURRENT_NOTES[S.lang].map(n => `<li>${esc(n)}</li>`).join('')}</ul>`;
+  if (!r) return tabs + `<div class="empty">${S.stage === 'CHECKING' ? t('正在检查…', 'Checking…') : t('检查到候选版本后，更新记录、大小与安装方式会显示在这里。', 'Release notes, size and install method appear here once a candidate is found.')}</div>`;
+  return tabs + `<h3>${chanName(S.channel)} ${r.version}</h3><p class="sub">${t('候选版本 · 尚未安装', 'Candidate · not installed')}</p>
+    <dl class="dl">
+      <div><dt>${t('版本码', 'Code')}</dt><dd>${r.code}</dd></div>
+      <div><dt>${t('大小', 'Size')}</dt><dd>${mib(r.bytes)} MiB</dd></div>
+      <div><dt>${t('发布日期', 'Published')}</dt><dd>${r.date}</dd></div>
+      <div><dt>${t('安装方式', 'Install')}</dt><dd>${t('系统安装器 · 安装前核验包名、版本与签名', 'System installer · package, version and signature checked first')}</dd></div></dl>
+    <p class="pane-h">${t('更新内容', 'Changes')}</p><ul class="notes">${r.notes[S.lang].map(n => `<li>${esc(n)}</li>`).join('')}</ul>`;
+}
+
+function newScreen() {
+  if (S.device === 'tablet-l') {
+    return `${sbar()}${appbar()}<div class="split">
+      <div class="scroll" data-scroll="main">${heroHTML()}${candRowHTML()}${manageHTML(true)}</div><div class="divider"></div>
+      <div class="scroll pane" data-scroll="pane">${paneHTML()}</div></div>`;
+  }
+  const body = heroHTML() + candHTML() + manageHTML(false);
+  return `${sbar()}${appbar()}<div class="scroll" data-scroll="main">${S.device === 'tablet-p' ? `<div class="col">${body}</div>` : body}</div>`;
+}
+
+/* ============================================================
+   当前实现（对照）：按 activity_update.xml + UpdateUi.render 还原
+   ============================================================ */
+function legacyScreen() {
+  const v = view();
+  const working = S.stage !== 'IDLE';
+  const check = `<button class="lg-btn${S.release ? ' is-2' : ''}" data-act="check" data-m="primary" ${busy() ? 'disabled' : ''}>${S.release ? t('重新检查', 'Check again') : t('检查更新', 'Check for updates')}</button>`;
+  const dl = S.release && !S.apk ? `<button class="lg-btn" data-act="download" ${busy() ? 'disabled' : ''}>${S.downloaded > 0 ? t('继续下载', 'Resume download') : t('下载更新', 'Download update')}</button>` : '';
+  const ins = S.apk ? `<button class="lg-btn" data-act="install" ${busy() ? 'disabled' : ''}>${t('安装更新', 'Install update')}</button>` : '';
+  const can = working ? `<button class="lg-btn is-2" data-act="cancel">${t('取消当前任务', 'Cancel current task')}</button>` : '';
+  // 与 UpdateUi.render 相同的进度条 / 字节数可见性
+  const total = S.release ? S.release.bytes : 0;
+  v.showProg = working || S.inst.verifying;
+  v.ind = S.inst.verifying || S.stage !== 'DOWNLOADING';
+  v.bytes = total > 0 && !S.inst.verifying && (S.stage === 'DOWNLOADING' || (S.stage === 'IDLE' && S.downloaded > 0)) ? `${mib(S.downloaded)} / ${mib(total)} MiB` : '';
+  const kv = (k, val) => `<div><span>${k}</span><span>${esc(val)}</span></div>`;
+  const row = (a, i, n, s) => `<button class="row" data-act="${a}"><span class="ri">${ic(i)}</span><span class="rt"><div class="rn">${n}</div><div class="rs">${esc(s)}</div></span>${ic('chev').replace('<svg', '<svg class="chev"')}</button>`;
+  return `${sbar()}${appbar()}<div class="scroll" data-scroll="main" style="padding:0 18px 18px">
+    <h1 class="lg-title">${t('版本更新', 'Updates')}</h1><p class="lg-intro">${t('查看应用与运行组件的版本信息。', 'Versions of the app and runtime components.')}</p>
+    <div class="card lg-kv">${kv(t('当前应用', 'Current app'), APP.name)}${kv(t('版本码', 'Version code'), APP.code)}${kv(t('当前版本类型', 'Edition'), t('标准版', 'Standard'))}${kv('DSH', APP.dsh)}</div>
+    <div class="lg-label">${t('更新通道', 'Update channel')}</div>
+    <button class="lg-select" data-act="channel-cycle" ${busy() ? 'disabled' : ''}><span>${chanName(S.channel)}</span>${ic('down')}</button>
+    <div class="lg-status">${esc(v.status)}</div>
+    ${v.showProg ? `<div class="bar${v.ind ? ' is-ind' : ''}" style="margin-top:12px;height:3px"><i style="--p:${v.pct}%"></i></div>` : ''}
+    ${v.bytes ? `<div class="lg-bytes">${v.bytes}</div>` : ''}
+    ${check}${dl}${ins}${can}
+    ${S.release ? `<div class="card list" style="margin-top:12px">${row('notes-cand', 'box', t('查看候选版本', 'View candidate'), t('更新记录、大小与安装方式', 'Notes, size and install method'))}</div>` : ''}
+    <div class="lg-label" style="margin-top:14px">${t('管理', 'Manage')}</div>
+    <div class="card list" data-m="manage">${row('runtime', 'box', t('更新受管运行时', 'Update managed runtime'), t('只更新随包组件，保留个人数据', 'Bundled components only; personal data stays'))}${row('rollback', 'doc', t('兼容运行时回退', 'Runtime rollback'), t('通过隔离试运行后再切换', 'Switches after an isolated trial'))}${row('notes-cur', 'doc', t('本版本更新记录', 'What’s new in this build'), `${APP.label} · build${APP.code}`)}</div>
+    <button class="lg-link" data-act="browser">${t('在浏览器查看发布页', 'Open releases in browser')}</button></div>`;
+}
+
+/* ---------------- 弹层 ---------------- */
+function overlayHTML() {
+  const o = S.overlay;
+  if (!o) return '';
+  const notes = (list) => `<ul class="notes" style="margin-top:0">${list.map(n => `<li>${esc(n)}</li>`).join('')}</ul>`;
+  let inner = '';
+  if (o === 'notes-cand' && S.release) {
+    const r = S.release;
+    inner = `<h2 id="ov-t">${chanName(S.channel)} ${r.version}</h2><p class="sub">build${r.code} · ${mib(r.bytes)} MiB · ${r.date}</p>
+      <div class="sheet-body">${notes(r.notes[S.lang])}</div><div class="sheet-acts"><button data-act="close">${t('关闭', 'Close')}</button></div>`;
+  } else if (o === 'notes-cur') {
+    inner = `<h2 id="ov-t">${t('本版本更新记录', 'What’s new in this build')}</h2><p class="sub">${APP.label} · build${APP.code}</p>
+      <div class="sheet-body">${notes(CURRENT_NOTES[S.lang])}</div><div class="sheet-acts"><button data-act="close">${t('关闭', 'Close')}</button></div>`;
+  } else if (o === 'runtime') {
+    inner = `<h2 id="ov-t">${t('更新受管运行时', 'Update managed runtime')}</h2><p class="sub">${t('查看当前环境与包内运行组件。', 'Review the current environment and bundled components.')}</p>
+      <div class="sheet-body"><dl class="dl"><div><dt>Ubuntu</dt><dd>${APP.ubuntu}</dd></div><div><dt>DSH</dt><dd>${APP.dsh}</dd></div><div><dt>${t('个人数据', 'Personal data')}</dt><dd>${t('保持原位', 'Kept in place')}</dd></div></dl>
+      <p class="note">${t('检查后展示实际差异；确认更新时停止 Web 与终端，准备候选并完成隔离试运行。', 'Review actual differences first. Updating stops Web and terminals, prepares a candidate and verifies it in an isolated trial.')}</p></div>
+      <div class="sheet-acts"><button data-act="close">${t('取消', 'Cancel')}</button><button class="is-primary" data-act="plan">${t('检查更新计划', 'Review update plan')}</button></div>`;
+  } else return '';
+  return `<div class="scrim" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ov-t"><div class="grip" aria-hidden="true"></div>${inner}</div>`;
+}
+
+/* ============================================================
+   渲染与测量
+   ============================================================ */
+function render() {
+  const ae = document.activeElement;
+  const pbFocused = !!(ae && ae.classList && ae.classList.contains('pbtn'));
+  const fk = !pbFocused && ae && ae.closest && ae.closest('#screen,#overlay') && ae.dataset.act ? ae.dataset.act + '|' + (ae.dataset.v || '') : null;
+  const scrolls = {};
+  document.querySelectorAll('[data-scroll]').forEach(e => (scrolls[e.dataset.scroll] = e.scrollTop));
+  const root = document.documentElement;
+  root.dataset.theme = S.theme;
+  root.dataset.reduced = String(S.reduced);
+  document.body.dataset.device = S.device;
+  const dev = $('#device');
+  dev.dataset.device = S.device;
+  dev.classList.toggle('is-short', S.short);
+  const screen = $('#screen');
+  screen.style.setProperty('--fs', S.fs);
+  screen.lang = S.lang === 'zh' ? 'zh-CN' : 'en';
+  screen.innerHTML = S.design === 'new' ? newScreen() : legacyScreen();
+  screen.inert = !!S.overlay;
+  const ov = $('#overlay');
+  ov.style.setProperty('--fs', S.fs);
+  ov.lang = screen.lang;
+  ov.innerHTML = overlayHTML();
+  ov.classList.toggle('is-on', !!S.overlay);
+  document.querySelectorAll('[data-scroll]').forEach(e => { if (scrolls[e.dataset.scroll]) e.scrollTop = scrolls[e.dataset.scroll]; });
+  settlePbtn();
+  // 按钮变成进度条（或反过来）时焦点留在同一位置，读屏能接着听到进度
+  if (pbFocused) { const el = $('#screen .pbtn'); if (el) el.focus({ preventScroll: true }); }
+  if (fk) {
+    const [a, v] = fk.split('|');
+    const el = document.querySelector(`#screen [data-act="${a}"]${v ? `[data-v="${v}"]` : ''}`);
+    if (el && !el.disabled) el.focus({ preventScroll: true });
+  }
+  measure();
+  document.querySelectorAll('[data-set]').forEach(b => b.setAttribute('aria-pressed', String(String(S[b.dataset.set]) === b.dataset.v)));
+  document.querySelectorAll('[data-flag]').forEach(c => (c.checked = !!S[c.dataset.flag]));
+  document.querySelectorAll('[data-sim]').forEach(c => (c.checked = !!S.sim[c.dataset.sim]));
+  $('#ins-scene').value = S.scene;
+}
+
+/* 首屏：主滚动区可视高度内，主操作和管理入口是否完整可见 */
+function measure() {
+  const sc = $('#screen [data-scroll="main"]');
+  if (!sc) return;
+  const vis = sc.clientHeight, total = sc.scrollHeight;
+  if (S.fold && total > vis) {
+    const f = document.createElement('div');
+    f.className = 'fold';
+    f.style.top = vis + 'px';
+    f.innerHTML = `<span>${t('首屏', 'Fold')}</span>`;
+    sc.appendChild(f);
+  }
+  const base = sc.getBoundingClientRect().top - sc.scrollTop;
+  const bottomOf = el => (el ? el.getBoundingClientRect().bottom - base : Infinity);
+  const p = bottomOf(sc.querySelector('[data-m="primary"]'));
+  // 管理列表只要求首行完整可见（说明后面还有内容）
+  const mg = sc.querySelector('[data-m="manage"] .row');
+  const m = bottomOf(mg);
+  const yn = ok => (ok ? '<span class="ok">✓</span>' : '<span class="no">✗</span>');
+  $('#metric').innerHTML = `内容 <b>${total}px</b> / 可视 <b>${vis}px</b> · 约 <b>${(total / vis).toFixed(2)}</b> 屏 · 首屏含主操作 ${yn(p <= vis)} · 首屏露出管理入口 ${yn(m <= vis)}`;
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('is-on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('is-on'), 2200);
+}
+let opener = null;
+function openOverlay(name, el) { opener = el; S.overlay = name; render(); const f = $('#overlay .sheet-acts button:last-child'); if (f) f.focus(); }
+function closeOverlay() { S.overlay = null; render(); if (opener && document.contains(opener)) opener.focus(); opener = null; }
+
+function act(name, el) {
+  const split = S.design === 'new' && S.device === 'tablet-l';
+  switch (name) {
+    case 'check': return check();
+    case 'download': return download();
+    case 'cancel': return cancel();
+    case 'install': return install();
+    case 'channel': if (busy() || S.channel === el.dataset.v) return; S.channel = el.dataset.v; return check();
+    case 'channel-cycle': if (busy()) return; S.channel = S.channel === 'preview' ? 'stable' : 'preview'; return check();
+    case 'fullver': S.fullVer = !S.fullVer; return render();
+    case 'copyver': return toast(t('已复制版本信息', 'Version info copied'));
+    case 'notes-cand': if (split) { S.pane = 'candidate'; return render(); } return openOverlay('notes-cand', el);
+    case 'notes-cur': if (split) { S.pane = 'current'; return render(); } return openOverlay('notes-cur', el);
+    case 'pane-cand': S.pane = 'candidate'; return render();
+    case 'pane-cur': S.pane = 'current'; return render();
+    case 'runtime': return openOverlay('runtime', el);
+    case 'plan': closeOverlay(); return toast(t('原型：进入维护页（review_only）', 'Prototype: opens maintenance review'));
+    case 'rollback': return toast(t('原型：沿用 RuntimeRecoveryUi.show', 'Prototype: uses RuntimeRecoveryUi.show'));
+    case 'browser': return toast(t('原型：打开发布页', 'Prototype: opens the release page'));
+    case 'back': return toast(t('原型：返回设置', 'Prototype: back to Settings'));
+    case 'close': return closeOverlay();
+  }
+}
+
+document.addEventListener('click', e => {
+  const set = e.target.closest('[data-set]');
+  if (set) { const k = set.dataset.set; S[k] = k === 'fs' ? Number(set.dataset.v) : set.dataset.v; return render(); }
+  const b = e.target.closest('#device [data-act]');
+  if (!b || b.disabled) return;
+  act(b.dataset.act, b);
+});
+document.addEventListener('change', e => {
+  const f = e.target.closest('[data-flag]');
+  if (f) { S[f.dataset.flag] = f.checked; return render(); }
+  const s = e.target.closest('[data-sim]');
+  if (s) { S.sim[s.dataset.sim] = s.checked; }
+});
+document.addEventListener('keydown', e => {
+  if (S.overlay && e.key === 'Escape') { e.preventDefault(); closeOverlay(); }
+  // 通道切换：方向键在两段之间移动（radiogroup 语义）
+  const r = e.target.closest && e.target.closest('.toggle [role="radio"]');
+  if (r && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+    e.preventDefault();
+    const other = r.parentElement.querySelector(`[role="radio"]:not([data-v="${r.dataset.v}"])`);
+    if (other && !other.disabled) { other.focus(); act('channel', other); }
+  }
+});
+$('#ins-scene').addEventListener('change', e => scene(e.target.value));
+$('#ins-run').addEventListener('click', () => { scene('never'); S.scene = 'never'; check(); });
+$('#ins-cancel').addEventListener('click', () => { if (S.stage === 'CHECKING' || S.stage === 'DOWNLOADING') cancel(); });
+$('#ins-reset').addEventListener('click', () => { S.sim = { failCheck: false, failInstall: false }; S.fullVer = false; S.overlay = null; scene('found'); });
+
+scene('found');
+</script>
+</body>
+</html>

@@ -99,9 +99,11 @@ def main():
         raise RuntimeError('TEST_ASSERTIONS_REQUIRE_UNOPTIMIZED_PYTHON')
     module = args.module
     if module is None:
-        selected = json.loads((ROOT / 'app/build/test-runtimes/current.json').read_text(encoding='utf-8'))
+        selected = os.environ.get('DSHA_TEST_RUNTIME')
+        if selected is None:
+            selected = json.loads((ROOT / 'app/build/test-runtimes/current.json').read_text(encoding='utf-8'))['raw']
         current = json.loads((ASSETS / 'welcome-notice-patch.json').read_text(encoding='utf-8'))
-        module = Path(selected['raw']) / 'node_modules' / current['module']
+        module = Path(selected) / 'node_modules' / current['module']
     historical_bytes = OLD_RECIPE.read_bytes()
     assert sha(historical_bytes) == OLD_SHA256, 'historical F10 fixture identity'
     historical = json.loads(historical_bytes)
@@ -109,7 +111,9 @@ def main():
     canonical = module.read_bytes()
     assert historical['module'] == current['module']
     assert historical['sourceSha256'] == current['sourceSha256'] == sha(canonical)
-    assert historical['packageIntegrity'] == current['packageIntegrity']
+    # rc3 repackages this byte-identical JS; historical recipe bytes remain SHA pinned.
+    assert historical['dshVersion'] == '0.2.1-rc.2'
+    assert current['dshVersion'] == json.loads((ROOT / 'tools/dsh-runtime/package.json').read_text(encoding='utf-8'))['dependencies']['@deepseek-ai/dsh']
     old = apply_recipe(canonical, historical)
     expected = apply_recipe(canonical, current)
     assert old != expected

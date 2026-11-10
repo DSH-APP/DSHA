@@ -4,28 +4,24 @@ import android.app.Activity;
 import android.app.Instrumentation;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Switch;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
-import com.deepseekharness.app.core.PluginRepository;
 import com.deepseekharness.app.R;
-import org.json.JSONObject;
+import com.deepseekharness.app.core.PluginRepository;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
+import org.json.JSONObject;
 
 /**
- * 调试入口：在 instrumentation 工作线程调用 run(driver, 空测试 Activity, 容器 ID)。
- * 替换打开页面/刷新边界；鉴权由 PreviewAuth 定向测试覆盖。
- * 不启动 Web、不更改实际插件，调用方提供独立测试 Activity。
+ * 调试入口：在 instrumentation 工作线程调用 run(driver, 空测试 Activity, 容器 ID)。 替换打开页面/刷新边界；鉴权由 PreviewAuth
+ * 定向测试覆盖。 不启动 Web、不更改实际插件，调用方提供独立测试 Activity。
  */
 public final class FragmentEntrySelfTest {
   private FragmentEntrySelfTest() {}
@@ -43,8 +39,6 @@ public final class FragmentEntrySelfTest {
       throws Exception {
     EntryProbe entry = new EntryProbe();
     PluginProbe plugin = new PluginProbe();
-    PluginRepository[] fixture = {null};
-    main(driver, () -> fixture[0] = new ViewModelProvider(host).get(PluginRepository.class));
     try {
       show(driver, host, container, entry);
       main(
@@ -116,7 +110,6 @@ public final class FragmentEntrySelfTest {
       Bundle installed = new Bundle();
       installed.putBoolean("show_installed", true);
       plugin.setArguments(installed);
-      main(driver, fixture[0]::invalidateInstalledState);
       show(driver, host, container, plugin);
       until(() -> plugin.refreshes.get() == 1);
       untilUi(driver, () -> plugin.showsSafeMode(false));
@@ -126,7 +119,7 @@ public final class FragmentEntrySelfTest {
           driver,
           () -> {
             host.getSupportFragmentManager().beginTransaction().detach(plugin).commitNow();
-            fixture[0].invalidateInstalledState();
+            plugin.fixtureDirty = true;
             plugin.fixtureSafeMode = true;
             plugin.blocked = true;
             host.getSupportFragmentManager().beginTransaction().attach(plugin).commitNow();
@@ -134,7 +127,12 @@ public final class FragmentEntrySelfTest {
       Thread.sleep(650);
       require(plugin.refreshes.get() == 1, "安全启动未完成就刷新了旧状态");
       main(driver, () -> require(plugin.showsSafeMode(false), "未刷新前测试缓存不正确"));
-      plugin.blocked = false;
+      main(
+          driver,
+          () -> {
+            plugin.blocked = false;
+            plugin.publishFixture(); // 模拟应用级引擎主动发布结果；页面没有 500ms 门禁轮询。
+          });
       until(() -> plugin.refreshes.get() == 2);
       untilUi(driver, () -> plugin.showsSafeMode(true));
       rebuild(driver, host, plugin);
@@ -144,7 +142,7 @@ public final class FragmentEntrySelfTest {
           () -> {
             host.getSupportFragmentManager().beginTransaction().detach(plugin).commitNow();
             plugin.fixtureSafeMode = false;
-            fixture[0].invalidateInstalledState();
+            plugin.fixtureDirty = true;
             host.getSupportFragmentManager().beginTransaction().attach(plugin).commitNow();
           });
       until(() -> plugin.refreshes.get() == 3);
@@ -258,28 +256,64 @@ public final class FragmentEntrySelfTest {
     }
   }
 
+  /** 构造纯内存目录快照，不创建生产/Activity Repository，不触发后台执行。 */
+  static PluginRepository.State fixtureState(
+      List<PluginRepository.Item> items, boolean busy, String message, boolean safeMode)
+      throws Exception {
+    var registry = new com.deepseekharness.app.plugins.PluginRegistry();
+    var source =
+        new com.deepseekharness.app.plugins.PluginSourceIdentity(
+            new java.io.File("/fixture/plugin-ui/data"),
+            "memory-data",
+            0,
+            new java.io.File("/fixture/plugin-ui/rootfs"),
+            "memory-rootfs",
+            0,
+            "fixture",
+            0);
+    registry.completeQuery(registry.beginQuery(source), items, Collections.emptyList(), safeMode);
+    Constructor<PluginRepository.State> state =
+        PluginRepository.State.class.getDeclaredConstructor(
+            com.deepseekharness.app.plugins.PluginRegistry.Snapshot.class,
+            List.class,
+            boolean.class,
+            String.class,
+            boolean.class,
+            int.class);
+    state.setAccessible(true);
+    return state.newInstance(
+        registry.snapshot(), Collections.emptyList(), busy, message, false, -1);
+  }
+
   public static class PluginProbe extends PluginFragment {
     final AtomicInteger refreshes = new AtomicInteger();
+    final MutableLiveData<PluginRepository.State> fixture = new MutableLiveData<>();
     volatile boolean blocked;
-    boolean fixtureSafeMode;
-    PluginRepository fixtureRepository;
+    boolean fixtureSafeMode, fixtureDirty = true;
     volatile Throwable fixtureFailure;
 
     @Override
-    PluginRepository installedRepository() {
-      return new ViewModelProvider(requireActivity()).get(PluginRepository.class);
+    com.deepseekharness.app.plugins.PluginManagementEngine managementEngine() {
+      return null;
     }
 
     @Override
-    boolean pluginRefreshBlocked() {
-      return blocked;
+    androidx.lifecycle.LiveData<PluginRepository.State> installedState() {
+      return fixture;
+    }
+
+    @Override
+    boolean safeModeActive() {
+      return fixture.getValue() != null && fixture.getValue().catalog.safeMode;
     }
 
     @Override
     void syncInstalledState() {
+      if (!blocked && fixtureDirty) publishFixture();
+    }
+
+    void publishFixture() {
       try {
-        // 独立测试宿主的 ViewModel；只发布内存夹具，不调用 refresh/safeMode/runPluginManager。
-        fixtureRepository = new ViewModelProvider(requireActivity()).get(PluginRepository.class);
         Constructor<PluginRepository.Item> item =
             PluginRepository.Item.class.getDeclaredConstructor(JSONObject.class);
         item.setAccessible(true);
@@ -292,18 +326,10 @@ public final class FragmentEntrySelfTest {
                         .put("version", "0.0.0")
                         .put("available", true)
                         .put("enabled", !fixtureSafeMode)));
-        Field safe = PluginRepository.class.getDeclaredField("safeMode");
-        safe.setAccessible(true);
-        safe.setBoolean(fixtureRepository, fixtureSafeMode);
-        Field cached = PluginRepository.class.getDeclaredField("items");
-        cached.setAccessible(true);
-        cached.set(fixtureRepository, items);
-        Constructor<PluginRepository.State> state =
-            PluginRepository.State.class.getDeclaredConstructor(
-                List.class, boolean.class, String.class);
-        state.setAccessible(true);
-        ((MutableLiveData<PluginRepository.State>) fixtureRepository.state())
-            .setValue(state.newInstance(items, false, fixtureSafeMode ? "测试夹具：安全模式" : "测试夹具：普通模式"));
+        fixture.setValue(
+            fixtureState(
+                items, false, fixtureSafeMode ? "测试夹具：安全模式" : "测试夹具：普通模式", fixtureSafeMode));
+        fixtureDirty = false;
         refreshes.incrementAndGet();
       } catch (Exception error) {
         fixtureFailure = error;
@@ -314,16 +340,20 @@ public final class FragmentEntrySelfTest {
     boolean showsSafeMode(boolean safe) {
       if (fixtureFailure != null) throw new AssertionError("发布插件夹具失败", fixtureFailure);
       View root = getView();
-      if (root == null || fixtureRepository == null || fixtureRepository.isSafeMode() != safe)
-        return false;
-      if ((root.findViewById(R.id.btnPluginRestore).getVisibility() == View.VISIBLE) != safe)
+      if (root == null || fixture.getValue() == null || fixture.getValue().catalog.safeMode != safe)
         return false;
       RecyclerView list = root.findViewById(R.id.pluginList);
-      RecyclerView.ViewHolder holder = list.findViewHolderForAdapterPosition(0);
-      if (holder == null) return false;
-      Switch toggle = holder.itemView.findViewById(R.id.pluginSwitch);
+      // 恢复按钮在 header 的安全模式警示条里；插件从位置 1 开始，位置 0 是 header。
+      if ((find(R.id.btnPluginRestore).getVisibility() == View.VISIBLE) != safe) return false;
+      RecyclerView.ViewHolder holder = list.findViewHolderForAdapterPosition(1);
+      if (holder == null) {
+        list.scrollToPosition(1);
+        return false;
+      }
+      android.widget.CompoundButton toggle = holder.itemView.findViewById(R.id.pluginSwitch);
       TextView status = holder.itemView.findViewById(R.id.pluginStatus);
-      return toggle.isChecked() != safe
+      return toggle != null
+          && toggle.isChecked() != safe
           && status.getText().toString().contains(safe ? "已禁用" : "已启用");
     }
   }

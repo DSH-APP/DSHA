@@ -67,7 +67,31 @@ public class AppLocaleDispatchTest {
         };
     assertThrows(
         IllegalArgumentException.class, () -> AppLocaleDispatch.apply(33, "system", writer));
-    assertThrows(IllegalArgumentException.class, () -> AppLocaleDispatch.apply(23, "fr", writer));
+    assertThrows(IllegalArgumentException.class, () -> AppLocaleDispatch.apply(23, "de", writer));
     assertTrue(calls.isEmpty());
+  }
+
+  @Test
+  public void everyResolvedLocaleReachesBothSupportedWritersWithoutCoercion() {
+    List<String> calls = new ArrayList<>();
+    AppLocaleDispatch.Writer writer =
+        new AppLocaleDispatch.Writer() {
+          @Override
+          public void platform(String language) {
+            calls.add("platform:" + language);
+          }
+
+          @Override
+          public void compat(String language) {
+            calls.add("compat:" + language);
+          }
+        };
+    for (String language : UiLanguagePreference.LANGUAGES) {
+      AppLocaleDispatch.apply(33, language, writer);
+      AppLocaleDispatch.apply(30, language, writer);
+    }
+    assertEquals(20, calls.size());
+    assertTrue(calls.contains("platform:zh-Hant"));
+    assertTrue(calls.contains("compat:ar"));
   }
 }

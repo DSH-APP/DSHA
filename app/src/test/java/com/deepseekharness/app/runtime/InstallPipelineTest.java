@@ -144,7 +144,7 @@ public class InstallPipelineTest {
     assertEquals(0, environment.repairs());
     for (int i = 0; i < 6; i++) {
       assertEquals(InstallTask.Step.FAILED, task.snapshot().steps[i]);
-      assertFalse(task.snapshot().details[i].equals("尚未检查"));
+      assertFalse(task.snapshot().details[i].equals("未检查"));
     }
   }
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- H1「分组」层级：raised 实底、无描边，与页面主卡（surface+细边+抬升）、次级描边卡区分开。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_raised" />
+    <corners android:radius="14dp" />
+</shape>

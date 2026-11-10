@@ -21,6 +21,8 @@ public final class RuntimeBrowserProbe {
       throws Exception {
     AtomicBoolean closed = new AtomicBoolean(), attached = new AtomicBoolean();
     AtomicReference<Exception> failure = new AtomicReference<>();
+    AtomicReference<com.deepseekharness.app.util.TrialRendererDiagnostic> diagnostic =
+        new AtomicReference<>(new com.deepseekharness.app.util.TrialRendererDiagnostic());
     Handler main = new Handler(Looper.getMainLooper());
     final class Surface implements Runnable {
       WeakReference<androidx.fragment.app.FragmentActivity> owner = new WeakReference<>(null);
@@ -44,6 +46,7 @@ public final class RuntimeBrowserProbe {
           return;
         }
         var activity = ForegroundActivity.current();
+        diagnostic.get().nativeFlag("ownerResumed", ForegroundActivity.isResumed(activity));
         if (!ForegroundActivity.isResumed(activity)) {
           main.postDelayed(this, 500);
           return;
@@ -52,13 +55,16 @@ public final class RuntimeBrowserProbe {
           if (owner.get() != activity) {
             detach();
             owner = new WeakReference<>(activity);
+            var facts = new com.deepseekharness.app.util.TrialRendererDiagnostic();
+            facts.nativeFlag("ownerResumed", true);
+            diagnostic.set(facts); // Callbacks from an old attachment keep only its old facts.
             java.util.function.Consumer<String> failed = code -> failure.set(new IOException(code));
             if (PreviewFallback.preferred(activity)) view = gecko(activity, authUrl, failed);
             else
               try {
-                view = webView(activity, baseUrl, cookie, failed);
+                view = webView(activity, baseUrl, cookie, failed, facts);
               } catch (RuntimeException | LinkageError error) {
-                if (!com.deepseekharness.app.BuildConfig.LOW_ANDROID) throw error;
+                if (!false) throw error;
                 view = gecko(activity, authUrl, failed);
               }
             attached.set(true);
@@ -83,6 +89,10 @@ public final class RuntimeBrowserProbe {
           public void check() throws IOException {
             if (failure.get() != null)
               throw new IOException("TRIAL_BROWSER_UNAVAILABLE", failure.get());
+          }
+
+          public java.util.Map<String, Object> diagnostics(String expectedNonce) {
+            return diagnostic.get().snapshot(expectedNonce);
           }
         };
     try {
@@ -117,10 +127,23 @@ public final class RuntimeBrowserProbe {
       androidx.fragment.app.FragmentActivity activity,
       String url,
       String cookie,
-      java.util.function.Consumer<String> failed) {
+      java.util.function.Consumer<String> failed,
+      com.deepseekharness.app.util.TrialRendererDiagnostic diagnostic) {
     FrameLayout container = new FrameLayout(activity);
     WebView view = new WebView(activity);
     AtomicBoolean alive = new AtomicBoolean(true);
+    Handler main = new Handler(Looper.getMainLooper());
+    Runnable sample =
+        new Runnable() {
+          public void run() {
+            if (!alive.get()) return;
+            diagnostic.nativeFlag("viewAttached", view.isAttachedToWindow());
+            diagnostic.nativeFlag("viewShown", view.isShown());
+            diagnostic.nativeFlag("windowVisible", view.getWindowVisibility() == View.VISIBLE);
+            diagnostic.nativeFlag("sizePositive", view.getWidth() > 0 && view.getHeight() > 0);
+            main.postDelayed(this, 10_000);
+          }
+        };
     try {
       var settings = view.getSettings();
       settings.setJavaScriptEnabled(true);
@@ -128,10 +151,69 @@ public final class RuntimeBrowserProbe {
       settings.setAllowFileAccess(false);
       settings.setAllowContentAccess(false);
       settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+      try {
+        boolean bridge =
+            androidx.webkit.WebViewFeature.isFeatureSupported(
+                androidx.webkit.WebViewFeature.WEB_MESSAGE_LISTENER);
+        diagnostic.nativeFlag("bridgeSupported", bridge);
+        if (bridge)
+          androidx.webkit.WebViewCompat.addWebMessageListener(
+              view,
+              "DshaTrialDiagnostic",
+              java.util.Set.of(url.substring(0, url.length() - 1)),
+              (source, message, origin, isMainFrame, reply) -> {
+                if (!alive.get()
+                    || source != view
+                    || !isMainFrame
+                    || origin == null
+                    || message == null
+                    || !com.deepseekharness.app.util.WebPreviewPolicy.sameService(
+                        url, origin.toString())) return;
+                try {
+                  if (message.getType() != androidx.webkit.WebMessageCompat.TYPE_STRING) return;
+                  String text = message.getData();
+                  if (text == null || text.length() > 2048) return;
+                  org.json.JSONObject value = new org.json.JSONObject(text);
+                  java.util.Map<String, Object> flags = new java.util.LinkedHashMap<>();
+                  for (String key :
+                      com.deepseekharness.app.util.TrialRendererDiagnostic.SCRIPT_FLAGS)
+                    flags.put(key, value.opt(key));
+                  flags.put("postHttpStatus", value.opt("postHttpStatus"));
+                  diagnostic.accept(value.optString("nonce", ""), flags);
+                } catch (org.json.JSONException | RuntimeException invalid) {
+                  // Diagnosis has no authority to change acceptance or initiate another request.
+                }
+              });
+      } catch (RuntimeException | LinkageError unavailable) {
+        diagnostic.nativeFlag("bridgeSupported", false);
+      }
       view.setWebViewClient(
           new WebViewClient() {
             @Override
+            public void onPageStarted(WebView web, String ignored, android.graphics.Bitmap icon) {
+              diagnostic.nativeFlag("pageStarted", true);
+            }
+
+            @Override
+            public void onPageFinished(WebView web, String ignored) {
+              diagnostic.nativeFlag("pageFinished", true);
+            }
+
+            @Override
+            public void onReceivedHttpError(
+                WebView web, WebResourceRequest request, WebResourceResponse response) {
+              if (request.isForMainFrame()) diagnostic.mainHttpStatus(response.getStatusCode());
+            }
+
+            @Override
+            public void onReceivedError(
+                WebView web, WebResourceRequest request, WebResourceError error) {
+              if (request.isForMainFrame()) diagnostic.mainLoadError(error.getErrorCode());
+            }
+
+            @Override
             public boolean onRenderProcessGone(WebView gone, RenderProcessGoneDetail detail) {
+              diagnostic.nativeFlag("rendererGone", true);
               if (alive.getAndSet(false)) failed.accept("TRIAL_RENDERER_GONE");
               container.removeView(gone);
               gone.destroy();
@@ -154,15 +236,22 @@ public final class RuntimeBrowserProbe {
           url,
           cookie + "; Path=/; HttpOnly; SameSite=Strict",
           ok -> {
+            diagnostic.nativeFlag("cookieCallback", true);
+            diagnostic.nativeFlag("cookieAccepted", Boolean.TRUE.equals(ok));
             if (alive.get() && Boolean.TRUE.equals(ok)) view.loadUrl(url);
           });
+      main.post(sample);
       return () -> {
         alive.set(false);
+        main.removeCallbacks(sample);
+        diagnostic.nativeFlag("closed", true);
         view.stopLoading();
         root.removeView(container);
         view.destroy();
       };
     } catch (RuntimeException | LinkageError error) {
+      alive.set(false);
+      main.removeCallbacks(sample);
       view.destroy();
       throw error;
     }

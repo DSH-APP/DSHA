@@ -1,0 +1,10 @@
+# DSHA 0.2.1-rc.5-20261108.0900-dsh0.2.2-rc.1 / build342
+
+- 按压反馈三变体（`PressFeedback`，A1 / C1 / C2，`99c971d6c`）：可点行只补状态层（不改内容与布局），主按钮按下 0.985 缩放，大卡片圆角 18→22dp 形变；系统关闭动画时全部静态处理，禁用按钮不进入缩放手势。`UiMotion` 新增数值滚动、圆角形变与区域淡换基元。25 个页面接入：`OnboardingKit` / `CardPage` 的共享按钮与行、`CardSheet` 页脚统一接入，25 个页面根视图 `attachButtons`（启动 / 设置 / 设备授权 / 数据备份 / 安装维护 / 更新 / 诊断 / 插件 / 虚拟屏 / 应急 / 恢复 / 文件等；终端自定义触摸区与 WebView 排除）。
+- 内联加载按钮 `LoadingAction`（A2，`2d261ff4f`）：按钮左侧 16dp 真实转圈，忙碌期锁定已测宽度、禁止点击并写入 `stateDescription`，结束恢复原文案与宽度；重复 `start` 被拒绝，同步动作 `run()` 保证异常时也恢复，系统关闭动画时显示静态弧。备份主按钮在真实任务开始时显示内联转圈并锁宽；部署 / 维护按钮忙碌时本来隐藏且有独立进度区，不叠加假加载态。
+- 数值滚动与状态淡换（E5 / G4，`3bbae9e68`）：`RollingNumber` 记住上一值并滚动到新值，单位跟随 formatter，关闭动画直接落值；`FadeSwap` 文字先写值再淡入，区域内容 90ms 淡出→重建→150ms 淡入，连续刷新只保留最后一次。存储页总量从上一值滚到新值；工作台状态、自动备份状态、维护页头状态改用 FadeSwap 文字切换。
+- 卡片层级与状态徽标（H1 / H2，`055b400c4`）：三级卡片 = elevated 主卡（surface + 细边 + 1dp 抬升）/ filled 分组（raised 实底无描边）/ outlined 次级；分组统一为 filled，`CardPage.card(Tier)` 供页面显式选级。徽标（>99 显示 99+）与状态点只使用 `shell_*` token，可在同一 View 换色复用；工作台状态卡使用 elevated，自动备份状态点随开关换色，多选栏使用数量徽标。
+- 单选卡与多选操作栏（D1 / D2 / H3，`708206da3`）：`SelectableCard` 单选为 2dp 描边 + 色调 + 勾选，多选为勾选框；紧凑格隐藏勾选以防截断，读屏报 `radio` / `checkbox` checked。`SelectionActionBar` 提供已选数量徽标与动作，0 项时收起计数但动作栏不跳位。接入：语言选择格、虚拟屏预览档位（卡内单选替换单选项弹窗）、导出范围单选卡；保留副本与旧环境改为多选底部操作栏（已选数量 + 检查 + 刷新 / 取消）。
+- 版本与范围：版本码提升为 342（基于已发布的 build341 / `04f2ace84`）；DSHA 修订号保持 `0.2.1-rc.5`，内置 DSH 为 `0.2.2-rc.1`。本版不改代码行为、不改受管输入、不新增受管运行时；runtimeId 保持 `2ae3f266…`，fixed-inputs 冻结沿用锁定的 20261105e；内置 `dsh-web-mobile` 保持上游 3.3.1 与默认启用不变。
+- **未验证 / 未验收**：Wave B 以定向组件单测与全量单测验证；真机视觉与朗读验收（TalkBack）、按压反馈手感、内联加载、卡片层级、单选 / 多选在日夜、短屏、1.3 倍字体与 RTL 下的表现均未逐项执行。**build342 尚未真机验收**，验收项是 341→342 首次覆盖安装成功、数据完好、READY 与上述交互在真实设备上的表现；build338–build341 真机安装验收仍待用户。
+- 验证范围：发布身份与前置检查、宿主 contracts 整组、descriptor `2ae3f266` / 202 assets / 475 launchers、第三方声明、内置插件、凭据路径、semver、host manifest、源卫生、UI i18n、`generate-changelog --check`、文档链接、全树 Java 格式、`git diff --check`、`test-vscreen-help`、`test-diagnostic-feedback`；全量 `:app:testStandardDebugUnitTest`（先 `tools/prepare-test-runtime.py`，10 例 aarch64 Robolectric 环境基线失败如实记录）与 `:app:lintStandardRelease`；正式签名 assemble 不在本机执行（无发布 keystore）。结果以本机发布准备回执与本次 CI run 为准。

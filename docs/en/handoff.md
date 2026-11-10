@@ -8,7 +8,7 @@ The old handoff guide's exact bytes are preserved in the [historical original](.
 
 ## Runtime structure
 
-The APK extracts a complete Ubuntu base into the application's private directory and runs Node 24, locked pnpm, and `@deepseek-ai/dsh` **0.2.1-rc.2** inside proot/proroot. The native application uses Java 17, Material3, and a single `:app` module, without Kotlin. Both variants are arm64-only and share `dsh.android.client`: Standard requires API 30 and uses system WebView; Low requires API 23 and additionally supplies Gecko 143.
+The APK extracts a complete Ubuntu base into the application's private directory and runs Node 24, locked pnpm, and `@deepseek-ai/dsh` **0.2.1-rc.5** inside proot/proroot. The native application uses Java 17, Material3, and a single `:app` module, without Kotlin. There is one Standard variant: API 30 minimum, arm64-v8a, system WebView, package `io.github.sunsetrne.dsha` (test variant `.test`). The Low/GeckoView line was removed in build209.
 
 Web uses an automatically allocated port by default (`--port 0`); startup may reuse an actual local port that is still available. Only an explicit manual setting requests a fixed port. Backup port memory does not migrate to another device, and the actual port is confirmed by the current authenticated startup output. The 3090 host bridge and default 3081 LAN entry have different roles; see [ports](ports-and-networking.md) and [DNS](dns-configuration.md). Never infer a PID from a port.
 
@@ -25,7 +25,7 @@ Web uses an automatically allocated port by default (`--port 0`); startup may re
 | Managed content and generator inputs | `managed-runtime-inputs.json`, generated runtime descriptor |
 | Independent emergency archives | `tools/recovery-runtime/lock.json` |
 | Host-test entry points | `tools/host-tests.manifest.json` |
-| Historical release certificate | `ci/release-identity.json` |
+| Mod release identity and certificate | `ci/release-identity.json` |
 
 The Ubuntu base retains an independent identity. Ordinary DSH or UI updates must not increment it. `offline-rootfs.bin` and `dsh-runtime.bin` use `split-runtime-v1`: cold installation reads both, and managed updates read the DSH overlay. Do not package the same large archive twice. Offline archives and large generated output are not committed; use CONTRIBUTING, BUILD, and current CI tools for generation and verification order.
 
@@ -44,8 +44,7 @@ python3 tools/check-source-hygiene.py
 Pure Java logic uses JUnit. PR source checks may generate current resources and run JVM tests for both variants. This is compilation and JVM verification, not generation or installation of an audit APK. Once complete inputs are prepared, run:
 
 ```bash
-./gradlew :app:testStandardDebugUnitTest :app:testLowDebugUnitTest \
-  :app:lintStandardRelease :app:lintLowRelease
+./gradlew :app:testStandardDebugUnitTest :app:lintStandardRelease
 python3 tools/run-host-tests.py --stage runtime
 python3 tools/verify-stability.py --stage software
 ```
@@ -71,10 +70,10 @@ The independent emergency runtime has its own root, HOME, and workspace and does
 Release APKs use the original package name, historical E7E3 certificate, an increasing versionCode, `debuggable=false`, and v1/v2/v3 signing. Passwords must be supplied explicitly. Do not substitute a temporary, A3, or debug certificate.
 
 ```bash
-./gradlew :app:assembleStandardRelease :app:assembleLowRelease
+./gradlew :app:assembleStandardRelease
 ```
 
-After the relevant software, asset, plugin, emergency, ELF, and signature gates, use the version directory `release/0.2.1-rc.2/dsha-0.2.1-rc.2.apk` and `.apk.sha256`. The present delivery scope is Standard only; preserve original Low172 bytes. Replace the same version and flavor while retaining other historical versions. Bind source snapshots and verification records to the final bytes.
+After the relevant software, asset, plugin, emergency, ELF, and signature gates, publish the signed APK through the current `release-production.yml` flow: the Release attaches the APK, evidence ZIP, `build-info.json` and `SHA256SUMS`, and — unless `test_packages=none` — the co-installable `.debug` / `.dev` test APKs and their public test certificate; `dry_run=true` builds and verifies everything, including those test packages, without creating the tag or Release. The delivery scope is Standard only; Low historical bytes remain archival and are never republished. Bind source commit, run, APK and verification records to the final bytes.
 
 Phone operations are paused. Do not generate extra debug/audit APKs or inject failures into production data. If future device acceptance is authorized, use only the same-signature release APK for an in-place upgrade and retain user data. Android 6/7, real 16 KiB devices, FUSE, vendor `/proc` restrictions, and external model services require their own real evidence.
 

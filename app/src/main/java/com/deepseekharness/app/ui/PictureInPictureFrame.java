@@ -61,7 +61,10 @@ final class PictureInPictureFrame extends FrameLayout {
   }
 
   void resumeViewport() {
-    if (!compact) {
+    // Full-screen layout notifications also reach this method when PiP is disabled.
+    // With no frozen viewport or PiP transform there is nothing to release; requesting
+    // another layout here repeats the WebView traversal after every size change.
+    if (!compact && (frozen || childTransformApplied)) {
       frozen = false;
       clearChildTransform();
       resetGeometryCache();

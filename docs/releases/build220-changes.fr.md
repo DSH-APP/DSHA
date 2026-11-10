@@ -1,0 +1,7 @@
+# DSHA 0.2.1-rc.3-20261101.0053-dsh0.2.1-rc.5 / build220
+
+- Corrige la course entre la fenêtre flottante de la tâche du téléphone et l’autorisation de lecture d’écran : lorsque l’utilisateur ouvre la fenêtre d’état, le contrôle de l’écran est suspendu et l’ancienne autorisation est révoquée ; un `turn/end` ou `/app/ui/task-end` reçu ensuite ne ferme plus systématiquement la fenêtre en pause.
+- La même tâche reste attachée lorsque l’utilisateur l’a ouverte puis mise en pause. Une reprise explicite demande une nouvelle observation de l’écran et un arrêt explicite retire la tâche. Les anciennes autorisations et les actions dont le résultat est inconnu ne sont jamais approuvées ou rejouées automatiquement. Une fin normale ferme toujours la fenêtre et le service.
+- Le nettoyage vérifie de nouveau le propriétaire de la tâche et l’état de pause sur le thread principal. Des régressions Android couvrent la conservation après expansion, l’arrêt explicite et la fin normale ; le guide des opérations sur l’appareil est également mis à jour.
+- Ajoute l’évaluation des performances et la proposition de refactorisation par étapes de ScreenSense mobile. L’OCR, le protocole compact et les budgets de latence restent une évaluation de conception, pas des fonctions implémentées dans cette version.
+- Le versionCode passe à 220. La révision DSHA reste 0.2.1-rc.3 et le DSH intégré reste 0.2.1-rc.5. Le périmètre complet de compilation, de tests, de signature et de validation sur appareil suit le reçu CI / Release.

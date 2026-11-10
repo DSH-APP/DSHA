@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-ui-file-actions/lib/client.js",
+  "sourceSha256": "437f70ba26ff1a11efc0aeb547e3a799948f55e8cabef69839dbc481e96ed40d",
+  "packageIntegrity": "sha512-S+A/paMumirh2V89M/yOrmsCJELMaooAzqNC9k6bNWv36NFskYqBlF39lFFkdsYVtZki7nwo8DSwsiVI2PU5cA==",
+  "patches": [
+    {
+      "before": "\t\t\t\t\treturn [\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tid: \"copy\",\n\t\t\t\t\t\t\ticon: { key: \"file-actions.copy\" },",
+      "after": "\t\t\t\t\treturn [\n\t\t\t\t\t\t// DSHA_IMAGE_GALLERY_MENU_V1: Android only. The native bridge saves the\n\t\t\t\t\t\t// original same-origin Blob to the system gallery; browsers keep upstream rows.\n\t\t\t\t\t\t...typeof window.DSHA?.saveImage === \"function\" && typeof window.DSHAFileTransfer?.imageMenu === \"function\" && typeof source.url === \"string\" && source.url.startsWith(\"blob:\" + location.origin + \"/\") ? [{\n\t\t\t\t\t\t\tid: \"dsha.saveToGallery\",\n\t\t\t\t\t\t\ticon: { key: \"file-actions.save\" },\n\t\t\t\t\t\t\tfailureLabel: t(\"menu.saveFailed\"),\n\t\t\t\t\t\t\tlabel: document.documentElement.lang?.startsWith(\"zh\") ? \"保存到相册\" : \"Save to gallery\",\n\t\t\t\t\t\t\trun: () => {\n\t\t\t\t\t\t\t\tif (!window.DSHAFileTransfer?.imageMenu(source.url, source.name)) throw new Error(\"Gallery save unavailable\");\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}] : [],\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tid: \"copy\",\n\t\t\t\t\t\t\ticon: { key: \"file-actions.copy\" },"
+    }
+  ]
+}

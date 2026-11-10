@@ -1,0 +1,107 @@
+name: "Node: fixed inputs"
+
+# 可复用节点：成对解析固定输入 → 按 SHA-256 还原 → （可选）按 npm lock 重建受管 DSH
+# 运行时并重算描述符 → 打包为同一 run 内的交接 artifact。下游节点用
+# .github/actions/restore-handoff 核对 commit 与逐文件摘要后再写入工作区。
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Exact commit to check out (defaults to the caller's commit)
+        required: false
+        type: string
+        default: ''
+      asset_bundle_url:
+        description: Explicit immutable HTTPS input archive; empty uses ci/sunset-inputs.lock.json
+        required: false
+        type: string
+        default: ''
+      asset_bundle_sha256:
+        description: SHA-256 paired with asset_bundle_url
+        required: false
+        type: string
+        default: ''
+      asset_archive_format:
+        description: bundle or source-archive (only with an explicit URL)
+        required: false
+        type: string
+        default: bundle
+      rebuild_runtime:
+        description: Rebuild the managed DSH runtime from the npm lock and rewrite the descriptor
+        required: false
+        type: boolean
+        default: true
+      artifact:
+        description: Handoff artifact name (unique within the calling run)
+        required: false
+        type: string
+        default: dsha-inputs
+    outputs:
+      url:
+        description: Resolved input archive URL
+        value: ${{ jobs.inputs.outputs.url }}
+      sha256:
+        description: Resolved input archive SHA-256
+        value: ${{ jobs.inputs.outputs.sha256 }}
+      format:
+        description: Resolved input archive layout
+        value: ${{ jobs.inputs.outputs.format }}
+      source:
+        description: Where the input pair came from
+        value: ${{ jobs.inputs.outputs.source }}
+      artifact:
+        description: Handoff artifact name
+        value: ${{ inputs.artifact }}
+permissions:
+  contents: read
+jobs:
+  inputs:
+    name: Restore and hand off fixed inputs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    outputs:
+      url: ${{ steps.resolve.outputs.url }}
+      sha256: ${{ steps.resolve.outputs.sha256 }}
+      format: ${{ steps.resolve.outputs.format }}
+      source: ${{ steps.resolve.outputs.source }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-toolchain
+      # 未显式给出时只认当前源码锁；不读取仓库变量。
+      - name: Resolve fixed input pair
+        id: resolve
+        env:
+          SUNSET_DISPATCH_URL: ${{ inputs.asset_bundle_url }}
+          SUNSET_DISPATCH_SHA: ${{ inputs.asset_bundle_sha256 }}
+          SUNSET_DISPATCH_FORMAT: ${{ inputs.asset_bundle_url && inputs.asset_archive_format || '' }}
+        run: python3 tools/sunset-ci-inputs.py --github-output
+      - name: Restore exact fixed build inputs
+        env:
+          INPUT_URL: ${{ steps.resolve.outputs.url }}
+          INPUT_SHA: ${{ steps.resolve.outputs.sha256 }}
+          INPUT_FORMAT: ${{ steps.resolve.outputs.format }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          args=(--url "$INPUT_URL" --sha256 "$INPUT_SHA")
+          if [ "$INPUT_FORMAT" = source-archive ]; then args+=(--source-archive); fi
+          python3 tools/ci-assets.py "${args[@]}"
+      - name: Rebuild current managed DSH runtime from the dependency lock
+        if: inputs.rebuild_runtime
+        run: |
+          python3 tools/prepare-dsh-runtime.py
+          python3 tools/prepare-backup-assets.py --write
+          python3 tools/prepare-runtime-descriptor.py --write
+          python3 tools/verify-runtime-descriptor-source.py
+      - name: Pack input handoff
+        run: python3 tools/ci-handoff.py pack --dir "$RUNNER_TEMP/dsha-handoff"
+      # 无压缩、1 天保留：仅供本 run 的下游节点使用，不作为交付物。
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ inputs.artifact }}
+          path: ${{ runner.temp }}/dsha-handoff
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 1

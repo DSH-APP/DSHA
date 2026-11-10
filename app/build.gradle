@@ -2,9 +2,10 @@ plugins {
     id 'com.android.application'
 }
 
-// 两版共用功能和离线环境；只有 low 携带兼容旧 Android 的 Gecko 内核。
+// DSHA 官方发行版（单一 Standard 变体）：Android 11（API 30）及以上；发布身份见下方 dsha.identity。
+// 旧 low/GeckoView 兼容线与独立上岛包都已移除：上岛能力并入正式包。
 // 文件名独立于可诊断版本名，保持当前用户下载入口不变。
-ext.dshaApkNameVersion = '0.2.1-rc.2'
+ext.dshaApkNameVersion = '0.2.2-rc.1'
 def bundledTools = new groovy.json.JsonSlurper().parse(rootProject.file('tools/runtime-tools.lock.json'))
 if (bundledTools.schema != 1 || !(bundledTools.pnpm.version ==~ /[0-9]+\.[0-9]+\.[0-9]+/))
     throw new GradleException('随包工具身份格式错误')
@@ -38,6 +39,39 @@ def verifyBundledDshVersion = tasks.register('verifyBundledDshVersion') {
 // END DSHA_BUNDLED_DSH_VERSION_GATE
 // CI 只生成未签名完整包；该产物不得进入 release 或覆盖安装。
 def unsignedPackage = project.findProperty('dsha.unsignedPackage') == 'true'
+// 测试包变体：显式开关才改包名/版本名，与正式包共存且数据完全隔离；默认构建不变。
+// .test 保留历史路径；.debug 是可调试的 debug 构建；.dev 是 release 构建的测试签名包。
+// 三者互斥；正式包名仍只由 release-production 用正式证书构建。
+def sunsetTest = project.findProperty('dsha.sunsetTest') == 'true' || System.getenv('DSHA_SUNSET_TEST') == '1'
+def debugPackage = project.findProperty('dsha.debugPackage') == 'true' || System.getenv('DSHA_DEBUG_PACKAGE') == '1'
+def devPackage = project.findProperty('dsha.devPackage') == 'true' || System.getenv('DSHA_DEV_PACKAGE') == '1'
+if ((sunsetTest ? 1 : 0) + (debugPackage ? 1 : 0) + (devPackage ? 1 : 0) > 1)
+    throw new GradleException('TEST_PACKAGE_VARIANT_CONFLICT: .test / .debug / .dev 只能选一个')
+def testVariantLabel = debugPackage ? 'Debug' : devPackage ? 'Dev' : sunsetTest ? 'Test' : ''
+// 发布身份：-Pdsha.identity=mod|upstream，默认 upstream（dsh.android.client / 历史 E7E3 证书，官方发行身份）。
+// mod 是 io.github.sunsetrne.dsha / Mod 证书，保留用于历史包与共存安装验证，不再作为默认身份。
+// 两套身份的包名、显示名、测试后缀、默认 key alias 与核对证书都从 ci/release-identity.<name>.json 读取；
+// versionCode / versionName 共用。未知值直接失败，不回退到任一身份，签名身份绝不混用。
+// 解析规则与 tools/release-identity.py 一致，由 tools/test-release-identity.py 交叉核对。
+def releaseIdentityNames = ['mod', 'upstream']
+def releaseIdentityName = (project.findProperty('dsha.identity') ?: 'upstream').toString()
+if (!(releaseIdentityName in releaseIdentityNames))
+    throw new GradleException("UNKNOWN_RELEASE_IDENTITY: dsha.identity 只接受 mod 或 upstream，收到 '${releaseIdentityName}'")
+def releaseIdentityFile = rootProject.file("ci/release-identity.${releaseIdentityName}.json")
+def releaseIdentity = new groovy.json.JsonSlurper().parse(releaseIdentityFile)
+if (releaseIdentity.schema != 1 || releaseIdentity.identity != releaseIdentityName
+        || !(releaseIdentity.packageName ==~ /[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+/)
+        || !(releaseIdentity.certificateSha256 ==~ /[a-f0-9]{64}/)
+        || !(releaseIdentity.testSuffix ==~ /\.[A-Za-z][A-Za-z0-9_]*/)
+        || !(releaseIdentity.devSuffix ==~ /\.[A-Za-z][A-Za-z0-9_]*/)
+        || !(releaseIdentity.keyAlias ==~ /[A-Za-z0-9._-]+/)
+        || !(releaseIdentity.appName instanceof String) || releaseIdentity.appName.trim().isEmpty())
+    throw new GradleException("RELEASE_IDENTITY_INVALID: ${releaseIdentityFile}")
+ext.dshaReleaseIdentity = releaseIdentity
+// 只有源码 CI 可显式允许缺少真实测试夹具；完整测试默认要求固定输入齐备。
+def sourceOnlyTests = providers.gradleProperty('dsha.sourceOnlyTests').orElse('false').get()
+if (!(sourceOnlyTests in ['true', 'false']))
+    throw new GradleException('dsha.sourceOnlyTests 只接受 true 或 false')
 
 android {
     namespace 'com.deepseekharness.app'
@@ -47,41 +81,53 @@ android {
     ndkVersion '26.3.11579264'
 
     defaultConfig {
-        applicationId "dsh.android.client"
+        // 包名随发布身份：mod = io.github.sunsetrne.dsha（与原版完全隔离，可并行安装），
+        // upstream = dsh.android.client（只能用历史 E7E3 证书覆盖升级）。
+        applicationId releaseIdentity.packageName
         minSdk 30
         targetSdk 37
         buildConfigField 'String', 'BUNDLED_PNPM_VERSION', '"' + bundledTools.pnpm.version + '"'
-        versionCode 190
+        // 测试包标记：只有显式测试变体（.test/.debug/.dev）为 true。正式包恒为 false，
+        // 用于只在测试包显示「反馈与诊断」导出入口；不得改为运行时猜测包名。
+        buildConfigField 'boolean', 'TEST_PACKAGE', (sunsetTest || debugPackage || devPackage) ? 'true' : 'false'
+        // 上岛能力已并入正式包；不再有独立上岛包名或独立显示名。
+        // 显示名随发布身份（DSH-A-Su / DSHA）；测试变体加后缀，便于桌面上区分两个包。
+        resValue 'string', 'app_name', testVariantLabel ? releaseIdentity.appName + ' ' + testVariantLabel : releaseIdentity.appName
+        versionCode 356
         // DSHA 修订号 + 固定的北京时间戳 + 内置 DSH 版本；同一交付重建不变。
-        versionName "0.2.1-rc.2-20261022.2100-dsh0.2.1-rc.2"
+        versionName "0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1"
         testInstrumentationRunner project.findProperty('dsha.testRunner') ?: "com.deepseekharness.app.Rc13Instrumentation"
         ndk {
             abiFilters 'arm64-v8a'
         }
     }
 
+    // 只保留 Standard 一条线（Android 11 / API 30+）。low 兼容线与 GeckoView 已整体删除。
     flavorDimensions 'androidSupport'
     productFlavors {
         standard {
             dimension 'androidSupport'
             minSdk 30
-            buildConfigField 'boolean', 'LOW_ANDROID', 'false'
-        }
-        low {
-            dimension 'androidSupport'
-            minSdk 23
-            versionNameSuffix 'low'
-            buildConfigField 'boolean', 'LOW_ANDROID', 'true'
+            if (sunsetTest) {
+                // mod = .test，upstream = .SunsetRNE（见身份文件 testSuffix）。
+                applicationIdSuffix releaseIdentity.testSuffix
+                // 测试包身份沿用历史 `-SunsetTest` 后缀：CI 与发布脚本按此核验，不能只写 `-test`。
+                versionNameSuffix '-SunsetTest'
+            } else if (devPackage) {
+                // 开发环境测试包：mod = .dev，upstream = .SunsetDev（见身份文件 devSuffix）。
+                applicationIdSuffix releaseIdentity.devSuffix
+                versionNameSuffix '-SunsetDev'
+            }
         }
     }
 
     signingConfigs {
-        // 线上发布签名 = DSHA-ACTUAL-PUBLISH-KEY-debug.keystore（alias androiddebugkey，
-        // 证书 SHA-256 E7:E3:A3:1A:75:94:6F:26:69:19:4C:97:2B:3D:D0:C9:AE:A3:FC:7C:50:A8:B8:85:D2:DE:E7:10:B2:2A:53:F5）。
-        // v1.1.7 起线上包都是这把 debug keystore 签的（历史原因，勿换），
-        // Android 只允许同签名覆盖安装，换钥 = 逼用户卸载重装丢数据。
-        // 另一把 DSHA-release.keystore 只签增量更新清单，绝不混用。
-        // 正式任务必须明确提供历史发布证书；单测/debug 不依赖发布密钥。
+        // mod 身份：DSH-A-Su Mod 发布签名 = 新建的 dsha-a-su-release.jks（alias dsha-a-su，
+        // 证书 SHA-256 A4:B0:41:3C:67:FA:46:DD:30:DC:7E:2B:CE:3A:D5:61:51:ED:8B:FD:E2:A3:31:5F:FF:68:5B:AF:78:6B:5D:5D）。
+        // io.github.sunsetrne.dsha 与原版 dsh.android.client 不存在覆盖安装关系，不使用历史 E7E3 证书。
+        // upstream 身份：历史 E7E3 证书（alias androiddebugkey），私钥只在 ym2025szz/DSHA-prerelase 的 Secrets。
+        // 期望的证书哈希记录在 ci/release-identity.<identity>.json，verifyPublishCertificate 会强制核对。
+        // 正式任务必须明确提供所选身份的发布证书；单测/debug 不依赖发布密钥。
         publish {
             def ksPath = System.getenv("DSHA_KEYSTORE") ?: project.findProperty("dsha.keystore")
             if (ksPath != null && !ksPath.toString().isEmpty() && file(ksPath).exists()) {
@@ -89,14 +135,14 @@ android {
                 storePassword System.getenv("DSHA_KEYSTORE_PASSWORD")
                         ?: project.findProperty("dsha.keystore.password")
                 keyAlias System.getenv("DSHA_KEY_ALIAS")
-                        ?: project.findProperty("dsha.key.alias") ?: "androiddebugkey"
+                        ?: project.findProperty("dsha.key.alias") ?: releaseIdentity.keyAlias
                 keyPassword System.getenv("DSHA_KEY_PASSWORD")
                         ?: project.findProperty("dsha.key.password")
                 if (!storePassword || !keyPassword)
                     throw new GradleException('必须明确提供发布密钥口令，不能使用隐式缺省值')
-                println "签名：已配置历史发布证书"
+                println "签名：已配置 ${releaseIdentityName} 身份发布证书"
             } else {
-                println "签名：未配置历史发布证书；正式 APK 打包将被阻止"
+                println "签名：未配置 ${releaseIdentityName} 身份发布证书；正式 APK 打包将被阻止"
             }
             enableV1Signing true
             enableV2Signing true
@@ -107,6 +153,13 @@ android {
     buildTypes {
         debug {
             debuggable true
+            if (debugPackage) {
+                // 可调试的共存包：包名 .debug；CI 用测试证书签名，产物仅用于开发环境。
+                applicationIdSuffix '.debug'
+                versionNameSuffix '-SunsetDebug'
+                // 统一先出 unsigned APK，再由 CI 用测试证书签名，避免 runner 一次性 debug 证书。
+                if (unsignedPackage) signingConfig null
+            }
         }
         release {
             minifyEnabled false
@@ -123,6 +176,12 @@ android {
             // 使用 app 自带的同版本 16 KB JNI，覆盖 terminal-emulator AAR 中的旧库。
             pickFirsts += ['**/libtermux.so']
             excludes += ['**/x86/**', '**/x86_64/**', '**/armeabi/**', '**/armeabi-v7a/**']
+        }
+        resources {
+            // bcprov 只被备份用到 AES-GCM / SHA-256 / PBKDF2 轻量 API；Picnic 后量子常量表与
+            // CertPathReviewer 文案只由应用从不调用的类加载，不进入 APK（压缩后约 1.2 MB）。
+            excludes += ['/org/bouncycastle/pqc/legacy/picnic/**',
+                         '/org/bouncycastle/x509/CertPathReviewerMessages*.properties']
         }
     }
 
@@ -146,6 +205,10 @@ android {
 
     testOptions {
         unitTests.includeAndroidResources = true
+        // 完整 Standard 套件在同一测试 JVM 内运行 2500+ 项，并包含 25MB 位图边界和
+        // 多组 Robolectric 界面沙箱；默认堆上限会在与断言无关的位图分配处 OOM。
+        // 这里只提高测试进程内存上限，不放宽或跳过任何用例。
+        unitTests.all { it.maxHeapSize = '2048m' }
     }
 
     sourceSets {
@@ -160,23 +223,38 @@ android {
 
 def verifyPublishCertificate = tasks.register("verifyPublishCertificate") {
     doLast {
+        if (sunsetTest || debugPackage || devPackage)
+            throw new GradleException('TEST_PACKAGE_REQUIRES_UNSIGNED: 测试包不能使用正式发布证书；请用 -Pdsha.unsignedPackage=true 由测试证书签名')
         def signing = android.signingConfigs.publish
         if (signing.storeFile == null || !signing.storeFile.isFile())
-            throw new GradleException("正式 APK 缺少历史 E7E3 发布密钥，停止打包")
+            throw new GradleException("正式 APK 缺少 ${releaseIdentityName} 身份发布密钥，停止打包")
         def store = java.security.KeyStore.getInstance(java.security.KeyStore.getDefaultType())
         signing.storeFile.withInputStream { store.load(it, signing.storePassword.toCharArray()) }
         def certificate = store.getCertificate(signing.keyAlias)
-        def expected = new groovy.json.JsonSlurper().parse(rootProject.file('ci/release-identity.json')).certificateSha256
+        def identityFile = "ci/release-identity.${releaseIdentityName}.json"
+        def identity = new groovy.json.JsonSlurper().parse(rootProject.file(identityFile))
+        def expected = identity.certificateSha256
         if (certificate == null || java.security.MessageDigest.getInstance("SHA-256")
                 .digest(certificate.encoded).encodeHex().toString() != expected)
-            throw new GradleException("发布证书不是历史 E7E3，停止打包")
+            throw new GradleException("发布证书与 ${identityFile} 记录不符，停止打包")
+        if (android.defaultConfig.applicationId != identity.packageName)
+            throw new GradleException("applicationId 与 ${identityFile} 记录不符，停止打包")
     }
 }
 tasks.configureEach {
-    if (!unsignedPackage && name.matches("(package|validateSigning|assemble)(Standard|Low)Release")) dependsOn(verifyPublishCertificate)
+    if (!unsignedPackage && name.matches("(package|validateSigning|assemble)StandardRelease")) dependsOn(verifyPublishCertificate)
+}
+// 只读配置检查：打印解析出的发布身份，不读取密钥、不打包。
+tasks.register('printReleaseIdentity') {
+    def summary = "releaseIdentity=${releaseIdentityName} applicationId=${android.defaultConfig.applicationId}" +
+            " appName=${releaseIdentity.appName} testSuffix=${releaseIdentity.testSuffix} devSuffix=${releaseIdentity.devSuffix}" +
+            " testVariant=${testVariantLabel.isEmpty() ? 'release' : testVariantLabel.toLowerCase()}" +
+            " keyAlias=${android.signingConfigs.publish.keyAlias ?: releaseIdentity.keyAlias}" +
+            " certificateSha256=${releaseIdentity.certificateSha256}"
+    doLast { println summary }
 }
 tasks.register('signPublishRelease') {
-    if (!unsignedPackage) dependsOn(verifyPublishCertificate, 'assembleStandardRelease', 'assembleLowRelease')
+    if (!unsignedPackage) dependsOn(verifyPublishCertificate, 'assembleStandardRelease')
     doFirst {
         if (unsignedPackage) throw new GradleException('未签名 CI 模式不能执行正式发布任务')
     }
@@ -208,9 +286,40 @@ def verifyProrootCompat = tasks.register('verifyProrootCompat', Exec) {
     commandLine(System.getenv('DSHA_PYTHON') ?: 'python3', '-B',
             rootProject.file('tools/test-proroot-compat.py').absolutePath)
 }
-tasks.named('preBuild').configure { dependsOn(verifyBundledIdentities, verifyBuiltinRegistry, verifyCredentialRegistry, verifyBundledDshVersion, verifyProrootCompat) }
+def verifyCurrentChangelog = tasks.register('verifyCurrentChangelog', Exec) {
+    inputs.file(file('build.gradle'))
+    inputs.files(rootProject.files('tools/generate-changelog.py', 'tools/source_text.py',
+            'tools/ui_language_catalog.py'))
+    ['zh', 'zh-Hant', 'en', 'ru', 'ja', 'ko', 'ar', 'pt', 'la', 'fr'].each { language ->
+        inputs.file(rootProject.file("docs/releases/build${android.defaultConfig.versionCode}-changes.${language}.md"))
+    }
+    inputs.files(fileTree('src/main/res') { include 'raw*/changelog.md' })
+    commandLine(System.getenv('DSHA_PYTHON') ?: 'python3', '-B',
+            rootProject.file('tools/generate-changelog.py').absolutePath, '--check')
+}
+
+tasks.named('preBuild').configure { dependsOn(verifyBundledIdentities, verifyBuiltinRegistry, verifyCredentialRegistry, verifyBundledDshVersion, verifyProrootCompat, verifyCurrentChangelog) }
+
+def verifyWebLanguages = tasks.register('verifyWebLanguages', Exec) {
+    inputs.files(rootProject.files('tools/prepare-web-languages.py', 'tools/web_language_catalog.py',
+            'tools/source_text.py', 'tools/ui_language_catalog.py',
+            'tools/i18n/web-messages.json', 'tools/i18n/web-language-bridge.js'))
+    inputs.files(rootProject.fileTree('tools/i18n/web-translations') { include '*.json' })
+    inputs.files(files('src/main/assets/web-integration/language.js',
+            'src/main/assets/language-patch.json',
+            'src/main/assets/recovery-recipes/0.2.2-rc.1/language-patch.json'))
+    commandLine(System.getenv('DSHA_PYTHON') ?: 'python3', '-B',
+            rootProject.file('tools/prepare-web-languages.py').absolutePath,
+            '--catalog-only', '--check')
+}
+
+tasks.named('preBuild').configure { dependsOn(verifyWebLanguages) }
+
 tasks.withType(Test).configureEach {
     systemProperty 'dsha.assetsDir', file('src/main/assets').absolutePath
+    systemProperty 'dsha.sourceOnlyTests', sourceOnlyTests
+    // 切换到完整测试时不得复用 source-only 的跳过结果。
+    inputs.property 'dsha.sourceOnlyTests', sourceOnlyTests
 }
 tasks.configureEach {
     if (name in ['verifyBundledIdentities', 'verifyBuiltinRegistry', 'prepareStandardAssets',
@@ -226,9 +335,12 @@ def prepareStandardAssets = tasks.register("prepareStandardAssets", Exec) {
     inputs.file(rootProject.file("tools/prepare-web-compat.mjs"))
     inputs.files(rootProject.files("tools/web-compat/entry.cjs", "tools/web-compat/package.json", "tools/web-compat/package-lock.json"))
     inputs.file(rootProject.file("tools/build-dsh-runtime.py"))
+    inputs.files(rootProject.files("tools/runtime_stable_patches.py", "tools/runtime_input_contract.py"))
     inputs.dir(rootProject.file("tools/dsh-runtime"))
     inputs.file(rootProject.file("tools/prepare-ubuntu-tools.py"))
     inputs.dir(rootProject.file("tools/ubuntu-tools"))
+    inputs.file(rootProject.file("tools/prepare-gh-cli.py"))
+    inputs.files(rootProject.files("tools/gh-cli/packages.lock.json"))
     outputs.dir(layout.buildDirectory.dir("generated/standardAssets"))
     outputs.file(layout.buildDirectory.file("generated/standard-assets-report.json"))
     commandLine(System.getenv("DSHA_PYTHON") ?: "python3", "-B",
@@ -243,6 +355,14 @@ def prepareBackupAssets = tasks.register("prepareBackupAssets", Exec) {
     commandLine(System.getenv("DSHA_PYTHON") ?: "python3", "-B", rootProject.file("tools/prepare-backup-assets.py").absolutePath, "--check")
 }
 prepareStandardAssets.configure { dependsOn(prepareBackupAssets) }
+def verifyExternalToolProof = tasks.register("verifyExternalToolProof", Exec) {
+    // 外接设备 root 执行的 adb/fastboot/加载器摘要必须由固定锁生成，不能手工改证明。
+    inputs.file(rootProject.file("tools/prepare-external-tools.py"))
+    inputs.file(rootProject.file("tools/external-tools/lock.json"))
+    inputs.file(file("src/main/assets/external-tool-proof.json"))
+    commandLine(System.getenv("DSHA_PYTHON") ?: "python3", "-B", rootProject.file("tools/prepare-external-tools.py").absolutePath, "--check")
+}
+prepareStandardAssets.configure { dependsOn(verifyExternalToolProof) }
 def runtimeInputContractFile = file("src/main/assets/managed-runtime-inputs.json")
 def runtimeInputContract = new groovy.json.JsonSlurper().parse(runtimeInputContractFile)
 if (runtimeInputContract.schema != 1) throw new GradleException("未知受管运行时输入契约")
@@ -281,9 +401,12 @@ def prepareRecoveryAssets = tasks.register("prepareRecoveryAssets", Exec) {
     dependsOn(prepareStandardAssets)
     inputs.file(rootProject.file("tools/prepare-recovery-assets.py"))
     inputs.file(rootProject.file("tools/recovery_runtime_overlay.py"))
+    inputs.file(rootProject.file("tools/recovery_descriptor_limits.py"))
+    inputs.file(file("src/main/java/com/deepseekharness/app/util/RecoveryDescriptorLimits.java"))
     inputs.file(rootProject.file("tools/generated_asset_directory.py"))
     inputs.files(rootProject.files("tools/asset-deployment.json", "tools/asset_deployment.py"))
     inputs.file(rootProject.file("tools/recovery-runtime/lock.json"))
+    inputs.files(fileTree("src/main/assets/recovery-recipes"))
     // 正式归档变化必须重算物理位置；固定副本可以首次缺失后由同摘要种子建立。
     inputs.files(layout.buildDirectory.file("generated/standardAssets/offline-rootfs.bin"),
             layout.buildDirectory.file("generated/standardAssets/dsh-runtime.bin"))
@@ -294,7 +417,7 @@ def prepareRecoveryAssets = tasks.register("prepareRecoveryAssets", Exec) {
     inputs.files(fileTree("src/main/assets/destructive-policy"), file("src/main/assets/recovery-native-consent.cjs"))
     inputs.files(file("src/main/assets/web-integration/es-compat.js"), file("src/main/assets/web-integration/startup.js"), file("src/main/assets/pdf-compat-patch.json"),
             file("src/main/assets/language-patch.json"), file("src/main/assets/web-integration/language.js"))
-    inputs.files(fileTree("src/main/jniLibs"), fileTree("src/low/jniLibs"))
+    inputs.files(fileTree("src/main/jniLibs"))
     outputs.dir(layout.buildDirectory.dir("generated/recoveryAssets"))
     commandLine(System.getenv("DSHA_PYTHON") ?: "python3", "-B",
             rootProject.file("tools/prepare-recovery-assets.py").absolutePath,
@@ -302,7 +425,7 @@ def prepareRecoveryAssets = tasks.register("prepareRecoveryAssets", Exec) {
             "--shared-assets", layout.buildDirectory.dir("generated/standardAssets").get().asFile.absolutePath)
 }
 tasks.configureEach {
-    if (name.matches("merge(Standard|Low).*Assets")) dependsOn(prepareRecoveryAssets)
+    if (name.matches("mergeStandard.*Assets")) dependsOn(prepareRecoveryAssets)
 }
 
 def verifyBackupDependencies = tasks.register("verifyBackupDependencies") {
@@ -338,7 +461,7 @@ def verifyBackupDependencies = tasks.register("verifyBackupDependencies") {
             }
             hash.digest().encodeHex().toString()
         }
-        ["standardReleaseRuntimeClasspath", "lowReleaseRuntimeClasspath"].each { name ->
+        ["standardReleaseRuntimeClasspath"].each { name ->
             def resolved = configurations.getByName(name).resolvedConfiguration.resolvedArtifacts
             lock.dependencies.each { expected ->
                 def selected = resolved.findAll { it.moduleVersion.id.group == expected.group && it.name == expected.name }
@@ -360,6 +483,9 @@ tasks.named("preBuild").configure { dependsOn(prepareStandardAssets, prepareReco
 def prepareUiLanguages = tasks.register("prepareUiLanguages", Exec) {
     inputs.file(rootProject.file("tools/prepare-ui-languages.py"))
     inputs.file(rootProject.file("tools/i18n/messages.json"))
+    inputs.files(rootProject.files("tools/ui_language_catalog.py", "tools/i18n/messages-extra.json"))
+    inputs.files(rootProject.fileTree("tools/i18n/translations") { include "*.json" })
+    inputs.files(rootProject.fileTree("tools/i18n/translations-extra") { include "*.json" })
     outputs.dir(layout.buildDirectory.dir("generated/uiLanguage"))
     commandLine(System.getenv("DSHA_PYTHON") ?: "python3", "-B",
             rootProject.file("tools/prepare-ui-languages.py").absolutePath,
@@ -367,22 +493,33 @@ def prepareUiLanguages = tasks.register("prepareUiLanguages", Exec) {
 }
 tasks.named("preBuild").configure { dependsOn(prepareUiLanguages) }
 
+def verifyUiLanguageResources = tasks.register("verifyUiLanguageResources", Exec) {
+    inputs.files(rootProject.files("tools/localize-android-ui.py", "tools/ui_language_catalog.py",
+            "tools/i18n/messages.json", "tools/i18n/messages-extra.json", "tools/i18n/android-resources.json"))
+    inputs.files(rootProject.fileTree("tools/i18n/translations") { include "*.json" })
+    inputs.files(rootProject.fileTree("tools/i18n/translations-extra") { include "*.json" })
+    inputs.files(fileTree("src/main/res") { include "**/*.xml" })
+    inputs.files(fileTree("src/standard/res") { include "**/*.xml" })
+    commandLine(System.getenv("DSHA_PYTHON") ?: "python3", "-B",
+            rootProject.file("tools/localize-android-ui.py").absolutePath,
+            "--resources-only", "--check")
+}
+tasks.named("preBuild").configure { dependsOn(verifyUiLanguageResources) }
+
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
-    lowImplementation 'org.mozilla.geckoview:geckoview-arm64-v8a:143.0.20251003115653'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    // 1.15 保留 API 23；1.16 起要求 API 24，不能用于兼容版。
     implementation 'androidx.webkit:webkit:1.15.0'
     implementation 'com.google.android.material:material:1.11.0'
     standardImplementation 'dev.rikka.shizuku:api:13.1.5'
     standardImplementation 'dev.rikka.shizuku:provider:13.1.5'
-    // 13.1.5 从 API 24 起可用；兼容版以 12.2.0 的相同 Binder 协议支持 Android 6。
-    lowImplementation 'dev.rikka.shizuku:api:12.2.0'
-    lowImplementation 'dev.rikka.shizuku:provider:12.2.0'
     // 真 PTY 终端：Termux 拆出的 terminal-view/terminal-emulator（Apache 2.0），
     // 自带 JNI PTY 层（openpty+fork/exec）。坐标是 JitPack 多模块真实 groupId
     // （com.termux.termux-app），不是 Wiki 上会 401 的 com.termux:terminal-view。
-    implementation 'com.termux.termux-app:terminal-view:0.118.0'
+    implementation('com.termux.termux-app:terminal-view:0.118.0') {
+        // Fixed 0.118.0 emulator sources are vendored with the bounded input queue fix.
+        exclude group: 'com.termux.termux-app', module: 'terminal-emulator'
+    }
     // 宿主备份：流式 JSON 清单与跨 API 23 的 PBKDF2-SHA256 / AES-GCM 实现，版本锁定。
     implementation 'com.google.code.gson:gson:2.13.1'
     implementation 'org.bouncycastle:bcprov-jdk15to18:1.85.2'

@@ -7,6 +7,42 @@ import static org.junit.Assert.*;
 
 public class ManagedPatchChainTest {
   @Test
+  public void onlyCompleteSignedPredecessorCanBeRestoredBeforeApplyingItsSuccessor()
+      throws Exception {
+    var old =
+        List.of(
+            new ManagedPatchChain.Patch("provide;", "old-helper;provide;old-effect;"),
+            new ManagedPatchChain.Patch("resolve;", "old-resolve;"));
+    var current =
+        List.of(
+            new ManagedPatchChain.Patch("provide;", "new-helper;provide;new-effect;"),
+            new ManagedPatchChain.Patch("resolve;", "new-resolve;"));
+    var chain = List.of(new ManagedPatchChain.Recipe("language", current, List.of(), old));
+    String archived = "old-helper;provide;old-effect; old-resolve;";
+    String expected = "new-helper;provide;new-effect; new-resolve;";
+    assertEquals(expected, ManagedPatchChain.apply(archived, chain, () -> null));
+    assertEquals(expected, ManagedPatchChain.apply(expected, chain, () -> null));
+    AtomicInteger reads = new AtomicInteger();
+    assertEquals(
+        expected,
+        ManagedPatchChain.apply(
+            "old-helper;provide;old-effect; resolve;",
+            chain,
+            () -> {
+              reads.incrementAndGet();
+              return archived;
+            }));
+    assertEquals(1, reads.get());
+    assertThrows(
+        java.io.IOException.class,
+        () ->
+            ManagedPatchChain.apply("old-helper;provide;old-effect; resolve;", chain, () -> null));
+    assertThrows(
+        java.io.IOException.class,
+        () -> ManagedPatchChain.apply(archived + archived, chain, () -> null));
+  }
+
+  @Test
   public void canonicalRepairReappliesEveryPatchForTheModuleAndIsIdempotent() throws Exception {
     var chain =
         List.of(

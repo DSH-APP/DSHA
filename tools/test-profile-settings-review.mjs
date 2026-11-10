@@ -40,9 +40,10 @@ const {default:Schema}=await import(pathToFileURL(require.resolve('@deepseek-ai/
 const Config=Schema.object({model:Schema.string().default('default'),limit:Schema.number().min(1).max(100).default(5)});
 Config.meta.volatile=true;
 let raw={model:'current',limit:5};const runtimeOwner={Config};
-const entry={id:'llm',options:{id:'llm',name:'test-settings',config:raw},fiber:{uid:1,state:2,runtime:runtimeOwner,config:resolveConfig(runtimeOwner,raw)}};
+const fiber={uid:1,state:2,runtime:runtimeOwner,rawConfig:raw,effectiveConfig:resolveConfig(runtimeOwner,raw)};fiber.ctx={fiber};
+const entry={id:'llm',options:{id:'llm',name:'test-settings',config:raw},fiber};
 const actual=Object.create(SettingsForms.prototype);actual.revisions=new Map();actual.presentations=new Map();
-actual.ownerContext={emit(){},configEditor:{entries:()=>[entry],configuration:()=>[{entry,inherited:{},override:raw}],async edit(_entry,change){const next=change(raw,{});const validated=resolveConfig(runtimeOwner,next);raw=next;entry.options.config=raw;entry.fiber.config=validated;}}};
+actual.ownerContext={emit(){},configEditor:{entries:()=>[entry],configuration:()=>[{entry,inherited:{},override:raw}],async edit(_entry,change){const next=change(raw,{});const validated=resolveConfig(runtimeOwner,next);raw=next;entry.options.config=raw;entry.fiber.rawConfig=raw;entry.fiber.effectiveConfig=validated;}}};
 result=await review(actual,{mode:'preview'},'- id: llm\n  config:\n    model: valid\n    limit: 101\n');
 assert.equal(result.items.length,1);assert(result.warnings.includes('SCHEMA_REJECTED:llm/limit'));assert.equal(actual.describe()[0].value.limit,5);
 result=await review(actual,{mode:'apply',selected:['llm/limit']},'- id: llm\n  config:\n    limit: 42\n');assert.equal(actual.describe()[0].value.limit,42);

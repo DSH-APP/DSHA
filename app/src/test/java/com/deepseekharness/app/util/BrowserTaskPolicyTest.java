@@ -35,15 +35,15 @@ public final class BrowserTaskPolicyTest {
   }
 
   @Test
-  public void nativeHomeNeverSelectsTheLiveBrowserEvenWithALegacyMainRoot() {
+  public void nativeHomeReordersTheSharedMainWebTaskBeforeAnyOtherMainTask() {
+    var tasks = List.of(new BrowserTaskPolicy.Task(9, true), new BrowserTaskPolicy.Task(4, true));
+    // 单任务布局：存活 Main 与网页同在 9，回主页就在 9 内重排，不跳到旧版本遗留的 4 另开一个窗口。
+    assertEquals(9, BrowserTaskPolicy.nativeTask(tasks, 9, 9));
+    assertEquals(9, BrowserTaskPolicy.nativeTask(tasks, 9, -1));
+    // 当前存活 Main 明确在别的任务时仍以它为准。
+    assertEquals(4, BrowserTaskPolicy.nativeTask(tasks, 9, 4));
     assertEquals(
-        4,
-        BrowserTaskPolicy.nativeTask(
-            List.of(new BrowserTaskPolicy.Task(9, true), new BrowserTaskPolicy.Task(4, true)),
-            9,
-            9));
-    assertEquals(
-        -1, BrowserTaskPolicy.nativeTask(List.of(new BrowserTaskPolicy.Task(9, true)), 9, -1));
+        9, BrowserTaskPolicy.nativeTask(List.of(new BrowserTaskPolicy.Task(9, true)), 9, -1));
   }
 
   @Test

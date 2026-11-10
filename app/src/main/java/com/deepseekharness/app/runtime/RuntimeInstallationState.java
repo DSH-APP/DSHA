@@ -121,6 +121,22 @@ final class RuntimeInstallationState {
     }
   }
 
+  /** 只读判断已装运行时是否由更高、且当前候选未声明可读的数据代次写入。 */
+  public com.deepseekharness.app.util.DshVersionPolicy.Status installedVersionStatus() {
+    try {
+      com.deepseekharness.app.backup.RuntimeDescriptor installed = installedRuntimeDescriptor();
+      com.deepseekharness.app.backup.RuntimeDescriptor expected = expectedRuntimeDescriptor();
+      if (installed == null) return com.deepseekharness.app.util.DshVersionPolicy.Status.MISSING;
+      return com.deepseekharness.app.util.DshVersionPolicy.assess(
+          installed.dshVersion(),
+          installed.dataWrite(),
+          expected.dshVersion(),
+          expected.dataRead());
+    } catch (IOException | RuntimeException error) {
+      return com.deepseekharness.app.util.DshVersionPolicy.Status.UNKNOWN;
+    }
+  }
+
   public void confirmRuntimeHealth(java.util.Map<String, Object> proof) throws IOException {
     managedAssets.confirmHealth(proof);
   }

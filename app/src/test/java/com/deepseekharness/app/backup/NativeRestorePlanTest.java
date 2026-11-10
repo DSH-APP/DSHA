@@ -88,4 +88,61 @@ public class NativeRestorePlanTest {
     assertThrows(IOException.class, () -> NativeRestorePlan.relativeTarget("a", "../outside"));
     assertEquals("folder/file", NativeRestorePlan.relativeTarget("folder/link", "file"));
   }
+
+  @Test
+  public void escapingLegacyLinkIsRetainedAsMetadataAndNeverMaterialized() throws Exception {
+    File task = temporary.newFolder(), active = temporary.newFolder();
+    File archive = new File(task, "archive");
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    var writer = new BackupArchive.Writer(bytes, new BackupControl(null));
+    writer.add(BackupArchive.Record.of("dsh", "", "DIRECTORY", "application", 0, ""), null);
+    Map<String, Object> link = new LinkedHashMap<>();
+    link.put("root", "dsh");
+    link.put("path", "web/node_modules/dsh-web-mobile");
+    link.put("kind", "LINK");
+    link.put("scope", "application");
+    link.put("size", 0L);
+    link.put("sha256", "");
+    link.put("target", "../../../../dsha-web-mobile");
+    writer.add(new BackupArchive.Record(link), null);
+    writer.finish(BackupArchiveTest.summary());
+    Files.write(archive.toPath(), bytes.toByteArray());
+    var plan =
+        NativeRestorePlan.inspect(
+            fs,
+            task,
+            archive,
+            root -> new NativeRestorePlan.Target(active, active, true),
+            Set.of("application"),
+            new BackupControl(null));
+    assertTrue(plan.warnings.contains("LINK_METADATA_RETAINED"));
+    assertEquals(List.of("dsh"), plan.buildCandidates(true, new BackupControl(null)));
+    assertFalse(new File(task, "candidate/dsh/web/node_modules/dsh-web-mobile").exists());
+    File retained = new File(task, "unresolved-links/1.json");
+    assertEquals(
+        "../../../../dsha-web-mobile",
+        BackupJson.read(Files.readAllBytes(retained.toPath()), BackupLimits.RECORD).get("target"));
+    assertTrue(plan.warnings.contains("LINK_METADATA_RETAINED"));
+  }
+
+  @Test
+  public void changedRestoreTargetStillFailsBeforeCandidateCreation() throws Exception {
+    File task = temporary.newFolder(),
+        active = temporary.newFolder(),
+        archive = new File(task, "archive");
+    Files.write(archive.toPath(), BackupArchiveTest.archive());
+    var plan =
+        NativeRestorePlan.inspect(
+            fs,
+            task,
+            archive,
+            root -> new NativeRestorePlan.Target(active, active, true),
+            Set.of("application"),
+            new BackupControl(null));
+    Files.writeString(new File(active, "changed").toPath(), "new data");
+    IOException error =
+        assertThrows(IOException.class, () -> plan.buildCandidates(true, new BackupControl(null)));
+    assertEquals("TARGET_CHANGED", error.getMessage());
+    assertEquals("new data", Files.readString(new File(active, "changed").toPath()));
+  }
 }

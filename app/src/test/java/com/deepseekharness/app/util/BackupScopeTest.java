@@ -52,6 +52,18 @@ public class BackupScopeTest {
   }
 
   @Test
+  public void nativeDeviceGrantStateIsExcludedFromEveryBackupScope() {
+    for (String path :
+        new String[] {
+          "dsha_device_grants",
+          "shared/dsha_device_grants",
+          "clipboard_read_mode_v1",
+          "prefs/clipboard_read_mode_v1"
+        }) assertTrue(BackupScope.excludesNativeGrantState(path));
+    assertFalse(BackupScope.excludesNativeGrantState("settings.yaml"));
+  }
+
+  @Test
   public void idRoundTrips() {
     for (int scope : BackupScope.ALL) {
       assertEquals(scope, BackupScope.fromId(BackupScope.id(scope)));

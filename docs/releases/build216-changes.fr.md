@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.3-20261031.0340-dsh0.2.1-rc.5 / build216
+
+- Le dsh-web-mobile intégré est synchronisé avec upstream main et le tag v3.2.2 actuel `bb0e5e1` : le panneau droit plein écran retrouve sa bande de feuille et son fond papier peint (#247), la surcouche du pet ne couvre plus les feuilles/panneaux et n'avale plus les appuis (#248), et le geste du panneau fichiers lit `data-sidebar-right-open` et reconnaît d'abord la racine nommée du pet (#249).
+- Tous les correctifs locaux DSHA sont rejoués sur les nouveaux octets upstream : les écarts d'entrée de session/fermeture du tiroir, de ligne de recherche, d'appui sur le fond et de ligne de famille de polices restent ; upstream n'a pas absorbé le correctif de la ligne de polices.
+- Le verrou upstream passe à 232 membres et au SHA-256 d'archive `80973622…` ; le descripteur d'exécution, les mentions tierces, les documents de correctifs mobiles et de provenance sont mis à jour, et les références de paquet, versionCode et DSH de l'époque build190 sont corrigées.
+- Le versionCode passe à 216 ; la révision DSHA reste 0.2.1-rc.3 et le DSH intégré est 0.2.1-rc.5 ; le périmètre de build et de recette suit cette exécution CI et le reçu de la Release.

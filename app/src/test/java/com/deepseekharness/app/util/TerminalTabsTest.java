@@ -62,6 +62,47 @@ public class TerminalTabsTest {
   }
 
   @Test
+  public void closeErrorPersistsAndOldGenerationCannotOverwriteRetry() {
+    TerminalTabs<String> tabs = new TerminalTabs<>();
+    var first = tabs.add("one");
+    assertTrue(tabs.beginClose(first.id));
+    long old = first.closeSnapshot().generation;
+    assertTrue(tabs.closeFailed(first.id, old, "Authorization: Bearer secret-token\nfailed"));
+    assertEquals(TerminalTabs.CleanupState.UNCONFIRMED, first.cleanupState());
+    assertTrue(first.isCloseUnconfirmed());
+    assertFalse(first.closeError().contains("secret-token"));
+    assertFalse(first.closeError().contains("\n"));
+    assertFalse(first.isClosing());
+    assertTrue(tabs.beginClose(first.id));
+    assertTrue(first.closeSnapshot().generation > old);
+    assertFalse(tabs.closeFailed(first.id, old, "late failure"));
+    assertTrue(first.isClosing());
+    assertEquals("", first.error());
+    tabs.remove(first.id);
+    assertEquals(TerminalTabs.CleanupState.VERIFIED, first.cleanupState());
+    var replacement = tabs.add("new");
+    assertFalse(tabs.closeFailed(first.id, old, "late old close"));
+    assertEquals(TerminalTabs.CleanupState.NOT_REQUESTED, replacement.cleanupState());
+  }
+
+  @Test
+  public void customTitlesAreBoundedSanitizedAndIndependentOfOutput() {
+    TerminalTabs<String> tabs = new TerminalTabs<>();
+    var first = tabs.add("original output");
+    assertTrue(tabs.rename(first.id, "\u202e API_KEY=private-token\nhello"));
+    assertFalse(first.customTitle().contains("private-token"));
+    assertFalse(first.customTitle().contains("\u202e"));
+    assertFalse(first.customTitle().contains("\n"));
+    assertEquals("original output", first.value);
+    assertTrue(tabs.rename(first.id, "😀".repeat(120)));
+    assertEquals(80, first.customTitle().codePointCount(0, first.customTitle().length()));
+    assertEquals(160, first.customTitle().length());
+    assertTrue(tabs.rename(first.id, null));
+    assertEquals("", first.customTitle());
+    assertFalse(tabs.rename(first.id + 1, "other"));
+  }
+
+  @Test
   public void snapshotIsDetachedAndImmutable() {
     TerminalTabs<String> tabs = new TerminalTabs<>();
     tabs.add("one");

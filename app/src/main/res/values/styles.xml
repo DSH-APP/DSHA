@@ -108,6 +108,9 @@
     </style>
     <style name="Widget.DSHA.Switch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
         <item name="android:textColor">@color/button_text</item>
+        <!-- 胶囊形状保持 Material；只改轨道填充：关闭态近白底，避免和浅灰卡片融在一起。
+             MaterialSwitch 只认 app 命名空间的 track/trackTint，android:track 会被忽略。 -->
+        <item name="trackTint">@color/switch_track_fill</item>
     </style>
 
     <style name="DshaText.PageTitle" parent="DshaText.Title">

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  预览舞台内容：VirtualScreenPreviewView 由代码插入到最底层（它没有 XML 构造器）；
+  说明卡只在没有可用画面时显示，运行中整块让给预览，触摸不会被说明卡截走。
+-->
+<merge xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+  <LinearLayout android:id="@+id/vscreen_stage_card" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center" android:gravity="center_horizontal" android:orientation="vertical" android:padding="24dp">
+    <ImageView android:id="@+id/vscreen_stage_icon" android:layout_width="56dp" android:layout_height="56dp" android:background="@drawable/bg_logo" android:importantForAccessibility="no" android:padding="14dp" android:src="@drawable/ic_vscreen_screen" app:tint="@color/shell_accent" />
+    <TextView android:id="@+id/vscreen_stage_title" style="@style/ShellCardTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:gravity="center" />
+    <TextView android:id="@+id/vscreen_stage_message" style="@style/ShellCardBody" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center" android:maxWidth="360dp" />
+    <ProgressBar android:id="@+id/vscreen_stage_progress" style="?android:attr/progressBarStyleSmall" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginTop="14dp" android:indeterminate="true" android:visibility="gone" />
+  </LinearLayout>
+</merge>

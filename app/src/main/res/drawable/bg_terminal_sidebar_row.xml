@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 会话行正文的按压层：与原型 .session-row 一致的 11dp 圆角涟漪。
+     空闲行本身透明；活动行由 bg_terminal_sidebar_row_active 提供浅底与描边。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/terminal_ripple">
+
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="@dimen/terminal_sidebar_row_radius" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#00000000" />
+            <corners android:radius="@dimen/terminal_sidebar_row_radius" />
+        </shape>
+    </item>
+</ripple>

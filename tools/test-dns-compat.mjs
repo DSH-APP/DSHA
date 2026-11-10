@@ -60,6 +60,92 @@ test('default callback signature, native return value and callback exactly once'
   assert.equal(count,1);
 });
 
+// ---- 宿主解析兜底：用假 fs/http 隔离，不读真实凭据、不连真实桥 ----
+import {EventEmitter} from 'node:events';
+function hostFixture({code='EAI_AGAIN', env={}, reply, mode=0o600, status=200, port='3091', delay=0}={}) {
+  const calls=[], requests=[], error=Object.assign(new Error('getaddrinfo '+code),{code});
+  const dns={lookup(host,options,callback){if(typeof options==='function'){callback=options;options=undefined;}
+    if(typeof callback!=='function')throw new TypeError('callback');
+    calls.push({host,options});queueMicrotask(()=>callback(error));return 'native-request';},
+    promises:{async lookup(host,options){calls.push({host,options});throw error;}}};
+  const files={'/root/.dsh/.bridge_headers':'X-Token: abc_DEF-123\n','/root/.dsh/.bridge_port':port};
+  const fs={lstatSync(path){if(!(path in files))throw Object.assign(Error('ENOENT'),{code:'ENOENT'});
+      return {isFile:()=>true,isSymbolicLink:()=>false,mode,size:files[path].length};},
+    readFileSync(path){return files[path];}};
+  const http={get(options,onResponse){
+    const request=new EventEmitter();request.destroy=()=>{request.destroyed=true;};requests.push(options);
+    const later=delay?fn=>setTimeout(fn,delay):queueMicrotask;
+    later(()=>{
+      if(reply===undefined){request.emit('error',Object.assign(Error('ECONNREFUSED'),{code:'ECONNREFUSED'}));return;}
+      const response=new EventEmitter();response.statusCode=status;response.setEncoding=()=>{};
+      onResponse(response);response.emit('data',JSON.stringify({result:reply}));response.emit('end');response.emit('end');
+    });
+    return request;}};
+  const context=vm.createContext({process:{env:{DSHA_DNS_MODE:'auto',...env}},require:name=>({
+    'node:dns':dns,'node:util':{promisify},'node:module':{syncBuiltinESMExports(){}},'node:fs':fs,'node:http':http})[name]??null});
+  vm.runInContext(source,context);
+  return {dns,calls,requests,error};
+}
+const OK='DSHA_RESOLVE_V1\nstatus=OK\n4 198.51.100.7\n6 2001:db8::7\n';
+const cb=(f,host,options)=>new Promise((resolve,reject)=>{let count=0;
+  const handler=(e,...values)=>{if(++count>1)reject(Error('callback twice'));else e?reject(e):resolve(values);};
+  options===undefined?f.dns.lookup(host,handler):f.dns.lookup(host,options,handler);});
+test('stale resolver: EAI_AGAIN falls back to host resolver once, after the IPv4 retry',async()=>{
+  const f=hostFixture({reply:OK});
+  const [address,family]=await cb(f,'api.example.com');
+  assert.equal(address,'198.51.100.7');assert.equal(family,4);
+  assert.equal(f.calls.length,2);assert.equal(f.requests.length,1);
+  const r=f.requests[0];assert.equal(r.host,'127.0.0.1');assert.equal(r.port,3091);assert.equal(r.headers['X-Token'],'abc_DEF-123');
+  assert.equal(r.path,'/app/net/resolve?host=api.example.com&family=0');assert.equal(r.agent,false);
+  const all=await cb(f,'api.example.com',{all:true,order:'ipv6first'});
+  assert.equal(JSON.stringify(all[0].map(a=>a.family)),'[6,4]');
+});
+test('explicit family goes to host with the same family and is not downgraded',async()=>{
+  const f=hostFixture({reply:'DSHA_RESOLVE_V1\nstatus=OK\n6 2001:db8::7\n'});
+  const [address,family]=await cb(f,'v6.example.com',{family:6});
+  assert.equal(address,'2001:db8::7');assert.equal(family,6);
+  assert.equal(f.calls.length,1);assert.match(f.requests[0].path,/family=6$/);
+});
+test('ENOTFOUND, IP literals, localhost and single labels never reach the bridge',async()=>{
+  const nx=hostFixture({code:'ENOTFOUND',reply:OK});
+  await assert.rejects(cb(nx,'missing.example.com'),e=>e===nx.error);assert.equal(nx.requests.length,0);
+  for(const host of ['localhost','svc.localhost','intranet','10.0.0.1']){
+    const f=hostFixture({reply:OK});await assert.rejects(cb(f,host),e=>e===f.error);assert.equal(f.requests.length,0);
+  }
+});
+test('host failure keeps the original error and is negatively cached; concurrent lookups coalesce',async()=>{
+  const f=hostFixture({reply:'DSHA_RESOLVE_V1\nstatus=NXDOMAIN\n'});
+  await assert.rejects(cb(f,'gone.example.com'),e=>e===f.error);
+  await assert.rejects(cb(f,'gone.example.com'),e=>e===f.error);
+  assert.equal(f.requests.length,1);
+  const down=hostFixture();
+  await assert.rejects(cb(down,'a.example.com'),e=>e===down.error);
+  const ok=hostFixture({reply:OK,delay:20});
+  await Promise.all([cb(ok,'same.example.com'),cb(ok,'same.example.com'),ok.dns.promises.lookup('same.example.com')]);
+  assert.equal(ok.requests.length,1);
+});
+test('old app ([NO_CMD]), HTTP errors and bad credential files fall back to the original error',async()=>{
+  for(const options of [{reply:'[NO_CMD]'},{reply:'[UNAUTHORIZED]'},{reply:OK,status:500},{reply:OK,mode:0o644},
+    {reply:'DSHA_RESOLVE_V1\nstatus=OK\n4 not-an-ip\n'}]){
+    const f=hostFixture(options);await assert.rejects(cb(f,'api.example.com'),e=>e===f.error);
+  }
+  // 端口文件无效时不猜 3090（可能是同机另一个 DSHA 安装），保留原错误且不发送 token。
+  const bad=hostFixture({reply:OK,port:'99999'});await assert.rejects(cb(bad,'api.example.com'),e=>e===bad.error);assert.equal(bad.requests.length,0);
+  const explicit=hostFixture({reply:OK,port:'99999',env:{DSHA_BRIDGE_PORT:'3095'}});await cb(explicit,'api.example.com');assert.equal(explicit.requests[0].port,3095);
+});
+test('promise API returns the native result shape from the host fallback',async()=>{
+  const f=hostFixture({reply:OK});
+  assert.equal(JSON.stringify(await f.dns.promises.lookup('p.example.com')),'{"address":"198.51.100.7","family":4}');
+  const all=await f.dns.promises.lookup('p.example.com',{all:true});assert.equal(all.length,2);
+  assert.equal((await promisify(f.dns.lookup)('q.example.com')).address,'198.51.100.7');
+});
+test('DSHA_DNS_HOST_FALLBACK=0 and native mode disable the bridge fallback',async()=>{
+  const off=hostFixture({reply:OK,env:{DSHA_DNS_HOST_FALLBACK:'0'}});
+  await assert.rejects(cb(off,'api.example.com'),e=>e===off.error);assert.equal(off.requests.length,0);
+  const native=hostFixture({reply:OK,env:{DSHA_DNS_MODE:'native'}});
+  await assert.rejects(cb(native,'api.example.com'),e=>e===native.error);assert.equal(native.requests.length,0);
+});
+
 test('native libuv/getaddrinfo fixture compiles and preserves one HTTP request',
   {skip:process.platform!=='linux'?'Real LD_PRELOAD boundary requires a Linux host':false},()=>{
     const folder=mkdtempSync(join(tmpdir(),'dsha-dns-native-'));
@@ -69,7 +155,7 @@ test('native libuv/getaddrinfo fixture compiles and preserves one HTTP request',
         '-Wl,--build-id=none',resolve('tools/dns-compat-fixture.c'),'-o',library],
         {stdio:'pipe',timeout:30000});
       for(const mode of ['auto','native']){
-        const env={...process.env,LD_PRELOAD:library,DSHA_DNS_MODE:mode};
+        const env={...process.env,LD_PRELOAD:library,DSHA_DNS_MODE:mode,DSHA_DNS_HOST_FALLBACK:'0'};
         delete env.NODE_OPTIONS;
         const output=execFileSync(process.execPath,['--require',
           resolve(process.env.DSHA_DNS_COMPAT_SOURCE||'app/src/main/assets/dns-compat.cjs'),

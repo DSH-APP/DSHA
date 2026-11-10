@@ -91,6 +91,8 @@ final class VirtualScreenAnchorProof implements AutoCloseable {
         throw new Unavailable("ANCHOR_WINDOW_INVENTORY_UNAVAILABLE");
       for (AccessibilityWindowInfo window : windows) {
         if (window.getId() == context.target().windowId) {
+          // 锚点只认原观察携带的 windowId，不重新跑 VirtualScreenWindowPolicy：语义路径的「多应用窗口
+          // 并列」拒绝不能在锚点这里被降级成自动选窗；同一 id 出现两次同样按歧义拒绝。
           if (root != null || window.getType() != AccessibilityWindowInfo.TYPE_APPLICATION)
             throw new Unavailable("ANCHOR_WINDOW_AMBIGUOUS");
           root = window.getRoot();

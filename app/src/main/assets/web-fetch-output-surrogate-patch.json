@@ -1,0 +1,22 @@
+{
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-tool-web/lib/index.js",
+  "patches": [
+    {
+      "before": "function renderBody(body, maxInputChars) {",
+      "after": "// DSHA_WEB_FETCH_OUTPUT_SURROGATE_BOUNDARY_V1\nfunction dshaWebSafePrefix(text, end) {\n\tif (end > 0 && end < text.length && text.charCodeAt(end - 1) >= 0xD800 && text.charCodeAt(end - 1) <= 0xDBFF && text.charCodeAt(end) >= 0xDC00 && text.charCodeAt(end) <= 0xDFFF) end -= 1;\n\treturn text.slice(0, end);\n}\nfunction renderBody(body, maxInputChars) {"
+    },
+    {
+      "before": "\tconst content = body.content.slice(0, maxInputChars);",
+      "after": "\tconst content = dshaWebSafePrefix(body.content, maxInputChars);"
+    },
+    {
+      "before": "\t\ttext: full.slice(0, maxOutputChars),",
+      "after": "\t\ttext: dshaWebSafePrefix(full, maxOutputChars),"
+    },
+    {
+      "before": "\t\ttext: `${prefix.slice(0, maxOutputChars - 78)}${TRUNCATION_FOOTER}`,",
+      "after": "\t\ttext: `${dshaWebSafePrefix(prefix, maxOutputChars - 78)}${TRUNCATION_FOOTER}`,"
+    }
+  ]
+}

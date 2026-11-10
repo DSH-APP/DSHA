@@ -63,6 +63,16 @@ public final class UpdatePolicy {
     return version != null && version.contains("-") ? PREVIEW : STABLE;
   }
 
+  /** The v1 feed records one complete signer, never an unknown or partial signer set. */
+  public static boolean feedIdentityMatches(
+      String installedPackage, List<String> installedSigners, String packageName, String signer) {
+    return installedPackage != null
+        && installedPackage.equals(packageName)
+        && signer != null
+        && installedSignersMatch(
+            installedSigners, Collections.singletonList(signer.toLowerCase(java.util.Locale.ROOT)));
+  }
+
   /** 旧稳定包可由两种通道选中，不能用发布通道或当前偏好猜测查询来源。 */
   public static String restoreCheckedChannel(
       boolean recorded, String checkedChannel, String releaseChannel) {

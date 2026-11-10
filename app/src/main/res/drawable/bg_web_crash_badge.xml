@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 错误面板结论图标底：圆角方块，颜色由 backgroundTint 按结论色调设置。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#FFFFFFFF" /><corners android:radius="20dp" /></shape>

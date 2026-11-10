@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "DSHA 应急页面语言同步",
-  "version": "1.1",
+  "version": "1.2",
   "browser_specific_settings": {
     "gecko": { "id": "dsha-recovery-locale@dsh.client" }
   },

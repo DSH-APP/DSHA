@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 自检与诊断（build248 简化版）布局文案。正文必须与 tools/i18n/messages-extra.json 的 zh 完全一致，十语资源由 localize-android-ui.py 生成。 -->
+<resources>
+    <string name="diag248_status">状态</string>
+    <string name="diag248_feedback">反馈</string>
+    <string name="diag248_tools">工具</string>
+    <string name="diag248_idle_title">未检查</string>
+    <string name="diag248_idle_sub">检查组件与环境</string>
+    <string name="diag248_empty">还没有结果；检查只读本机状态</string>
+    <string name="diag248_copy">复制诊断报告</string>
+    <string name="diag248_copy_sub">脱敏文本，可粘贴到反馈</string>
+    <!-- 以下三条复用目录既有 zh（x1970771 / x1970289 / m0135），不新增译文。 -->
+    <string name="diag248_start">开始检查</string>
+    <string name="diag248_export">导出故障包</string>
+    <string name="diag248_plugins">插件管理</string>
+    <string name="diag248_export_sub">结构化日志包</string>
+    <string name="diag248_repair_sub">重装证书与运行组件</string>
+    <string name="diag248_plugins_sub">排查插件导致的启动问题</string>
+</resources>

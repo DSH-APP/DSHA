@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+  自检与诊断（build248 简化版，平板两栏）：左栏 状态 / 反馈 / 工具，右栏 检查结果。
+  与手机布局共用 diagnostic_hero / diagnostic_feedback / diagnostic_tools 与全部 id；
+  右栏宽度足够时（DiagnosticSummary.okColumns）正常项排两列。整页一个滚动容器，不做嵌套滚动。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/shell_bg">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingStart="16dp" android:paddingTop="6dp" android:paddingEnd="24dp" android:paddingBottom="6dp" android:gravity="center_vertical">
+    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/diagnostic_back" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_ui_back" android:contentDescription="@string/ui_m0201" app:tint="@color/shell_text" />
+    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:layout_weight="1" android:accessibilityHeading="true" android:includeFontPadding="false" android:text="@string/ui2_diagnostics" android:textColor="@color/shell_text" android:textSize="@dimen/shell_title_text" android:textStyle="bold" />
+  </LinearLayout>
+  <ScrollView android:id="@+id/diagnostic_scroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true" android:clipToPadding="false">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:baselineAligned="false" android:orientation="horizontal" android:paddingStart="32dp" android:paddingEnd="32dp" android:paddingTop="8dp" android:paddingBottom="@dimen/shell_page_bottom">
+      <LinearLayout android:layout_width="340dp" android:layout_height="wrap_content" android:orientation="vertical">
+        <TextView style="@style/ShellSectionLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/shell_section_margin" android:accessibilityHeading="true" android:text="@string/diag248_status" />
+        <include layout="@layout/diagnostic_hero" />
+
+        <TextView style="@style/ShellSectionLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/shell_section_gap" android:layout_marginBottom="@dimen/shell_section_margin" android:accessibilityHeading="true" android:text="@string/diag248_feedback" />
+        <include layout="@layout/diagnostic_feedback" />
+
+        <TextView style="@style/ShellSectionLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/shell_section_gap" android:layout_marginBottom="@dimen/shell_section_margin" android:accessibilityHeading="true" android:text="@string/diag248_tools" />
+        <include layout="@layout/diagnostic_tools" android:id="@+id/diagnostic_tools" />
+      </LinearLayout>
+
+      <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="24dp" android:layout_weight="1" android:orientation="vertical">
+        <TextView style="@style/ShellSectionLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/shell_section_margin" android:accessibilityHeading="true" android:text="@string/ui134_results" />
+        <LinearLayout android:id="@+id/diagnostic_results" style="@style/ShellCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+          <TextView android:id="@+id/diagnostic_empty" style="@style/ShellCardBody" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:padding="24dp" android:text="@string/diag248_empty" />
+        </LinearLayout>
+        <TextView android:id="@+id/diagnostic_report" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone" />
+      </LinearLayout>
+    </LinearLayout>
+  </ScrollView>
+</LinearLayout>

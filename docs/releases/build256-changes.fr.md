@@ -1,0 +1,7 @@
+# DSHA 0.2.1-rc.3-20261101.2330-dsh0.2.1-rc.5 / build256
+
+- Sous-pages données et sauvegarde repensées : la restauration devient un assistant en quatre étapes dans la page (choix du fichier, portée et options, contrôle préalable, confirmation) à la place d'une suite de boîtes de dialogue ; Confirmer se verrouille après un appui et le parcours reprend après rotation.
+- L'export personnalisé propose cinq portées au choix et avertit que le fichier n'est pas chiffré s'il inclut les clés API ; les outils de secours et de maintenance sont regroupés par usage et chaque action demande toujours confirmation.
+- La page stockage affiche l'occupation totale et sa répartition par catégorie ; les copies conservées se filtrent par copies de sauvegarde, anciens environnements, plugins, etc. sans perdre les éléments cochés ; le guide de stockage devient une FAQ qui se déplie au toucher.
+- build255 n'a pas été publié séparément : un test des notes de version ne correspondait pas au texte livré, ce qui a fait échouer sa compilation et sa publication. Ses changements de boutons de la page de maintenance sont inclus dans ce build et le test est corrigé.
+- Portée de la vérification : compilation locale et tests unitaires associés uniquement ; aucune installation sur appareil, tests d'interface et Lint confiés à la CI. versionCode porté à 256 (basé sur build255). La révision DSHA reste 0.2.1-rc.3 et le DSH intégré reste 0.2.1-rc.5.

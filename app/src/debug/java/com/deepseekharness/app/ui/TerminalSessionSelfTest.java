@@ -227,6 +227,16 @@ final class TerminalSessionSelfTest {
     }
 
     @Override
+    public void onReady(Process process, com.deepseekharness.app.util.TerminalReady identity)
+        throws Exception {
+      delegate.onReady(process, identity);
+      synchronized (this) {
+        require(processes.contains(process), "拒绝登记非本次创建的进程身份");
+        groups.put(process, (long) identity.session);
+      }
+    }
+
+    @Override
     public void write(Process process, String text) throws IOException {
       delegate.write(process, text);
     }

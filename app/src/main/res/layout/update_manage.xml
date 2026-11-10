@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  管理卡：受管运行时 / 兼容回退 / 本版本更新记录 / 浏览器发布页。手机与平板共用。
+  update_runtime / update_runtime_rollback / update_changelog / update_changelog_summary / update_browser 的 id 保持不变；
+  浏览器入口从页面底部的文字按钮收进本卡第 4 行。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" style="@style/ShellCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+  <LinearLayout android:id="@+id/update_runtime" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <ImageView style="@style/ShellRowIcon" android:layout_width="@dimen/shell_row_icon" android:layout_height="@dimen/shell_row_icon" android:contentDescription="@null" android:src="@drawable/ic_ui2_box" />
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
+      <TextView style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_managed_update" />
+      <TextView style="@style/ShellRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/ui2_managed_sub" />
+    </LinearLayout>
+    <ImageView android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
+  </LinearLayout>
+  <View style="@style/ShellDivider" android:layout_marginStart="60dp" />
+  <LinearLayout android:id="@+id/update_runtime_rollback" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <ImageView style="@style/ShellRowIcon" android:layout_width="@dimen/shell_row_icon" android:layout_height="@dimen/shell_row_icon" android:contentDescription="@null" android:src="@drawable/ic_recovery_document" />
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
+      <TextView style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_rollback" />
+      <TextView style="@style/ShellRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/ui2_rollback_sub" />
+    </LinearLayout>
+    <ImageView android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
+  </LinearLayout>
+  <View style="@style/ShellDivider" android:layout_marginStart="60dp" />
+  <LinearLayout android:id="@+id/update_changelog" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <ImageView style="@style/ShellRowIcon" android:layout_width="@dimen/shell_row_icon" android:layout_height="@dimen/shell_row_icon" android:contentDescription="@null" android:src="@drawable/ic_recovery_document" />
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
+      <TextView style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_changelog" />
+      <TextView android:id="@+id/update_changelog_summary" style="@style/ShellRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" />
+    </LinearLayout>
+    <ImageView android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
+  </LinearLayout>
+  <View style="@style/ShellDivider" android:layout_marginStart="60dp" />
+  <LinearLayout android:id="@+id/update_browser" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <ImageView style="@style/ShellRowIcon" android:layout_width="@dimen/shell_row_icon" android:layout_height="@dimen/shell_row_icon" android:contentDescription="@null" android:src="@drawable/ic_onb_external" />
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
+      <TextView style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0094" />
+      <TextView style="@style/ShellRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/upd_browser_sub" />
+    </LinearLayout>
+    <ImageView android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
+  </LinearLayout>
+</LinearLayout>

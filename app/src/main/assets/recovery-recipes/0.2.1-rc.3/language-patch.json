@@ -1,0 +1,35 @@
+{
+  "dshVersion": "0.2.1-rc.3",
+  "module": "@deepseek-ai/dsh-client-locale/lib/client.js",
+  "patches": [
+    {
+      "before": "ctx.provide(\"locale\", locale);",
+      "after": "ctx.provide(\"locale\", locale);\n            ctx.effect(() => installDshaLanguageBridge(locale), \"DSHA application language\");",
+      "prependAsset": "web-integration/language.js"
+    },
+    {
+      "before": "resolveActive() {\n\t\t\t\tif (this.preference === void 0) return this.provisional;",
+      "after": "resolveActive() {\n                if (typeof window !== \"undefined\" && [\"zh\", \"zh-Hant\", \"en\", \"ru\", \"ja\", \"ko\", \"ar\", \"pt\", \"la\", \"fr\"].includes(window.__DSHA_LANGUAGE__) && this.catalog.has(localeKey(window.__DSHA_LANGUAGE__))) return window.__DSHA_LANGUAGE__;\n\t\t\t\tif (this.preference === void 0) return this.provisional;"
+    },
+    {
+      "before": "this.preference = match.id;\n\t\t\t\tif (this.snapshot.active !== match.id)",
+      "after": "this.preference = match.id;\n                if (typeof window !== \"undefined\" && window.__DSHA_LANGUAGE__ && window.__DSHA_LANGUAGE__ !== match.id) { window.__DSHA_LANGUAGE__ = match.id; window.dispatchEvent(new CustomEvent(\"dsha-language-selected\", { detail: match.id })); }\n\t\t\t\tif (this.snapshot.active !== match.id)"
+    }
+  ],
+  "sourceSha256": "bad8fe9bfb07af2a60c80933be65ceafdaab5386f404fb264401c7e540a36e16",
+  "packageIntegrity": "sha512-/WpBT8gEivbD/yndgefYM09SysDcLcd8/Ov5zmC+A1EPNv6UoQ+4avPT6tkwT46XaG4XoJXmVglDOmfg/vUFGg==",
+  "previousPatches": [
+    {
+      "before": "ctx.provide(\"locale\", locale);",
+      "after": "/* 原生语言通过实际 locale 服务应用；只处理应用 UI，不改聊天或文件内容。 */\nfunction installDshaLanguageBridge(locale) {\n    if (typeof window === 'undefined' || typeof document === 'undefined') return () => {};\n    const valid = value => value === 'zh' || value === 'en';\n    const apply = () => {\n        const language = window.__DSHA_LANGUAGE__;\n        if (!valid(language)) return;\n        if (locale.getSnapshot().active !== language) locale.setLocale(language);\n        document.documentElement.lang = language;\n    };\n    window.addEventListener('dsha-language', apply);\n    apply();\n    return () => window.removeEventListener('dsha-language', apply);\n}\n\nctx.provide(\"locale\", locale);\n            ctx.effect(() => installDshaLanguageBridge(locale), \"DSHA application language\");"
+    },
+    {
+      "before": "resolveActive() {\n\t\t\t\tif (this.preference === void 0) return this.provisional;",
+      "after": "resolveActive() {\n                if (typeof window !== \"undefined\" && (window.__DSHA_LANGUAGE__ === \"zh\" || window.__DSHA_LANGUAGE__ === \"en\")) return window.__DSHA_LANGUAGE__;\n\t\t\t\tif (this.preference === void 0) return this.provisional;"
+    },
+    {
+      "before": "this.preference = match.id;\n\t\t\t\tif (this.snapshot.active !== match.id)",
+      "after": "this.preference = match.id;\n                if (typeof window !== \"undefined\" && window.__DSHA_LANGUAGE__ && window.__DSHA_LANGUAGE__ !== match.id) { window.__DSHA_LANGUAGE__ = match.id; window.dispatchEvent(new CustomEvent(\"dsha-language-selected\", { detail: match.id })); }\n\t\t\t\tif (this.snapshot.active !== match.id)"
+    }
+  ]
+}

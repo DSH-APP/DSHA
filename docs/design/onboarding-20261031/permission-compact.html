@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>引导第 3 步 · 授权页压缩方案对比</title>
+<style>
+  :root{
+    --bg:#f3f5fa; --card:#fff; --line:#d9e0ee; --line-rec:#b9c6e6;
+    --text:#1b2433; --text2:#4a5568; --muted:#7a8597;
+    --accent:#1f47c9; --accent-soft:#e7edfb;
+    --good:#1f6b45; --good-soft:#e7f3ec;
+    --warn:#9a5b00; --warn-soft:#fbf1df;
+    --chip:#eef1f7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,"PingFang SC","HarmonyOS Sans SC","Noto Sans CJK SC",system-ui,sans-serif;color:var(--text);background:#e6e9f0}
+  header.page{max-width:1180px;margin:0 auto;padding:20px 20px 4px}
+  header.page h1{font-size:20px;margin:0 0 6px}
+  header.page p{margin:4px 0;color:var(--text2)}
+  .verdict{max-width:1180px;margin:10px auto;padding:12px 16px;background:#fff;border-radius:12px;border:1px solid var(--line)}
+  .verdict b{color:var(--accent)}
+  .verdict ul{margin:6px 0 0;padding-left:20px}
+  .controls{max-width:1180px;margin:10px auto;padding:12px 16px;background:#fff;border-radius:12px;border:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+  .controls label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+  .controls select{font:inherit;padding:2px 6px}
+  .stage{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;padding:16px 12px 40px}
+  .col{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .col h2{font-size:15px;margin:0}
+  .metric{font-size:12.5px;color:var(--text2);text-align:center;min-height:38px}
+  .metric b{color:var(--text)}
+
+  /* 手机外框：360dp 宽，按一加 PJD110 的 360×792dp 比例 */
+  .phone{width:360px;height:792px;background:var(--bg);border-radius:28px;border:8px solid #111;position:relative;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+  .status{height:28px;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-size:12px;font-weight:600}
+  .scroll{position:absolute;top:28px;bottom:76px;left:0;right:0;overflow-y:auto;padding:0 18px 16px}
+  .scroll::-webkit-scrollbar{width:0}
+  .bottom{position:absolute;left:0;right:0;bottom:0;height:76px;background:#fff;border-top:1px solid var(--line);padding:10px 18px 16px}
+  .fold{position:absolute;left:0;right:0;border-top:2px dashed rgba(220,40,40,.55);pointer-events:none;z-index:5;bottom:76px}
+  .fold span{position:absolute;right:6px;top:-18px;font-size:10px;color:#c42}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;height:52px}
+  .back{width:32px;height:32px;border:0;background:none;font-size:22px;color:var(--text);cursor:pointer}
+  .deploy{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600}
+  .deploy i{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block}
+  .stepno{font-size:13px;color:var(--text2);letter-spacing:2px}
+  .bars{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:2px 0 12px}
+  .bars i{height:3px;border-radius:2px;background:var(--accent)} .bars i.todo{background:#e3e8f2}
+
+  button{font:inherit}
+  .btn-main{width:100%;height:50px;border:0;border-radius:14px;background:var(--accent);color:#fff;font-weight:700;font-size:15px;line-height:1.25;cursor:pointer}
+  .pill{font-size:12px;border-radius:999px;padding:1px 9px;white-space:nowrap;background:var(--chip);color:var(--text2)}
+  .pill.good{background:var(--good-soft);color:var(--good)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.accent{background:var(--accent-soft);color:var(--accent)}
+  .ico{flex:none;display:grid;place-items:center;border-radius:10px;background:var(--chip);color:var(--muted)}
+  .ico.ok{background:var(--good-soft);color:var(--good)}
+
+  /* ---------- 现状 ---------- */
+  .cur .eyebrow{color:var(--accent);font-size:13px;letter-spacing:1px}
+  .cur h3{font-size:24px;margin:4px 0}
+  .cur .lead{color:var(--text2);font-size:14px;margin:0 0 12px}
+  .cur .sum{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px 14px;font-weight:700}
+  .dots{display:flex;gap:5px}.dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid #c9d1e0}.dots i.on{background:var(--good);border-color:var(--good)}
+  .cur .gh{display:flex;gap:8px;align-items:center;margin-top:20px;color:var(--text2)}
+  .cur .gd{color:var(--muted);font-size:12.5px;margin:4px 0 8px}
+  .cur .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+  .cur .card.rec{border-color:var(--line-rec)}
+  .cur .head{display:flex;gap:12px}
+  .cur .head .ico{width:40px;height:40px;font-size:18px}
+  .cur .t{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:15.5px}
+  .cur .recline{color:var(--accent);font-size:11px;font-weight:700;margin-top:2px}
+  .cur .why{color:var(--text2);font-size:13px;margin-top:10px}
+  .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.tags span{background:var(--chip);border-radius:999px;padding:1px 8px;font-size:11.5px;color:var(--text2)}
+  .cur .st{background:#f6f8fc;border-radius:10px;padding:8px 10px;font-size:12.5px;margin-top:10px;color:var(--text2)} .cur .st.ok{color:var(--good)}
+  .cur .out{font-size:12px;color:var(--muted);margin-top:8px}
+  .cur .act{margin-top:10px}
+  .ghost{border:0;background:none;color:var(--accent);font-weight:600;padding:6px 0;cursor:pointer}
+  .small{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:6px 14px;font-weight:600;cursor:pointer}
+  .toggle-other{width:100%;border:1px dashed var(--line-rec);background:none;border-radius:12px;padding:10px;color:var(--accent);font-weight:600;margin-top:18px;cursor:pointer}
+
+  /* ---------- 精简 ---------- */
+  .neo h3{font-size:22px;margin:0;display:flex;justify-content:space-between;align-items:baseline}
+  .neo .prog{font-size:13px;font-weight:600;color:var(--good)}
+  .neo .lead{color:var(--muted);font-size:12.5px;margin:2px 0 12px}
+  .neo .meter{height:4px;border-radius:2px;background:#e3e8f2;overflow:hidden;margin-bottom:6px}.neo .meter i{display:block;height:100%;background:var(--good);transition:width .25s}
+  .neo .gh{font-size:12.5px;color:var(--muted);margin:16px 4px 6px;display:flex;justify-content:space-between}
+  .neo .list{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .row{width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;background:none;border:0;text-align:left;cursor:pointer;min-height:52px}
+  .item+.item{border-top:1px solid #edf0f6}
+  .row .ico{width:30px;height:30px;font-size:15px}
+  .row .w{flex:1;min-width:0}
+  .row .n{font-weight:600;font-size:14.5px}
+  .row .s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .s.warn{color:var(--warn)}
+  .chev{color:#a5aec0;transition:transform .2s;font-size:13px}
+  .item.open .chev{transform:rotate(90deg)}
+  .go{border:0;background:var(--accent);color:#fff;border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:600;cursor:pointer;flex:none}
+  .det{display:none;padding:0 12px 12px 52px;font-size:12.5px;color:var(--text2)}
+  .item.open .det{display:block}
+  .det .tags{margin-top:0}
+  .det .hint{color:var(--muted);margin-top:6px}
+  .det .ghost{padding:4px 0 0}
+  .seg{display:flex;gap:4px;margin:2px 0 6px}.seg button{flex:1;border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px;font-size:12px;cursor:pointer}.seg button.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .more{width:100%;border:0;background:none;color:var(--accent);font-weight:600;padding:12px 4px;text-align:left;cursor:pointer}
+  .neo .note{font-size:12px;color:var(--muted);margin:10px 4px 0}
+  @media (max-width:800px){.phone{transform:scale(.92);transform-origin:top center}}
+</style>
+</head>
+<body>
+<header class="page">
+  <h1>引导第 3 步「按需授权」· 现状 vs 精简方案</h1>
+  <p>两台模拟机都是 360×792dp（一加 PJD110 竖屏比例），读同一份授权状态。改上面的开关，两边同步变化；红色虚线是底部按钮上沿，即首屏可见区域。</p>
+</header>
+
+<section class="verdict">
+  <b>依据：</b>左侧按 build243 源码还原（截图 864×1920 即一加 PJD110 1440×3168 的等比缩小，文案均能在源码中找到）；右侧为 build247 的实现。
+  <ul>
+    <li>build247 测试包已在一加 PJD110（360dp 竖屏、字体缩放 1.0）上从引导第 1 步走到第 3 步核对：推荐 6 项一屏放下，展开 / 收起与行内操作正常。</li>
+    <li>中英文以外的语言、深色模式、短屏与 1.3 倍字体尚未在真机核对。</li>
+  </ul>
+</section>
+
+<section class="controls" aria-label="模拟授权状态">
+  <strong>模拟状态：</strong>
+  <label><input type="checkbox" data-k="notify" checked> 通知</label>
+  <label><input type="checkbox" data-k="battery" checked> 电池不受限</label>
+  <label><input type="checkbox" data-k="storage"> 存储</label>
+  <label><input type="checkbox" data-k="a11y" checked> 无障碍</label>
+  <label><input type="checkbox" data-k="overlay" checked> 悬浮窗</label>
+  <label><input type="checkbox" data-k="channel"> Shizuku / Stellar</label>
+  <label>用途
+    <select id="goal"><option value="all">全选（推荐 6 项）</option><option value="screen">只选屏幕操作（推荐 3 项）</option></select>
+  </label>
+  <label>通知拒绝次数
+    <select id="denied"><option value="0">未拒绝</option><option value="1">已拒绝，不再弹框</option></select>
+  </label>
+</section>
+
+<main class="stage">
+  <div class="col">
+    <h2>现状（build243）</h2>
+    <div class="phone cur" id="curPhone">
+      <div class="status"><span>08:36</span><span>5G ▮▮▮ 21</span></div>
+      <div class="scroll" id="curScroll"></div>
+      <div class="fold"><span>首屏</span></div>
+      <div class="bottom"><button class="btn-main" id="curBtn"></button></div>
+    </div>
+    <div class="metric" id="curMetric"></div>
+  </div>
+
+  <div class="col">
+    <h2>精简方案（build247：不分类）</h2>
+    <div class="phone neo" id="neoPhone">
+      <div class="status"><span>08:36</span><span>5G ▮▮▮ 21</span></div>
+      <div class="scroll" id="neoScroll"></div>
+      <div class="fold"><span>首屏</span></div>
+      <div class="bottom"><button class="btn-main" id="neoBtn"></button></div>
+    </div>
+    <div class="metric" id="neoMetric"></div>
+  </div>
+</main>
+
+<script>
+// 授权卡数据：文案取自 PermissionCards / PermissionChannelCard（build243），较长的状态说明有删节。
+const S = {notify:true,battery:true,storage:false,a11y:true,overlay:true,channel:false,denied:0};
+const GROUPS = [
+  {id:'basic', title:'基础', desc:'让部署进度和后台任务可见，少被系统中断。', cards:['notify','battery']},
+  {id:'files', title:'文件', desc:'', cards:['storage']},
+  {id:'screen', title:'屏幕操作（手机任务）', desc:null, cards:['a11y','overlay']},
+  {id:'shell', title:'设备命令通道', desc:'普通对话和终端不依赖设备控制授权；设备命令白名单始终开启。', cards:['channel']},
+];
+const C = {
+  notify:{ico:'🔔',title:'通知',why:'部署与维护进度、手机任务的停止按钮、更新下载会显示在通知栏。',tags:['部署进度','手机任务停止按钮','更新下载'],
+    pill:()=>S.notify?['已开启','good']:S.denied?['已拒绝','warn']:['未开启',''],
+    status:()=>S.notify?'已允许通知 · 部署进度和手机任务停止按钮会显示在通知栏':S.denied?'系统不会再弹出申请框；如需开启，请在系统通知设置中允许。':'未允许 · 部署进度和手机任务停止按钮不会显示在通知栏',
+    out:'Android 13+ 会弹出系统权限框；拒绝后只能在系统通知设置中开启，并可在其中打开“手机任务状态”类别。',
+    act:()=>S.notify?['系统通知设置',0]:S.denied?['去系统通知设置',1]:['允许通知',1],
+    go:()=>S.denied?'去设置':'允许', warn:()=>S.denied&&!S.notify?'系统不再弹框，需在系统设置中开启':''},
+  battery:{ico:'🔋',title:'电池优化',why:'减少系统在后台结束 Web、终端与保活服务。',tags:['后台 Web 少被中断','终端与保活更稳'],
+    pill:()=>S.battery?['不受限制','good']:['后台受限','warn'],
+    status:()=>S.battery?'已允许后台使用，并设为“不受限制”：系统不会因电池优化推迟 Web、终端与保活。':'“允许后台使用”已关闭：后台 Web、终端与保活很可能被系统结束。',
+    out:'会打开本应用的系统「关于」页。ColorOS 上再点「耗电管理」，选「完全允许后台行为」。',
+    act:()=>S.battery?['打开应用详情',0]:['打开耗电管理',1], go:()=>'去设置', warn:()=>S.battery?'':'后台受限，Web 与终端可能被系统结束'},
+  storage:{ico:'📁',title:'存储读写',why:'让容器和工作区读写手机共享存储，例如 /sdcard 下的项目。不开也能用，仅限私有目录。',tags:['工作区可建在 /sdcard','读写下载与文档目录'],
+    pill:()=>S.storage?['已开启','good']:['未开启',''],
+    status:()=>S.storage?'已开启：可读写系统允许的共享存储；其他应用私有目录仍受系统限制':'未开启：仅能访问 App 私有目录；去系统设置开启后可访问全部文件',
+    out:'打开系统「所有文件访问」页，允许 DSH-A-Su。建议在首次启动 Web 前完成。',
+    act:()=>S.storage?['系统设置',0]:['去开启所有文件访问',1], go:()=>'去开启', warn:()=>''},
+  a11y:{ico:'👆',title:'无障碍（屏幕操作）',why:'让助手读屏、点按和输入，在对话中使用 Computer Use。',tags:['读屏与点按','截屏'],
+    pill:()=>S.a11y?['已连接','good']:['未开启',''],
+    status:()=>S.a11y?'已连接，可以在对话中使用 Computer Use。':'未开启 · 开启后可在对话中让助手操作屏幕',
+    out:'在系统无障碍设置中找到 DSH-A-Su 并打开。',
+    act:()=>S.a11y?['无障碍设置',0]:['去开启屏幕操作',1], go:()=>'去开启', warn:()=>''},
+  overlay:{ico:'🪟',title:'悬浮窗',why:'显示流式悬浮条、命令批准和手机任务状态窗。',tags:['流式悬浮条','手机任务状态窗'],
+    pill:()=>S.overlay?['已允许','good']:['未允许',''],
+    status:()=>S.overlay?'已允许显示在其他应用上层':'未允许 · 悬浮条和手机任务状态窗不会显示',
+    out:'在系统「显示在其他应用上层」中允许 DSH-A-Su。',
+    act:()=>S.overlay?['系统设置',0]:['去允许悬浮窗',1], go:()=>'去允许', warn:()=>''},
+  channel:{ico:'⌨️',title:'设备命令通道',why:'推荐用 Stellar 作为管理器；DSHA 走它的 Shizuku 兼容层，不是 Stellar 原生权限。Root 与 ADB 在 设置 → 设备能力授权 中配置。',tags:[],
+    pill:()=>S.channel?['Stellar 已授权','good']:['未授权',''],
+    status:()=>S.channel?'Stellar 已授权 · 设备命令可用':'未授权 · 设备命令不可用',
+    out:'会跳到 Stellar / Shizuku 管理器中授权，完成后回到 DSHA 自动检查。',
+    act:()=>S.channel?['打开 Stellar',0]:['授权 Stellar',1], go:()=>'授权', warn:()=>'', channel:true},
+};
+// 精简方案的文案（build247：PermissionCards / PermissionChannelCard）
+const N = {
+  notify:{title:'通知',why:'在通知栏显示部署进度、更新下载和手机任务的停止按钮。',tags:['部署进度','任务停止按钮'],out:()=>S.denied?'在系统通知设置中允许 DSH-A-Su。':'会弹出系统权限框。',warn:()=>S.denied&&!S.notify?'系统不再弹框，需在系统设置中开启':''},
+  battery:{title:'电池优化',why:'减少系统在后台结束 Web 和终端。',tags:['后台更稳'],out:()=>'会打开应用详情。ColorOS 点「耗电管理」→「完全允许后台行为」。',warn:()=>S.battery?'':'后台受限，可能被系统结束'},
+  storage:{title:'存储读写',why:'读写 /sdcard 下的项目和文件。不开也能用，仅限私有目录。',tags:['读写 /sdcard'],out:()=>'在「所有文件访问」中允许 DSH-A-Su。',warn:()=>''},
+  a11y:{title:'无障碍',why:'让助手读屏、点按和输入，用于手机任务。',tags:['读屏与点按'],out:()=>'在无障碍设置中开启「DSH-A-Su」。提示“受限设置”时，先在应用详情右上角菜单中允许。',warn:()=>''},
+  overlay:{title:'悬浮窗',why:'显示悬浮条、命令批准和手机任务状态窗。',tags:['悬浮条与状态窗'],out:()=>'在“显示在其他应用上层”中允许 DSH-A-Su。',warn:()=>''},
+  channel:{title:'设备命令通道',why:'通过 Stellar 的 Shizuku 兼容层执行设备命令。Root 与 ADB 在设置中配置。',tags:[],out:()=>'在 Stellar 中启动服务并开启「Shizuku 兼容层」，再回来授权。',warn:()=>''},
+};
+const ORDER=['notify','battery','storage','a11y','overlay','channel'];
+let GOAL='all';
+const recNeo=()=>GOAL==='all'?ORDER:['notify','a11y','overlay'];
+let moreOpen=false;
+// 模拟“用途”：推荐 6 项全部（与截图的“推荐 4 / 6”一致）
+const REC = ['notify','battery','storage','a11y','overlay','channel'];
+const done = ()=>REC.filter(k=>S[k]).length;
+const mark = b=>b?'✓':'○';
+
+// ---------------- 现状渲染：对应 PermissionPanel.render + PermissionCard.build ----------------
+let curOthers=false;
+function renderCur(){
+  const el=document.getElementById('curScroll'); const top=el.scrollTop;
+  let h=`<div class="topbar"><button class="back" aria-label="返回">‹</button><span class="deploy"><i></i>部署中 8/8 ›</span><span class="stepno">3 / 4</span></div>
+  <div class="bars"><i></i><i></i><i></i><i class="todo"></i></div>
+  <div class="eyebrow">第 3 步 · 授权</div><h3>按需授权</h3>
+  <p class="lead">全部可选。授权在系统设置或管理器中完成，回到 DSHA 后会自动重新检查；之后可在 设置 → 设备能力授权 中修改或撤销。</p>
+  <div class="sum"><span>推荐 ${done()} / ${REC.length}</span><span class="dots">${REC.map(k=>`<i class="${S[k]?'on':''}"></i>`).join('')}</span></div>`;
+  for(const g of GROUPS){
+    const desc = g.desc===null?`手机任务需要：${mark(S.a11y)} 无障碍　${mark(S.overlay)} 悬浮窗　${mark(S.notify)} 通知`:g.desc;
+    h+=`<div class="gh"><span>${g.title}</span><span class="pill accent">推荐</span></div>${desc?`<div class="gd">${desc}</div>`:''}`;
+    for(const k of g.cards){const c=C[k],[p,t]=c.pill(),[a,primary]=c.act(),ok=S[k];
+      h+=`<div class="card rec"><div class="head"><div class="ico ${ok?'ok':''}">${c.ico}</div><div style="flex:1">
+        <div class="t"><span>${c.title}</span><span class="pill ${t}">${p}</span></div><div class="recline">按你的用途推荐</div></div></div>
+        <div class="why">${c.why}</div><div class="tags">${c.tags.map(x=>`<span>${x}</span>`).join('')}</div>
+        ${c.channel?`<div class="seg" style="margin-top:10px"><button class="on">Shizuku / Stellar</button></div>`:''}
+        <div class="st ${ok?'ok':''}">${c.status()}</div>
+        ${ok?'':`<div class="out">↗ ${c.out}</div>`}
+        <div class="act">${primary?`<button class="small">${a}</button>`:`<button class="ghost">${a}</button>`}</div></div>`;}
+  }
+  el.innerHTML=h; el.scrollTop=top;
+  document.getElementById('curBtn').textContent=`下一步（推荐已开启 ${done()} / ${REC.length}，其余可稍后开启）`;
+  measure('cur');
+}
+
+// ---------------- 精简渲染 ----------------
+// 规则：已满足 → 一行（图标 + 名称 + 绿色状态）可展开；未满足 → 一行 + 行内主按钮，副标题只放一句“开了能做什么”；
+// 异常（拒绝 / 不再弹框）才显示警示副标题；用途说明、离开提示、标签都进展开区。
+const open=new Set(); // 展开状态由面板持有，重绘不丢（对应 PermissionPanel 字段）
+function neoRow(k){
+  const c=C[k],x=N[k],[p,t]=c.pill(),[a]=c.act(),ok=S[k],isOpen=open.has(k),w=x.warn();
+  const sub = ok?'':(w?`<div class="s warn">${w}</div>`:`<div class="s">${x.tags.length?x.tags.join(' · '):p}</div>`);
+  return `<div class="item ${isOpen?'open':''}">
+    <div class="row" role="button" tabindex="0" aria-expanded="${isOpen}" data-open="${k}">
+      <div class="ico ${ok?'ok':''}" aria-hidden="true">${c.ico}</div>
+      <div class="w"><div class="n">${x.title}</div>${sub}</div>
+      ${ok?`<span class="pill ${t}">${p}</span>`:`<button class="go" data-grant="${k}">${c.go()}</button>`}
+      <span class="chev" aria-hidden="true">›</span>
+    </div>
+    <div class="det">
+      <div>${x.why}</div>
+      ${ok?'':`<div class="hint">↗ ${x.out()}</div>`}
+      ${ok?`<button class="ghost">${a} ›</button>`:''}
+    </div></div>`;
+}
+function renderNeo(){
+  const el=document.getElementById('neoScroll'); const top=el.scrollTop;
+  const rec=recNeo(), others=ORDER.filter(k=>!rec.includes(k));
+  const d=rec.filter(k=>S[k]).length, n=rec.length;
+  let h=`<div class="topbar"><button class="back" aria-label="返回">‹</button><span class="deploy"><i></i>部署中 8/8 ›</span><span class="stepno">3 / 4</span></div>
+  <div class="bars"><i></i><i></i><i></i><i class="todo"></i></div>
+  <div class="eyebrow" style="color:var(--accent);font-size:12px;letter-spacing:1px">第 3 步 · 授权</div><h3><span>按需授权</span></h3>
+  <p class="lead">全部可选，之后可在设置中修改。</p>
+  <div class="prog" style="color:${d===n?'var(--good)':'var(--text2)'}">推荐 ${d} / ${n}</div><div class="meter" aria-hidden="true" style="margin-top:6px"><i style="width:${d/n*100}%"></i></div>
+  <div class="list" style="margin-top:14px">${rec.map(neoRow).join('')}</div>`;
+  if(others.length){
+    h+=`<button class="more" data-more>${moreOpen?'收起':`更多授权 · ${others.length} 项`}</button>`;
+    if(moreOpen) h+=`<div class="list">${others.map(neoRow).join('')}</div>`;
+  }
+  el.innerHTML=h; el.scrollTop=top;
+  document.getElementById('neoBtn').textContent = d===n?'下一步':`下一步 · 已开启 ${d} / ${n}`;
+  measure('neo');
+}
+
+function measure(id){
+  const sc=document.getElementById(id+'Scroll');
+  const vis=sc.clientHeight, total=sc.scrollHeight;
+  // 统计首屏完整可见的授权项
+  const items=[...sc.querySelectorAll(id==='cur'?'.card':'.item')];
+  const full=items.filter(e=>e.offsetTop+e.offsetHeight<=vis).length;
+  document.getElementById(id+'Metric').innerHTML=
+    `内容高度 <b>${total}px</b> · 约 <b>${(total/vis).toFixed(1)}</b> 屏 · 首屏完整可见 <b>${full} / ${items.length}</b> 项`;
+}
+function renderAll(){renderCur();renderNeo();}
+
+document.querySelectorAll('.controls input').forEach(i=>i.addEventListener('change',e=>{S[e.target.dataset.k]=e.target.checked;renderAll();}));
+document.getElementById('goal').addEventListener('change',e=>{GOAL=e.target.value;moreOpen=false;renderNeo();});
+document.getElementById('denied').addEventListener('change',e=>{S.denied=+e.target.value;renderAll();});
+
+const neo=document.getElementById('neoScroll');
+neo.addEventListener('click',e=>{
+  const g=e.target.closest('[data-grant]');
+  if(g){ // 模拟“去系统设置 → 返回后自动复查”：授权后该行折叠成一行绿色状态
+    const k=g.dataset.grant; S[k]=true; open.delete(k);
+    document.querySelector(`.controls input[data-k="${k}"]`).checked=true; renderAll(); return;}
+  if(e.target.closest('[data-more]')){moreOpen=!moreOpen;renderNeo();return;}
+  const r=e.target.closest('[data-open]');
+  if(r){const k=r.dataset.open; open.has(k)?open.delete(k):open.add(k); renderNeo();}
+});
+neo.addEventListener('keydown',e=>{const r=e.target.closest('[data-open]');if(r&&(e.key==='Enter'||e.key===' ')){e.preventDefault();r.click();}});
+renderAll();
+</script>
+</body>
+</html>

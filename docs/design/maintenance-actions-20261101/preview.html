@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>DSHA · 运行环境维护页底部操作区压缩（交互原型）</title>
+<style>
+/* UI v5 token 离线副本（与 install-env-20261101/preview.html 相同），只用于本预览。 */
+:root{color-scheme:light;--page:#e9eef6;--bg:#f3f6fb;--surface:#fcfdff;--raised:#e7edf6;--line:rgba(29,58,96,.075);--line-2:rgba(29,58,96,.145);
+--text:#18273f;--text-2:#50617a;--muted:#5a6b86;--accent:#1e50d0;--accent-soft:rgba(30,80,208,.08);--on-accent:#fff;
+--good:#287453;--good-soft:rgba(40,116,83,.10);--warn:#8c600d;--warn-soft:rgba(140,96,13,.10);--bad:#af404b;--bad-soft:rgba(175,64,75,.10);
+--bezel:#1b2333;--shadow:0 18px 50px rgba(17,32,62,.14);--sans:system-ui,-apple-system,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+--ease:cubic-bezier(.22,1,.36,1);--fs:1}
+[data-theme=dark]{color-scheme:dark;--page:#070a10;--bg:#0b0f16;--surface:#131923;--raised:#1b2432;--line:rgba(203,220,255,.07);--line-2:rgba(203,220,255,.13);
+--text:#edf1f7;--text-2:#b0bbcc;--muted:#8895aa;--accent:#6aa4ff;--accent-soft:rgba(106,164,255,.10);--on-accent:#091729;
+--good:#93ccaf;--good-soft:rgba(147,204,175,.10);--warn:#e4be83;--warn-soft:rgba(228,190,131,.10);--bad:#eea3a6;--bad-soft:rgba(238,163,166,.10);--bezel:#2a3446;--shadow:0 18px 50px rgba(0,0,0,.5)}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--page);color:var(--text);font:14px/1.45 var(--sans)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* —— 外层工具栏 —— */
+.bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:12px 18px;background:var(--surface);border-bottom:1px solid var(--line-2)}
+.bar h1{font-size:15px;margin:0 8px 0 0}
+.grp{display:flex;align-items:center;gap:6px}
+.grp>span{font-size:12px;color:var(--muted)}
+.seg{display:inline-flex;background:var(--raised);border-radius:10px;padding:2px}
+.seg button{border:0;background:none;padding:5px 10px;border-radius:8px;font-size:12.5px;color:var(--text-2)}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--text);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.notes{max-width:1180px;margin:14px auto 0;padding:0 18px;font-size:12.5px;color:var(--text-2)}
+.notes b{color:var(--text)}
+
+/* —— 舞台：改前 / 改后并排 —— */
+.stage{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;padding:22px 18px 40px}
+.col{display:flex;flex-direction:column;align-items:center;gap:10px}
+.col h2{font-size:13px;margin:0;color:var(--text-2);font-weight:600}
+.meter{font-size:12px;color:var(--muted)}
+.meter b{color:var(--text)}
+.dev{background:var(--bezel);border-radius:34px;padding:10px;box-shadow:var(--shadow)}
+.dev.tablet{border-radius:26px;padding:14px}
+.scr{position:relative;overflow:hidden;background:var(--bg);border-radius:26px;display:flex;flex-direction:column;font-size:calc(14px*var(--fs))}
+.dev.tablet .scr{border-radius:14px}
+.phone .scr{width:360px;height:760px}
+.land .scr{width:760px;height:360px}
+.tablet .scr{width:900px;height:620px}
+.sb{height:26px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:11px;color:var(--text-2)}
+
+/* —— 页面正文（与 activity_extract.xml 结构一致，只作上下文） —— */
+.body{flex:1;overflow:auto;padding:18px 20px 16px}
+.wide .body{padding:24px max(20px,calc((100% - 640px)/2)) 20px}
+.hd{display:flex;align-items:center;gap:10px}
+.spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--accent-soft);border-top-color:var(--accent);animation:r 1s linear infinite;flex:none}
+@keyframes r{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin,.fill::after{animation:none!important}}
+.hd h3{margin:0;font-size:calc(22px*var(--fs));font-weight:600;flex:1}
+.pill{font-size:calc(11.5px*var(--fs));font-weight:700;padding:3px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.good{background:var(--good-soft);color:var(--good)}
+.st{margin:10px 0 2px;font-weight:600}
+.lead{margin:0 0 12px;color:var(--text-2);font-size:calc(13px*var(--fs))}
+.card{background:var(--surface);border:1px solid var(--line-2);border-radius:18px;padding:14px 16px}
+.segs{display:flex;gap:5px;margin:10px 0 8px}.segs i{flex:1;height:6px;border-radius:4px;background:var(--raised)}.segs i.on{background:var(--accent)}.segs i.x{background:var(--bad)}
+.stp{display:flex;align-items:center;gap:10px;padding:5px 0;color:var(--text-2);font-size:calc(13.5px*var(--fs))}
+.stp .d{width:18px;height:18px;border-radius:50%;border:2px solid var(--line-2);flex:none;display:grid;place-items:center;font-size:10px}
+.stp.done .d{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.stp.cur{color:var(--text)}.stp.cur .d{border-color:var(--accent);box-shadow:inset 0 0 0 3px var(--surface);background:var(--accent)}
+.stp.fail{color:var(--bad)}.stp.fail .d{border-color:var(--bad);color:var(--bad)}
+.msg{margin-top:12px;border-radius:14px;padding:10px 12px;font-size:calc(12.5px*var(--fs));white-space:pre-line}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}.msg.warn{background:var(--warn-soft);color:var(--warn)}
+
+/* —— 底栏通用 —— */
+.foot{flex:none;background:var(--surface);border-top:1px solid var(--line-2);padding:12px 20px 14px}
+.wide .foot{padding-left:max(20px,calc((100% - 640px)/2));padding-right:max(20px,calc((100% - 640px)/2))}
+
+/* 改前：复刻当前 build249 */
+.old .pri{display:block;width:100%;min-height:52px;border:0;border-radius:18px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:calc(14px*var(--fs))}
+.old .pri:disabled{background:var(--raised);color:#fff;opacity:.9;cursor:default}
+[data-theme=dark] .old .pri:disabled{color:var(--raised)}
+.old .sec{display:block;width:100%;min-height:48px;margin-top:8px;border:1px solid var(--line-2);border-radius:16px;background:var(--surface);font-weight:700;font-size:calc(14px*var(--fs))}
+.old .txt{display:block;width:100%;min-height:48px;border:0;background:none;color:var(--accent);font-size:calc(13px*var(--fs))}
+.old .txt:first-of-type{margin-top:4px}
+
+/* 改后 */
+.new .row{display:flex;gap:8px}
+.new .pri,.new .busy{flex:1 1 0;min-width:0;min-height:48px;border-radius:14px;font-weight:700;font-size:calc(14px*var(--fs));display:flex;align-items:center;justify-content:center;gap:8px;padding:0 14px;line-height:1.2;text-align:center}
+.new .pri{border:0;background:var(--accent);color:var(--on-accent)}
+.new .pri.bad{background:var(--bad)}
+/* 忙态：不是“灰掉的按钮”，而是可读的进度条 + 文字（aria-disabled，不可点击） */
+.new .busy{position:relative;overflow:hidden;border:1px solid var(--line-2);background:var(--raised);color:var(--text);cursor:default}
+.new .busy .fill{position:absolute;inset:0 auto 0 0;background:var(--accent-soft)}
+.new .busy .fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(30,80,208,.10),transparent);animation:sh 1.6s linear infinite}
+@keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.new .busy>*:not(.fill){position:relative}
+.new .busy .spin{width:15px;height:15px;border-width:2px}
+.new .busy small{font-weight:600;color:var(--text-2);font-size:calc(12.5px*var(--fs))}
+.new .sec{flex:1 1 0;min-width:0;min-height:44px;border:1.5px solid var(--line-2);border-radius:14px;background:var(--surface);color:var(--text);font-weight:600;font-size:calc(13.5px*var(--fs));padding:6px 12px;line-height:1.2}
+.new .sec.accent{border-color:var(--accent);color:var(--accent)}
+.new .vert{flex-direction:column}
+.new .vert .pri,.new .vert .busy,.new .vert .sec{flex:none;width:100%}
+/* 三个次要入口：一行等分托盘，图标 + 短文案，44dp 触控高度 */
+.tray{display:flex;margin-top:8px;border-radius:14px;background:var(--raised);padding:2px}
+.tray button{flex:1 1 0;min-width:0;min-height:44px;border:0;background:none;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--accent);font-weight:600;font-size:calc(12.5px*var(--fs));padding:4px 6px;line-height:1.15;text-align:center}
+.tray button+button{box-shadow:inset 1px 0 0 var(--line-2)}
+.tray button:hover{background:var(--surface)}
+.tray button.hot{background:var(--surface);color:var(--bad);box-shadow:0 0 0 1.5px var(--bad-soft)}
+.tray button.done{color:var(--good)}
+.tray svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fs13 .tray button{flex-direction:column;gap:2px}
+/* 方案 A（推荐）：无底色的文字链接行。只靠间距和居中的短分隔线区分，强调时只改文字颜色，不出现浮起的卡片 */
+.links{display:flex;align-items:center;margin-top:6px}
+.links button{flex:1 1 0;min-width:0;min-height:44px;border:0;background:none;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:5px;color:var(--accent);font-weight:600;font-size:calc(13px*var(--fs));padding:4px 6px;line-height:1.15;text-align:center}
+.links button:active,.links button:hover{background:var(--accent-soft)}
+.links .div{width:1px;height:16px;background:var(--line-2);flex:none}
+.links button.hot{color:var(--bad)}
+.links button.done{color:var(--good)}
+.links svg,.chips svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fs13 .links button{flex-direction:column;gap:2px}
+/* 方案 B：三个独立描边小按钮，每个之间留 8dp 空隙 */
+.chips{display:flex;gap:8px;margin-top:8px}
+.chips button{flex:1 1 0;min-width:0;min-height:44px;border:1px solid var(--line-2);background:var(--surface);border-radius:12px;display:flex;align-items:center;justify-content:center;gap:5px;color:var(--accent);font-weight:600;font-size:calc(12.5px*var(--fs));padding:4px 6px;line-height:1.15;text-align:center}
+.chips button.hot{border-color:var(--bad);color:var(--bad);background:var(--bad-soft)}
+.chips button.hot[data-act=logs]{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.chips button.done{color:var(--good);border-color:var(--good)}
+.fs13 .chips button{flex-direction:column;gap:2px}
+/* 宽屏 / 横屏：主次按钮并排（次左主右），托盘仍在下方 */
+.wide .new .row,.land .new .row{flex-direction:row}
+.land .foot{padding:8px 20px 10px}
+.land .new .tray{margin-top:6px}
+.land .body{padding:12px 20px}
+.toast{position:absolute;left:50%;bottom:190px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:7px 14px;border-radius:99px;font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:.92}
+table{border-collapse:collapse;font-size:12.5px;margin:8px 0}td,th{border:1px solid var(--line-2);padding:5px 8px;text-align:left;vertical-align:top}th{background:var(--raised)}
+</style>
+</head>
+<body>
+<div class="bar" role="toolbar" aria-label="预览控制">
+  <h1>维护页底部操作区 · build249 基线</h1>
+  <div class="grp"><span>设备</span><div class="seg" data-k="dev"><button data-v="phone" aria-pressed="true">手机竖屏</button><button data-v="land">手机横屏</button><button data-v="tablet">平板</button></div></div>
+  <div class="grp"><span>状态</span><div class="seg" data-k="state">
+    <button data-v="busy" aria-pressed="true">更新进行中</button><button data-v="failed">更新失败</button><button data-v="pending">中断待恢复</button><button data-v="incomplete">就绪未通过</button><button data-v="declined">待手动开始</button><button data-v="ready">已完成</button></div></div>
+  <div class="grp"><span>主题</span><div class="seg" data-k="theme"><button data-v="light" aria-pressed="true">日</button><button data-v="dark">夜</button></div></div>
+  <div class="grp"><span>语言</span><div class="seg" data-k="lang"><button data-v="zh" aria-pressed="true">中</button><button data-v="en">EN</button></div></div>
+  <div class="grp"><span>字体</span><div class="seg" data-k="fs"><button data-v="1" aria-pressed="true">1.0</button><button data-v="1.3">1.3×</button></div></div>
+  <div class="grp"><span>次要入口</span><div class="seg" data-k="tray"><button data-v="a">A 链接行</button><button data-v="b" aria-pressed="true">B 独立小按钮（已选）</button><button data-v="old">上版托盘</button></div></div>
+  <div class="grp"><span>对比</span><div class="seg" data-k="cmp"><button data-v="both" aria-pressed="true">改前+改后</button><button data-v="new">只看改后</button></div></div>
+</div>
+
+<div class="notes">
+  <p><b>问题（截图 2026-11-01 20:38）：</b>更新进行中时主按钮是浅蓝底配白字，几乎看不清；三个文字链接各占一整行 48dp，底栏占屏约 1/3，正文被挤压。</p>
+  <p><b>改法：</b>① 忙态主按钮换成可读的进度条（深色字 + 步骤 + 转圈，aria-disabled，不能点）；② 主按钮 52→48dp，受限入口 48→44dp 且只在需要时强调；③ 三个文字链接收进一行等分托盘（图标 + 短文案，完整文案放无障碍描述），触控高度仍为 44dp；④ 横屏和平板上主次按钮并排，底栏宽度保持在 640dp 内；⑤ 失败或中断时“应急 DSH”用警示色突出，主按钮用红色表示“重试 / 恢复”。点击行为与 ExtractActivity 现有的点击监听一致，不改门禁逻辑。</p>
+</div>
+
+<div class="stage" id="stage"></div>
+
+<div class="notes">
+  <table>
+    <tr><th>状态</th><th>主按钮（retryLabel）</th><th>受限入口</th><th>托盘强调</th></tr>
+    <tr><td>更新进行中 busy</td><td>进度条“正在更新运行时 · 2/5”，不可点</td><td>常规描边</td><td>无</td></tr>
+    <tr><td>更新失败 failed</td><td>“重试更新运行时”（红）</td><td>常规描边</td><td>应急 DSH</td></tr>
+    <tr><td>中断待恢复 pending</td><td>“恢复中断维护”（红）</td><td>常规描边</td><td>应急 DSH</td></tr>
+    <tr><td>就绪未通过 incomplete</td><td>“保护数据并重建”</td><td>蓝色描边（推荐出口）</td><td>维护记录</td></tr>
+    <tr><td>待手动开始 declined</td><td>“更新运行时”</td><td>常规描边</td><td>无</td></tr>
+    <tr><td>已完成 ready</td><td>隐藏（会自动跳转，留作兜底）</td><td>变为“进入主界面”主按钮</td><td>无</td></tr>
+  </table>
+  <p>高度读数按原型 CSS 像素约等于 dp 计算，只用于对比，以真机 LayoutAuditInstrumentation 结果为准。</p>
+</div>
+
+<script>
+const S={dev:'phone',state:'busy',theme:'light',lang:'zh',fs:'1',cmp:'both',tray:'b'};
+const T={
+ zh:{title:'运行环境维护',st:'更新运行环境',lead:'相同基础环境只更新 dsh 与内置插件，个人目录、会话和配置保持原位；验证失败回切原运行时。',
+  steps:['停止 Web 与终端任务','解压新版 dsh','准备内置插件与界面适配','保留并切换受管文件','隔离试运行与就绪检查'],
+  line:(i,n,s)=>`第 ${i} / ${n} 步 · ${s}`,
+  update:'更新运行时',retryUpdate:'重试更新运行时',recover:'恢复中断维护',rebuild:'保护数据并重建',busy:'正在更新运行时',
+  limited:'进入受限主界面 · 查看日志与配置',limitedShort:'受限主界面',main:'进入主界面',
+  logs:'维护记录',copy:'复制给支持',emer:'应急 DSH',logsFull:'查看本次维护记录',emerFull:'启动应急 DSH',copied:'已复制本机环境摘要。',
+  failMsg:'未完成的操作：更新运行时\n最后记录阶段：隔离试运行与就绪检查\n\n任务未完成。请按上方原因处理后重试；本页不会自动覆盖环境。',
+  pendMsg:'上次维护未完成，请先恢复原环境。恢复前不会再次更新。',
+  incMsg:'维护步骤已结束，但环境就绪检查未通过。已停止自动跳转，请查看原因或进入受限主界面。',
+  decMsg:'本次自动维护未能启动。已有任务结束后可手动重试，不会反复启动维护。',
+  pill:{busy:'2 / 5',failed:'失败',pending:'待恢复',incomplete:'未就绪',declined:'未开始',ready:'完成'},
+  before:'改前（build249 当前）',after:'改后（建议）',h:'底栏高度'},
+ en:{title:'Runtime maintenance',st:'Updating runtime',lead:'Same base: only dsh and built-in plugins are updated; personal folders, sessions and config stay in place. Rolls back if verification fails.',
+  steps:['Stop Web and terminal tasks','Extract new dsh','Prepare built-in plugins and UI','Keep and switch managed files','Isolated trial and readiness check'],
+  line:(i,n,s)=>`Step ${i} / ${n} · ${s}`,
+  update:'Update runtime',retryUpdate:'Retry runtime update',recover:'Recover interrupted maintenance',rebuild:'Protect data and rebuild',busy:'Updating runtime',
+  limited:'Enter limited interface · logs & config',limitedShort:'Limited interface',main:'Enter main interface',
+  logs:'Record',copy:'Copy for support',emer:'Emergency DSH',logsFull:'View maintenance record',emerFull:'Start emergency DSH',copied:'Copied the device summary.',
+  failMsg:'Unfinished: runtime update\nLast stage: isolated trial and readiness check\n\nThe task did not finish. Fix the reason above and retry; this page never overwrites the environment automatically.',
+  pendMsg:'The last maintenance did not finish. Recover the original environment first.',
+  incMsg:'Maintenance ended, but readiness checks did not pass. Automatic navigation stopped. Review the reason or enter the limited interface.',
+  decMsg:'Automatic maintenance could not start. Retry manually after the current task ends; maintenance will not start repeatedly.',
+  pill:{busy:'2 / 5',failed:'Failed',pending:'Pending',incomplete:'Not ready',declined:'Not started',ready:'Done'},
+  before:'Before (build249)',after:'After (proposed)',h:'Footer height'}};
+const ICON={
+ logs:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>',
+ copy:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>',
+ emer:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M12 8v5M12 16v.5"/></svg>',
+ ok:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg>'};
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function body(t){
+  const st=S.state, cur=st==='ready'?5:st==='incomplete'?5:st==='failed'||st==='pending'?4:st==='declined'?0:1;
+  const tone={failed:'bad',pending:'bad',incomplete:'warn',declined:'warn',ready:'good'}[st]||'';
+  const steps=t.steps.map((s,i)=>{let c=i<cur?'done':i===cur?((st==='failed'||st==='pending')?'fail':st==='busy'?'cur':''):'';
+    if(st==='ready'||st==='incomplete')c='done'; return `<div class="stp ${c}"><span class="d">${c==='done'?'✓':c==='fail'?'!':''}</span>${esc(s)}</div>`}).join('');
+  const segs=t.steps.map((_,i)=>`<i class="${i<cur||st==='ready'||st==='incomplete'?'on':(i===cur&&(st==='failed'||st==='pending'))?'x':i===cur&&st==='busy'?'on':''}"></i>`).join('');
+  const msg={failed:['bad',t.failMsg],pending:['bad',t.pendMsg],incomplete:['warn',t.incMsg],declined:['warn',t.decMsg]}[st];
+  return `<div class="hd">${st==='busy'?'<span class="spin" aria-hidden="true"></span>':''}<h3>${t.title}</h3><span class="pill ${tone}">${t.pill[st]}</span></div>
+   <p class="st">${t.st}</p><p class="lead">${t.lead}</p>
+   <div class="card"><div style="font-weight:600">${esc(t.line(Math.min(cur+1,5),5,t.steps[Math.min(cur,4)]))}</div><div class="segs">${segs}</div>${steps}</div>
+   ${msg?`<div class="msg ${msg[0]}" role="status">${esc(msg[1])}</div>`:''}`;
+}
+function footOld(t){
+  const st=S.state, busy=st==='busy';
+  const lbl={busy:t.update,failed:t.retryUpdate,pending:t.recover,incomplete:t.rebuild,declined:t.update,ready:t.update}[st];
+  return `<div class="old"><button class="pri" ${busy?'disabled':''}>${lbl}</button>
+   <button class="sec">${st==='ready'?t.main:t.limited}</button>
+   <button class="txt">${t.logsFull}</button><button class="txt">${t.copy}</button><button class="txt">${t.emerFull}</button></div>`;
+}
+function footNew(t){
+  const st=S.state, sideBySide=S.dev!=='phone';
+  let pri;
+  if(st==='busy') pri=`<div class="busy" role="progressbar" aria-disabled="true" aria-valuemin="0" aria-valuemax="5" aria-valuenow="2" aria-label="${t.busy} 2/5"><span class="fill" style="width:40%"></span><span class="spin" aria-hidden="true"></span><span>${t.busy}</span><small>2 / 5</small></div>`;
+  else if(st==='ready') pri=`<button class="pri" data-act="main">${t.main}</button>`;
+  else{const lbl={failed:t.retryUpdate,pending:t.recover,incomplete:t.rebuild,declined:t.update}[st];
+    pri=`<button class="pri ${st==='failed'||st==='pending'?'bad':''}" data-act="retry">${lbl}</button>`;}
+  const sec=st==='ready'?'':`<button class="sec ${st==='incomplete'?'accent':''}" data-act="limited" aria-label="${t.limited}">${sideBySide?t.limitedShort:t.limited}</button>`;
+  // 竖屏：主按钮在上、受限入口在下（拇指区优先主操作）；横屏/平板：次左主右
+  const row=sideBySide?`<div class="row">${sec}${pri}</div>`:`<div class="row vert">${pri}${sec}</div>`;
+  const hot=(st==='failed'||st==='pending')?'emer':st==='incomplete'?'logs':'';
+  const items=[['logs',t.logsFull,t.logs],['copy',t.copy,t.copy],['emer',t.emerFull,t.emer]]
+    .map(([a,full,short])=>`<button data-act="${a}" aria-label="${full}" class="${hot===a?'hot':''}">${ICON[a]}<span>${short}</span></button>`);
+  const cls={old:'tray',a:'links',b:'chips'}[S.tray];
+  const tray=`<div class="${cls}" role="group">${S.tray==='a'?items.join('<span class="div" aria-hidden="true"></span>'):items.join('')}</div>`;
+  return `<div class="new">${row}${tray}</div>`;
+}
+function device(kind,t){
+  const wide=S.dev==='tablet';
+  return `<div class="dev ${S.dev}"><div class="scr ${wide?'wide':''} ${S.fs==='1.3'?'fs13':''}" style="--fs:${S.fs}">
+    <div class="sb"><span>20:38</span><span>▮▮▮ ◯</span></div>
+    <div class="body">${body(t)}</div>
+    <div class="foot" data-kind="${kind}">${kind==='old'?footOld(t):footNew(t)}</div>
+    <div class="toast" role="status" aria-live="polite"></div></div></div>`;
+}
+function render(){
+  const t=T[S.lang];
+  document.documentElement.dataset.theme=S.theme;document.documentElement.lang=S.lang==='zh'?'zh-CN':'en';
+  const cols=(S.cmp==='both'?['old','new']:['new']).map(k=>`<div class="col"><h2>${k==='old'?t.before:t.after}</h2>${device(k,t)}<div class="meter">${t.h}：<b data-m="${k}">—</b></div></div>`).join('');
+  document.getElementById('stage').innerHTML=cols;
+  requestAnimationFrame(()=>document.querySelectorAll('.foot').forEach(f=>{
+    const m=document.querySelector(`[data-m="${f.dataset.kind}"]`), scr=f.closest('.scr');
+    if(m)m.textContent=`${Math.round(f.offsetHeight)}dp · ${Math.round(f.offsetHeight/scr.offsetHeight*100)}%`;}));
+}
+document.querySelectorAll('.seg').forEach(g=>g.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;S[g.dataset.k]=b.dataset.v;
+  g.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));render();}));
+document.getElementById('stage').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;const t=T[S.lang],scr=b.closest('.scr'),toast=scr.querySelector('.toast');
+  const say=s=>{toast.textContent=s;toast.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>toast.classList.remove('show'),1400)};
+  const a=b.dataset.act;
+  if(a==='copy'){say(t.copied);b.classList.add('done');b.querySelector('svg').outerHTML=ICON.ok;setTimeout(render,1500);}
+  else if(a==='retry'){S.state='busy';document.querySelectorAll('[data-k=state] button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v==='busy'));render();}
+  else say({logs:'→ DiagnosticActivity.downloadLogs',emer:'→ RecoveryActivity',limited:'→ proceed()（受限主界面）',main:'→ proceed()'}[a]);
+});
+render();
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 
 
 
-    <string name="alpha_static_loader">使用 proroot 静态加载器</string>
-    <string name="alpha_no_seccomp">禁用 proot seccomp 加速</string>
+    <string name="alpha_static_loader">静态加载器（proroot）</string>
+    <string name="alpha_no_seccomp">关闭 seccomp 加速</string>
 
 </resources>

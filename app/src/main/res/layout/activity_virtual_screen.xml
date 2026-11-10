@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  虚拟识屏页（T28）：顶栏 → 预览舞台 → 结果条 → 按状态切换的操作区。
+  - 舞台在未开启 / 创建中 / 待清理时盖一层说明卡，运行中只显示画面；文字全部由
+    VirtualScreenActivity 按真实状态写入（UiText.choose），布局不放字面文案。
+  - 结果条与详情行固定高度：状态变化不能挪动预览，否则手指下一次落点会对不上（见布局测试）。
+  - 横屏见 layout-land：预览在左、操作在右。
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/vscreen_scroll" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/shell_bg" android:fillViewport="true">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="12dp" android:paddingEnd="12dp" android:paddingBottom="12dp">
+    <include layout="@layout/vscreen_header" />
+
+    <FrameLayout android:id="@+id/vscreen_stage" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:minHeight="240dp" android:layout_marginTop="4dp" android:background="@drawable/bg_shell_card" android:padding="1dp">
+      <include layout="@layout/vscreen_stage_content" />
+    </FrameLayout>
+
+    <include layout="@layout/vscreen_controls" />
+  </LinearLayout>
+</ScrollView>

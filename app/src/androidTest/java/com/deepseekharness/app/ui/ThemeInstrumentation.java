@@ -185,7 +185,6 @@ public final class ThemeInstrumentation extends Instrumentation {
       "activity_plugin_install",
       "activity_update",
       "activity_web_preview",
-      "activity_welcome",
       "fragment_config",
       "fragment_install",
       "fragment_launch",
@@ -194,10 +193,7 @@ public final class ThemeInstrumentation extends Instrumentation {
       "fragment_settings",
       "fragment_terminal",
       "fragment_workspace",
-      "item_plugin",
-      "welcome_page1",
-      "welcome_page2",
-      "welcome_page3"
+      "item_plugin"
     };
     for (String name : names) {
       int resource = theme.getResources().getIdentifier(name, "layout", host.getPackageName());
@@ -291,7 +287,8 @@ public final class ThemeInstrumentation extends Instrumentation {
         com.deepseekharness.app.PtySession terminal =
             (com.deepseekharness.app.PtySession) field.get(null);
         MainActivity old = MainActivity.active();
-        runOnMainSync(() -> old.findViewById(R.id.btn_theme).performClick());
+        // 顶栏主题按钮已移到设置 › 主题与外观；重建路径相同，直接切到白天。
+        runOnMainSync(() -> ThemeController.select(old, "light"));
         until(
             () ->
                 MainActivity.active() != null
@@ -361,19 +358,19 @@ public final class ThemeInstrumentation extends Instrumentation {
           phase((dark ? "黑夜" : "白天") + "主题：检查布局、按钮状态与更新页");
         }
         require(failures.isEmpty(), String.join("\n", failures));
-        // 顶部按钮切换后再切回，仍保留当前设置页。
+        // 切换后再切回，仍保留当前设置页（顶栏按钮已移除，入口在设置 › 主题与外观）。
         MainActivity before = MainActivity.active();
-        runOnMainSync(() -> before.findViewById(R.id.btn_theme).performClick());
+        runOnMainSync(() -> ThemeController.select(before, "light"));
         until(
             () -> MainActivity.active() != before && !ThemeController.isDark(MainActivity.active()),
-            "顶部切换无效");
+            "切换无效");
         require(MainActivity.active().findViewById(R.id.settings_tabs) != null, "切换丢失当前页面");
         runOnMainSync(() -> ThemeController.select(MainActivity.active(), "dark"));
         until(() -> ThemeController.isDark(MainActivity.active()), "持久性检查准备失败");
         output.putString("result", "PASS");
         output.putString(
             "coverage",
-            checked + " 项真实控件文字状态；最低对比度 " + minimum + "；20 个布局×两主题×1.3 字体、实际更新页、顶部切换与页面保留");
+            checked + " 项真实控件文字状态；最低对比度 " + minimum + "；20 个布局×两主题×1.3 字体、实际更新页、切换重建与页面保留");
       }
     } catch (Throwable error) {
       output.putString("result", "FAIL: " + error);

@@ -187,7 +187,7 @@ public final class VirtualScreenActivityNodeControlsTest {
 
   @Before
   public void createActualResumedActivityAndAuthenticatedCore() throws Exception {
-    org.junit.Assume.assumeFalse(com.deepseekharness.app.BuildConfig.LOW_ANDROID);
+    org.junit.Assume.assumeFalse(false);
     com.deepseekharness.app.util.UiText.setLanguage("zh");
     fixture = new VirtualScreenNativeControlsTest.Fixture();
     controller = Robolectric.buildActivity(VirtualScreenActivity.class);

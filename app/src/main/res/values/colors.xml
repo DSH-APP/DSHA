@@ -3,32 +3,58 @@
 
 
 
-    <color name="primary">#1E50D0</color>
-    <color name="primary_dark">#1D4EC7</color>
-    <color name="accent_on">#FFFFFF</color>
-    <color name="surface">#FFFFFF</color>
-    <color name="card">#F6F7F9</color>
-    <color name="raised">#EDF0F5</color>
-    <color name="line">#DFE4ED</color>
-    <color name="text">#152033</color>
-    <color name="text_secondary">#5C6A80</color>
-    <color name="text_muted">#5B6578</color>
-    <color name="ok">#207348</color>
-    <color name="warn">#825900</color>
-    <color name="err">#AD3D45</color>
-    <color name="preview">#F2F4F8</color>
+    <!-- 强调色与底色（primary / surface / card / raised / disabled / preview / shell_accent 等 32 个）随调色板切换：
+         定义在 theme_palettes.xml（tools/generate-theme-palettes.py 生成），经 ?attr/dsha_pal_* 引用。 -->
+    <color name="line">#131D3A60</color>
+    <color name="text">#18273F</color>
+    <color name="text_secondary">#50617A</color>
+    <color name="text_muted">#5A6B86</color>
+    <color name="ok">#287453</color>
+    <color name="warn">#8C600D</color>
+    <color name="err">#AF404B</color>
     <!-- Termux 的默认 ANSI 前景色是白色；终端背景必须固定为深色，不能复用
          会在浅色主题下变亮的 preview，否则就会出现浅灰底白字。 -->
-    <color name="terminal_surface">#0A0D12</color>
+    <color name="terminal_surface">#000000</color>
+    <color name="terminal_foreground">#E4E8F0</color>
     <color name="terminal_outline">#263041</color>
-    <color name="logo_top">#E9F0FF</color>
+    <!-- 快捷键托盘：与输出区一样固定深色，不随明暗主题切换（values-night 不覆盖）。
+         键帽比托盘亮一档；功能键（Esc/Tab/Ctrl/Alt/Home/End）再深一档以分区。 -->
+    <color name="terminal_key_tray">#0A0D13</color>
+    <color name="terminal_key_tray_line">#1A212C</color>
+    <color name="terminal_key">#1C2430</color>
+    <color name="terminal_key_fn">#161D28</color>
+    <color name="terminal_key_highlight">#262E3A</color>
+    <color name="terminal_key_edge">#04060A</color>
+    <color name="terminal_key_ripple">#33FFFFFF</color>
+    <color name="terminal_key_text">#E8ECF3</color>
+    <color name="terminal_key_symbol">#C9D2DF</color>
+    <color name="terminal_key_control">#A9C4F7</color>
+    <color name="terminal_key_led_off">#354152</color>
+    <color name="terminal_key_led_on">#8AB4FF</color>
+    <color name="terminal_key_latched">#172A47</color>
+    <color name="terminal_key_latched_line">#5A7FBF</color>
+    <!-- 会话状态点：运行中 / 空闲 / 待核验，明暗各一套（values-night 覆盖）。 -->
+    <color name="terminal_state_running">#2FA36B</color>
+    <color name="terminal_state_pending">#C98A12</color>
+    <!-- 侧栏底部动作与弹窗选项卡：无描边柔和填充 / 按压加深；新建按钮内加号方块的半透明底。 -->
+    <color name="terminal_on_primary_chip">#2EFFFFFF</color>
+    <!-- 终端外壳跟随应用三向态：浅色为白/浅蓝灰，夜间为近黑/浅蓝；输出区仍固定黑底。
+         外壳颜色只从这些 token 取，Java 与 drawable 不再写死色值。 -->
+    <color name="terminal_panel_text">#152033</color>
+    <color name="terminal_panel_text_strong">#0D1727</color>
+    <color name="terminal_muted">#59657A</color>
+    <color name="terminal_faint">#7A879C</color>
+    <color name="terminal_line">#DFE6F0</color>
+    <color name="terminal_line_strong">#C6D2E4</color>
+    <color name="terminal_warning">#7A5300</color>
+    <color name="terminal_warning_soft">#FCF3DE</color>
+    <color name="terminal_danger">#A93B43</color>
+    <color name="terminal_danger_soft">#FBEBEC</color>
+    <color name="terminal_scrim">#8C09101E</color>
 
-    <!-- 按压涟漪：主色低透明度，浅色底上淡淡一层 -->
-    <color name="ripple">#1A3D6FD4</color>
-    <color name="primary_ripple">#1F000000</color>
+    <!-- 按压涟漪：主色低透明度，浅色底上淡淡一层；叠加 raised 后主色文字仍须保持 4.5:1。 -->
+    <color name="primary_ripple">#1FFFFFFF</color>
     <color name="error_on">#FFFFFF</color>
-    <!-- 禁用态：按钮变灰 + 文字降到可读下限（不可点却外观照旧最让人困惑） -->
-    <color name="disabled">#E9ECF2</color>
     <!-- 状态色的浅底（用于状态条/标签背景，不刺眼） -->
     <color name="err_bg">#14C45A5A</color>
 </resources>

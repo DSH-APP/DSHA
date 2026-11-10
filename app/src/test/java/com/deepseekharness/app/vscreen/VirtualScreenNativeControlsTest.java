@@ -34,7 +34,7 @@ import org.robolectric.util.ReflectionHelpers;
 public final class VirtualScreenNativeControlsTest {
   @org.junit.Before
   public void standardOnly() {
-    org.junit.Assume.assumeFalse(com.deepseekharness.app.BuildConfig.LOW_ANDROID);
+    org.junit.Assume.assumeFalse(false);
   }
 
   public static final String CORE = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
@@ -565,6 +565,70 @@ public final class VirtualScreenNativeControlsTest {
         assertFalse(rejected.tree().optBoolean("ok"));
         assertEquals(0, f.actions.get());
       }
+    }
+  }
+
+  @Test
+  public void assistantNodeSetTextCannotWriteIntoPasswordNode() throws Exception {
+    try (var f = new Fixture()) {
+      f.button.setEditable(true);
+      f.button.setPassword(true);
+      f.button.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_TEXT);
+      var shared = new VirtualScreenAccessibility();
+      JSONObject tree = shared.run(f.service, DISPLAY, "tree", new JSONObject());
+      assertTrue(tree.toString(), tree.optBoolean("ok"));
+      String id = "";
+      for (int i = 0; i < tree.getJSONArray("nodes").length(); i++) {
+        JSONObject row = tree.getJSONArray("nodes").getJSONObject(i);
+        if (row.optBoolean("editable")) id = row.getString("nodeId");
+      }
+      assertFalse("The password node must still be addressable by id", id.isEmpty());
+      JSONObject result =
+          shared.run(
+              f.service,
+              DISPLAY,
+              "node",
+              new JSONObject().put("nodeId", id).put("action", "set_text").put("text", "secret"));
+      assertFalse(result.toString(), result.optBoolean("ok"));
+      assertEquals("PASSWORD_INPUT_UNAVAILABLE", result.getString("error"));
+      assertEquals(0, f.actions.get());
+    }
+  }
+
+  @Test
+  public void assistantNodeSetTextStillWritesOrdinaryEditableNodes() throws Exception {
+    try (var f = new Fixture()) {
+      f.button.setEditable(true);
+      f.button.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_TEXT);
+      var written = new java.util.concurrent.atomic.AtomicReference<String>();
+      nodeShadow(f.button)
+          .setOnPerformActionListener(
+              (action, args) -> {
+                assertEquals(AccessibilityNodeInfo.ACTION_SET_TEXT, action);
+                written.set(
+                    args.getCharSequence(
+                            AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE)
+                        .toString());
+                f.actions.incrementAndGet();
+                return true;
+              });
+      var shared = new VirtualScreenAccessibility();
+      JSONObject tree = shared.run(f.service, DISPLAY, "tree", new JSONObject());
+      String id = "";
+      for (int i = 0; i < tree.getJSONArray("nodes").length(); i++) {
+        JSONObject row = tree.getJSONArray("nodes").getJSONObject(i);
+        if (row.optBoolean("editable")) id = row.getString("nodeId");
+      }
+      assertFalse(id.isEmpty());
+      JSONObject result =
+          shared.run(
+              f.service,
+              DISPLAY,
+              "node",
+              new JSONObject().put("nodeId", id).put("action", "set_text").put("text", "普通输入"));
+      assertTrue(result.toString(), result.optBoolean("ok"));
+      assertEquals("普通输入", written.get());
+      assertEquals(1, f.actions.get());
     }
   }
 }

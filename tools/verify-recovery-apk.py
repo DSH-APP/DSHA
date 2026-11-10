@@ -7,7 +7,8 @@ import sys
 import zipfile
 from pathlib import Path
 from recovery_apk_assets import archive_locations
-from recovery_runtime_overlay import TARGETS as BROWSER_TARGETS, INPUT_ASSETS, CAPSULE_DEPENDENCIES
+from recovery_runtime_overlay import TARGETS as BROWSER_TARGETS, input_assets, CAPSULE_DEPENDENCIES
+from recovery_descriptor_limits import MAX_BYTES as DESCRIPTOR_MAX_BYTES, validate as validate_descriptor_budget
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -33,8 +34,9 @@ def verify_overlays(apk,descriptor):
 
 def verify_overlay_inputs(apk,descriptor):
     inputs=descriptor.get('overlayInputs')
-    require((isinstance(inputs,dict) and set(inputs)==set(INPUT_ASSETS)), 'RECOVERY_OVERLAY_INPUTS')
-    for name in INPUT_ASSETS:
+    expected=input_assets(descriptor['dshVersion'])
+    require((isinstance(inputs,dict) and set(inputs)==set(expected)), 'RECOVERY_OVERLAY_INPUTS')
+    for name in expected:
         require((hash_entry(apk,'assets/'+name)==inputs[name]), 'RECOVERY_OVERLAY_INPUT_HASH')
 
 
@@ -51,10 +53,16 @@ def verify_capsule_dependencies(apk, descriptor):
                 'RECOVERY_DEPENDENCY_PROOF')
 
 
+def read_descriptor(apk):
+    require(apk.getinfo('assets/recovery-runtime.json').file_size <= DESCRIPTOR_MAX_BYTES,
+            'RECOVERY_DESCRIPTOR_BYTE_LIMIT')
+    return validate_descriptor_budget(apk.read('assets/recovery-runtime.json'))
+
+
 def verify(path):
     lock=json.loads((ROOT/'tools/recovery-runtime/lock.json').read_text(encoding='utf8'))
     with zipfile.ZipFile(path) as apk:
-        descriptor=json.loads(apk.read('assets/recovery-runtime.json'))
+        descriptor=read_descriptor(apk)
         identity=descriptor['id']
         require((identity==hashlib.sha256(json.dumps({k:v for k,v in descriptor.items() if k!='id'},sort_keys=True,separators=(',',':')).encode()).hexdigest()), 'RECOVERY_ID')
         require((descriptor['schema']==1 and descriptor['dshVersion']==lock['dshVersion']), 'RECOVERY_VERSION')
@@ -66,7 +74,8 @@ def verify(path):
         verify_overlays(apk,descriptor)
         verify_overlay_inputs(apk,descriptor)
         verify_capsule_dependencies(apk,descriptor)
-        flavor='low' if 'lib/arm64-v8a/libproot_legacy.so' in apk.namelist() else 'standard'
+        require(('lib/arm64-v8a/libproot_legacy.so' not in apk.namelist()), 'RECOVERY_LOW_LIBRARY')
+        flavor='standard'
         for name,sha in descriptor['launcherHashes'][flavor].items():
             require((hash_entry(apk,'lib/arm64-v8a/'+name)==sha), 'RECOVERY_LAUNCHER')
         for name in ('recovery-web-integration/manifest.json',

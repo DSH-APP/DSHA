@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "identity": "mod",
+  "packageName": "io.github.sunsetrne.dsha",
+  "certificateSha256": "a4b0413c67fa46dd30dc7e2bce3ad56151ed8bfde2a3315fff685baf786b5d5d",
+  "schemes": ["v1", "v2", "v3"],
+  "appName": "DSH-A-Su",
+  "keyAlias": "dsha-a-su",
+  "testSuffix": ".test",
+  "devSuffix": ".dev",
+  "tagPrefix": "dsha-a-su-build",
+  "apkPrefix": "dsha-a-su",
+  "repository": "SunsetRNE/DSHA-Sunset-mod",
+  "ref": "refs/heads/main",
+  "privateRepository": false,
+  "workflow": ".github/workflows/release-production.yml"
+}

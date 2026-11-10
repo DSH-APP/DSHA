@@ -13,6 +13,7 @@ import os
 import re
 import shlex
 import socket
+import stat
 import sys
 import threading
 import time
@@ -26,9 +27,53 @@ _policy_spec.loader.exec_module(policy)
 KEYDIR = '/root/.dsh/adbkeys'
 KEY = KEYDIR + '/adbkey'
 KEYPUB = KEY + '.pub'
+BRIDGE_TOKEN_FILE = '/root/.dsh/.bridge_token'
+BRIDGE_PORT_FILE = '/root/.dsh/.bridge_port'
 TRANSPORT_TIMEOUT = 4.0
 CONNECT_TIMEOUT = 25.0
 COMMAND_TIMEOUT = 90.0
+
+
+def bridge_port():
+    """每次重读本安装端口；只接受 ASCII 十进制，失效时只认显式环境值。
+
+    不回退任何固定端口：3090–3099 可能属于同机另一个 DSHA 安装，
+    猜端口再带上本安装 token 等于把凭据交给别的应用。未发布即视为桥未就绪，命令不发送。
+    """
+    def regular(info):
+        return (stat.S_ISREG(info.st_mode) and 1 <= info.st_size <= 5
+                and (info.st_mode & 0o077) == 0)
+
+    def same(left, right):
+        return regular(right) and all(getattr(left, key) == getattr(right, key)
+            for key in ('st_dev', 'st_ino', 'st_mode', 'st_size', 'st_mtime_ns', 'st_ctime_ns'))
+
+    try:
+        before = os.lstat(BRIDGE_PORT_FILE)
+        if not regular(before):
+            raise OSError('invalid port file')
+        # NONBLOCK 防止 lstat 后被换成 FIFO 时阻塞；fstat 只接受同一普通文件。
+        descriptor = os.open(BRIDGE_PORT_FILE, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            opened = os.fstat(descriptor)
+            if not same(before, opened):
+                raise OSError('port file changed')
+            raw = os.read(descriptor, 6)
+            if (len(raw) != opened.st_size or not re.fullmatch(rb'[0-9]{1,5}', raw)
+                    or not same(opened, os.fstat(descriptor))
+                    or not same(opened, os.lstat(BRIDGE_PORT_FILE))):
+                raise OSError('invalid port file')
+            value = int(raw)
+            if 1 <= value <= 65535:
+                return value
+        finally:
+            os.close(descriptor)
+    except OSError:
+        pass
+    raw = os.environ.get('DSHA_BRIDGE_PORT', '')
+    if re.fullmatch(r'[0-9]{1,5}', raw) and 1 <= int(raw) <= 65535:
+        return int(raw)
+    raise policy.Blocked('设备桥端口未发布（BRIDGE_PORT_UNAVAILABLE），命令未发送；请打开 DSHA 等设备桥就绪后重试')
 
 class ConnectFail(Exception):
     """命令尚未发送，允许重新发现地址。"""
@@ -183,7 +228,7 @@ def bridge_request(route, parameters, timeout):
     if not token:
         raise ValueError('CREDENTIAL_UNAVAILABLE')
     request = urllib.request.Request(
-        'http://127.0.0.1:3090' + route + '?' + urllib.parse.urlencode(parameters),
+        'http://127.0.0.1:%d' % bridge_port() + route + '?' + urllib.parse.urlencode(parameters),
         headers={'X-Token': token})
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     return opener.open(request, timeout=timeout)
@@ -331,7 +376,7 @@ def request_device_plan(cmd, use_su=False):
         if not token:
             raise ValueError('missing token')
         query = urllib.parse.urlencode({'cmd': cmd, 'su': '1' if use_su else '0'})
-        request = urllib.request.Request('http://127.0.0.1:3090/device/plan?' + query, headers={'X-Token': token})
+        request = urllib.request.Request('http://127.0.0.1:%d/device/plan?' % bridge_port() + query, headers={'X-Token': token})
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
         with opener.open(request, timeout=75) as response:
             value = json.loads(response.read(1024 * 1024)).get('result')
@@ -432,7 +477,7 @@ def request_native_execution(cmd, use_su=False, force_adb=False):
     except (OSError, ValueError) as error:
         raise policy.Blocked('设备桥未准备好，请打开 DSHA 后重试') from error
     query = urllib.parse.urlencode({'cmd': cmd, 'su': '1' if use_su else '0', 'adb': '1' if force_adb else '0'})
-    request = urllib.request.Request('http://127.0.0.1:3090/device/execute?' + query, headers={'X-Token': token})
+    request = urllib.request.Request('http://127.0.0.1:%d/device/execute?' % bridge_port() + query, headers={'X-Token': token})
     try:
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
         with opener.open(request, timeout=155) as response:
@@ -446,7 +491,7 @@ def request_native_execution(cmd, use_su=False, force_adb=False):
         plan = value.get('plan')
         if value.get('state') != 'adb' or not isinstance(plan, dict) or plan.get('version') != 1:
             raise ValueError('missing explicit ADB plan')
-        if plan.get('kind') not in ('READ', 'FILE', 'STOP'):
+        if plan.get('kind') not in ('READ', 'FILE', 'STOP', 'SHELL'):
             raise ValueError('invalid ADB plan')
         return plan
     except Exception as error:

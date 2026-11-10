@@ -126,6 +126,25 @@ public final class NativeRestorePlan {
         plan.memberBefore.put(id, BackupTree.digest(fs, target.memberRead, control));
     }
     if (plan.targets.isEmpty()) throw new IOException("NO_RECOVERABLE_SCOPE");
+    // Report links that cannot be safely materialized before the user confirms restore.
+    plan.each(
+        row -> {
+          BackupArchive.Record record = new BackupArchive.Record(row);
+          if (!plan.targets.containsKey(record.root) || !record.kind.equals("LINK")) return;
+          String target = BackupJson.string(row, "target");
+          if (record.path.isEmpty() || target.startsWith("/")) {
+            if (!plan.warnings.contains("LINK_METADATA_RETAINED"))
+              plan.warnings.add("LINK_METADATA_RETAINED");
+            return;
+          }
+          try {
+            relativeTarget(record.path, target);
+          } catch (IOException error) {
+            if (!"ARCHIVE_LINK_ESCAPE".equals(error.getMessage())) throw error;
+            if (!plan.warnings.contains("LINK_METADATA_RETAINED"))
+              plan.warnings.add("LINK_METADATA_RETAINED");
+          }
+        });
     if (selected.contains("application")
         || selected.contains("sessions")
         || selected.contains("settings"))
@@ -273,9 +292,15 @@ public final class NativeRestorePlan {
         saveLinkMetadata(row);
         continue;
       }
-      String normalized = relativeTarget(path, target),
-          group = rootGroups.get(root),
-          prefix = targets.get(root).prefix;
+      String normalized;
+      try {
+        normalized = relativeTarget(path, target);
+      } catch (IOException error) {
+        if (!"ARCHIVE_LINK_ESCAPE".equals(error.getMessage())) throw error;
+        saveLinkMetadata(row);
+        continue;
+      }
+      String group = rootGroups.get(root), prefix = targets.get(root).prefix;
       linkTargets.put(group + "/" + joined(prefix, path), group + "/" + joined(prefix, normalized));
     }
     for (var row : links) {

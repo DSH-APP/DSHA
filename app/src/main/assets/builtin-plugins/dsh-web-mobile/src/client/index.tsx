@@ -7,12 +7,15 @@ import { MOBILE_CSS } from './styles/index.ts'
 import { installFrameController, installPhoneChrome } from './effects/phone-chrome.ts'
 import { installReconciler, registerReconcileTasks } from './effects/reconciler-adapter.ts'
 import { installSelectionChromeYield } from './effects/selection-chrome.ts'
-import { installOverlayInteractions } from './effects/drawer-close.ts'
+import { installOverlayInteractions, toggleDrawer } from './effects/drawer-close.ts'
 import { installSidebarSwipe } from './effects/sidebar-swipe.ts'
 import { installSubagentChipTouch } from './effects/subagent-chip-touch.ts'
 import { installSessionMenuDelete } from './effects/session-menu.ts'
 import { installComposerKeyboardGuard } from './effects/composer-keyboard-guard.ts'
 import { installComposerKeyboardLift } from './effects/composer-keyboard-lift.ts'
+import { installComposerClearance } from './effects/composer-clearance.ts'
+import { installDocumentScrollLock } from './effects/document-scroll-lock.ts'
+import { installQuestionFullscreen } from './effects/question-fullscreen.ts'
 import { installComposerPlusToggle } from './effects/composer-plus-toggle.ts'
 import { installWorkspaceChipToggle } from './effects/workspace-chip-toggle.ts'
 import { installTeamChipToggle } from './effects/team-chip-toggle.ts'
@@ -21,15 +24,17 @@ import { installShortcutModalKeyboardGuard } from './effects/shortcut-modal-keyb
 import { installModelMenuKeyboardGuard } from './effects/model-menu-keyboard-guard.ts'
 import { installPluginCardTap } from './effects/plugin-card-tap.ts'
 import { installInstalledListRows } from './effects/installed-list.ts'
-import { installSessionFocusGuard } from './effects/session-focus-guard.ts'
+import { installTabletQuickSettings } from './effects/tablet-quick-settings.ts'
 import { installAionuiCompat } from './effects/aionui-compat.ts'
 import { installComposerPasteGuard } from './effects/composer-paste-guard.ts'
+import { installComposerEnterNewline } from './effects/composer-enter-newline.ts'
+import { installFocusGestureGuard } from './effects/focus-gesture-guard.ts'
 import { installComposerFilePicker } from './effects/composer-file-picker.ts'
 import { installAttachmentMention } from './effects/attachment-mention.ts'
 import { installFileShare } from './effects/file-share.ts'
 import { createPanelExit, installPanelRowExit } from './effects/panel-exit.ts'
 import { installDebugBadge } from './debug.ts'
-import { NS, en, zh } from './i18n/locales.ts'
+import { NS, mobileNavLocales } from './i18n/locales.ts'
 import type { MobileNavKey } from './i18n/locales.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
@@ -55,24 +60,46 @@ export const inject = ['slots', 'layout', 'locale', 'sessionLogDownload', 'sessi
 const SWAP_RESTORE_MS = 10_000
 
 type SavedScroll = { top: number; savedAt: number; url: string }
-const scrollWindow = window as Window & { __dshaMobileScrollState?: WeakMap<HTMLElement, SavedScroll> }
+const scrollWindow = window as Window & {
+  __dshaMobileScrollState?: WeakMap<HTMLElement, SavedScroll>
+  /** Last known conversation offset, independent of the scroller's identity. */
+  __dshaMobileLastScroll?: SavedScroll
+}
 const scrollState = scrollWindow.__dshaMobileScrollState instanceof WeakMap
   ? scrollWindow.__dshaMobileScrollState
   : (scrollWindow.__dshaMobileScrollState = new WeakMap<HTMLElement, SavedScroll>())
 
+// 宿主自己写在会话滚动区上的 [data-conversation-scroll] 打头（2026-11-04 热换后对话弹到顶，内置 3.2.2 同样）：
+// effect 按后注册先清理（cordis clear() 反序），frame 标记归后注册的 reconciler 所有、先被摘掉，
+// 只靠它的话卸载时 0 命中、什么也没存下。
 function conversationScrollers(): HTMLElement[] {
-  return [...document.querySelectorAll<HTMLElement>('[data-mobile-nav="frame"] [class*="scrollBody"]')]
+  return [...document.querySelectorAll<HTMLElement>('[data-conversation-scroll], [data-mobile-nav="frame"] [class*="scrollBody"]')]
 }
 
+/**
+ * Where the conversation was scrolled to, independent of the element.
+ *
+ * The per-element WeakMap below only survives a stylesheet swap, where the
+ * scroll body keeps its identity. A hot swap that re-renders the tree (the
+ * host re-imports the client module) replaces the node, and the frame marker
+ * the scroller query keys on is only applied by a reconciler task on the NEXT
+ * frame — so the old restore found nothing and the conversation stayed at 0.
+ * Field data 2026-10-30 (phone beacon): convTop 5546 -> 0 within one second of
+ * a plugin re-apply, with no pointer or key event in between; the owner's
+ * 「时不时跳到上文很久以前的内容」 is exactly that.
+ */
 function rememberConversationScroll(): void {
   for (const element of conversationScrollers()) {
-    if (element.scrollTop > 0)
-      scrollState.set(element, { top: element.scrollTop, savedAt: Date.now(), url: location.href })
-    else scrollState.delete(element)
+    if (element.scrollTop > 0) {
+      const saved = { top: element.scrollTop, savedAt: Date.now(), url: location.href }
+      scrollState.set(element, saved)
+      scrollWindow.__dshaMobileLastScroll = saved
+    } else scrollState.delete(element)
   }
 }
 
 function restoreConversationScroll(): void {
+  // Same node (stylesheet-only swap): the cheap path.
   for (const element of conversationScrollers()) {
     const saved = scrollState.get(element)
     scrollState.delete(element)
@@ -83,6 +110,23 @@ function restoreConversationScroll(): void {
         element.scrollTop = saved.top
     })
   }
+  // Remounted tree (plugin re-apply): retry until the new scroller exists, has
+  // content, and the frame marker is in place. Bounded, and it never fights a
+  // scroll the user started — it only writes while the scroller sits at 0.
+  const saved = scrollWindow.__dshaMobileLastScroll
+  if (saved === undefined) return
+  let tries = 0
+  const attempt = (): void => {
+    tries += 1
+    if (saved.url !== location.href || Date.now() - saved.savedAt > SWAP_RESTORE_MS) return
+    const element = document.querySelector<HTMLElement>('[class*="scrollBody"]')
+    if (element !== null && element.scrollTop === 0 && element.scrollHeight >= saved.top + element.clientHeight) {
+      element.scrollTop = saved.top
+      return
+    }
+    if (tries < 30) requestAnimationFrame(attempt)
+  }
+  requestAnimationFrame(attempt)
 }
 
 /**
@@ -92,7 +136,7 @@ function restoreConversationScroll(): void {
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
-  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-web-mobile: dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, mobileNavLocales), 'dsh-web-mobile: dictionaries')
 
   ctx.effect(() => {
     // 先清掉可能残留的同 id 样式表。
@@ -127,6 +171,9 @@ export function apply(ctx: ClientContext): void {
 
   // Market「installed」列表行的内联样式：实现与全部注释见 effects/installed-list.ts。
   installInstalledListRows(ctx)
+
+  // 宽屏触屏（平板 ≥1024）：只补一颗一键设置齿轮，布局仍交给宿主原生。
+  installTabletQuickSettings(ctx)
 
 
   // Leaving a sidebar panel. The host's panels replace the main area and ship
@@ -186,7 +233,21 @@ export function apply(ctx: ClientContext): void {
   installComposerKeyboardGuard(ctx)
   // iOS: the host Lexical scroll helper mis-scrolls the window on every
   // keystroke (issue #149); pin the composer seat above the keyboard.
-  installComposerKeyboardLift(ctx)
+  // 2026-10-31: 键盘抬升不武装。帧数据显示它和引擎自己的滚动纠正互相拉扯
+  // （seat 578→283→560，conv 8572↔8587 每帧来回），而引擎单独工作时座位是落在
+  // 可见带内的。实现原样保留在 effects/composer-keyboard-lift.ts，改回一行即可重开。
+  void installComposerKeyboardLift
+  // Keyboard-shrunken landscape (issue #245): the sticky composer seat's editing
+  // row lands inside the opaque, z-index-30 conversation header, so the input
+  // box is covered until the page reloads. Measure the band and let the CSS
+  // outrank the header while it is covered.
+  installComposerClearance(ctx)
+  installDocumentScrollLock(ctx)
+  // Ask-question card (owner report 2026-10-25): a manual expand/collapse control
+  // in the card header turns the answer area into the whole visible band
+  // (the host's 60vh ceiling collapses with the keyboard), and the answer field
+  // is scrolled back into the card body when it is covered.
+  installQuestionFullscreen(ctx)
   installComposerPlusToggle(ctx)
   // Hero workspace chip: the host's picker portaled its Menu with
   // `anchor={null}`, so its own outside-pointerdown close eats the trigger's
@@ -210,17 +271,22 @@ export function apply(ctx: ClientContext): void {
   // armed from the capture-phase tap that precedes the pane switch.
   installModelMenuKeyboardGuard(ctx)
   installPluginCardTap(ctx)
-  // Entering a session (issue #140): the host's InputBar focuses the editor
-  // from a [locked, sessionId, editor] passive effect on every switch, which
-  // raises the soft keyboard over the history the user wanted to read. A short
-  // shadow-focus window per observed session switch swallows that one
-  // autofocus; real taps are unaffected.
-  installSessionFocusGuard(ctx)
 
   // Multi-line paste after an IME commit keeps only the first line (host
   // Lexical routes Android's insertText paste through the text-insertion
   // command). Re-dispatch those as a paste event; mobile-only.
   installComposerPasteGuard(ctx)
+
+  // Soft-keyboard Enter inserts a newline instead of sending (owner 2026-11-05):
+  // phone keyboards have no Shift, so the host's Enter-to-send left no way to
+  // break a line. Send stays on the button; Ctrl/Cmd+Enter still sends.
+  installComposerEnterNewline(ctx)
+
+  // Only a real tap on a text field may raise the soft keyboard (owner
+  // 2026-11-05): every host flow that focuses a field programmatically (mount
+  // autoFocus, returning from a subpage, switching tabs) otherwise pops the IME
+  // over the page.
+  installFocusGestureGuard(ctx)
 
   // Composer paperclip (owner report 2026-10-06): the system file picker is the
   // wrong shape and cannot pick "images only", so the tap opens the plugin's own
@@ -249,7 +315,7 @@ export function apply(ctx: ClientContext): void {
     order: 10,
     locale: NS,
     inject: () => ({
-      toggleSidebar: () => ctx.layout.toggleSidebar(),
+      toggleSidebar: () => toggleDrawer(ctx),
     }),
   }, MobileNavToggle))
 
@@ -270,6 +336,7 @@ export function apply(ctx: ClientContext): void {
     order: 10,
     locale: NS,
     inject: () => ({}),
+
   }, ComposerFileButton))
 }
 
@@ -279,6 +346,4 @@ export function apply(ctx: ClientContext): void {
 // effects/drawer-session-log.ts, which reads that service).
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
-import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'

@@ -30,6 +30,7 @@ public final class RecoveryRepairPlan {
   public static final Set<String> ACTIONS =
       Set.of(
           "recover-maintenance",
+          "isolate-plugin-journals",
           "repair-runtime",
           "repair-cli-dependencies",
           "profile-settings",

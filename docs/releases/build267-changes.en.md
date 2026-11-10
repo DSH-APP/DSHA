@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.3-20261102.0830-dsh0.2.1-rc.5 / build267
+
+- Experimental: a best-effort fix for the container losing internet after switching to mobile data. The container's DNS was written only at startup with the current network's servers, so after moving from Wi-Fi to mobile data those servers became unreachable and every lookup timed out until Wi-Fi returned. DNS in the container is now refreshed automatically after a network change; if a lookup still fails, it is resolved once more through Android's system resolver (lookup only, no request is resent and no public DNS is injected). Adds the read-only diagnostic /app/net.
+- This fix is experimental and is not guaranteed for every device, system, carrier, VPN or private DNS combination; if the container still has no internet after switching networks, please report the output of /app/net.
+- Verification scope: local unit tests and source gates only; network switching was not tested on a device. Raises versionCode to 267 (based on build266). The DSHA revision remains 0.2.1-rc.3 and bundled DSH remains 0.2.1-rc.5.

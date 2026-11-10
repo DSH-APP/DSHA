@@ -21,25 +21,58 @@ public class UpdatePolicyTest {
   }
 
   @Test
+  public void feedIdentityRequiresTheInstalledPackageAndCompleteSigner() {
+    String hash = "a".repeat(64);
+    assertTrue(
+        UpdatePolicy.feedIdentityMatches(
+            "io.github.sunsetrne.dsha",
+            Arrays.asList(hash),
+            "io.github.sunsetrne.dsha",
+            hash.toUpperCase()));
+    assertFalse(
+        UpdatePolicy.feedIdentityMatches(
+            "io.github.sunsetrne.dsha", Arrays.asList(hash), "com.dsh.client", hash));
+    assertFalse(
+        UpdatePolicy.feedIdentityMatches(
+            "io.github.sunsetrne.dsha",
+            Arrays.asList(hash),
+            "io.github.sunsetrne.dsha",
+            "b".repeat(64)));
+    assertFalse(
+        UpdatePolicy.feedIdentityMatches(
+            "io.github.sunsetrne.dsha", Arrays.asList(hash), null, hash));
+    assertFalse(
+        UpdatePolicy.feedIdentityMatches(
+            "io.github.sunsetrne.dsha", Arrays.asList(hash), "io.github.sunsetrne.dsha", null));
+    assertFalse(
+        UpdatePolicy.feedIdentityMatches(
+            "io.github.sunsetrne.dsha",
+            Arrays.asList(hash, "b".repeat(64)),
+            "io.github.sunsetrne.dsha",
+            hash));
+  }
+
+  @Test
   public void separatesChannelsAndEditionsAndNeverDowngrades() {
-    UpdatePolicy.Release stable = release(113, "stable", "low", 23);
-    UpdatePolicy.Release preview = release(114, "preview", "low", 23);
+    UpdatePolicy.Release stable = release(113, "stable", "standard", 30);
+    UpdatePolicy.Release preview = release(114, "preview", "standard", 30);
     java.util.List<UpdatePolicy.Release> entries =
         Arrays.asList(
-            release(110, "preview", "low", 23),
-            release(112, "preview", "low", 23),
-            release(120, "preview", "standard", 30),
+            release(110, "preview", "standard", 30),
+            release(112, "preview", "standard", 30),
+            // 旧 low 清单条目即使版本码更高，也不得成为 Standard 的更新来源。
+            release(120, "preview", "low", 23),
             stable,
             preview);
-    assertSame(stable, UpdatePolicy.select(entries, 112, "low", 23, "stable"));
-    assertSame(preview, UpdatePolicy.select(entries, 112, "low", 23, "preview"));
-    assertNull(UpdatePolicy.select(entries, 120, "low", 23, "preview"));
+    assertSame(stable, UpdatePolicy.select(entries, 112, "standard", 30, "stable"));
+    assertSame(preview, UpdatePolicy.select(entries, 112, "standard", 30, "preview"));
+    assertNull(UpdatePolicy.select(entries, 120, "standard", 30, "preview"));
     assertNull(UpdatePolicy.select(entries, 112, "standard", 29, "preview"));
   }
 
   @Test
   public void defaultsAndReleasePromotionUseVersionCode() {
-    assertEquals("preview", UpdatePolicy.defaultChannel("1.2.0-rc1.3low"));
+    assertEquals("preview", UpdatePolicy.defaultChannel("1.2.0-rc1.3"));
     assertEquals("stable", UpdatePolicy.defaultChannel("1.2.0"));
     assertNotNull(
         UpdatePolicy.select(
@@ -56,15 +89,15 @@ public class UpdatePolicyTest {
             120,
             "1.3",
             "preview",
-            "low",
-            23,
+            "standard",
+            30,
             "arm64-v8a",
             "https://dsha.cc/a.apk",
             "bad",
             100,
             "",
             "https://dsha.cc/");
-    assertNull(UpdatePolicy.select(Arrays.asList(bad), 112, "low", 23, "preview"));
+    assertNull(UpdatePolicy.select(Arrays.asList(bad), 112, "standard", 30, "preview"));
   }
 
   @Test

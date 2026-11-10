@@ -4,9 +4,9 @@ import android.accessibilityservice.AccessibilityService;
 import android.graphics.Bitmap;
 import android.hardware.display.DisplayManager;
 import android.view.Display;
-import com.deepseekharness.app.util.ScreenWindowRegion;
-import com.deepseekharness.app.util.ScreenPixelFingerprint;
 import com.deepseekharness.app.util.ScreenCaptureDelivery;
+import com.deepseekharness.app.util.ScreenPixelFingerprint;
+import com.deepseekharness.app.util.ScreenWindowRegion;
 import java.util.concurrent.TimeUnit;
 
 /** 截图读取、像素指纹及系统缓冲区所有权；不登记“已观察”。 */
@@ -30,7 +30,7 @@ public final class ScreenScreenshotCapture {
             thread.setDaemon(true);
             return thread;
           },
-          new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+          new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
 
   public static final class Shot implements AutoCloseable {
     public final Bitmap bitmap;
@@ -83,25 +83,49 @@ public final class ScreenScreenshotCapture {
                         : "SCREEN_OPERATION_UNAVAILABLE",
                     failure,
                     true));
+    var waiting = new java.util.concurrent.atomic.AtomicBoolean(true);
     context
         .service()
         .takeScreenshot(
             displayId,
-            CALLBACKS,
+            // The framework callback only hands off owned resources; bitmap work never runs on
+            // its Binder/main caller when the bounded decode queue is saturated.
+            Runnable::run,
             new AccessibilityService.TakeScreenshotCallback() {
               @Override
               public void onSuccess(AccessibilityService.ScreenshotResult result) {
+                try {
+                  CALLBACKS.execute(() -> decode(result));
+                } catch (java.util.concurrent.RejectedExecutionException full) {
+                  result.getHardwareBuffer().close();
+                  pending.fail("SCREENSHOT_BUSY");
+                }
+              }
+
+              private void decode(AccessibilityService.ScreenshotResult result) {
                 Bitmap hardware = null, software = null;
                 Shot shot = null;
                 try {
+                  if (!waiting.get()) return;
                   if (!context.current()) throw new IllegalStateException("SCREENSHOT_RUN_CHANGED");
                   hardware =
                       Bitmap.wrapHardwareBuffer(result.getHardwareBuffer(), result.getColorSpace());
                   if (hardware == null) throw new IllegalStateException("SCREENSHOT_DECODE_FAILED");
                   if ((long) hardware.getWidth() * hardware.getHeight() > 16 * 1024 * 1024)
                     throw new IllegalStateException("SCREENSHOT_TOO_LARGE");
-                  software = hardware.copy(Bitmap.Config.ARGB_8888, false);
+                  software = hardware.copy(Bitmap.Config.ARGB_8888, true);
                   if (software == null) throw new IllegalStateException("SCREENSHOT_DECODE_FAILED");
+                  // Only a measured self-owned compact control is redacted. Its exact bounds and
+                  // epoch travel in the observation and its pixels never authorize a touch path.
+                  if (region != null && !region.exclusions().isEmpty()) {
+                    android.graphics.Canvas canvas = new android.graphics.Canvas(software);
+                    android.graphics.Paint paint = new android.graphics.Paint();
+                    paint.setColor(android.graphics.Color.BLACK);
+                    for (var exclusion : region.exclusions()) {
+                      var b = exclusion.bounds();
+                      canvas.drawRect(b.left(), b.top(), b.right(), b.bottom(), paint);
+                    }
+                  }
                   shot = new Shot(software, rotation, region);
                   software = null;
                   pending.complete(shot);
@@ -128,6 +152,7 @@ public final class ScreenScreenshotCapture {
       result = pending.await(remaining);
       if (result == null) throw new CaptureFailure(pending.error(), pending.takeFailure());
     } finally {
+      waiting.set(false);
       pending.close();
     }
     try {

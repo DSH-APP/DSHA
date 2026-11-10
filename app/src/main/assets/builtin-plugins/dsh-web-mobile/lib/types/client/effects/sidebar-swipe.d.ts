@@ -1,10 +1,4 @@
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client';
-/**
- * The zone in pixels for a given viewport width (pure, exported for the
- * decision-table tests). Rounded so the probe boundary assertions stay
- * integral (390px → Math.round(175.5) = 176).
- */
-export declare function startZonePxFor(viewportWidthPx: number, ratio?: number): number;
 export interface SwipeThresholds {
     openDistanceRatio: number;
     closeDistanceRatio: number;
@@ -76,29 +70,31 @@ export declare function slidingVelocity(samples: Array<{
     t: number;
     x: number;
 }>, windowMs: number, now: number): number;
-/**
- * Geometric start-hit test: the pointer went down in the left edge start
- * zone (when the drawer is closed) or inside the drawer content area (when
- * open). Pure and viewport-relative so it is unit-testable; the runtime
- * variant additionally checks the drawer geometry via the DOM.
- */
-export declare function hitTestStart(clientX: number, viewportWidthPx: number, rtl: boolean, t: {
-    startZonePx: number;
-}): boolean;
-/**
- * Geometric start-hit test for the FILES gesture: the pointer went down in
- * the RIGHT edge zone (RTL: LEFT) — the exact mirror of hitTestStart. Pure
- * and viewport-relative.
- */
-export declare function filesZoneHit(clientX: number, viewportWidthPx: number, rtl: boolean, zonePx: number): boolean;
-/** Which gesture family owns a stroke that begins while the drawer is OPEN.
- * Inside the drawer body the drawer family always wins (owner's rule
- * 2026-09-17: the drawer's own surface must answer a leftward drag, whether or
- * not the viewport-ratio files zone overlaps it — at 390px that zone starts at
- * x=214, inside the 280px drawer); outside the body the right zone keeps its
- * files routing and its deliberate leftward 'none' verdict (2026-09-13
- * narrowing). */
-export declare function openStateStartMode(insideDrawer: boolean, inFilesZone: boolean): 'drawer' | 'files';
+/** Which gesture family owns a stroke that begins while a panel is OPEN.
+ *
+ * The TOP-most open panel owns it: the drawer's column is painted above the
+ * files panel, so a drawer sitting on top still owns the stroke. The panels
+ * are mutually exclusive (classifyFilesSwipe's leftward cell answers 'none'
+ * while `drawerOpen`), so no second family ever competes for it.
+ *
+ * The drawer's own rect is deliberately NOT consulted — a stale rect
+ * mid-animation would hand the stroke to a family that can open the wrong
+ * panel. Issue #268 (2026-11-07) removed the last geometric gate here; see
+ * docs/specs/2026-08-27-sidebar-swipe-gestures.md 第十四轮. */
+export declare function openStateStartMode(drawerOpen: boolean, panelOpen: boolean): 'drawer' | 'files';
+/** Which gesture family a stroke belongs to when BOTH panels were shut at
+ * pointerdown — the whole-viewport start rule (issue #268, 2026-11-07).
+ *
+ * Direction is the only gate: each classifier already refuses strokes that
+ * disagree with its own family's direction, so the retired left/right 45%
+ * zones were a redundant second gate (and left a 38px dead strip at 390px).
+ *
+ *   rightward-logical (toward the drawer's edge) → drawer
+ *   leftward-logical  (toward the files edge)    → files
+ *
+ * RTL mirrors the axis exactly like the classifiers: `rightward` arrives
+ * already normalized, so no `rtl` parameter is needed. */
+export declare function closedStateStrokeMode(rightward: boolean): 'drawer' | 'files';
 /**
  * Pure follow mapping (B 档): the translateX (px) to paint for a stroke
  * sample, or null when THIS sample has no follow. `closedTx` is the signed
@@ -155,14 +151,30 @@ export interface SwipeChainNode {
  * scroller: the browser claims the horizontal pan (pointercancel on real
  * devices) and the release classification must neither compete with it nor
  * preventDefault it away — prevention is what would break the strip's native
- * scrolling near the left edge once the start zone grew to 45% of the
- * viewport (the stats
- * line spans the full width; message code blocks are overflow-x:auto too).
+ * scrolling (the stats line spans the full width; message code blocks are
+ * overflow-x:auto too).
  * CDP failure scenario C1 pins this contract. overflow-x:hidden/clip never
  * match: clipped content cannot pan, so a horizontal stroke there stays free
  * for the gesture layer.
  */
 export declare function findHorizontalScroller(node: SwipeChainNode | null): SwipeChainNode | null;
+/**
+ * True when the host's right sidebar files panel is currently OPEN (any form:
+ * fullscreen on phones, docked on tablets).
+ *
+ * The host owns the authoritative marker: `data-sidebar-right-open` is present
+ * exactly while the panel is expanded (live-verified on 0.2.1-rc.2).
+ * The 0.1.5-era geometry probe (`rect.left < innerWidth` on a mounted, not
+ * visibility:hidden panel) died with the 0.2.0 dockkit refactor: the panel is
+ * now a persistent viewport-wide box whose CLOSED form hides its children
+ * instead of itself, so its own rect always spans the viewport and every
+ * closed panel read as open (measured 2026-10-29 at 390x844: closed rect
+ * [0,0,390,844] without the marker, open the same rect with it). That read
+ * killed the documented right-edge LEFTWARD entry and left an undocumented
+ * rightward one (#249). A host without this panel keeps returning false and
+ * the explorer fallback applies.
+ */
+export declare function filesPanelOpen(): boolean;
 /**
  * Whether a live, non-collapsed text selection owns the pointer stroke.
  * A selection-handle drag (and a long-press selection that appears between
@@ -185,6 +197,32 @@ export declare function findHorizontalScroller(node: SwipeChainNode | null): Swi
  * points land outside the control's own box.
  */
 export declare function selectionOwnsStroke(): boolean;
+/**
+ * Floating-widget positional yield (2026-09-11, 悬浮窗拖动冲突 B 侧): plugins
+ * ship draggable floating widgets (desktop-pet / floating-ball / draggable
+ * panel shapes) that carry NO standard "draggable" DOM mark, yet the user
+ * presses the widget itself — so the stroke's start target sits inside that
+ * widget's layer. Draggable widgets almost always live in a SMALL
+ * freely-positioned layer (position: fixed | absolute, own box under
+ * FLOATING_WIDGET_MAX_PX) hovering above the page, so walk the ancestor chain
+ * from the event target: the first small positioned ancestor counts as a
+ * floating widget and the stroke yields (no arm, no touchmove preventDefault).
+ * Pairs with dragMarkYields (cooperation mark) which needs no shape guessing.
+ * Named exception (2026-10-29, #249-1): dsh-pet 0.3.x registers its root
+ * (.dsh-pet-root) into the shell overlay slot, i.e. INSIDE our frame subtree,
+ * and its hit box is 173x206 — the frame exclusion and the size cap both miss
+ * it, so a stroke started on the pet dragged it AND armed the drawer. Known
+ * roots are claimed by name before either filter runs.
+ * Excluded: anything else inside our own frame subtree — the FAB / backdrop /
+ * drawer content carry their own gesture semantics and must never be
+ * misread as floating widgets (the closed-state FAB sits near the left edge).
+ * ponytail: no DOM-standard draggable signal exists; shape ≈ draggable is an
+ * approximation with a known ceiling — a STATIC small positioned element
+ * (e.g. a message badge) also yields, costing a stroke start under a
+ * FLOATING_WIDGET_MAX_PX dot; a REAL widget that misses upgrades via the
+ * data-mobile-nav-dragging mark, a named branch like the pet one, or the cap.
+ */
+export declare function findFloatingWidget(target: Element): Element | null;
 /** Animate an OPEN drawer into its closed slot and flip the host state once it
  * has landed. Every non-gesture closer (backdrop tap, Escape, navigation taps)
  * routes through this, so a click close animates exactly like a swipe close:

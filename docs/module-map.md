@@ -17,7 +17,7 @@
 | 数据与备份 | backup 宿主文件层、HostDataTransaction、NativeBackupJobs、MaintenanceDataSnapshot.capture/restore | 范围、认证/摘要、编号槽位、数据代次和读写事务；基础重建不借损坏 guest 的 Python 备份作隐式回退 |
 | 维护界面适配 | MaintenanceUiPorts、DataProtectionService、DshaApp | 备份层发出维护状态与通知请求，组合根装配真实界面目标；备份/运行时不直接引用 ui 类 |
 | 插件 | PluginInstallJournals、plugin-transactions.py、插件归档图 | 原件 / 候选切换、实际依赖、用户启停意图 |
-| 浏览器与桥 | WebPageScripts、GeckoPreviewActivity、HttpShellService | 当前页面/来源/代次、鉴权、能力授权；不拥有第二套运行状态 |
+| 浏览器与桥 | WebPageScripts、WebPreviewActivity、HttpShellService | 当前页面/来源/代次、鉴权、能力授权；不拥有第二套运行状态 |
 | 独立应急 | RecoveryController、RecoveryRuntime、RecoveryStoragePlan、RecoveryRepairBroker | 独立根与 HOME，五项受控工具；安全文件层原子记录、明确发布与保留原件；原生确认的修复 lease |
 | 部署与历史隔离 | asset-deployment.json、prepare-standard-assets.py、prepare-recovery-assets.py | 许可/插件/扩展完整成员、明确源与物理映射；退休源不进入APK |
 

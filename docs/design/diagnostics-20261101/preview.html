@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-scale="1" data-short="false" data-device="phone">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>DSHA · 自检与诊断简化（交互原型）</title>
+  <style>
+    /* UI v5 token 离线副本，仅用于本预览；与 shell_ui.xml 日夜色对齐。 */
+    :root {
+      color-scheme: light;
+      --page: #e9eef6; --bg: #f3f6fb; --surface: #fcfdff; --raised: #e7edf6;
+      --line: rgba(29, 58, 96, .075); --line-2: rgba(29, 58, 96, .145);
+      --text: #18273f; --text-2: #50617a; --muted: #5a6b86;
+      --accent: #1e50d0; --accent-soft: rgba(30, 80, 208, .08); --on-accent: #fff;
+      --good: #287453; --good-soft: rgba(40, 116, 83, .10);
+      --warn: #8c600d; --warn-soft: rgba(140, 96, 13, .10);
+      --bad: #af404b; --bad-soft: rgba(175, 64, 75, .10);
+      --bezel: #1b2333; --shadow: 0 18px 50px rgba(17, 32, 62, .14);
+      --sans: system-ui, -apple-system, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --ease: cubic-bezier(.22, 1, .36, 1);
+      --fs: 1;
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --page: #070a10; --bg: #0b0f16; --surface: #131923; --raised: #1b2432;
+      --line: rgba(203, 220, 255, .07); --line-2: rgba(203, 220, 255, .13);
+      --text: #edf1f7; --text-2: #b0bbcc; --muted: #8895aa;
+      --accent: #6aa4ff; --accent-soft: rgba(106, 164, 255, .1); --on-accent: #091729;
+      --good: #93ccaf; --good-soft: rgba(147, 204, 175, .12);
+      --warn: #e4be83; --warn-soft: rgba(228, 190, 131, .12);
+      --bad: #eea3a6; --bad-soft: rgba(238, 163, 166, .12);
+      --bezel: #2a3446; --shadow: 0 18px 50px rgba(0, 0, 0, .5);
+    }
+    [data-scale="1.3"] { --fs: 1.3; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--page); color: var(--text); font-family: var(--sans);
+      display: flex; gap: 32px; justify-content: center; align-items: flex-start; padding: 28px 20px 60px; flex-wrap: wrap; }
+    button { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* ---------- 控制面板 ---------- */
+    .panel { width: 300px; background: var(--surface); border: 1px solid var(--line-2); border-radius: 18px; padding: 18px; position: sticky; top: 20px; }
+    @media (max-width: 760px) { .panel { position: static; width: 390px; max-width: 100%; } }
+    .panel h1 { font-size: 17px; margin: 0 0 4px; }
+    .panel p { font-size: 13px; color: var(--text-2); margin: 0 0 14px; line-height: 1.5; }
+    .panel fieldset { border: 0; padding: 0; margin: 0 0 14px; }
+    .panel legend { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+    .seg button { border: 1px solid var(--line-2); background: var(--bg); border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+    .notes { font-size: 12.5px; color: var(--text-2); line-height: 1.6; padding-left: 18px; margin: 4px 0 0; }
+    .notes b { color: var(--text); font-weight: 600; }
+
+    /* ---------- 手机外框 ---------- */
+    .phone { width: 390px; height: 820px; border-radius: 44px; background: var(--bezel); padding: 10px; box-shadow: var(--shadow); flex: none; }
+    [data-device="phone"][data-short="true"] .phone { height: 640px; }
+    .screen { position: relative; height: 100%; border-radius: 36px; overflow: hidden; isolation: isolate; clip-path: inset(0 round 36px); background: var(--bg); display: flex; flex-direction: column; }
+    .statusbar { height: 34px; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 0 26px; font-size: 13px; font-weight: 600; }
+    .appbar { height: 52px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 12px 0 6px; }
+    .appbar .icon-btn { width: 44px; height: 44px; border: 0; background: transparent; border-radius: 50%; display: grid; place-items: center; cursor: pointer; }
+    .appbar .icon-btn:hover { background: var(--accent-soft); }
+    .appbar h2 { margin: 0; font-size: calc(19px * var(--fs)); font-weight: 700; flex: 1; }
+    .scroll { flex: 1; overflow-y: auto; padding: 4px 16px 28px; }
+    .scroll::-webkit-scrollbar { width: 0; }
+
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; }
+    .label { font-size: calc(13px * var(--fs)); font-weight: 600; color: var(--muted); margin: 22px 4px 8px; }
+
+    /* ---------- 状态卡 ---------- */
+    .hero { padding: 18px; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center; }
+    .badge { width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center; grid-row: span 2; background: var(--raised); color: var(--muted); }
+    .badge svg { width: 26px; height: 26px; }
+    .hero[data-tone="good"] .badge { background: var(--good-soft); color: var(--good); }
+    .hero[data-tone="warn"] .badge { background: var(--warn-soft); color: var(--warn); }
+    .hero[data-tone="bad"] .badge { background: var(--bad-soft); color: var(--bad); }
+    .hero[data-tone="run"] .badge { background: var(--accent-soft); color: var(--accent); }
+    .hero[data-tone="run"] .badge svg { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hero h3 { margin: 0; font-size: calc(18px * var(--fs)); font-weight: 700; }
+    .hero .sub { font-size: calc(13px * var(--fs)); color: var(--text-2); line-height: 1.45; }
+    .progress { grid-column: 1 / -1; height: 4px; border-radius: 4px; background: var(--raised); overflow: hidden; margin-top: 10px; }
+    .progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s var(--ease); }
+    .primary { grid-column: 1 / -1; margin-top: 14px; min-height: 48px; border: 0; border-radius: 14px; background: var(--accent); color: var(--on-accent);
+      font-size: calc(15px * var(--fs)); font-weight: 600; cursor: pointer; }
+    .primary.quiet { background: var(--accent-soft); color: var(--accent); }
+    .primary:disabled { opacity: .5; cursor: default; }
+
+    /* ---------- 行 ---------- */
+    .row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 13px 16px; min-height: 56px; background: transparent; border: 0; text-align: left; cursor: pointer; }
+    .row + .row, .row + .fold, .fold + .row { border-top: 1px solid var(--line); }
+    .row:hover { background: var(--accent-soft); }
+    .card > .row:first-child { border-radius: 20px 20px 0 0; }
+    .card > .row:last-child { border-radius: 0 0 20px 20px; }
+    .card > .row:only-child { border-radius: 20px; }
+    .row:disabled { opacity: .5; cursor: default; }
+    .row .ri { width: 34px; height: 34px; border-radius: 11px; flex: none; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+    .row .ri svg { width: 18px; height: 18px; }
+    .row .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; margin: 0 4px; background: var(--good); }
+    .row .dot.warn { background: var(--warn); } .row .dot.bad { background: var(--bad); }
+    .row .tx { flex: 1; min-width: 0; }
+    .row .t { font-size: calc(15px * var(--fs)); font-weight: 600; }
+    .row .s { font-size: calc(12.5px * var(--fs)); color: var(--text-2); margin-top: 2px; overflow-wrap: anywhere; }
+    .row .s.warn { color: var(--warn); } .row .s.bad { color: var(--bad); }
+    .row .chev { color: var(--muted); flex: none; transition: transform .2s var(--ease); }
+    .row[aria-expanded="true"] .chev { transform: rotate(90deg); }
+    .fold { overflow: hidden; }
+    /* 展开的正常项：单行紧凑行，标题左、状态右，无箭头，细内缩分隔 */
+    .fold { padding: 2px 0 6px; border-top: 1px solid var(--line); }
+    .mini { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 22px;
+      background: transparent; border: 0; text-align: left; cursor: pointer; }
+    .mini:hover { background: var(--accent-soft); }
+    .mini { position: relative; }
+    .mini + .mini::before { content: ""; position: absolute; top: 0; left: 42px; right: 16px; height: 1px; background: var(--line); }
+    .mini i { width: 6px; height: 6px; border-radius: 50%; background: var(--good); flex: none; opacity: .7; }
+    .mini .mt { font-size: calc(14px * var(--fs)); flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-left: 4px; }
+    .mini .ms { font-size: calc(12.5px * var(--fs)); color: var(--muted); flex: 0 1 auto; max-width: 48%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+    [data-scale="1.3"] .mini { flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; row-gap: 2px; }
+    [data-scale="1.3"] .mini .ms { max-width: none; flex-basis: 100%; text-align: left; padding-left: 20px; white-space: normal; }
+    .empty { padding: 20px 18px; font-size: calc(13px * var(--fs)); color: var(--text-2); line-height: 1.55; text-align: center; }
+
+    /* ---------- 底部弹层 ---------- */
+    .scrim { position: absolute; inset: 0; background: rgba(8, 14, 26, .38); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 5; }
+    .scrim.on { opacity: 1; pointer-events: auto; }
+    .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86%; display: flex; flex-direction: column; background: var(--surface);
+      border-radius: 26px 26px 0 0; transform: translateY(102%); transition: transform .28s var(--ease); z-index: 6; }
+    .sheet:not(.on) { visibility: hidden; transition: transform .28s var(--ease), visibility 0s .28s; }
+    .sheet.on { transform: none; }
+    .sheet .grab { width: 36px; height: 4px; border-radius: 4px; background: var(--line-2); margin: 10px auto 4px; flex: none; }
+    .sheet header { padding: 8px 20px 4px; flex: none; }
+    .sheet header h4 { margin: 0; font-size: calc(17px * var(--fs)); }
+    .sheet header p { margin: 4px 0 0; font-size: calc(12.5px * var(--fs)); color: var(--text-2); line-height: 1.5; }
+    .sheet .body { padding: 12px 20px; overflow-y: auto; flex: 1; }
+    .sheet footer { padding: 10px 20px 22px; display: flex; gap: 8px; flex: none; border-top: 1px solid var(--line); }
+    .sheet footer button { flex: 1; min-height: 46px; border-radius: 14px; border: 0; font-weight: 600; cursor: pointer; font-size: calc(14px * var(--fs)); }
+    .btn-2 { background: var(--raised); }
+    .btn-1 { background: var(--accent); color: var(--on-accent); }
+    pre.detail { margin: 0; font: calc(12px * var(--fs))/1.6 var(--mono); white-space: pre-wrap; background: var(--bg); border-radius: 12px; padding: 12px; color: var(--text-2); }
+    .opt { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 1px solid var(--line-2); border-radius: 14px; cursor: pointer; margin-bottom: 8px; }
+    .opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+    .opt input { margin-top: 3px; accent-color: var(--accent); }
+    .opt .t { font-weight: 600; font-size: calc(14px * var(--fs)); }
+    .opt .s { font-size: calc(12px * var(--fs)); color: var(--text-2); margin-top: 2px; line-height: 1.45; }
+    textarea { width: 100%; min-height: 84px; resize: vertical; border: 1px solid var(--line-2); border-radius: 12px; background: var(--bg); color: var(--text);
+      padding: 10px 12px; font: calc(13px * var(--fs))/1.5 var(--sans); }
+    .field-label { font-size: calc(12.5px * var(--fs)); font-weight: 600; color: var(--muted); margin: 14px 0 6px; display: block; }
+    .toast { position: absolute; left: 50%; bottom: 34px; transform: translate(-50%, 20px); background: #1f2a3d; color: #fff; padding: 10px 16px; border-radius: 12px;
+      font-size: 13px; opacity: 0; transition: .2s; z-index: 9; max-width: 86%; text-align: center; pointer-events: none; }
+    .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+    /* ---------- 旧版复刻（对比用） ---------- */
+    .old .big { font-size: 30px; font-weight: 800; margin: 14px 4px 4px; }
+    .old .desc { font-size: 13px; color: var(--text-2); margin: 0 4px; }
+    .old .pad { padding: 16px; }
+    .old .obtn { width: 100%; min-height: 46px; border: 1px solid var(--line-2); border-radius: 14px; background: var(--surface); font-weight: 600; margin-top: 10px; }
+    .old .lbtn { width: 100%; min-height: 44px; border: 0; background: none; color: var(--accent); }
+    .old .pair { display: flex; gap: 8px; margin-top: 12px; } .old .pair .obtn { margin: 0; }
+    .old .thin { height: 10px; margin-top: 0; }
+    .old .link { color: var(--accent); font-size: 12.5px; overflow-wrap: anywhere; }
+    .hide { display: none !important; }
+
+    /* ---------- 设备外框：平板竖屏 800×1280、横屏 1280×800（dp 等比），按窗口缩放 ---------- */
+    .stage { flex: none; position: relative; }
+    .stage .phone { transform-origin: 0 0; position: absolute; left: 0; top: 0; }
+    [data-device="tp"] .phone { width: 820px; height: 1300px; border-radius: 40px; }
+    [data-device="tl"] .phone { width: 1300px; height: 820px; border-radius: 40px; }
+    [data-device="tp"] .screen, [data-device="tl"] .screen { border-radius: 30px; clip-path: inset(0 round 30px); }
+
+    /* ---------- 宽屏布局（≥ 700dp 容器宽，对应 Android sw600dp 以上的实际窗口） ---------- */
+    .screen { container: screen / inline-size; }
+    .layout { display: flex; flex-direction: column; }
+    .g-hero > .card { margin-top: 0; }
+    @container screen (min-width: 700px) {
+      .appbar { padding: 6px 24px 6px 14px; }
+      .scroll { padding: 8px 32px 36px; }
+      .layout { display: grid; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); column-gap: 24px;
+        grid-template-areas: "hero results" "feedback results" "tools results"; grid-template-rows: auto auto 1fr; align-items: start;
+        max-width: 1120px; margin: 0 auto; }
+      .g-hero { grid-area: hero; } .g-feedback { grid-area: feedback; } .g-tools { grid-area: tools; }
+      .g-results { grid-area: results; }
+      .g-results > .label { margin-top: 0; }
+      /* 让右栏标题与左栏卡片顶对齐：左栏 hero 前补一个等高标签位 */
+      .g-hero::before { content: "状态"; display: block; font-size: calc(13px * var(--fs)); font-weight: 600; color: var(--muted); margin: 0 4px 8px; }
+      /* 弹层改为居中对话框 */
+      .sheet { left: 50%; top: 50%; bottom: auto; right: auto; width: min(520px, 86%); max-height: 80%; border-radius: 24px;
+        transform: translate(-50%, -46%) scale(.98); opacity: 0; transition: transform .22s var(--ease), opacity .18s; }
+      .sheet.on { transform: translate(-50%, -50%); opacity: 1; }
+      .sheet:not(.on) { transition: transform .22s var(--ease), opacity .18s, visibility 0s .22s; }
+      .sheet .grab { display: none; }
+      .sheet header { padding-top: 22px; }
+      .sheet footer { padding-bottom: 18px; }
+    }
+    /* 结果卡足够宽时正常项排两列，行高不变，高度减半 */
+    #results { container: results / inline-size; }
+    @container results (min-width: 560px) {
+      .fold { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8px; }
+      .mini + .mini::before { display: none; }
+      .mini:nth-child(n+3)::before { content: ""; display: block; position: absolute; top: 0; left: 42px; right: 16px; height: 1px; background: var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <aside class="panel" aria-label="预览控制">
+    <h1>自检与诊断 · 简化方案</h1>
+    <p>点「开始检查」模拟一次诊断；结果卡片、导出弹层和工具行均可点按。</p>
+    <fieldset><legend>版本</legend><div class="seg" data-ctl="view">
+      <button data-v="new" aria-pressed="true">新方案</button><button data-v="old" aria-pressed="false">现状</button></div></fieldset>
+    <fieldset><legend>设备</legend><div class="seg" data-ctl="device">
+      <button data-v="phone" aria-pressed="true">手机</button><button data-v="tp" aria-pressed="false">平板竖屏</button><button data-v="tl" aria-pressed="false">平板横屏</button></div></fieldset>
+    <fieldset><legend>模拟检查结果</legend><div class="seg" data-ctl="outcome">
+      <button data-v="ok" aria-pressed="true">全部正常</button><button data-v="issues" aria-pressed="false">有 2 项问题</button><button data-v="failed" aria-pressed="false">检查失败</button></div></fieldset>
+    <fieldset><legend>主题</legend><div class="seg" data-ctl="theme">
+      <button data-v="light" aria-pressed="true">日间</button><button data-v="dark" aria-pressed="false">夜间</button></div></fieldset>
+    <fieldset><legend>验收条件</legend><div class="seg">
+      <button data-toggle="scale" aria-pressed="false">1.3 倍字体</button><button data-toggle="short" aria-pressed="false">短屏</button></div></fieldset>
+    <fieldset><legend>改了什么</legend>
+      <ol class="notes">
+        <li><b>去掉重复大标题</b>：顶栏已写「自检与诊断」，状态卡直接说结论。</li>
+        <li><b>状态卡带结论</b>：图标 + 一句话（正常 / 几项问题 / 未完成），主按钮唯一。</li>
+        <li><b>结果按严重度排</b>：问题置顶并标色，正常项折叠成一行「N 项正常」。不再每行同一个盒子图标。</li>
+        <li><b>空状态</b>：未检查时说明检查范围，替换现在那条空细卡。</li>
+        <li><b>6 个分组 → 3 个</b>：检查结果 / 反馈 / 工具。</li>
+        <li><b>导出合并为一个弹层</b>：故障包或文本报告 + 下载或另存为；「补充复现步骤」移进弹层，不再常驻页底。</li>
+        <li>所有既有能力保留：复制、导出 txt、日志下载/另存为、上次文件、启动记录、故障处理、修复工具、插件管理。</li>
+      </ol></fieldset>
+  </aside>
+
+  <div class="stage" id="stage"><div class="phone"><div class="screen" id="screen">
+    <div class="statusbar"><span>18:01</span><span>100%</span></div>
+    <div class="appbar">
+      <button class="icon-btn" aria-label="返回"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2>自检与诊断</h2>
+    </div>
+
+    <!-- ================= 新方案 ================= -->
+    <div class="scroll" id="vNew"><div class="layout">
+      <div class="g-hero">
+      <section class="card hero" id="hero" data-tone="idle" aria-live="polite">
+        <div class="badge" id="heroIcon"></div>
+        <h3 id="heroTitle">尚未检查</h3>
+        <div class="sub" id="heroSub">检查组件、存储与服务，生成脱敏报告</div>
+        <div class="progress hide" id="heroProg"><i></i></div>
+        <button class="primary" id="run">开始检查</button>
+      </section>
+      </div>
+
+      <div class="g-results">
+      <div class="label">检查结果</div>
+      <section class="card" id="results"><div class="empty" id="emptyResults">还没有结果。检查只读取本机状态，不会修改环境，约需几秒。</div></section>
+      </div>
+
+      <div class="g-feedback">
+      <div class="label">反馈</div>
+      <section class="card">
+        <button class="row" id="copy" data-needs-report disabled>
+          <span class="ri" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></span>
+          <span class="tx"><span class="t">复制诊断报告</span><span class="s" style="display:block">脱敏文本，可直接粘贴到反馈</span></span>
+        </button>
+        <button class="row" id="exportBtn">
+          <span class="ri" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></span>
+          <span class="tx"><span class="t">导出故障包</span><span class="s" style="display:block" id="lastSaved">保存到 Download/DSHA，可附复现步骤</span></span>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </section>
+      </div>
+
+      <div class="g-tools">
+      <div class="label">工具</div>
+      <section class="card" id="tools"></section>
+      </div>
+    </div></div>
+
+    <!-- ================= 现状复刻 ================= -->
+    <div class="scroll old hide" id="vOld">
+      <div class="big">自检与诊断</div>
+      <p class="desc">检查组件、存储与服务，生成脱敏报告。</p>
+      <section class="card pad" style="margin-top:18px"><b>准备检查</b><div class="desc" style="margin:4px 0 0">报告保留在本机，复制或导出后可用于反馈</div><button class="obtn">重新诊断</button></section>
+      <div class="label">检查结果</div><section class="card thin"></section>
+      <div class="pair"><button class="obtn">复制反馈</button><button class="obtn">导出报告</button></div>
+      <div class="label">启动记录</div>
+      <section class="card"><div class="row"><span class="ri"></span><span class="tx"><span class="t">最近五次启动</span></span></div><div class="row"><span class="ri"></span><span class="tx"><span class="t">启动故障处理</span></span></div></section>
+      <div class="label">错误日志</div>
+      <section class="card pad"><div class="link">上次保存：DSHA-diagnostics-20261101-163050-f123d50e-001c-4c05-b070-9081a0a635b4.tar.gz（点按查看）</div><button class="obtn">下载错误日志</button><button class="lbtn">另存为</button></section>
+      <div class="label">排查与修复</div>
+      <section class="card pad"><button class="obtn" style="margin:0">修复工具</button><button class="lbtn">打开插件管理</button></section>
+      <div class="label">补充复现步骤</div>
+      <textarea placeholder="描述复现步骤（可选）"></textarea>
+    </div>
+
+    <div class="scrim" id="scrim"></div>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <div class="grab"></div>
+      <header><h4 id="sheetTitle"></h4><p id="sheetSub"></p></header>
+      <div class="body" id="sheetBody"></div>
+      <footer id="sheetFoot"></footer>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+  </div></div></div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const root = document.documentElement;
+  const ICON = {
+    idle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 3h6M10 3v5l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/></svg>',
+    run: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9"/></svg>',
+    good: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5M12 16.5v.5"/><path d="M10.3 3.9L2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+    bad: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.2v.3"/></svg>',
+    chev: '<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>',
+    doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>',
+    life: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M5.6 5.6l3.6 3.6M14.8 14.8l3.6 3.6M18.4 5.6l-3.6 3.6M9.2 14.8l-3.6 3.6"/></svg>',
+    wrench: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-2.5z"/></svg>',
+    plug: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/></svg>'
+  };
+
+  const BASE = [
+    ['应用与设备', '本次只读采样'], ['网页内核', '可用'], ['冷安装诊断记录', '无异常记录'],
+    ['Ubuntu 与 Bash 加载器', '就绪检查通过'], ['运行工具文件', '文件存在'], ['所选运行方式', 'proot · SMOKE_OK'],
+    ['Node · npm · Python', '实际命令已响应'], ['网络工具', 'curl / git 可用'], ['运行时版本与身份', '与包内版本一致'],
+    ['最近隔离运行试验', '没有失败记录'], ['存储与数据目录', '私有目录可用'], ['Web 鉴权与桥接', 'DSH 未运行（启动后再检查）']
+  ];
+  const OUTCOME = {
+    ok: {},
+    issues: { '网络工具': ['bad', 'curl 无法解析域名（EAI_AGAIN）'], 'Web 鉴权与桥接': ['warn', 'DSH 未运行，鉴权未检查'] },
+    failed: { '存储与数据目录': ['bad', '探针超时，检查未完成'] }
+  };
+  const state = { phase: 'idle', outcome: 'ok', items: [], foldOpen: false, note: '', lastSaved: '' };
+
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), 2200); }
+  function row({ icon, dot, title, sub, subTone, chev = true, onClick, attrs = '' }) {
+    const b = document.createElement('button'); b.className = 'row';
+    b.innerHTML = (icon ? `<span class="ri" aria-hidden="true">${ICON[icon]}</span>` : '') + (dot ? `<span class="dot ${dot}" aria-hidden="true"></span>` : '') +
+      `<span class="tx"><span class="t">${title}</span>${sub ? `<span class="s ${subTone || ''}" style="display:block">${sub}</span>` : ''}</span>` + (chev ? ICON.chev : '');
+    if (attrs) attrs.split(' ').forEach((a) => { const [k, v] = a.split('='); b.setAttribute(k, v); });
+    b.onclick = onClick; return b;
+  }
+
+  function renderHero() {
+    const h = $('#hero'), bad = state.items.filter((i) => i.tone !== 'ok').length;
+    const cfg = {
+      idle: ['idle', 'idle', '尚未检查', '检查组件、存储与服务，生成脱敏报告', '开始检查'],
+      run: ['run', 'run', '正在检查…', `${state.done || 0} / ${BASE.length} 项`, '检查中'],
+      ok: ['good', 'good', '环境正常', `${BASE.length} 项检查全部通过 · 刚刚`, '重新检查'],
+      issues: ['warn', 'warn', `${bad} 项需要处理`, '问题已排在结果顶部，点开查看原因', '重新检查'],
+      failed: ['bad', 'bad', '检查未完成', '部分探针未返回，可导出故障包反馈', '重新检查']
+    }[state.phase];
+    h.dataset.tone = cfg[0]; $('#heroIcon').innerHTML = ICON[cfg[1]]; $('#heroTitle').textContent = cfg[2]; $('#heroSub').textContent = cfg[3];
+    const run = $('#run'); run.textContent = cfg[4]; run.disabled = state.phase === 'run';
+    run.classList.toggle('quiet', state.phase === 'ok');
+    $('#heroProg').classList.toggle('hide', state.phase !== 'run');
+    $('#heroProg i').style.width = `${((state.done || 0) / BASE.length) * 100}%`;
+    document.querySelectorAll('[data-needs-report]').forEach((b) => (b.disabled = !state.items.length || state.phase === 'run'));
+  }
+
+  function renderResults() {
+    const box = $('#results'); box.innerHTML = '';
+    if (!state.items.length) {
+      box.innerHTML = `<div class="empty">${state.phase === 'run' ? '正在收集结果…' : '还没有结果。检查只读取本机状态，不会修改环境，约需几秒。'}</div>`; return;
+    }
+    const problems = state.items.filter((i) => i.tone !== 'ok'), ok = state.items.filter((i) => i.tone === 'ok');
+    problems.forEach((i) => box.append(row({ dot: i.tone, title: i.title, sub: i.sub, subTone: i.tone, onClick: () => detail(i) })));
+    if (!ok.length) return;
+    const head = row({ dot: 'ok', title: `${ok.length} 项正常`, sub: state.foldOpen ? '点按收起' : ok.slice(0, 3).map((i) => i.title).join('、') + ' 等',
+      onClick: () => { state.foldOpen = !state.foldOpen; renderResults(); }, attrs: `aria-expanded=${state.foldOpen}` });
+    box.append(head);
+    if (state.foldOpen) {
+      const f = document.createElement('div'); f.className = 'fold';
+      ok.forEach((i) => {
+        const m = document.createElement('button'); m.className = 'mini';
+        m.setAttribute('aria-label', `${i.title}，${i.sub}，查看详情`);
+        m.innerHTML = `<i aria-hidden="true"></i><span class="mt">${i.title}</span><span class="ms">${i.sub}</span>`;
+        m.onclick = () => detail(i); f.append(m);
+      });
+      box.append(f);
+    }
+  }
+
+  function runCheck() {
+    state.phase = 'run'; state.items = []; state.done = 0; state.foldOpen = false; renderHero(); renderResults();
+    const tick = setInterval(() => {
+      state.done++; renderHero();
+      if (state.done >= BASE.length) {
+        clearInterval(tick);
+        const map = OUTCOME[state.outcome];
+        state.items = BASE.map(([title, sub]) => map[title] ? { title, tone: map[title][0], sub: map[title][1] } : { title, tone: 'ok', sub });
+        state.phase = state.outcome; renderHero(); renderResults();
+      }
+    }, 140);
+  }
+
+  // ---------- 弹层 ----------
+  let lastFocus = null;
+  function openSheet(title, sub, body, foot) {
+    lastFocus = document.activeElement;
+    $('#sheetTitle').textContent = title; $('#sheetSub').textContent = sub || ''; $('#sheetSub').classList.toggle('hide', !sub);
+    const b = $('#sheetBody'); b.innerHTML = ''; typeof body === 'string' ? (b.innerHTML = body) : b.append(body);
+    const f = $('#sheetFoot'); f.innerHTML = '';
+    foot.forEach(([label, cls, fn]) => { const btn = document.createElement('button'); btn.className = cls; btn.textContent = label; btn.onclick = fn; f.append(btn); });
+    $('#scrim').classList.add('on'); $('#sheet').classList.add('on');
+    setTimeout(() => f.lastChild && f.lastChild.focus(), 50);
+  }
+  function closeSheet() { $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); lastFocus && lastFocus.focus(); }
+  $('#scrim').onclick = closeSheet;
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+
+  function detail(i) {
+    const tone = { ok: '正常', warn: '需要注意', bad: '失败' }[i.tone];
+    openSheet(i.title, `${tone} · ${i.sub}`, `<pre class="detail">status: ${i.tone}\nsummary: ${i.sub}\nsampled: 2026-11-01 18:01:12\n\n（这里显示 DiagnosticRepository 返回的 item.detail 原文）</pre>`,
+      [['关闭', 'btn-2', closeSheet]]);
+  }
+
+  function exportSheet() {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <label class="opt"><input type="radio" name="fmt" value="pkg" checked><span><span class="t" style="display:block">故障包 .tar.gz（推荐）</span><span class="s" style="display:block">结构化状态、脱敏操作记录尾部和摘要；不含原始进程输出</span></span></label>
+      <label class="opt"><input type="radio" name="fmt" value="txt"><span><span class="t" style="display:block">文本报告 .txt</span><span class="s" style="display:block">只有本次检查结果${state.items.length ? '' : '（需先完成检查）'}</span></span></label>
+      <label class="field-label" for="note">补充复现步骤（可选，仅本次附加，不保存）</label>
+      <textarea id="note" maxlength="2000" placeholder="例如：打开终端后点运行，大约 10 秒后白屏"></textarea>
+      ${state.lastSaved ? `<button class="row" id="openLast" style="padding:12px 0;margin-top:8px"><span class="tx"><span class="t" style="font-size:14px">打开上次保存的文件</span><span class="s" style="display:block">${state.lastSaved}</span></span>${ICON.chev}</button>` : ''}`;
+    const ta = wrap.querySelector('#note'); ta.value = state.note; ta.oninput = () => (state.note = ta.value);
+    const txt = wrap.querySelector('input[value="txt"]'); txt.disabled = !state.items.length;
+    const ol = wrap.querySelector('#openLast'); if (ol) ol.onclick = () => toast('用系统应用打开 ' + state.lastSaved.slice(0, 24) + '…');
+    const save = (how) => {
+      const fmt = wrap.querySelector('input[name="fmt"]:checked').value;
+      const name = fmt === 'pkg' ? 'DSHA-diagnostics-20261101-180130-f123d50e.tar.gz' : 'DSHA-diagnostic-20261101-180130.txt';
+      if (fmt === 'pkg') { state.lastSaved = name; $('#lastSaved').textContent = '上次：' + name; }
+      closeSheet(); toast(how === 'dl' ? `已保存到 Download/DSHA` : '打开系统文件管理器选择位置…');
+    };
+    openSheet('导出故障包', '导出前不会上传任何内容。公开分享前请先查看文件。', wrap, [['另存为…', 'btn-2', () => save('as')], ['下载', 'btn-1', () => save('dl')]]);
+  }
+
+  function historySheet() {
+    const list = document.createElement('div'); list.className = 'card';
+    [['11月1日 17:58', '鉴权 · 成功', 'ok'], ['11月1日 16:30', '启动 Web · 退出码 1', 'bad'], ['10月31日 22:04', '鉴权 · 成功', 'ok'], ['10月31日 09:12', '鉴权 · 成功', 'ok'], ['10月30日 20:47', '环境检查 · 成功', 'ok']]
+      .forEach(([d, s, t]) => list.append(row({ dot: t, title: d, sub: s, subTone: t === 'bad' ? 'bad' : '', onClick: () => toast('打开该次启动的阶段、原因与日志') })));
+    openSheet('最近五次启动', '阶段、实际错误与退出码', list, [['关闭', 'btn-2', closeSheet]]);
+  }
+
+  function renderTools() {
+    const t = $('#tools');
+    t.append(row({ icon: 'doc', title: '最近五次启动', sub: '阶段、实际错误与退出码', onClick: historySheet }));
+    t.append(row({ icon: 'life', title: '启动故障处理', sub: '查看问题与恢复方式', onClick: () => toast('打开 StartupRecoveryActivity') }));
+    t.append(row({ icon: 'wrench', title: '修复网络工具', sub: '重新配置 curl / git / 证书', onClick: () => toast('repairNetworkTools() 已开始') }));
+    t.append(row({ icon: 'plug', title: '插件管理', sub: '排查插件导致的启动问题', onClick: () => toast('跳转主界面插件页') }));
+  }
+
+  $('#run').onclick = runCheck;
+  $('#exportBtn').onclick = exportSheet;
+  $('#copy').onclick = () => toast('报告已复制，请在公开分享前查看内容');
+
+  // ---------- 控制面板 ----------
+  document.querySelectorAll('[data-ctl]').forEach((g) => g.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    g.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    const v = b.dataset.v, ctl = g.dataset.ctl;
+    if (ctl === 'theme') root.dataset.theme = v;
+    if (ctl === 'device') { root.dataset.device = v; fit(); }
+    if (ctl === 'view') { $('#vNew').classList.toggle('hide', v !== 'new'); $('#vOld').classList.toggle('hide', v !== 'old'); closeSheet(); }
+    if (ctl === 'outcome') { state.outcome = v; if (state.items.length) runCheck(); }
+  }));
+  document.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => {
+    const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
+    if (b.dataset.toggle === 'scale') root.dataset.scale = on ? '1.3' : '1'; else root.dataset.short = on;
+    fit();
+  }));
+
+  // 外框按窗口等比缩小；容器查询按未缩放的逻辑宽度计算，布局与真机一致。
+  function fit() {
+    const phone = document.querySelector('.phone'), stage = $('#stage');
+    phone.style.transform = 'none';
+    const w = phone.offsetWidth, h = phone.offsetHeight;
+    const side = window.innerWidth > 760 ? 300 + 32 : 0;
+    const k = Math.min(1, (window.innerWidth - side - 48) / w, root.dataset.device === 'phone' ? 1 : (window.innerHeight - 56) / h);
+    phone.style.transform = `scale(${k})`;
+    stage.style.width = `${w * k}px`; stage.style.height = `${h * k}px`;
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  renderTools(); renderHero(); renderResults();
+})();
+</script>
+</body>
+</html>

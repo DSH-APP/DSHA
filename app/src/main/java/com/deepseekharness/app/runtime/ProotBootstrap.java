@@ -77,7 +77,21 @@ public class ProotBootstrap {
             ctx, rootfsDir, baseDir, libDir, tmpDir, nativeFiles, launcher, hostPorts);
     pluginScripts =
         new GuestPluginScripts(
-            ctx, rootfsDir, this::isEnvironmentReady, this::execAndReadWithProotResult);
+            ctx,
+            rootfsDir,
+            this::isEnvironmentReady,
+            new GuestPluginScripts.Runner() {
+              public BoundedProcessRunner.Result run(String command, long timeoutMs)
+                  throws IOException, InterruptedException {
+                return execution.collect(command, timeoutMs, true);
+              }
+
+              public BoundedProcessRunner.Result run(
+                  String command, long timeoutMs, java.util.function.Consumer<String> onLine)
+                  throws IOException, InterruptedException {
+                return execution.collect(command, timeoutMs, true, onLine);
+              }
+            });
   }
 
   public RuntimeHostPorts hostPorts() {
@@ -142,6 +156,10 @@ public class ProotBootstrap {
     return installation.needsRuntimeUpdate();
   }
 
+  public com.deepseekharness.app.util.DshVersionPolicy.Status installedVersionStatus() {
+    return installation.installedVersionStatus();
+  }
+
   public void confirmRuntimeHealth(java.util.Map<String, Object> proof) throws IOException {
     installation.confirmRuntimeHealth(proof);
   }
@@ -194,6 +212,31 @@ public class ProotBootstrap {
   public BoundedProcessRunner.Result registerBuiltinPluginsResult()
       throws IOException, InterruptedException {
     return pluginScripts.builtin("");
+  }
+
+  /** Synchronous startup scope; every helper still has its own bounded guest and exit proof. */
+  public StartupPlugins prepareStartupPlugins() throws IOException, InterruptedException {
+    return new StartupPlugins(pluginScripts.startup());
+  }
+
+  public static final class StartupPlugins implements AutoCloseable {
+    private final GuestPluginScripts.Startup scripts;
+
+    private StartupPlugins(GuestPluginScripts.Startup scripts) {
+      this.scripts = scripts;
+    }
+
+    public BoundedProcessRunner.Result register() throws IOException, InterruptedException {
+      return scripts.register();
+    }
+
+    public BoundedProcessRunner.Result legacy() throws IOException, InterruptedException {
+      return scripts.legacy();
+    }
+
+    public void close() {
+      scripts.close();
+    }
   }
 
   public String prepareRc1Migration(String startupId) {
@@ -312,6 +355,19 @@ public class ProotBootstrap {
     return execution.collect(command, timeoutMs, true);
   }
 
+  /** 带完整行回调的 proot 命令；用于把固定 guest 阶段行带进宿主诊断。 */
+  public BoundedProcessRunner.Result execAndReadWithProotResult(
+      String command, long timeoutMs, java.util.function.Consumer<String> onLine)
+      throws IOException, InterruptedException {
+    return execution.collect(command, timeoutMs, true, onLine);
+  }
+
+  /** 旧 CAS 迁移仍使用固定 proot，诊断只记录本次宿主阶段。 */
+  public BoundedProcessRunner.Result materializeCasLinksResult(
+      java.util.function.Consumer<String> timing) throws IOException, InterruptedException {
+    return execution.collectCasLinks(timing);
+  }
+
   public void prepareDataMaintenance() throws IOException {
     recovery.prepareData();
   }
@@ -346,7 +402,12 @@ public class ProotBootstrap {
   }
 
   public PtyLaunch ptyLaunch() {
-    TerminalRuntime.Launch value = terminal.launch();
+    return ptyLaunch(new String[0]);
+  }
+
+  /** 固定 guest command 只替换命令尾部，argv/env 仍由 {@link TerminalRuntime} 唯一构造。 */
+  public PtyLaunch ptyLaunch(String... guestCommand) {
+    TerminalRuntime.Launch value = terminal.launch(guestCommand);
     return new PtyLaunch(value.argv(), value.environment());
   }
 
@@ -371,10 +432,16 @@ public class ProotBootstrap {
 
   public static final class SmokeResult {
     public final String runtimeMode;
+
+    /** proroot / proot-seccomp / proot-no-seccomp，见 {@link com.deepseekharness.app.util.RuntimeModeLabel}。 */
+    public final String runtimeDetail;
+
     public final BoundedProcessRunner.Result command;
 
-    private SmokeResult(String runtimeMode, BoundedProcessRunner.Result command) {
+    private SmokeResult(
+        String runtimeMode, String runtimeDetail, BoundedProcessRunner.Result command) {
       this.runtimeMode = runtimeMode;
+      this.runtimeDetail = runtimeDetail;
       this.command = command;
     }
   }
@@ -382,7 +449,13 @@ public class ProotBootstrap {
   /** Read-only selected-runtime probe; mode and command use the same config image. */
   public SmokeResult smokeTestResult() throws IOException, InterruptedException {
     RuntimeExecution.Probe result = execution.probe();
-    return new SmokeResult(result.runtimeMode(), result.command());
+    return new SmokeResult(result.runtimeMode(), result.runtimeDetail(), result.command());
+  }
+
+  /** 已选运行时的启动日志标签；proot 写明是否带 seccomp 过滤。调用方须在本次启动的配置 scope 内。 */
+  public static String runtimeLabel(ContainerRuntime runtime) {
+    return com.deepseekharness.app.util.RuntimeModeLabel.display(
+        runtime.id(), RuntimeExecution.seccompOff(runtime));
   }
 
   public String smokeTest() {

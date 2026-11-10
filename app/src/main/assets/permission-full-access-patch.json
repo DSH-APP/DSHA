@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-client-ui-permission-presets/lib/client.js",
   "patches": [
     {
@@ -80,5 +80,7 @@
       "before": "\t\t\tasync select(preset) {\n\t\t\t\tconst state = this.store.getSnapshot();",
       "after": "\t\t\tasync select(preset) {\n\t\t\t\tif (preset === \"guarded-full-access\") { this.fail(new Error(\"历史权限配置仅兼容读取，不再提供新选择。\")); return; }\n\t\t\t\tconst state = this.store.getSnapshot();"
     }
-  ]
+  ],
+  "sourceSha256": "012597974dbc75ac0c545946c3f3d26bbffac6aee56d75a1ca0b9cf1c6e4331b",
+  "packageIntegrity": "sha512-IwWZb+w+n+KHc1hBGbLe0dsqoxkf637twc66y8AJ3qInGUoGVUl0VeH0DsrsqhIhO1L4k8xADtoR5zGyEXdaJw=="
 }

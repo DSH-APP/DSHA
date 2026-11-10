@@ -17,7 +17,7 @@ Read the [handoff guide](handoff.md), then the [engineering standard](engineerin
 | Data and backup | backup host file layer, HostDataTransaction, NativeBackupJobs, MaintenanceDataSnapshot.capture/restore | Scope, authentication/digests, numbered slots, data generations, and read/write transactions. Base rebuild does not silently fall back to Python backup from a damaged guest. |
 | Maintenance UI adaptation | MaintenanceUiPorts, DataProtectionService, DshaApp | The backup layer requests maintenance state and notifications; the composition root assembles real UI destinations. Backup/runtime code does not directly reference UI classes. |
 | Plugins | PluginInstallJournals, plugin-transactions.py, plugin archive graph | Original/candidate switching, actual dependencies, and the user's enable/disable intent. |
-| Browser and bridge | WebPageScripts, GeckoPreviewActivity, HttpShellService | Current page, origin, generation, authentication, and capability grants; no second runtime state. |
+| Browser and bridge | WebPageScripts, WebPreviewActivity, HttpShellService | Current page, origin, generation, authentication, and capability grants; no second runtime state. |
 | Independent emergency runtime | RecoveryController, RecoveryRuntime, RecoveryStoragePlan, RecoveryRepairBroker | An independent root and HOME, five controlled tools, atomic records through the safe file layer, explicit publication with retained originals, and native-confirmed repair leases. |
 | Deployment and historical isolation | asset-deployment.json, prepare-standard-assets.py, prepare-recovery-assets.py | Complete license/plugin/extension members and explicit source-to-physical mappings; retired sources stay out of the APK. |
 

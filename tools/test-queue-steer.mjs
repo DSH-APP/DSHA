@@ -1,5 +1,5 @@
 import {testRuntime} from './test-runtime-fixture.mjs';
-// Verify the rc2 queue arrow fix against the locked DSH client and session host.
+// Verify the current queue arrow fix against the locked DSH client and session host.
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';

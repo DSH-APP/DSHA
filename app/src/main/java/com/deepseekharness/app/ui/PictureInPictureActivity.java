@@ -134,6 +134,7 @@ public abstract class PictureInPictureActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle saved) {
     super.onCreate(saved);
+    BrowserTasks.reconcileRecents(this, -1);
     restoredPresentation = saved != null;
     presentation.restore(saved == null ? "FULL" : saved.getString("browser-presentation", "FULL"));
     userHidden = saved != null && saved.getBoolean("browser-user-hidden", false);
@@ -303,19 +304,44 @@ public abstract class PictureInPictureActivity extends AppCompatActivity {
       input.hideSoftInputFromWindow(pictureFrame.getWindowToken(), 0);
     // 保留任务及 ViewModel；再次进入接管同一页面、草稿和浏览器会话。
     if (inPicture) {
-      // 先将同一 singleTask 从 PiP 展开，再显式返回原生主页；保留当前网页。
-      startActivity(
+      // 先将同一宿主从 PiP 展开，再显式返回原生主页；保留当前网页。宿主不再独占 affinity，
+      // 优先派发进它自己的画中画任务，避免按 affinity 落进 Main 任务另建一个宿主。
+      Intent expand =
           new Intent(this, getClass())
-              .addFlags(
-                  Intent.FLAG_ACTIVITY_NEW_TASK
-                      | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                      | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-              .putExtra(BrowserConversationRoute.MODE, "HIDDEN"));
+              .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP)
+              .putExtra(BrowserConversationRoute.MODE, "HIDDEN");
+      if (!BrowserTasks.startInTask(this, getTaskId(), expand))
+        startActivity(expand.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
     } else hideConversationTask();
   }
 
   private void hideConversationTask() {
     BrowserTasks.openMain(this);
+  }
+
+  /**
+   * 启动目标为 Web 时，网页返回到底就回桌面：与按 Home 相同地登记“返回原网页”，
+   * 下次点桌面图标由 Main 的既有路由带回同一页面。页面、草稿与会话全部保留，不停止运行实例。
+   *
+   * <p>Main 与 Web 同一任务（旧版本遗留的独立网页任务亦然），结束或移走本页都会露出 Main；所以先显式切到桌面。
+   * 带 NO_USER_ACTION，避免这次程序化离开被当成用户按 Home 而自动进入画中画。
+   */
+  protected final void leaveToLauncher() {
+    if (isFinishing() || isDestroyed()) return;
+    if (showing(this)) {
+      hideConversation();
+      return;
+    }
+    BrowserTasks.rememberBackground(this);
+    try {
+      startActivity(
+          new Intent(Intent.ACTION_MAIN)
+              .addCategory(Intent.CATEGORY_HOME)
+              .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_USER_ACTION));
+    } catch (android.content.ActivityNotFoundException unavailable) {
+      android.util.Log.w("DSHA", "HOME_TASK_UNAVAILABLE");
+      moveTaskToBack(true);
+    }
   }
 
   protected final void receivePresentationIntent() {
@@ -448,7 +474,12 @@ public abstract class PictureInPictureActivity extends AppCompatActivity {
     synchronizePictureViewport();
     refreshPictureInPicture();
     if (conversationHidden() && userHidden && !showing(this)) hideConversationTask();
-    else BrowserTasks.browserResumed(this);
+    else {
+      BrowserTasks.browserResumed(this);
+      // 整屏可见的 Web：系统回收后从桌面 / 最近任务恢复时据此回到 Web。
+      if (!conversationHidden() && !showing(this))
+        new com.deepseekharness.app.core.ConfigStore(this).setLastForegroundWeb(true);
+    }
   }
 
   /** 文件选择、系统浏览器、恢复页等由应用主动打开时，不留下多余的小窗。 */

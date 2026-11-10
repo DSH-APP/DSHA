@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 终端主题三段文字色：选中项用强调色，未选中用弱化色（再配合背景选中态）。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true" android:color="?attr/dsha_pal_terminal_accent" />
+    <item android:color="@color/terminal_muted" />
+</selector>

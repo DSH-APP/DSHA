@@ -128,4 +128,103 @@ public class AgentTaskStateTest {
             0));
     assertEquals("unknown", state.snapshot(15_001).get(0).phase());
   }
+
+  @Test
+  public void detailAndTitleAreOneLineBoundedAndRefreshPhaseTiming() {
+    var state = new AgentTaskState();
+    state.identity(1, "run");
+    state.bind("a".repeat(32));
+    var key = new AgentTaskState.Key(1, "run", "session", 1);
+    assertTrue(
+        state.event(
+            "a".repeat(32),
+            key,
+            1,
+            "tool",
+            "",
+            "read_file · src/README.md\n第二阶段",
+            "会话标题\n第二行",
+            100));
+    var row = state.snapshot(100).get(0);
+    assertEquals("read_file · src/README.md 第二阶段", row.detail());
+    assertEquals("会话标题 第二行", row.title());
+    assertEquals(100, row.phaseAt());
+    assertTrue(
+        state.event("a".repeat(32), key, 2, "tool", "", "read_file · src/OTHER.md", "", 200));
+    assertEquals(200, state.snapshot(200).get(0).phaseAt());
+    assertTrue(
+        state.event("a".repeat(32), key, 3, "tool", "", "read_file · src/OTHER.md", "", 300));
+    assertEquals(200, state.snapshot(300).get(0).phaseAt());
+    String longDetail = "x".repeat(200);
+    assertTrue(state.event("a".repeat(32), key, 4, "reply", "", longDetail, "", 400));
+    assertEquals(64, state.snapshot(400).get(0).detail().length());
+  }
+
+  @Test
+  public void silenceEndsWithConnectionLostAndAHeartbeatCanReviveIt() {
+    var state = new AgentTaskState();
+    state.identity(1, "run");
+    String client = "a".repeat(32);
+    state.bind(client);
+    var key = new AgentTaskState.Key(1, "run", "session", 1);
+    assertTrue(state.event(client, key, 1, "tool", "", 5_000));
+    assertEquals(15_000, AgentTaskState.STALE_UNKNOWN_MS);
+    assertEquals(60_000, AgentTaskState.STALE_END_MS);
+    var unknown = state.snapshot(20_001).get(0);
+    assertEquals("unknown", unknown.phase());
+    assertEquals("connection-lost", unknown.reason());
+    assertTrue(unknown.active());
+    var ended = state.snapshot(65_500).get(0);
+    assertEquals("ended", ended.phase());
+    assertEquals("connection-lost", ended.reason());
+    assertFalse(ended.active());
+    // 瞬时断连不是真实终态：同一轮的心跳可以恢复，胶囊重新出现。
+    assertTrue(state.event(client, key, 2, "reply", "", 65_600));
+    var revived = state.snapshot(65_600).get(0);
+    assertTrue(revived.active());
+    assertEquals("reply", revived.phase());
+    assertTrue(revived.reason().isEmpty());
+    // 真实终态仍然不可复活。
+    assertTrue(state.event(client, key, 3, "ended", "completed", 65_700));
+    assertFalse(state.snapshot(65_700).get(0).active());
+    assertFalse(state.event(client, key, 4, "running", "", 65_800));
+  }
+
+  @Test
+  public void reporterTakeoverKeepsTheRowRevivableButRealTerminalDoesNot() {
+    var state = new AgentTaskState();
+    state.identity(1, "run");
+    var key = new AgentTaskState.Key(1, "run", "session", 1);
+    assertTrue(state.bind("b".repeat(32)));
+    assertTrue(state.event("b".repeat(32), key, 1, "running", "", 0));
+    assertFalse(state.bind("c".repeat(32), 10_000));
+    assertTrue(state.bind("c".repeat(32), 16_000));
+    var taken = state.snapshot(16_000).get(0);
+    assertFalse(taken.active());
+    assertEquals("unknown", taken.phase());
+    assertEquals("reporter-changed", taken.reason());
+    assertTrue(state.event("c".repeat(32), key, 2, "tool", "", 16_001));
+    assertTrue(state.snapshot(16_001).get(0).active());
+    assertTrue(state.event("c".repeat(32), key, 3, "ended", "max-tokens", 16_002));
+    assertFalse(state.snapshot(16_002).get(0).active());
+    assertEquals("max-tokens", state.snapshot(16_002).get(0).reason());
+    assertFalse(state.event("c".repeat(32), key, 4, "running", "", 16_003));
+  }
+
+  @Test
+  public void questionPayloadIsBoundedAndClearedByNonWaitingFacts() {
+    var state = new AgentTaskState();
+    state.identity(1, "run");
+    String client = "a".repeat(32);
+    state.bind(client);
+    var key = new AgentTaskState.Key(1, "run", "session", 1);
+    String question = "{\"version\":1,\"questions\":[{\"id\":\"q1\"}]}";
+    assertTrue(state.event(client, key, 1, "waiting", "", "问题", "标题", question, 100));
+    assertEquals(question, state.snapshot(100).get(0).question());
+    assertTrue(state.event(client, key, 2, "running", "", "", "", "", 200));
+    assertEquals("", state.snapshot(200).get(0).question());
+    String longQuestion = "x".repeat(3000);
+    assertTrue(state.event(client, key, 3, "waiting", "", "", "", longQuestion, 300));
+    assertEquals(2000, state.snapshot(300).get(0).question().length());
+  }
 }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 左栏进度卡（run）。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/shell_accent_soft">
+    <item android:id="@android:id/mask"><shape android:shape="rectangle"><solid android:color="#FFFFFFFF" /><corners android:radius="@dimen/onb_radius_capcard" /></shape></item>
+    <item><shape android:shape="rectangle"><solid android:color="@color/shell_bg" /><corners android:radius="@dimen/onb_radius_capcard" /><stroke android:width="1dp" android:color="@color/shell_line_strong" /></shape></item>
+</ripple>

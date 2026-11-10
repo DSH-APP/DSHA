@@ -11,6 +11,9 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Parcel;
+import com.deepseekharness.app.util.ShizukuManagers;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import rikka.shizuku.Shizuku;
 
@@ -24,11 +27,44 @@ public final class ShizukuManagerCompat {
   private ShizukuManagerCompat() {}
 
   public static ApplicationInfo manager(Context context) {
+    ShizukuManagers.Selection selected = select(context);
+    if (selected.kind() == ShizukuManagers.Kind.NONE) return null;
+    return applicationInfo(context.getPackageManager(), selected.packageName());
+  }
+
+  /** 识别到的管理器种类；未安装任何管理器时为 NONE。 */
+  public static ShizukuManagers.Kind kind(Context context) {
+    return select(context).kind();
+  }
+
+  /** Stellar 不声明 API_V23，也没有导出的 rikka REQUEST_BINDER；文案与入口据此区分。 */
+  public static boolean isStellar(Context context) {
+    return kind(context) == ShizukuManagers.Kind.STELLAR;
+  }
+
+  /** 权限声明者优先，其次按固定白名单顺序取第一个已安装的兼容管理器。 */
+  private static ShizukuManagers.Selection select(Context context) {
     PackageManager pm = context.getPackageManager();
+    Set<String> installed = new LinkedHashSet<>();
+    for (String packageName : ShizukuManagers.knownPackages())
+      if (applicationInfo(pm, packageName) != null) installed.add(packageName);
+    return ShizukuManagers.choose(protocolOwner(pm), installed);
+  }
+
+  /** 权限声明者必须在包可见性内可解析；查不到时交给兼容白名单兜底，不把协议管理器误判成未安装。 */
+  private static String protocolOwner(PackageManager pm) {
     try {
-      // 权限声明者是协议管理器，名称变化时无需不断追加包名白名单。
       String owner = pm.getPermissionInfo(PERMISSION, 0).packageName;
-      return pm.getApplicationInfo(owner, 0);
+      return applicationInfo(pm, owner) == null ? null : owner;
+    } catch (PackageManager.NameNotFoundException | RuntimeException error) {
+      return null;
+    }
+  }
+
+  private static ApplicationInfo applicationInfo(PackageManager pm, String packageName) {
+    if (packageName == null || packageName.isEmpty()) return null;
+    try {
+      return pm.getApplicationInfo(packageName, 0);
     } catch (PackageManager.NameNotFoundException | RuntimeException error) {
       return null;
     }
@@ -60,6 +96,14 @@ public final class ShizukuManagerCompat {
       completed.run();
       return;
     }
+    // Stellar 的 REQUEST_BINDER 是 receiver（roro.stellar.intent.action.REQUEST_BINDER），协议未核实：
+    // 安全上不向它发送任何 broadcast / 自定义协议，只打开 Stellar 让用户检查服务与「Shizuku 兼容层」。
+    // Stellar 服务端会在进程进入前台时经 <包名>.shizuku Provider 主动推送兼容 Binder，这里不需要索取。
+    if (ShizukuManagers.isStellar(info.packageName)) {
+      openManager(activity);
+      completed.run();
+      return;
+    }
     Intent intent = new Intent(REQUEST_BINDER).setPackage(info.packageName);
     android.content.pm.ResolveInfo handler =
         activity.getPackageManager().resolveActivity(intent, 0);
@@ -67,12 +111,8 @@ public final class ShizukuManagerCompat {
         || handler.activityInfo == null
         || !handler.activityInfo.exported
         || handler.activityInfo.applicationInfo.uid != info.uid) {
-      Intent launch = launchIntent(activity);
-      if (launch != null)
-        try {
-          activity.startActivity(launch);
-        } catch (RuntimeException ignored) {
-        }
+      // 找不到导出的标准入口时只能打开管理器本身，不猜测未知协议。
+      openManager(activity);
       completed.run();
       return;
     }
@@ -142,6 +182,16 @@ public final class ShizukuManagerCompat {
       finish.run();
     }
     MAIN.postDelayed(finish, 15000);
+  }
+
+  /** 打开管理器启动页；失败时保持静默，由状态行说明原因，不猜测未知协议。 */
+  private static void openManager(Activity activity) {
+    Intent launch = launchIntent(activity);
+    if (launch != null)
+      try {
+        activity.startActivity(launch);
+      } catch (RuntimeException ignored) {
+      }
   }
 
   // 锁定的 API 12.2.0 / 13.1.5 均使用这一 Parcelable 线协议；仅此适配点接触库内部类型。

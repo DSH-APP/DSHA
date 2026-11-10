@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-host-plugin-inventory/lib/index.js",
-  "sourceSha256": "f8e50fb2e24c92302570a41baa007e409cf4651bed0a65605b0871ba14325d30",
+  "sourceSha256": "4dbacd5d35857b9682a8a4cc46500a7f2594fbb642c0df66d693e0eeeef75a92",
   "patches": [
     {
       "before": "\tlet _list_decorators;",

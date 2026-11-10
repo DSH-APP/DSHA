@@ -86,6 +86,108 @@ class DeleteNoFollowTest(unittest.TestCase):
         self.transaction.recover_all(); self.transaction.recover_all()
         self.assertFalse(self.package.exists())
 
+    def test_delete_receipt_confirms_target_without_full_list(self):
+        execution = self.cli('delete', 'test-plugin')
+        self.assertEqual(0, execution.returncode, execution.stdout + execution.stderr)
+        rows = [json.loads(line.split('PLUGIN_RESULT: ', 1)[1])
+                for line in execution.stdout.splitlines() if line.startswith('PLUGIN_RESULT: ')]
+        self.assertEqual(1, len(rows))
+        self.assertEqual('test-plugin', rows[0]['name'])
+        self.assertIs(True, rows[0]['removed'])
+        self.assertIs(True, rows[0]['deletionVerified'])
+        self.assertNotIn('items', rows[0])
+        self.assertNotIn('test-plugin', json.loads((self.profile / 'package.json').read_text())['dependencies'])
+
+    def test_delete_expected_version_mismatch_preserves_package_and_profile(self):
+        package_before = {
+            path.relative_to(self.package): (path.read_bytes(), path.stat().st_ino)
+            for path in self.package.rglob('*') if path.is_file()
+        }
+        manifest = self.profile / 'package.json'
+        profile_before = manifest.read_bytes(), manifest.stat().st_ino
+        execution = self.cli('delete', 'test-plugin', '2.0.0')
+        self.assertNotEqual(0, execution.returncode, execution.stdout + execution.stderr)
+        self.assertIn('PLUGIN_TARGET_VERSION_CHANGED', execution.stdout + execution.stderr)
+        rows = [json.loads(line.split('PLUGIN_RESULT: ', 1)[1])
+                for line in execution.stdout.splitlines() if line.startswith('PLUGIN_RESULT: ')]
+        self.assertEqual(1, len(rows))
+        self.assertEqual('error', rows[0]['status'])
+        self.assertIn('PLUGIN_TARGET_VERSION_CHANGED', rows[0]['message'])
+        self.assertTrue(self.package.is_dir())
+        self.assertEqual(package_before, {
+            path.relative_to(self.package): (path.read_bytes(), path.stat().st_ino)
+            for path in self.package.rglob('*') if path.is_file()
+        })
+        self.assertEqual(profile_before, (manifest.read_bytes(), manifest.stat().st_ino))
+        self.assertFalse((self.home / 'plugin-install-operations').exists())
+
+    def test_native_versioned_delete_retains_a_plugin_with_missing_patch(self):
+        (self.package / 'cordis.patch.yml').unlink()
+        execution = self.cli('delete', 'test-plugin', '1.0.0')
+        self.assertEqual(0, execution.returncode, execution.stdout + execution.stderr)
+        retained = list((self.home / 'plugin-install-operations/completed').glob('*/delete-link'))
+        self.assertEqual(1, len(retained))
+        self.assertEqual('original owned bytes', (retained[0] / 'index.js').read_text())
+        self.assertFalse(self.package.exists())
+
+    def test_native_versioned_delete_does_not_require_loadable_main_or_cordis_entry(self):
+        manifest = self.package / 'package.json'
+        package = json.loads(manifest.read_text())
+        package.update(main='missing-main.js', cordis={'entry': 'missing-cordis.js'})
+        manifest.write_text(json.dumps(package))
+        execution = self.cli('delete', 'test-plugin', '1.0.0')
+        self.assertEqual(0, execution.returncode, execution.stdout + execution.stderr)
+        self.assertFalse(self.package.exists())
+
+    def test_empty_expected_version_cannot_delete_a_later_valid_version(self):
+        before = (self.profile / 'package.json').read_bytes()
+        execution = self.cli('delete', 'test-plugin', '')
+        self.assertNotEqual(0, execution.returncode, execution.stdout + execution.stderr)
+        self.assertIn('PLUGIN_TARGET_VERSION_CHANGED', execution.stdout + execution.stderr)
+        self.assertTrue(self.package.exists())
+        self.assertEqual(before, (self.profile / 'package.json').read_bytes())
+
+    def test_corrupt_disabled_plugin_stays_visible_and_can_be_retained(self):
+        original = b'{broken package metadata'
+        (self.package / 'package.json').write_bytes(original)
+        (self.profile / 'node_modules/test-plugin.disabled').write_text('')
+        doc = json.loads((self.profile / 'package.json').read_text())
+        doc['dsh']['profile']['bundles'] = []
+        (self.profile / 'package.json').write_text(json.dumps(doc))
+        with patch.object(self.manager, 'result') as result:
+            self.assertEqual(0, self.manager.cmd_list())
+            row = next(row for row in result.call_args.kwargs['items'] if row['name'] == 'test-plugin')
+        self.assertTrue(row['deletable'])
+        self.assertFalse(row['enabled'])
+        self.assertEqual('', row['version'])
+        self.assertTrue(row['metadataError'])
+        execution = self.cli('delete', 'test-plugin', row['version'])
+        self.assertEqual(0, execution.returncode, execution.stdout + execution.stderr)
+        retained = list((self.home / 'plugin-install-operations/completed').glob('*/delete-link/package.json'))
+        self.assertEqual([original], [path.read_bytes() for path in retained])
+
+    def test_disabled_plugin_with_missing_metadata_stays_visible(self):
+        (self.package / 'package.json').unlink()
+        (self.profile / 'node_modules/test-plugin.disabled').write_text('')
+        doc = json.loads((self.profile / 'package.json').read_text())
+        doc['dsh']['profile']['bundles'] = []
+        (self.profile / 'package.json').write_text(json.dumps(doc))
+        with patch.object(self.manager, 'result') as result:
+            self.assertEqual(0, self.manager.cmd_list())
+            row = next(row for row in result.call_args.kwargs['items'] if row['name'] == 'test-plugin')
+        self.assertTrue(row['deletable'])
+        self.assertFalse(row['available'])
+        execution = self.cli('delete', 'test-plugin', row['version'])
+        self.assertEqual(0, execution.returncode, execution.stdout + execution.stderr)
+        self.assertFalse(self.package.exists())
+
+    def test_delete_readback_rejects_unconfirmed_load_entry(self):
+        with patch.object(self.transaction, 'apply_delete', return_value=None):
+            with self.assertRaisesRegex(ValueError, '删除结果未确认'):
+                self.manager.cmd_delete('test-plugin')
+        self.assertTrue(self.package.is_dir())
+        self.assertIn('test-plugin', json.loads((self.profile / 'package.json').read_text())['dependencies'])
+
     def test_legacy_unmarked_delete_journal_recovers_with_original_algorithm(self):
         work, plan = self.prepare(legacy=True)
         os.replace(self.package, work / 'delete-link')
@@ -165,9 +267,10 @@ class DeleteNoFollowTest(unittest.TestCase):
                 scanner = self.scanner(); wanted = scanner.state(str(source))
                 actual_library = ctypes.CDLL
                 library = actual_library(None, use_errno=True)
-                actual_rename = library.renameat2
-                actual_rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
-                actual_rename.restype = ctypes.c_int
+                # 生产代码直接发 renameat2 系统调用（proroot 的 libc 符号忽略目录描述符）。
+                actual_rename = library.syscall
+                actual_rename.argtypes = [ctypes.c_long, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+                actual_rename.restype = ctypes.c_long
                 class Rename:
                     def __call__(self, *args):
                         if replace_parent:
@@ -178,7 +281,7 @@ class DeleteNoFollowTest(unittest.TestCase):
                             source.mkdir(); (source / 'owned').write_text('selected object')
                         return actual_rename(*args)
                 class Library:
-                    renameat2 = Rename()
+                    syscall = Rename()
                 self_home, store = self.home, self.store
                 with patch.object(ctypes, 'CDLL', return_value=Library()), self.assertRaises((ValueError, OSError)):
                     scanner.move(str(source), str(destination), wanted)
@@ -186,6 +289,39 @@ class DeleteNoFollowTest(unittest.TestCase):
                 if replace_parent:
                     self.home.unlink(); self.home.with_name('original-dsh-parent').rename(self.home)
                 self.assertTrue(destination.exists())
+
+    @unittest.skipIf(os.name == 'nt', 'Linux descriptor-relative renameat2 syscall')
+    def test_retained_move_uses_descriptor_syscall_not_libc_renameat2(self):
+        # proroot v1.2.8 的 libc renameat2 忽略目录描述符、按 cwd 解析名字：返回 ENOENT，
+        # 或把 cwd 下同名对象改名。生产路径必须绕开该符号，且仍拒绝覆盖已有目标。
+        rename = self.transaction.object_state.__globals__['rename_noreplace']
+        real = ctypes.CDLL(None, use_errno=True)
+        class Library:
+            syscall = real.syscall
+            @property
+            def renameat2(self):
+                raise AssertionError('libc renameat2 must not be used')
+        decoy = self.root / 'cwd'; decoy.mkdir(); (decoy / 'object').write_text('cwd decoy')
+        source_dir, target_dir = self.root / 'source', self.root / 'target'
+        source_dir.mkdir(); target_dir.mkdir(); (source_dir / 'object').write_text('selected')
+        descriptors = [os.open(str(path), os.O_RDONLY | os.O_DIRECTORY) for path in (source_dir, target_dir)]
+        previous = os.getcwd(); os.chdir(str(decoy))
+        try:
+            with patch.object(ctypes, 'CDLL', return_value=Library()):
+                rename(descriptors[0], 'object', descriptors[1], 'retained')
+                (source_dir / 'object').write_text('second')
+                with self.assertRaises(FileExistsError):
+                    rename(descriptors[0], 'object', descriptors[1], 'retained')
+                with self.assertRaisesRegex(ValueError, '名称无效'):
+                    rename(descriptors[0], '../object', descriptors[1], 'other')
+        finally:
+            os.chdir(previous)
+            for descriptor in descriptors:
+                os.close(descriptor)
+        self.assertEqual((target_dir / 'retained').read_text(), 'selected')
+        self.assertEqual((source_dir / 'object').read_text(), 'second')
+        self.assertEqual(sorted(p.name for p in decoy.iterdir()), ['object'])
+        self.assertEqual((decoy / 'object').read_text(), 'cwd decoy')
 
     def test_cancellation_is_propagated_before_any_move(self):
         class Cancelled(Exception):

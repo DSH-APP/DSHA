@@ -1,0 +1,12 @@
+{
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-tools/lib/pipeline.js",
+  "packageVersion": "0.2.2-rc.1",
+  "canonicalSourceSha256": "f6c850cefce30831c4c5f160e831856b105935331bacd1ae0823129001614bc6",
+  "patches": [
+    {
+      "before": "\tconst settlement = new BatchSettlement(input);\n\ttry {\n\t\tconst planned = toolCalls.map((block) => ({",
+      "after": "\t// DSHA_TOOL_DISPATCH_IDENTITY_V2: preflight the whole batch before the first session event or side effect.\n\tif (toolCalls.some(block => !(typeof block.id === \"string\" && block.id.trim() !== \"\" && typeof block.name === \"string\" && block.name.trim() !== \"\"))) throw new HarnessError(\"DSHA_INVALID_TOOL_CALL: missing name/id; this step was not dispatched. No automatic replay.\", \"INVALID_RESPONSE\");\n\tconst settlement = new BatchSettlement(input);\n\ttry {\n\t\tconst planned = toolCalls.map((block) => ({"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "schema": 2,
+  "generatedBy": "tools/prepare-external-tools.py",
+  "lockSha256": "862d21d1dd81d8b3e8ff84d6521648db195120429663ac54f69ad9799644d09b",
+  "distribution": "Ubuntu 24.04 noble",
+  "packages": {
+    "adb": "1:34.0.4-1build3",
+    "fastboot": "1:34.0.4-1build3",
+    "libc6": "2.39-0ubuntu8.9"
+  },
+  "files": {
+    "usr/bin/adb": "9c4c531f3f4bd9a9edf608b99803e65fb111e4198743345c76ae9a416035674b",
+    "usr/bin/fastboot": "e09bad894f9153621b6529763c9dedb0ae1b38bdde537dfa574e57af7942bc87",
+    "usr/lib/ld-linux-aarch64.so.1": "390027e5f45f236bd1838bc54bf464c5ff01d260ab9f8b415ea8276641bce505"
+  },
+  "targets": {
+    "usr/bin/adb": "usr/lib/android-sdk/platform-tools/adb",
+    "usr/bin/fastboot": "usr/lib/android-sdk/platform-tools/fastboot",
+    "usr/lib/ld-linux-aarch64.so.1": "usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1"
+  },
+  "install": "apt-get install --allow-downgrades adb=1:34.0.4-1build3 fastboot=1:34.0.4-1build3 libc6=2.39-0ubuntu8.9"
+}

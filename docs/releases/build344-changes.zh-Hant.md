@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.5-20261108.1300-dsh0.2.2-rc.1 / build344
+
+- proot 執行根自鏡像綁定（T123）：`baseArgv()` 增加 `-b <canonical rootfs>:<canonical rootfs>`，修 `/proc/self/maps` 宿主路徑回讀（執行根以 `/data/user/0` 別名傳入、maps 卻是 `/data/data` 時 guest 會誤讀 `<rootfs>/data/data/...` 並 ENOENT）；canonical 由 `getCanonicalFile()` 解析、失敗回退傳入路徑；proroot v1.2.8 vendor 已綁，App 不重複綁定（升級需複核）。落在 launcher 源，受管執行環境 descriptor 由 `2ae3f266` 重算為 **`f65796a2`**；固定輸入未重建、未新增受管執行環境。新增 `ContainerRuntimeSelfMirrorTest`。**proot 真機核對未做**。
+- 左滑動作 `SwipeAction`（T122）：45% 門檻、超過動作列寬度 30% 阻尼、LTR 左 / RTL 右由純邏輯鏡像；滑動只露動作，破壞性動作只呼叫既有確認彈窗（二次確認），無回呼不可點，同屏只開一列，讀屏提供「顯示操作」。底部抽屜 `BottomSheetCard`：拖曳手柄 / 點擊 / 下拖 96dp 關閉、返回鍵先收、短屏 <480dp 全高正文捲動頁腳常駐、遮罩只關閉；系統關動畫直接落終態。接入備份記錄、外掛清單與外掛動作 / 排序抽屜，新增十語文案 11 條與 hygiene 位元組釘。
+- 版本與範圍：版本碼 344（基於已發佈 build343 / `4ba75ddd`）；DSHA `0.2.1-rc.5` / 內建 DSH `0.2.2-rc.1`。本版含一處受管執行環境更新（runtimeId `f65796a2…`），不改其餘程式行為；fixed-inputs 凍結（20261105e）；內建 `dsh-web-mobile` 不變。
+- **未驗證／未驗收**：真機手勢、短屏、RTL、TalkBack 與 proot 真機核對未做（切 proot 會重啟 Web 並中斷工作階段）。**build344 尚未真機驗收**（343→344 覆蓋、資料完好、READY 與上述行為待使用者）；build338–343 真機驗收仍待使用者。驗證範圍： contracts 整組、descriptor `f65796a2`、format 1625、i18n、hygiene、changelog、doc-links、全量單測（10 例 aarch64 基線）與 lint；正式簽章 assemble 本機不執行。

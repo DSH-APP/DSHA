@@ -5,6 +5,7 @@ import com.deepseekharness.app.backup.AndroidBackupFileSystem;
 import com.deepseekharness.app.data.KeyVault;
 import com.deepseekharness.app.util.DshAuthUrl;
 import com.deepseekharness.app.util.WebSessionProof;
+import com.deepseekharness.app.util.WebSessionStorage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +22,9 @@ public final class StoredWebSession {
       boolean compatible,
       String taskToken) {}
 
+  // 多个控制器门面共享同一文件；比较退休与新记录写入必须串行。
+  private static final Object RECORD_LOCK = new Object();
+
   private final Context context;
   private final AndroidBackupFileSystem fs = new AndroidBackupFileSystem();
   private final KeyVault vault;
@@ -30,11 +34,11 @@ public final class StoredWebSession {
     vault = new KeyVault(context, "dsha_web_session");
   }
 
-  private File home() throws IOException {
+  private WebSessionStorage.Home home() throws IOException {
     try {
       File directory = context.getNoBackupFilesDir();
       if (directory == null) throw new IOException("WEB_SESSION_PRIVATE_DIRECTORY");
-      return directory;
+      return WebSessionStorage.bind(fs, new File(context.getApplicationInfo().dataDir), directory);
     } catch (RuntimeException unavailable) {
       throw new IOException("WEB_SESSION_PRIVATE_DIRECTORY", unavailable);
     }
@@ -54,12 +58,19 @@ public final class StoredWebSession {
   }
 
   public boolean exists() throws IOException {
-    return !fs.stat(fs.child(home(), "web-session.enc")).type.equals("MISSING");
+    var home = home();
+    boolean present = !fs.stat(fs.child(home.directory, "web-session.enc")).type.equals("MISSING");
+    home.verify(fs);
+    return present;
   }
 
   public Record read() throws IOException {
-    File file = fs.child(home(), "web-session.enc");
-    if (fs.stat(file).type.equals("MISSING")) return null;
+    var home = home();
+    File file = fs.child(home.directory, "web-session.enc");
+    if (fs.stat(file).type.equals("MISSING")) {
+      home.verify(fs);
+      return null;
+    }
     try {
       String encrypted = new String(fs.small(file, 32768), StandardCharsets.UTF_8);
       String plain = vault.decryptChecked(encrypted); // 读取失败绝不新建或替换旧密钥。
@@ -91,14 +102,17 @@ public final class StoredWebSession {
       if (DshAuthUrl.parse(url) == null
           || !token.matches("[a-f0-9]{64}")
           || !token.equals(p.nonce())) throw new IOException("WEB_SESSION_CREDENTIAL");
-      return new Record(
-          p,
-          url,
-          j.getString("app"),
-          j.getString("root"),
-          j.getString("descriptor"),
-          j.getBoolean("compatible"),
-          token);
+      var record =
+          new Record(
+              p,
+              url,
+              j.getString("app"),
+              j.getString("root"),
+              j.getString("descriptor"),
+              j.getBoolean("compatible"),
+              token);
+      home.verify(fs);
+      return record;
     } catch (IOException failure) {
       throw failure;
     } catch (Exception invalid) {
@@ -107,8 +121,14 @@ public final class StoredWebSession {
   }
 
   public void write(Record record) throws IOException {
+    synchronized (RECORD_LOCK) {
+      writeLocked(record);
+    }
+  }
+
+  private void writeLocked(Record record) throws IOException {
     try {
-      File home = home();
+      var home = home();
       var p = record.proof();
       JSONObject j =
           new JSONObject()
@@ -132,8 +152,10 @@ public final class StoredWebSession {
       String encrypted = vault.encrypt(j.toString());
       if (encrypted.isEmpty() || !j.toString().equals(vault.decryptChecked(encrypted)))
         throw new IOException("WEB_SESSION_ENCRYPTION_UNAVAILABLE");
-      fs.atomic(home, "web-session.enc", encrypted.getBytes(StandardCharsets.UTF_8));
-      fs.syncDirectory(home);
+      home.verify(fs);
+      fs.atomic(home.directory, "web-session.enc", encrypted.getBytes(StandardCharsets.UTF_8));
+      fs.syncDirectory(home.directory);
+      home.verify(fs);
     } catch (IOException failure) {
       throw failure;
     } catch (Exception invalid) {
@@ -143,10 +165,29 @@ public final class StoredWebSession {
 
   /** 调用方必须持有对应停止已完成或旧实例已退休的新启动围栏。 */
   public void clear() throws IOException {
-    File home = home();
-    File file = fs.child(home, "web-session.enc");
-    if (fs.stat(file).type.equals("MISSING")) return;
+    synchronized (RECORD_LOCK) {
+      clearLocked();
+    }
+  }
+
+  /** 仅在原 Web 与启动器均已确认退出后调用；新记录不能被旧回调删除。 */
+  public boolean retire(Record expected) throws IOException {
+    synchronized (RECORD_LOCK) {
+      if (expected == null || !expected.equals(read())) return false;
+      clearLocked();
+      return true;
+    }
+  }
+
+  private void clearLocked() throws IOException {
+    var home = home();
+    File file = fs.child(home.directory, "web-session.enc");
+    if (fs.stat(file).type.equals("MISSING")) {
+      home.verify(fs);
+      return;
+    }
     fs.delete(file);
-    fs.syncDirectory(home);
+    fs.syncDirectory(home.directory);
+    home.verify(fs);
   }
 }

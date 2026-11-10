@@ -11,7 +11,7 @@ const require = createRequire(import.meta.url);
 const instance = randomBytes(16).toString('hex'), token = randomBytes(32).toString('hex');
 const installation = [instance.slice(0, 8), instance.slice(8, 12), instance.slice(12, 16), instance.slice(16, 20), instance.slice(20)].join('-');
 const run = randomUUID();
-let stopped = false, bypass = false, calls = 0;
+let stopped = false, bypass = false, calls = 0, heldReply;
 const broker = createServer(async (request, response) => {
   calls++;
   assert.equal(request.method, 'POST');
@@ -19,6 +19,7 @@ const broker = createServer(async (request, response) => {
   assert.equal(request.headers.authorization, 'Bearer ' + token);
   let body = ''; for await (const part of request) body += part;
   assert.equal(body, '{}');
+  if (heldReply) { heldReply.entered.resolve(); await heldReply.release.promise; }
   response.writeHead(200, { 'Content-Type': 'application/json' });
   response.end(JSON.stringify({ schema: 1, available: true, globalAllow: bypass, revision: 0,
     installationId: installation, bridgeRunId: run, webGeneration: 7,
@@ -41,12 +42,43 @@ const sdk = exports.exports;
 const query = async () => {
   const connection = sdk.readConnection();
   const response = await sdk.bridgeFetch('/device/consent', { expectedConnectionGeneration: connection.generation,
-    signal: AbortSignal.timeout(2000) });
+    expectedConnectionPort: connection.port, signal: AbortSignal.timeout(2000) });
   return JSON.parse((await response.json()).result);
 };
 try {
+  const production = sdk.readConnection();
+  assert.equal(production.applicationId, 'io.github.sunsetrne.dsha');
+  env.DSHA_BRIDGE_APPLICATION_ID = 'io.github.sunsetrne.dsha.test';
+  assert.equal(sdk.readConnection().applicationId, 'io.github.sunsetrne.dsha.test');
+  assert.equal(sdk.readConnection().generation, production.generation);
+  assert.equal(calls, 0, 'application identity selection does not dispatch a request');
   assert.equal((await query()).globalAllow, false);
   assert.equal((await query()).bridgeRunId, run);
+  const originalPort = env.DSHA_RECOVERY_BROKER_PORT;
+  const changedPort = String(Number(originalPort) === 65535 ? 65534 : Number(originalPort) + 1);
+  const connection = sdk.readConnection();
+  assert.equal(connection.port, Number(originalPort));
+  const beforePortRejections = calls;
+  await assert.rejects(sdk.bridgeFetch('/device/consent', {
+    expectedConnectionGeneration: connection.generation, expectedConnectionPort: Number(changedPort),
+  }), /CHANGED/);
+  env.DSHA_RECOVERY_BROKER_PORT = changedPort;
+  try {
+    assert.notEqual(sdk.readConnection().generation, connection.generation);
+    await assert.rejects(sdk.bridgeFetch('/device/consent', {
+      expectedConnectionGeneration: connection.generation, expectedConnectionPort: connection.port,
+    }), /CHANGED/);
+    await assert.rejects(sdk.bridgeFetch('/device/consent', { expectedConnectionGeneration: connection.generation }), /CHANGED/);
+    assert.equal(calls, beforePortRejections, 'stale or mismatched port must be rejected before dispatch');
+  } finally { env.DSHA_RECOVERY_BROKER_PORT = originalPort; }
+  heldReply = { entered: Promise.withResolvers(), release: Promise.withResolvers() };
+  const pending = query();
+  const rejected = assert.rejects(pending, /CHANGED/);
+  await heldReply.entered.promise;
+  env.DSHA_RECOVERY_BROKER_PORT = changedPort;
+  try { heldReply.release.resolve(); await rejected; }
+  finally { env.DSHA_RECOVERY_BROKER_PORT = originalPort; heldReply = undefined; }
+  assert.equal(calls, beforePortRejections + 1, 'in-flight port change must not replay the query');
   await assert.rejects(sdk.bridgeFetch('/app/execute', {}), /QUERY_ONLY/);
   await assert.rejects(sdk.bridgeFetch('/device/consent', { expectedConnectionGeneration: 'old' }), /CHANGED/);
   bypass = true; await assert.rejects(query(), /REPLY/); bypass = false;

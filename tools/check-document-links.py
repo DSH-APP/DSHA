@@ -32,6 +32,8 @@ CURRENT = (
     "docs/emergency-recovery.md", "docs/terminal.md", "docs/picture-in-picture.md",
     "docs/i18n.md", "docs/overlay-and-notifications.md", "docs/browser-engines.md",
     "docs/bridge-and-files.md", "docs/web-file-sharing.md", "docs/security-model.md",
+    "docs/fixed-build-inputs.md", "docs/ci-release.md", "docs/i18n-length-policy.md",
+    "docs/mod-identity-and-signing.md",
     "docs/security-model.en.md", "docs/engineering-standard.md", "docs/module-map.md",
     "docs/source-provenance.md", "docs/download-verification.md", "docs/download-verification.en.md",
     "docs/接手指南.md", "docs/agents/domain.md", "docs/agents/issue-tracker.md",
@@ -66,13 +68,13 @@ WINDOWS_PATH = re.compile(r'^[A-Za-z]:[/\\]')
 # source path and literal target. Do not generalize this to vendor/history trees.
 UPSTREAM_SOURCE_RELATIVE = {
     "app/src/main/assets/builtin-plugins/dsh-web-mobile/README.md": {
-        "sha256": "852f84c7a58695bfca8730e003155c2a061d58e31f648e88d10e0528499b63ab",
+        "sha256": "f6b8cf532640b096e07ceee33061b3ee63eff9d228369d36de5e98a278c14b93",
         "targets": {
-            "assets/banner.png": "https://github.com/mexiaosqwq/dsh-web-mobile/blob/10e58ce0c4ed424c7fbd9c91d48db06c6061b4e4/assets/banner.png",
-            "assets/drawer.png": "https://github.com/mexiaosqwq/dsh-web-mobile/blob/10e58ce0c4ed424c7fbd9c91d48db06c6061b4e4/assets/drawer.png",
-            "assets/hero.png": "https://github.com/mexiaosqwq/dsh-web-mobile/blob/10e58ce0c4ed424c7fbd9c91d48db06c6061b4e4/assets/hero.png",
-            "assets/settings.png": "https://github.com/mexiaosqwq/dsh-web-mobile/blob/10e58ce0c4ed424c7fbd9c91d48db06c6061b4e4/assets/settings.png",
-            "AGENTS.md": "https://github.com/mexiaosqwq/dsh-web-mobile/blob/10e58ce0c4ed424c7fbd9c91d48db06c6061b4e4/AGENTS.md",
+            "assets/banner.png": "https://github.com/mexiaosqwq/dsh-web-mobile/blob/646fe837440f9939228bdba0024d407eaac01128/assets/banner.png",
+            "assets/drawer.png": "https://github.com/mexiaosqwq/dsh-web-mobile/blob/646fe837440f9939228bdba0024d407eaac01128/assets/drawer.png",
+            "assets/hero.png": "https://github.com/mexiaosqwq/dsh-web-mobile/blob/646fe837440f9939228bdba0024d407eaac01128/assets/hero.png",
+            "assets/settings.png": "https://github.com/mexiaosqwq/dsh-web-mobile/blob/646fe837440f9939228bdba0024d407eaac01128/assets/settings.png",
+            "AGENTS.md": "https://github.com/mexiaosqwq/dsh-web-mobile/blob/646fe837440f9939228bdba0024d407eaac01128/AGENTS.md",
         },
     },
     "tools/termux-jni/LICENSE.upstream.md": {

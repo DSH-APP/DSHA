@@ -11,6 +11,7 @@ try {
     window.DshaFiles = {postMessage: text => requests.push(JSON.parse(text))};
   });
   await page.addScriptTag({content:fs.readFileSync('app/src/main/assets/web-integration/files.js','utf8')});
+  await page.evaluate(() => __dshaFilesBind({nonce:'fixture-document', generation:1, instance:'fixture-runtime'}));
   await page.addScriptTag({content:fs.readFileSync('app/src/main/assets/web-integration/blob.js','utf8')});
   const result = await page.evaluate(async () => {
     const bytes = new Uint8Array(50 * 1024);
@@ -30,14 +31,17 @@ try {
     URL.revokeObjectURL(original);
     if(!save)throw Error('anchor was not intercepted');
     const transfer = await new Promise((resolve,reject)=>{
-      const ports = new MessageChannel(), chunks=[];let sequence=0;
+      const ports = new MessageChannel(), chunks=[];let sequence=0, awaitingAck=false;
       const timeout=setTimeout(()=>reject(Error('blob timeout')),2000);
       ports.port1.onmessage = event => {
         const value=JSON.parse(event.data);
         if(value.type==='chunk') {
+          if(awaitingAck)return reject(Error('Blob source ignored native backpressure'));
+          if(atob(value.data).length>24576)return reject(Error('Blob chunk exceeded the bounded frame'));
           if(value.sequence!==sequence++)return reject(Error('sequence'));
           chunks.push(...Array.from(atob(value.data),ch=>ch.charCodeAt(0)));
-          ports.port1.postMessage(JSON.stringify({type:'ack'}));
+          awaitingAck=true;
+          setTimeout(()=>{awaitingAck=false;ports.port1.postMessage(JSON.stringify({type:'ack'}));},5);
         } else if(value.type==='done') {
           clearTimeout(timeout);ports.port1.close();resolve({bytes:value.bytes,chunks});
         } else if(value.type==='error')reject(Error(value.message));

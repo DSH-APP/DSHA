@@ -51,8 +51,12 @@ export function readBundleRev(): string | null {
 }
 export function installDebugBadge(ctx: ClientContext): void {
   ctx.effect(() => {
+    // 也认 hash：带 token 的地址会先 303 跳到 `/` 鉴权，跳转会把 `?` 后面的参数
+    // 全部丢掉（2026-11-06 实测：`/?token=…&mobile-nav-debug=1` → `301/303` →
+    // `http://127.0.0.1:41333/`）。`#` 后面的片段在跳转中会保留，所以
+    // `/?token=…#mobile-nav-debug=1` 才是这个环境里唯一能活到页面的写法。
     const params = new URLSearchParams(location.search)
-    if (!params.has('mobile-nav-debug')) return () => {}
+    if (!params.has('mobile-nav-debug') && !location.hash.includes('mobile-nav-debug')) return () => {}
     const errors: string[] = []
     const onError = (event: ErrorEvent) => errors.push(`ERR ${event.message.slice(0, 120)}`)
     const onRejection = (event: PromiseRejectionEvent) => errors.push(`REJ ${String(event.reason).slice(0, 120)}`)
@@ -86,13 +90,23 @@ export function installDebugBadge(ctx: ClientContext): void {
         const b = el.getBoundingClientRect()
         return `${el.getAttribute('data-sidebar-right-panel')} pad ${getComputedStyle(el).paddingTop} rect ${Math.round(b.top)},${Math.round(b.left)} ${Math.round(b.width)}x${Math.round(b.height)}`
       }
+      /** 浏览器真正给到的 safe-area-inset-top（env() 读不到，只能量一个探针）。 */
+      const envInset = (): string => {
+        const probe = document.createElement('div')
+        probe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top,0px);pointer-events:none;visibility:hidden'
+        document.body.appendChild(probe)
+        const h = probe.getBoundingClientRect().height
+        probe.remove()
+        return `${Math.round(h)}px`
+      }
       const rev = readBundleRev()
       return [
         `build rev ${rev ?? '?'} (diag chips)`,
         `URL ${location.pathname}${location.search}`,
         `W ${innerWidth} x ${innerHeight} dpr ${devicePixelRatio}`,
         `mq≤1023 ${matchMedia(MOBILE_QUERY).matches}  mq≥1024 ${matchMedia(DESKTOP_QUERY).matches}`,
-        `safeTop framePad ${frame === null ? 'n/a' : getComputedStyle(frame).paddingTop}  rightPanel ${rightPanel()}`,
+        `safeTop ${frame === null ? 'n/a' : getComputedStyle(frame).getPropertyValue('--dsha-safe-area-inset-top').trim() || 'unset'}  framePad ${frame === null ? 'n/a' : getComputedStyle(frame).paddingTop}  rightPanel ${rightPanel()}`,
+        `env(inset) ${envInset()}  vvOffsetTop ${Math.round(window.visualViewport?.offsetTop ?? -1)}  standalone ${matchMedia('(display-mode: standalone)').matches}  dsha ${typeof (window as { DSHA?: unknown }).DSHA !== 'undefined'}`,
         `css ${q('style[data-plugin-css*="mobile"]')}  frame ${!!frame}`,
         `previewCol ${vis('[data-aionui-preview-col]')}  explorerCol ${vis('[data-aionui-explorer-col]')}`,
         `previewOpen ${frame?.hasAttribute('data-aionui-preview-open') ?? '?'}  explorerOpen ${frame?.hasAttribute('data-aionui-explorer-open') ?? '?'}  previewFull ${frame?.hasAttribute('data-mobile-preview-full') ?? '?'}`,

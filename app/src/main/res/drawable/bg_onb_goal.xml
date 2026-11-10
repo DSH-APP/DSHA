@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 用途多选项：选中态强调色软底与描边，未选中细描边；按压涟漪。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/shell_accent_soft">
+    <item android:id="@android:id/mask"><shape android:shape="rectangle"><solid android:color="#FFFFFFFF" /><corners android:radius="@dimen/onb_radius_card" /></shape></item>
+    <item><selector>
+        <item android:state_checked="true"><shape android:shape="rectangle"><solid android:color="@color/shell_accent_soft" /><corners android:radius="@dimen/onb_radius_card" /><stroke android:width="1.5dp" android:color="@color/shell_accent" /></shape></item>
+        <item android:state_selected="true"><shape android:shape="rectangle"><solid android:color="@color/shell_accent_soft" /><corners android:radius="@dimen/onb_radius_card" /><stroke android:width="1.5dp" android:color="@color/shell_accent" /></shape></item>
+        <item><shape android:shape="rectangle"><solid android:color="@color/shell_surface" /><corners android:radius="@dimen/onb_radius_card" /><stroke android:width="1.5dp" android:color="@color/shell_line_strong" /></shape></item>
+    </selector></item>
+</ripple>

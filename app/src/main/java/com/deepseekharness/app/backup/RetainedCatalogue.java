@@ -260,8 +260,10 @@ public final class RetainedCatalogue {
     // directory merely to remove the two reserved names for display.
     List<String> names = fs.list(parent);
     for (String id : names) {
-      if (id.equals(HostOperationArchive.COMPLETED) || id.equals(".completed-proof-v1.json"))
-        continue;
+      // 历史目录与旧版插件完成证明残留是本项目自有缓存，不作为“无法识别”的保留记录展示。
+      if (id.equals(HostOperationArchive.COMPLETED)
+          || com.deepseekharness.app.util.PluginJournalNames.kind(id)
+              == com.deepseekharness.app.util.PluginJournalNames.Kind.LEGACY_PROOF) continue;
       if (!uuid(id)) {
         entries.add(
             new Entry(

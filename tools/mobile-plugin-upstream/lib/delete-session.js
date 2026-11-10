@@ -1,24 +1,21 @@
 /**
  * dsh-web-mobile, host half: session deletion.
  *
- * Port of community-fork wzxmt-zhc v2.7.0 src/delete-session.ts, adapted to
- * the mainline baselines (DSH 0.1.1-rc.2 / 0.1.2-rc.1) while staying forward
- * compatible with the unpublished 0.1.3-alpha.1 handle-based persistence.
- * Three deliberate deltas from the fork original, each verified against the
- * installed 0.1.1-rc.2 host (2026-09-06):
+ * Port of community-fork wzxmt-zhc v2.7.0 src/delete-session.ts. Host faces
+ * it relies on (supported hosts >=0.2.2-rc.1, re-verified 2026-11-05 against
+ * the installed 0.2.2-rc.1 packages):
  *
- * 1. `persistence.list()` is generation-dependent: 0.1.2 and earlier return
- *    flat `SessionHeader[]` (the header IS the entry), 0.1.3 returns
- *    handle/snapshot entries that carry `.header`. `entryHeader()` accepts
- *    both shapes.
- * 2. Live-session teardown needs the 0.1.3 AgentHandle face (callable
- *    `cancel` + `whenIdle`). The 0.1.1/0.1.2 `AgentRegistry.get()` returns a
- *    plain Agent face without them, so on those hosts a live session is
- *    refused with 409 session-busy instead of deleted under a still
- *    registered live agent.
- * 3. Workspace accounting is optional per workspace: 0.1.1-rc.2 Workspace
- *    carries no `detachSession`, so the call is optional-chained and a
- *    finished deletion never fails on missing accounting.
+ * 1. `persistence.list()` returns snapshot entries that carry `.header`
+ *    (dsh-session-persistence-jsonl `list()`); the flat `SessionHeader[]`
+ *    shape of 0.1.1/0.1.2 hosts is no longer accepted.
+ * 2. Live-session teardown uses the agent's disposal face (callable `cancel`
+ *    + `whenIdle`, the agent-loop agent that `AgentRegistry.get()` returns).
+ *    An agent without that face is still refused with 409 session-busy rather
+ *    than deleted under a still-registered live agent (defensive: a provider
+ *    other than agent-loop may register agents of another shape).
+ * 3. Workspace accounting calls `detachSession` on every registry workspace
+ *    (dsh-workspace `WorkspaceEntity.detachSession`); the 0.1.1-rc.2
+ *    "no detachSession" skip was removed with the host floor.
  *
  * The JSONL backend stores one directory per session under its public
  * `config.root`:
@@ -27,8 +24,7 @@
  *
  * with immutable generation log files inside. This module recomputes that
  * directory (mirroring the backend's projectKey / encodeSegment layout from
- * @deepseek-ai/dsh-session-persistence-jsonl — verified byte-identical
- * against the 0.1.1-rc.2 backend) and moves it into the trash
+ * @deepseek-ai/dsh-session-persistence-jsonl) and moves it into the trash
  * (`<root>/.sessions-trash/<UTC>-<projectKey>-<encodedId>/`, payloads renamed
  * with a `.trash` suffix plus a best-effort manifest.json) so a deletion can
  * be restored; entries older than 24h are purged best-effort.
@@ -153,13 +149,12 @@ function detachLiveSession(sessions, id) {
     store?.store?.get(id)?.detach?.();
 }
 /** Remove the session from every workspace account (idempotent; unknown ids
- * resolve without writing). Optional per workspace: 0.1.1-rc.2 Workspace
- * carries no `detachSession`, in which case that workspace is skipped. */
+ * resolve without writing). */
 async function detachFromWorkspaces(deps, sessionId) {
     if (deps.workspaceRegistry === undefined)
         return;
     for (const workspace of deps.workspaceRegistry.list()) {
-        await workspace.detachSession?.(sessionId);
+        await workspace.detachSession(sessionId);
     }
 }
 function errorMessage(error) {
@@ -271,12 +266,11 @@ async function purgeStaleTrash(trashRoot) {
         // trash root unreadable: purge is best effort, the deletion already succeeded
     }
 }
-/** Normalize one `persistence.list()` entry across host generations: prefer
- * the 0.1.3 snapshot's `.header`, fall back to the flat 0.1.2 header.
- * Entries without a usable id are skipped. */
+/** Read one `persistence.list()` snapshot's header. Entries without a usable
+ * id are skipped. */
 function entryHeader(entry) {
-    const header = entry.header ?? entry;
-    if (typeof header.id !== 'string' || header.id === '')
+    const header = entry.header;
+    if (header === undefined || typeof header.id !== 'string' || header.id === '')
         return undefined;
     return {
         id: header.id,
@@ -343,11 +337,11 @@ async function deleteSessionInner(deps, sessionId) {
             },
         };
     }
-    // Live sessions: only delete when the host exposes the 0.1.3 AgentHandle
-    // disposal face (callable cancel + whenIdle). The 0.1.1/0.1.2 AgentRegistry
-    // returns a plain Agent face without them, so refuse with 409 instead of
-    // deleting under a still-registered live agent (otherwise the session
-    // would keep running on a removed log and stay listed in `session.list`).
+    // Live sessions: only delete when the live agent exposes the disposal face
+    // (callable cancel + whenIdle, as the agent-loop agent does). An agent of
+    // another shape is refused with 409 instead of deleting under a
+    // still-registered live agent (otherwise the session would keep running on
+    // a removed log and stay listed in `session.list`).
     const live = deps.sessions?.get(sessionId);
     if (live !== undefined && deps.sessions !== undefined) {
         const agent = deps.agents?.get(sessionId);
@@ -362,7 +356,7 @@ async function deleteSessionInner(deps, sessionId) {
                 ok: false,
                 error: {
                     code: 'session-busy',
-                    message: `session '${sessionId}' is live on a host generation that exposes no agent disposal face; stop it first, then retry`,
+                    message: `session '${sessionId}' is live under an agent that exposes no disposal face; stop it first, then retry`,
                 },
             };
         }
@@ -417,8 +411,7 @@ async function deleteSessionInner(deps, sessionId) {
                 await detachFromWorkspaces(deps, sessionId);
             }
             catch {
-                // The stale workspace id stays until the host reconciles it
-                // (same phase-1 gap as a skipped detachSession face).
+                // The stale workspace id stays until the host reconciles it.
             }
             return {
                 status: 500,
@@ -458,10 +451,8 @@ async function deleteSessionInner(deps, sessionId) {
         };
     }
     // Workspace accounting: remove the deleted session from every workspace
-    // account (idempotent; unknown ids resolve without writing). Optional per
-    // workspace: 0.1.1-rc.2 Workspace carries no detachSession, in which case
-    // the stale id stays in that workspace record until the host reconciles it
-    // (accepted phase-1 gap). The session directory is already in the trash, so
+    // account (idempotent; unknown ids resolve without writing). The session
+    // directory is already in the trash, so
     // a failing store must never fail an already-finished deletion — the caller
     // reports success and the host reconciles the stale id (same isolation as
     // the cleanup-failed branch above).

@@ -54,11 +54,7 @@ public final class EnvironmentMaintenance {
           com.deepseekharness.app.util.UiText.choose("检查启动配置…", "Checking startup configuration…"));
       var proof =
           com.deepseekharness.app.runtime.RuntimeTrial.verify(
-              context,
-              boot,
-              control,
-              () -> validateRuntime(boot, false),
-              boot.hostPorts().browserProbe());
+              context, boot, control, () -> validateRuntime(boot), boot.hostPorts().browserProbe());
       boot.hostPorts().confirmColdRuntime(boot.getRootfsDir(), proof);
       boot.confirmRuntimeHealth(proof);
       if (!boot.isEnvironmentReady()) throw new IOException("RUNTIME_READINESS_FAILED");
@@ -90,7 +86,7 @@ public final class EnvironmentMaintenance {
                   controller.context(),
                   controller.proot(),
                   control,
-                  () -> validateRuntime(controller.proot(), false),
+                  () -> validateRuntime(controller.proot()),
                   controller.runtimeHostPorts().browserProbe());
           controller.proot().confirmRuntimeHealth(proof);
           if (!controller.isEnvironmentReady()) throw new IOException("RUNTIME_READINESS_FAILED");
@@ -144,7 +140,11 @@ public final class EnvironmentMaintenance {
                     controller.context(),
                     controller.proot(),
                     control,
-                    () -> validateRuntime(controller.proot(), false),
+                    // 只核验运行时补丁。注册必须放在事务提交、新 runtimeId 的健康回执写入之后：
+                    // 验证阶段受管文件已切换到新 descriptor，但 runtime-health 尚不存在，
+                    // environmentReady() 必然为 false。build352 把注册放在这里，导致每次跨
+                    // runtime 的覆盖升级都以 ENV_NOT_READY 回滚（真机 P0，build353 修复）。
+                    () -> validateRuntime(controller.proot()),
                     controller.runtimeHostPorts().browserProbe());
             controller.proot().confirmRuntimeHealth(proof);
             if (!controller.isEnvironmentReady()) throw new IOException("RUNTIME_READINESS_FAILED");
@@ -164,6 +164,8 @@ public final class EnvironmentMaintenance {
               transaction.directory(), BackupManager.safeError(failure)),
           failure);
     }
+    // 事务已提交、健康回执已写；此时注册才能通过 environmentReady 门禁。失败只降级。
+    boolean registered = registerBuiltinAfterCommit(controller);
     String cleanup = "";
     try {
       com.deepseekharness.app.backup.ManagedRuntimeTransaction.trimOlder(
@@ -176,8 +178,11 @@ public final class EnvironmentMaintenance {
           com.deepseekharness.app.util.UiText.format(
               "\n部分旧运行时待下次清理：%s", BackupManager.safeError(error));
     }
-    return com.deepseekharness.app.util.UiText.format(
-        "dsh 与内置插件更新完成；Ubuntu、个人目录、会话、配置和第三方插件保持原位。%s", cleanup);
+    String summary =
+        registered
+            ? "dsh 与内置插件更新完成；Ubuntu、个人目录、会话、配置和第三方插件保持原位。"
+            : "dsh 更新完成；内置插件注册未完成，将在下次启动按宽预算重试。Ubuntu、个人目录、会话、配置和第三方插件保持原位。";
+    return com.deepseekharness.app.util.UiText.text(summary) + cleanup;
   }
 
   static String rebuild(
@@ -191,6 +196,22 @@ public final class EnvironmentMaintenance {
     if (!controller.hasOfflineBundle())
       throw new IOException(com.deepseekharness.app.util.UiText.text("APK 缺少内置环境包，原环境保持原位"));
     var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
+    // 用户工具目录（/opt）会随整树重建被复制进快照；先做有界预检，超限时在切换旧树前失败。
+    var toolUsage =
+        com.deepseekharness.app.backup.MaintenanceDataSnapshot.inspectToolRoots(
+            fs,
+            com.deepseekharness.app.util.GuestPaths.rootfs(files),
+            com.deepseekharness.app.backup.BackupLimits.ENTRIES);
+    if (toolUsage.overflowed)
+      throw new IOException(
+          com.deepseekharness.app.util.UiText.format(
+              "用户工具目录 %s 的条目超过环境重建快照上限（%s 条）；请清理或移出大 SDK/缓存后再重建，原环境保持原位",
+              "/opt", com.deepseekharness.app.backup.BackupLimits.ENTRIES));
+    if (toolUsage.bytes > 1024L * 1024 * 1024)
+      progress.accept(
+          com.deepseekharness.app.util.UiText.format(
+              "提示：用户工具目录 %s 有 %s 个条目、%s 字节，会随环境重建复制；大目录建议先移出",
+              "/opt", toolUsage.entries, toolUsage.bytes));
     var layout = new com.deepseekharness.app.backup.UserDataLayout(fs, files);
     if (layout.selected() == com.deepseekharness.app.backup.UserDataLayout.Home.STABLE)
       layout.choose(com.deepseekharness.app.backup.UserDataLayout.Home.STABLE);
@@ -275,7 +296,7 @@ public final class EnvironmentMaintenance {
               controller.context(),
               controller.proot(),
               control,
-              () -> validateRuntime(controller.proot(), false),
+              () -> validateRuntime(controller.proot()),
               controller.runtimeHostPorts().browserProbe());
       controller.proot().confirmRuntimeHealth(proof);
       if (!controller.isEnvironmentReady()) throw new IOException("RUNTIME_READINESS_FAILED");
@@ -416,11 +437,6 @@ public final class EnvironmentMaintenance {
 
   private static void validateRuntime(com.deepseekharness.app.runtime.ProotBootstrap proot)
       throws IOException {
-    validateRuntime(proot, true);
-  }
-
-  private static void validateRuntime(
-      com.deepseekharness.app.runtime.ProotBootstrap proot, boolean register) throws IOException {
     // 与安装页共用检查项，冷重建不能依赖用户先启动一次 Web 才补齐运行补丁。
     // 覆盖安装/权限变更可能改变 Android supplementary groups；与冷安装、PTY 一样先补齐当前真实组。
     // 只追加缺少的本机名称映射，随后仍以 id -Gn 实际复验，不能跳过第 6 步。
@@ -434,7 +450,25 @@ public final class EnvironmentMaintenance {
         readCheckedProot(proot, com.deepseekharness.app.util.InstallProbe.script(checks), 30_000);
     for (String line : probe.split("\\r?\\n")) checked.accept(line);
     if (!checked.ok(6)) throw new IOException("RUNTIME_PATCH_CHECK_FAILED:" + checked.detail(6));
-    if (register) readCheckedProot(proot, "python3 /root/.dsh/register-builtin-plugins.py", 30_000);
+  }
+
+  /**
+   * 维护期注册：调用点在运行时事务提交、健康回执写入之后，environmentReady 已成立。注册失败不再
+   * 回滚已健康的运行时，只记录诊断事件，由启动路径按分级预算重试（启动路径仍强制回执）。
+   */
+  private static boolean registerBuiltinAfterCommit(HarnessController controller) {
+    String outcome =
+        com.deepseekharness.app.util.MaintenanceRegistration.attempt(
+            () -> {
+              var result = controller.proot().registerBuiltinPluginsResult();
+              String output =
+                  com.deepseekharness.app.util.GuestCommandOutcome.requireCompleted(
+                      result, "BUILTIN_REGISTER");
+              if (!output.contains("BUILTIN_REGISTER_OK"))
+                throw new IOException("BUILTIN_REGISTER_RECEIPT_MISSING");
+            });
+    DiagnosticLog.record(controller.context(), "MAINTENANCE_REGISTRATION", outcome);
+    return com.deepseekharness.app.util.MaintenanceRegistration.OK.equals(outcome);
   }
 
   private static String readCheckedProot(
@@ -498,8 +532,11 @@ public final class EnvironmentMaintenance {
   public static String recover(HarnessController controller) throws Exception {
     if (!MaintenanceCoordinator.isOwner())
       throw new IOException(com.deepseekharness.app.util.UiText.text("维护回滚必须经过停止屏障与全局数据任务锁"));
-    ensureSingleRecovery(controller);
     File files = controller.context().getFilesDir().getCanonicalFile();
+    // 先做不抛异常的全域检查：记录读不了时给出可读原因与出口，不让后续探测把原始错误码
+    // 冒充为「恢复失败」，也不对读不了的域重复执行必然失败的批量扫描。
+    requireReadable(files);
+    ensureSingleRecovery(controller);
     com.deepseekharness.app.runtime.BoundedGuestSessions.reapExited(files);
     var filesystemCold = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
     if (!com.deepseekharness.app.backup.ColdInstallTransaction.pending(filesystemCold, files)
@@ -602,6 +639,14 @@ public final class EnvironmentMaintenance {
     pending.rollback();
     return com.deepseekharness.app.util.UiText.format(
         "中断的维护已回滚；安全备份、旧环境及失败的新环境均已保留。\n%s", pending.directory().getAbsolutePath());
+  }
+
+  /** 任一域记录无法读取时停止，并说明原因与可用出口；原件保持原样。 */
+  static void requireReadable(File files) throws IOException {
+    var unreadable = com.deepseekharness.app.backup.HostMaintenancePending.firstUnreadable(files);
+    if (unreadable == null) return;
+    throw MaintenanceUnreadable.explain(
+        unreadable, PluginJournalIsolation.offerOrNull(files) != null);
   }
 
   public static void ensureSingleRecovery(HarnessController controller) throws IOException {

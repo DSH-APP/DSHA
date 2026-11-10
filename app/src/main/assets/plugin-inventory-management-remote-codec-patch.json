@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-host-plugin-inventory/lib/typert.remote-client.js",
-  "sourceSha256": "b945b0cb7c1861b7ce1e56166c585266bb74e2dfa201c1b892c2938e22ae6dff",
+  "sourceSha256": "995fa040318b85d1ccc275f737671c337b744e61459ff44ac05d9793f1c9d86c",
   "patches": [
     {
       "before": "  methods: {\n    'pluginInventory/list': {",

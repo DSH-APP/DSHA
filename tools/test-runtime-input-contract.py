@@ -70,6 +70,16 @@ class RuntimeInputContractTest(unittest.TestCase):
         for name in ('util/ColdInstallPlan.java', 'util/ColdInstallPackages.java'):
             self.assertIn(name, selected, 'Cold compatibility and package policy must invalidate old runtime proofs')
             self.assertEqual(selected[name], ROOT / JAVA / name)
+    def test_all_production_active_recipes_and_helpers_are_identified(self):
+        from runtime_stable_patches import load_chains
+        production = load(ROOT)
+        assets = ROOT / ASSETS
+        version = json.loads((ROOT / 'tools/dsh-runtime/package.json').read_text())['dependencies']['@deepseek-ai/dsh']
+        _, recipes = load_chains(assets, version)
+        identified = set(asset_paths(ROOT, production))
+        for name in recipes:
+            self.assertIn(assets / name, identified,
+                          'Every executable signed recipe/helper must change runtime identity: ' + name)
     def test_invalid_recipe_rejected_before_install(self):
         for bad in ('../outside', '/absolute', 'root//duplicate', 'C:/windows', 'a\\b', 'a/./b'):
             with self.subTest(path=bad):
@@ -77,6 +87,34 @@ class RuntimeInputContractTest(unittest.TestCase):
                 self.write(MANIFEST, json.dumps(self.spec))
                 with self.assertRaises(ValueError):
                     load(self.root)
+    def builtin(self):
+        self.write(ASSETS + '/builtin-plugins.json', json.dumps({'plugins': [{
+            'name': 'dsh-fixture', 'guestDirectory': '/root/dsha-fixture', 'entrypoint': 'lib/index.js'}]}))
+        self.write(ASSETS + '/builtin-plugins/dsh-fixture/lib/index.js', "import './helper.js'\n")
+        self.write(ASSETS + '/builtin-plugins/dsh-fixture/lib/helper.js', 'export {}\n')
+        self.spec['installs'] += [{'asset': 'builtin-plugins/dsh-fixture/lib/' + name,
+            'target': 'root/dsha-fixture/lib/' + name, 'executable': False} for name in ('index.js', 'helper.js')]
+        self.write(MANIFEST, json.dumps(self.spec))
+    def test_packaged_builtin_helper_without_install_row_is_rejected(self):
+        self.builtin()
+        load(self.root)
+        self.spec['installs'].pop()
+        self.write(MANIFEST, json.dumps(self.spec))
+        with self.assertRaisesRegex(ValueError, 'BUILTIN_RUNTIME_FILE_UNINSTALLED:.*helper.js'):
+            load(self.root)
+    def test_builtin_helper_wrong_destination_is_rejected(self):
+        self.builtin()
+        self.spec['installs'][-1]['target'] = 'root/dsha-other/lib/helper.js'
+        self.write(MANIFEST, json.dumps(self.spec))
+        with self.assertRaisesRegex(ValueError, 'BUILTIN_RUNTIME_TARGET_MISMATCH:.*helper.js'):
+            load(self.root)
+    def test_all_production_builtin_runtime_files_are_installed_to_exact_entities(self):
+        production = load(ROOT)
+        rows = {row['asset']: row['target'] for row in production['installs']}
+        for plugin, helper in [('dsh-status-overlay', 'session-adapter.js'),
+                               ('dsh-computer-use-android', 'task-binding.js')]:
+            self.assertEqual('root/dsha-' + plugin[4:] + '/lib/' + helper,
+                rows['builtin-plugins/' + plugin + '/lib/' + helper])
 
 if __name__ == '__main__':
     unittest.main()

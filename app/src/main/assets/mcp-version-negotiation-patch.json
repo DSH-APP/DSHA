@@ -1,0 +1,15 @@
+{
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-mcp-client/lib/index.js",
+  "description": "Optional per-server MCP version negotiation. Default stays the upstream \"auto\"; a plugin may opt into \"legacy\" for 2025-era stdio servers so the SDK does not spawn a server/discover sibling before the real process.",
+  "patches": [
+    {
+      "before": "\t\t\tversionNegotiation: { mode: \"auto\" },\n",
+      "after": "\t\t\t// DSHA_MCP_VERSION_NEGOTIATION_V1: opt-in legacy skips the stdio discover sibling; default unchanged.\n\t\t\tversionNegotiation: { mode: config.versionNegotiation === \"legacy\" ? \"legacy\" : \"auto\" },\n"
+    },
+    {
+      "before": "\targs: z.array(String).default([]),\n",
+      "after": "\targs: z.array(String).default([]),\n\tversionNegotiation: z.union([z.const(\"auto\"), z.const(\"legacy\")]).default(\"auto\"),\n"
+    }
+  ]
+}

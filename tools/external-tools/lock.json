@@ -1,0 +1,59 @@
+{
+  "format": 1,
+  "purpose": "外接设备通道以 root 执行的 adb / fastboot 及其 glibc 加载器；只锁定并核验字节，不随 APK 分发 deb",
+  "distribution": "Ubuntu 24.04 noble",
+  "architecture": "arm64",
+  "mirror": "https://ports.ubuntu.com/ubuntu-ports/",
+  "sources": [
+    {
+      "suite": "noble",
+      "component": "universe",
+      "inReleaseSha256": "cdb2f31d809f589719a53c6ad15f255b27569c4059542ada282aaa21b8e164b0"
+    },
+    {
+      "suite": "noble-updates",
+      "component": "main",
+      "inReleaseSha256": "3e30429b6923a2bc9dd1a8ce6a6dcb2292c2f0b3a88036d8d2e38cc65d2df9b5"
+    }
+  ],
+  "packages": [
+    {
+      "Package": "adb",
+      "Version": "1:34.0.4-1build3",
+      "Suite": "noble",
+      "Filename": "pool/universe/a/android-platform-tools/adb_34.0.4-1build3_arm64.deb",
+      "Size": 271840,
+      "SHA256": "17433097fd151c47a95de2f7b45c3b683cde0a14d2b1e21251744075e71a1bcd",
+      "files": {
+        "usr/lib/android-sdk/platform-tools/adb": "9c4c531f3f4bd9a9edf608b99803e65fb111e4198743345c76ae9a416035674b"
+      }
+    },
+    {
+      "Package": "fastboot",
+      "Version": "1:34.0.4-1build3",
+      "Suite": "noble",
+      "Filename": "pool/universe/a/android-platform-tools/fastboot_34.0.4-1build3_arm64.deb",
+      "Size": 195612,
+      "SHA256": "b7b05117fe5afb102b4e38d34e868cfccae00fd9d4cabee73e71cb73280e3b6a",
+      "files": {
+        "usr/lib/android-sdk/platform-tools/fastboot": "e09bad894f9153621b6529763c9dedb0ae1b38bdde537dfa574e57af7942bc87"
+      }
+    },
+    {
+      "Package": "libc6",
+      "Version": "2.39-0ubuntu8.9",
+      "Suite": "noble-updates",
+      "Filename": "pool/main/g/glibc/libc6_2.39-0ubuntu8.9_arm64.deb",
+      "Size": 2776414,
+      "SHA256": "ad109797c5f78a5eeb6d4c296bfbaae68b239111a0c9ac0eb97b8d430284ac45",
+      "files": {
+        "usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1": "390027e5f45f236bd1838bc54bf464c5ff01d260ab9f8b415ea8276641bce505"
+      }
+    }
+  ],
+  "entrypoints": {
+    "usr/bin/adb": "usr/lib/android-sdk/platform-tools/adb",
+    "usr/bin/fastboot": "usr/lib/android-sdk/platform-tools/fastboot",
+    "usr/lib/ld-linux-aarch64.so.1": "usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1"
+  }
+}

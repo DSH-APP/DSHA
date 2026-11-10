@@ -81,7 +81,7 @@ test('trash链接拒绝写入其他目录，真实会话原件保持可读',()=>
 async function liveFixture(run,{capture=true}={}) {
   const root=await mkdtemp(join(tmpdir(),'dsha-mobile-rc2-live-')),ctx=new Context();let release=()=>{};
   try {
-    for(let i=0;i<services.length-1;i++)await ctx.plugin(services[i].default, i===5?{mode:'native'}:{});
+    for(let i=0;i<services.length-1;i++)await ctx.plugin(services[i].default, {});
     await ctx.plugin(Jsonl,{root,compression:'none'});
     await ctx.plugin(services.at(-1).default,{agents:[],maxParallelToolCalls:1});
     if(capture)release=installSessionDeletionLifecycle(ctx.agents);

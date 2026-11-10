@@ -11,7 +11,7 @@ import {testRuntime, requireNativeHost} from './test-runtime-fixture.mjs';
 
 const root=path.resolve(import.meta.dirname,'..');
 const runtime=testRuntime('raw');requireNativeHost(runtime);
-const output=path.resolve(process.env.DSHA_DIRECTORY_PICKER_OUTPUT || 'F:/DSHA_RESTART/app/build/build190-fix13/directory-picker');
+const output=path.resolve(process.env.DSHA_DIRECTORY_PICKER_OUTPUT || '<local-workspace>');
 fs.mkdirSync(output,{recursive:true});
 const base=fs.mkdtempSync(path.join(root,'app/build/directory-picker-service-'));
 const recipeFile=path.join(root,'app/src/main/assets/directory-picker-service-patch.json');

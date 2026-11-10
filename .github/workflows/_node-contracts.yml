@@ -1,0 +1,38 @@
+name: "Node: source contracts"
+
+# 可复用节点：已提交的契约、声明、清单、文案与文档门禁；不需要固定输入。
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Exact commit to check out (defaults to the caller's commit)
+        required: false
+        type: string
+        default: ''
+permissions:
+  contents: read
+jobs:
+  contracts:
+    name: Verify checked-in contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-toolchain
+      - name: Verify checked-in contracts
+        run: |
+          python3 tools/prepare-runtime-tools.py --check
+          python3 tools/verify-runtime-descriptor-source.py
+          python3 tools/generate-third-party-notices.py --check
+          python3 tools/check-third-party-notices.py
+          python3 tools/generate-builtin-plugins.py --verify
+          python3 tools/generate-credential-paths.py --check
+          python3 tools/prepare-semver-reference.py
+          python3 tools/run-host-tests.py --check-manifest
+          python3 tools/check-source-hygiene.py
+          python3 tools/check-ui-i18n.py
+          python3 tools/generate-changelog.py --check
+          python3 tools/check-document-links.py

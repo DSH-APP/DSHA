@@ -53,6 +53,109 @@ public class SensitiveDataTest {
   }
 
   @Test
+  public void privateKeyVariantsAreHiddenUntilTheirMatchingEndOrEndOfInput() {
+    for (String type : new String[] {"", "RSA ", "EC ", "OPENSSH ", "ENCRYPTED ", "DSA "}) {
+      String begin = "-----BEGIN " + type + "PRIVATE KEY-----\n";
+      String end = "-----END " + type + "PRIVATE KEY-----";
+      String marker = UiText.text("[私钥已隐藏]");
+      assertEquals(marker, SensitiveData.redact(begin + "private material\n"));
+      assertEquals(
+          "before\n" + marker + "\nafter",
+          SensitiveData.redact("before\n" + begin + "private material\n" + end + "\nafter"));
+    }
+    assertEquals(
+        UiText.text("[私钥已隐藏]"),
+        SensitiveData.redact(
+            "-----BEGIN RSA PRIVATE KEY-----\nprivate one\n"
+                + "-----END EC PRIVATE KEY-----\nprivate two"));
+  }
+
+  @Test
+  public void unterminatedQuotedValuesStayHiddenThroughEndOfInput() {
+    for (String quote : new String[] {"\"", "'"}) {
+      assertEquals(
+          "password=***",
+          SensitiveData.redact("password=" + quote + "first private line\nsecond private line"));
+      assertEquals(
+          "password=***\npublic tail",
+          SensitiveData.redact(
+              "password="
+                  + quote
+                  + "first private line\nsecond private line"
+                  + quote
+                  + "\npublic tail"));
+    }
+  }
+
+  @Test
+  public void rangeProjectionUsesBothSidesWithoutIncludingUnselectedText() {
+    String source = "before\npassword=\"private head\nprivate middle\nprivate tail\"\nafter";
+    int start = source.indexOf("private middle");
+    String[] safe =
+        SensitiveData.redactRanges(
+            source, start, start + "private middle".length(), 0, source.length());
+    assertEquals("***", safe[0]);
+    assertEquals("before\npassword=***\nafter", safe[1]);
+    assertEquals("", SensitiveData.redactRanges(source, start, start)[0]);
+  }
+
+  @Test
+  public void rangeProjectionMasksAllExistingRuleFamiliesWhenTheirPrefixIsOutside() {
+    String secret = "synthetic-private-value";
+    for (String source :
+        new String[] {
+          "Authorization: " + secret,
+          "https://host/?token=" + secret + "&ok=yes",
+          "api_key='" + secret + "'",
+          "https://user:" + secret + "@host/path",
+          "Bearer " + secret,
+          "sk-" + secret
+        }) {
+      int start = source.indexOf(secret);
+      assertEquals(source, "***", SensitiveData.redactRanges(source, start + 3, start + 12)[0]);
+      assertFalse(SensitiveData.redactRanges(source, 0, source.length())[0].contains(secret));
+    }
+  }
+
+  @Test
+  public void knownSecretsAreProjectedAcrossLinesAndCannotDestroyPrivateKeyDelimiters() {
+    String secret = "opaque head\nopaque middle\nopaque tail";
+    SensitiveData.registerKnownSecret(secret);
+    SensitiveData.registerKnownSecret("PRIVATE KEY");
+    try {
+      String source = "before\n" + secret + "\nafter";
+      int start = source.indexOf("opaque middle");
+      assertEquals("***", SensitiveData.redactRanges(source, start, start + 13)[0]);
+      String key = "-----BEGIN PRIVATE KEY-----\nprivate material\n-----END PRIVATE KEY-----";
+      assertEquals(UiText.text("[私钥已隐藏]"), SensitiveData.redactRanges(key, 0, key.length())[0]);
+    } finally {
+      SensitiveData.forgetKnownSecret(secret);
+      SensitiveData.forgetKnownSecret("PRIVATE KEY");
+    }
+  }
+
+  @Test
+  public void overlappingKnownSecretsHideTheirEntireUnionAndSeparateOccurrences() {
+    String secret = "A".repeat(4096);
+    SensitiveData.registerKnownSecret(secret);
+    try {
+      String source = "before " + "A".repeat(8191) + " middle " + secret + " after";
+      assertEquals(
+          "before *** middle *** after", SensitiveData.redactRanges(source, 0, source.length())[0]);
+      assertEquals("***", SensitiveData.redactRanges(source, 8000, 8198)[0]);
+    } finally {
+      SensitiveData.forgetKnownSecret(secret);
+    }
+  }
+
+  @Test
+  public void rangeProjectionNeverReturnsHalfOfASurrogatePair() {
+    String source = "a😀b";
+    assertArrayEquals(
+        new String[] {"b", "", "😀"}, SensitiveData.redactRanges(source, 2, 4, 1, 2, 1, 3));
+  }
+
+  @Test
   public void oauthQueryValuesAreHiddenWithoutReplacingDiagnosticWords() {
     String query =
         "http://127.0.0.1:41821/oauth/callback?code=fake-code&state=fake-state"

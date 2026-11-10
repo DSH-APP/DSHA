@@ -109,9 +109,9 @@ public final class SimpleTerminalBackend {
       throws IOException {
     String blocked = blockMessage(proot);
     if (!blocked.isEmpty()) throw new TerminalSession.EnvironmentUnavailable(blocked);
-    EnvironmentTaskGate.Lease lease = EnvironmentTaskGate.tryAcquire(kind);
+    EnvironmentTaskGate.Lease lease = EnvironmentTaskGate.tryAcquireShared(kind);
     if (lease == null)
-      throw new TerminalSession.EnvironmentUnavailable(UiText.text("已有环境任务启动，请稍后再打开终端"));
+      throw new TerminalSession.EnvironmentUnavailable(UiText.text("环境维护或独占任务正在进行，请稍后再打开终端"));
     return lease;
   }
 

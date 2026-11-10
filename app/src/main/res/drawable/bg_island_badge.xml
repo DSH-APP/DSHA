@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 上岛顺序的级别号与示例胶囊：raised 底小圆角。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_raised" />
+    <corners android:radius="8dp" />
+</shape>

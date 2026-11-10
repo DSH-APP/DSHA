@@ -1,0 +1,7 @@
+# DSHA 0.2.1-rc.3-20261030.1900-dsh0.2.1-rc.5 / build213
+
+- The bundled DSH is upgraded to upstream dsh-v0.2.1-rc.5: the conversation's thinking display follows the upstream update; the runtime archive is rebuilt for rc.5 (127,674,426 B, SHA-256 `91aa4685721ce569e32953295dc6b01b63fe2ac5e1eac8173440656896acdcb2`), the patch chain and 31 data/storage reader packages are verified, with evidence in [rc.5 data-reader evidence](../runtime-data-compatibility-rc5.md).
+- The terminal gains a DSH CLI entry: the workspace top-bar button and the "New session" picker can directly open a PTY session with a fixed startup banner (it pre-checks the dsh version and explains that there is no interactive TUI, the credential/permission differences of headless, and not to start Web in the terminal); no new session type is added, and session closing, run protection and maintenance-barrier semantics are unchanged.
+- The terminal session drawer is narrowed from a 336dp maximum width to 224dp (about one third less) on phone portrait/narrow windows (< 600dp), while tablets/wide windows (≥ 600dp) keep 336dp; the scrim/back-gesture area still keeps at least 32dp and the inline sidebar width is unchanged.
+- In the 224dp drawer, session rows stack their status by the existing narrow-window rule and the footer keeps two columns; the compact/landscape compression rules are unchanged.
+- versionCode is raised to 213; the DSHA revision stays 0.2.1-rc.3 and the bundled-DSH suffix is 0.2.1-rc.5; build and acceptance scope follows this run and the Release receipt.

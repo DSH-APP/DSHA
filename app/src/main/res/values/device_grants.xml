@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 设备能力授权页（压缩版）：页内间距比通用设置页收一档；颜色仍只引用 shell_* token。 -->
+<resources>
+    <dimen name="grants_page_pad">14dp</dimen>
+    <dimen name="grants_page_top">10dp</dimen>
+    <dimen name="grants_section_gap">14dp</dimen>
+    <dimen name="grants_section_margin">6dp</dimen>
+    <dimen name="grants_card_pad_h">14dp</dimen>
+    <dimen name="grants_card_pad_v">4dp</dimen>
+    <dimen name="grants_column_gap">12dp</dimen>
+    <dimen name="grants_segment_height">40dp</dimen>
+    <!-- 通道 / 屏幕卡的标题行：标题 + 短动作 + 开关同一行，保持 44dp 触控下限 -->
+    <dimen name="grants_channel_row">46dp</dimen>
+</resources>

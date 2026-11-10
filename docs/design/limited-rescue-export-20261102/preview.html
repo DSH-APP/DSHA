@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>DSHA · 受限状态下「导出可读副本」入口（交互原型）</title>
+<!-- 离线设计原型：不连接设备或外部网络；文案取自 build271 源码，数据为演示样例。 -->
+<style>
+/* UI v5 token 离线副本（与 maintenance-actions-20261101/preview.html 相同），只用于本预览。 */
+:root{color-scheme:light;--page:#e9eef6;--bg:#f3f6fb;--surface:#fcfdff;--raised:#e7edf6;--line:rgba(29,58,96,.075);--line-2:rgba(29,58,96,.145);
+--text:#18273f;--text-2:#50617a;--muted:#5a6b86;--accent:#1e50d0;--accent-soft:rgba(30,80,208,.08);--on-accent:#fff;
+--good:#287453;--good-soft:rgba(40,116,83,.10);--warn:#8c600d;--warn-soft:rgba(140,96,13,.10);--bad:#af404b;--bad-soft:rgba(175,64,75,.10);
+--bezel:#1b2333;--shadow:0 18px 50px rgba(17,32,62,.14);--scrim:rgba(12,20,36,.40);
+--sans:system-ui,-apple-system,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--fs:1}
+[data-theme=dark]{color-scheme:dark;--page:#070a10;--bg:#0b0f16;--surface:#131923;--raised:#1b2432;--line:rgba(203,220,255,.07);--line-2:rgba(203,220,255,.13);
+--text:#edf1f7;--text-2:#b0bbcc;--muted:#8895aa;--accent:#6aa4ff;--accent-soft:rgba(106,164,255,.10);--on-accent:#091729;
+--good:#93ccaf;--good-soft:rgba(147,204,175,.10);--warn:#e4be83;--warn-soft:rgba(228,190,131,.10);--bad:#eea3a6;--bad-soft:rgba(238,163,166,.10);--bezel:#2a3446;--shadow:0 18px 50px rgba(0,0,0,.5);--scrim:rgba(0,0,0,.58)}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--page);color:var(--text);font:14px/1.45 var(--sans)}
+button{font:inherit;color:inherit;cursor:pointer}
+button[disabled]{cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* —— 外层工具栏 —— */
+.bar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:12px 18px;background:var(--surface);border-bottom:1px solid var(--line-2)}
+.bar h1{font-size:15px;margin:0 8px 0 0}
+.grp{display:flex;align-items:center;gap:6px}
+.grp>span{font-size:12px;color:var(--muted)}
+.seg{display:inline-flex;background:var(--raised);border-radius:10px;padding:2px}
+.seg button{border:0;background:none;padding:5px 10px;border-radius:8px;font-size:12.5px;color:var(--text-2)}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--text);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.notes{max-width:1180px;margin:14px auto 0;padding:0 18px;font-size:12.5px;color:var(--text-2)}
+.notes b{color:var(--text)}
+.notes ol{margin:4px 0;padding-left:20px}
+
+/* —— 舞台：改前 / 改后并排，设备按可用宽度等比缩放 —— */
+.stage{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;padding:22px 18px 40px}
+.col{display:flex;flex-direction:column;align-items:center;gap:10px}
+.col h2{font-size:13px;margin:0;color:var(--text-2);font-weight:600}
+.meter{font-size:12px;color:var(--muted);max-width:420px;text-align:center}
+.meter b{color:var(--text)}
+.fit{position:relative}
+.dev{position:absolute;left:0;top:0;transform-origin:0 0;background:var(--bezel);border-radius:34px;padding:10px;box-shadow:var(--shadow)}
+.dev.tab{border-radius:26px;padding:14px}
+.scr{position:relative;overflow:hidden;background:var(--bg);border-radius:26px;display:flex;flex-direction:column;font-size:calc(14px*var(--fs))}
+.dev.tab .scr{border-radius:14px}
+.sb{height:26px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:11px;color:var(--text-2)}
+.scroll{flex:1;min-height:0;overflow:auto}
+.scroll::-webkit-scrollbar{width:0;height:0}
+
+/* —— 通用组件 —— */
+.card{background:var(--surface);border:1px solid var(--line-2);border-radius:18px;padding:14px 16px}
+.btn{min-height:44px;border-radius:14px;border:1.5px solid var(--line-2);background:var(--surface);color:var(--text);font-weight:600;font-size:calc(13.5px*var(--fs));padding:6px 14px;line-height:1.2;display:flex;align-items:center;justify-content:center;gap:6px;text-align:center}
+.btn.p{border:0;background:var(--accent);color:var(--on-accent);min-height:48px;font-weight:700}
+.btn.bad{border:0;background:var(--bad);color:var(--on-accent);min-height:48px;font-weight:700}
+.btn.acc{border-color:var(--accent);color:var(--accent)}
+.btn.t{border:0;background:none;color:var(--accent)}
+.btn[disabled]{opacity:.45}
+.btn svg,.ent svg,.chips svg{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pill{font-size:calc(11.5px*var(--fs));font-weight:700;padding:3px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.new-mark{outline:2px dashed var(--accent);outline-offset:3px}
+.hide-mark .new-mark{outline:0}
+
+/* —— 维护页（activity_extract.xml） —— */
+.ex .body{padding:18px 20px 16px}
+.ex.wide .body{padding:24px max(20px,calc((100% - var(--colw))/2)) 20px}
+.hd{display:flex;align-items:center;gap:10px}
+.hd h3{margin:0;font-size:calc(22px*var(--fs));font-weight:600;flex:1;min-width:0}
+.st{margin:10px 0 2px;font-weight:600}
+.lead{margin:0 0 12px;color:var(--text-2);font-size:calc(13px*var(--fs))}
+.cols{display:flex;flex-direction:column;gap:0}
+.cols.split{flex-direction:row;gap:28px;align-items:flex-start}
+.cols.split>.stagecard{flex:1 1 0;min-width:0}.cols.split>.focus{flex:1.15 1 0;min-width:0}
+.cols.split .msg{margin-top:0}
+.segs{display:flex;gap:5px;margin:10px 0 8px}.segs i{flex:1;height:6px;border-radius:4px;background:var(--raised)}.segs i.on{background:var(--accent)}.segs i.x{background:var(--bad)}
+.stp{display:flex;align-items:center;gap:10px;padding:5px 0;color:var(--text-2);font-size:calc(13.5px*var(--fs))}
+.stp .d{width:18px;height:18px;border-radius:50%;border:2px solid var(--line-2);flex:none;display:grid;place-items:center;font-size:10px}
+.stp.done .d{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.stp.fail{color:var(--bad)}.stp.fail .d{border-color:var(--bad);color:var(--bad)}
+.msg{margin-top:12px;border-radius:14px;padding:10px 12px;font-size:calc(12.5px*var(--fs));white-space:pre-line}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}.msg.warn{background:var(--warn-soft);color:var(--warn)}
+.msg mark{background:none;color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.rescue{margin-top:12px;width:100%}
+.cols.split .rescue{margin-top:0;margin-bottom:12px}
+.foot{flex:none;background:var(--surface);border-top:1px solid var(--line-2);padding:12px 20px 14px}
+.ex.wide .foot,.ex.land .foot{padding-left:max(20px,calc((100% - 640px)/2));padding-right:max(20px,calc((100% - 640px)/2))}
+.ex.land .foot{padding-top:8px;padding-bottom:10px}
+.ex.land .body{padding:12px 20px}
+.row{display:flex;gap:8px}.row>*{flex:1 1 0;min-width:0}
+.row.vert{flex-direction:column}
+.chips{display:flex;gap:8px;margin-top:8px}
+.chips button{flex:1 1 0;min-width:0;min-height:44px;border:1px solid var(--line-2);background:var(--surface);border-radius:12px;display:flex;align-items:center;justify-content:center;gap:5px;color:var(--accent);font-weight:600;font-size:calc(12.5px*var(--fs));padding:4px 6px;line-height:1.15;text-align:center}
+.chips button.hot{border-color:var(--bad);color:var(--bad);background:var(--bad-soft)}
+.chips button.warn{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.fs13 .chips button{flex-direction:column;gap:2px}
+
+/* —— 受限主界面 · 数据与备份（fragment_workspace.xml） —— */
+.ma{display:flex;flex-direction:column;flex:1;min-height:0}
+.banner{margin:8px 12px 0;min-height:44px;padding:10px;border-radius:14px;background:var(--accent-soft);color:var(--accent);font-size:calc(13px*var(--fs));display:flex;align-items:center;justify-content:center;text-align:center}
+.mainrow{flex:1;min-height:0;display:flex}
+.pane-list{flex:0 0 300px;border-right:1px solid var(--line-2);padding:16px 12px;overflow:auto}
+.pane-list .it{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 12px;border-radius:12px;color:var(--text-2);font-size:calc(14px*var(--fs))}
+.pane-list .it.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.ws{padding:16px var(--pad,16px) 20px}
+.ws.center{max-width:720px;margin:0 auto}
+.ws h3{margin:0;font-size:calc(24px*var(--fs))}
+.ws .sub{margin:6px 0 0;color:var(--text-2);font-size:calc(13px*var(--fs))}
+.hero{margin-top:16px}
+.hero .top{display:flex;gap:14px;align-items:flex-start}
+.tile{width:48px;height:48px;border-radius:14px;flex:none;display:grid;place-items:center;background:var(--warn-soft);color:var(--warn)}
+.tile svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hero h4{margin:0;font-size:calc(17px*var(--fs))}
+.hero p{margin:6px 0 0;color:var(--text-2);font-size:calc(13px*var(--fs))}
+.stats{display:flex;gap:10px;margin-top:14px}
+.stats>div{flex:1;min-width:0;background:var(--raised);border-radius:12px;padding:8px 10px}
+.stats small{display:block;color:var(--muted);font-size:calc(11.5px*var(--fs))}
+.stats b{font-size:calc(13.5px*var(--fs))}
+.stats.stack{flex-direction:column;gap:6px}.stats.stack>div{display:flex;justify-content:space-between;align-items:center}
+.acts{display:flex;gap:10px;margin-top:14px}.acts>*{flex:1 1 0;min-width:0}
+.acts.vert{flex-direction:column}
+.sec-label{margin:20px 2px 8px;font-size:calc(12.5px*var(--fs));font-weight:700;color:var(--muted)}
+.group{background:var(--surface);border:1px solid var(--line-2);border-radius:18px;overflow:hidden}
+.ent{display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 14px;border:0;background:none;width:100%;text-align:left}
+.ent+.ent{border-top:1px solid var(--line)}
+.ent .ic{width:36px;height:36px;border-radius:11px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.ent .tx{flex:1;min-width:0}
+.ent .tx b{display:block;font-size:calc(14px*var(--fs));font-weight:600}
+.ent .tx small{display:block;color:var(--text-2);font-size:calc(12px*var(--fs))}
+.ent .chev{color:var(--muted)}
+.ent[disabled]{opacity:.45}
+.ent .tag{font-size:calc(11px*var(--fs));padding:1px 7px;border-radius:7px;background:var(--good-soft);color:var(--good);font-weight:600;margin-left:6px;vertical-align:1px}
+.nav{flex:none;display:flex;border-top:1px solid var(--line-2);background:var(--surface)}
+.nav span{flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:calc(11px*var(--fs));color:var(--muted);gap:2px}
+.nav span.on{color:var(--accent);font-weight:700}
+.nav i{width:22px;height:4px;border-radius:2px;background:currentColor;opacity:.5}
+
+/* —— 救援确认（NativeDataActivity + DshaDialogBuilder） —— */
+.scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:center;justify-content:center;padding:24px;z-index:3}
+.dlg{width:100%;max-width:420px;max-height:100%;overflow:auto;background:var(--surface);border-radius:24px;padding:20px 20px 14px;box-shadow:var(--shadow)}
+.dlg h4{margin:0 0 10px;font-size:calc(18px*var(--fs))}
+.dlg p{margin:0;color:var(--text-2);font-size:calc(13.5px*var(--fs))}
+.dlg .ft{display:flex;justify-content:flex-end;gap:6px;margin-top:16px;flex-wrap:wrap}
+.toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:7px 14px;border-radius:99px;font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;z-index:4;max-width:90%;overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:.92}
+table{border-collapse:collapse;font-size:12.5px;margin:8px 0}td,th{border:1px solid var(--line-2);padding:5px 8px;text-align:left;vertical-align:top}th{background:var(--raised)}
+</style>
+</head>
+<body>
+<div class="bar" role="toolbar" aria-label="预览控制">
+  <h1>受限状态「导出可读副本」· build271 基线</h1>
+  <div class="grp"><span>设备</span><div class="seg" data-k="dev">
+    <button data-v="phone" aria-pressed="true">手机竖屏</button><button data-v="land">手机横屏</button><button data-v="tp">平板竖屏</button><button data-v="tl">平板横屏</button></div></div>
+  <div class="grp"><span>页面</span><div class="seg" data-k="page">
+    <button data-v="extract" aria-pressed="true">① 维护页</button><button data-v="workspace">② 受限主界面 · 数据与备份</button><button data-v="confirm">③ 救援确认</button></div></div>
+  <div class="grp"><span>维护状态</span><div class="seg" data-k="state">
+    <button data-v="failed" aria-pressed="true">更新失败</button><button data-v="pending">中断待恢复</button><button data-v="incomplete">就绪未通过</button><button data-v="busy">更新进行中</button></div></div>
+  <div class="grp"><span>主题</span><div class="seg" data-k="theme"><button data-v="light" aria-pressed="true">日</button><button data-v="dark">夜</button></div></div>
+  <div class="grp"><span>语言</span><div class="seg" data-k="lang"><button data-v="zh" aria-pressed="true">中</button><button data-v="en">EN</button></div></div>
+  <div class="grp"><span>字体</span><div class="seg" data-k="fs"><button data-v="1" aria-pressed="true">1.0</button><button data-v="1.3">1.3×</button></div></div>
+  <div class="grp"><span>对比</span><div class="seg" data-k="cmp"><button data-v="both" aria-pressed="true">改前+改后</button><button data-v="new">只看改后</button></div></div>
+  <div class="grp"><span>标注新增</span><div class="seg" data-k="mark"><button data-v="on" aria-pressed="true">显示</button><button data-v="off">隐藏</button></div></div>
+</div>
+
+<div class="notes">
+  <p><b>问题（用户反馈 2026-11-02）：</b>更新卡在维护页，失败说明写着“也可进入受限主界面导出可读副本”，进去后找不到按钮。原因有两层：受限主界面要点 4 层（设置 → 数据与备份 → 环境修复与数据救援 → 只读救援导出）；而且维护未完成时「数据与备份」把「环境修复与数据救援」整行置灰（<code>WorkspaceFragment.refreshBackupStatus</code>），实际点不进去。后端 <code>NativeBackupJobs.exportInternal</code> 只在非 rescue 时拦截待恢复状态，救援导出本来可用。</p>
+  <p><b>改法：</b></p>
+  <ol>
+    <li>维护页：失败 / 待恢复 / 就绪未通过时，在阶段卡与说明之间加一个「导出可读副本」次按钮（放说明下方时手机首屏看不到），直接打开救援确认（1 次点击）。底栏三列不变，大字体下不再挤。更新进行中不显示。</li>
+    <li>数据与备份：待恢复时卡片副按钮由置灰的「从备份恢复」改为可点的「导出可读副本」；说明文案改为指出这条出路；「环境修复与数据救援」行不再置灰（里面的恢复中断提交、回退运行时本来就是给这个状态用的）。「自定义导出」「重置配置」仍置灰。</li>
+    <li>救援确认：<code>NativeDataActivity</code> 新增 <code>data_mode=rescue</code>，首次打开即弹出现有「救援导出」确认框，后续流程（系统保存位置、tar.gz、尽力救援标注）完全复用。</li>
+    <li>失败说明文案改为“也可先点‘导出可读副本’保存数据”，中英文同步进 i18n。</li>
+  </ol>
+  <p>不改门禁与后端：救援导出不停止写入、不写就绪标记、不进入受限主界面。</p>
+</div>
+
+<div class="stage" id="stage"></div>
+
+<div class="notes">
+  <table>
+    <tr><th>维护状态</th><th>维护页「导出可读副本」</th><th>数据与备份卡片副按钮</th><th>环境修复与数据救援行</th></tr>
+    <tr><td>更新失败 failed</td><td>显示</td><td>（未待恢复时）从备份恢复，可用</td><td>可用</td></tr>
+    <tr><td>中断待恢复 pending</td><td>显示</td><td>导出可读副本</td><td>改前置灰 → 改后可用</td></tr>
+    <tr><td>就绪未通过 incomplete</td><td>显示</td><td>从备份恢复</td><td>可用</td></tr>
+    <tr><td>更新进行中 busy</td><td>不显示（树正在移动）</td><td>置灰（数据任务进行中）</td><td>置灰</td></tr>
+  </table>
+  <p>平板横屏（≥ 840dp）的设置页为双栏，左栏为示意。设备尺寸按 CSS 像素约等于 dp，最终以真机 <code>LayoutAuditInstrumentation</code> 为准。</p>
+</div>
+
+<script>
+const S={dev:'phone',page:'extract',state:'failed',theme:'light',lang:'zh',fs:'1',cmp:'both',mark:'on'};
+const DEV={phone:[360,760],land:[760,360],tp:[800,1180],tl:[1180,800]};
+const T={
+ zh:{
+  title:'运行环境维护',st:'更新运行环境',lead:'相同基础环境只更新 dsh 与内置插件，个人数据保持原位；基础环境变更时先保护数据再重建。验证失败可恢复原环境。',
+  steps:['停止 Web 与终端任务','解压新版 dsh','准备内置插件与界面适配','保留并切换受管文件','隔离试运行与就绪检查'],
+  line:(i,n,s)=>`第 ${i} / ${n} 步 · ${s}`,
+  retryUpdate:'重试更新运行时',recover:'恢复中断维护',rebuild:'保护数据并重建',busy:'正在更新运行时',
+  limited:'进入受限主界面 · 查看日志与配置',limitedShort:'进入受限主界面',
+  logs:'维护记录',copy:'复制给支持',emer:'应急 DSH',
+  failOld:'未完成的操作：更新运行时\n最后记录阶段：隔离试运行与就绪检查\n\nRUNTIME_TRIAL_FAILED\n\n原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。\n\n任务未完成。请按上方原因处理后重试；本页不会自动覆盖环境。',
+  failNew:'未完成的操作：更新运行时\n最后记录阶段：隔离试运行与就绪检查\n\nRUNTIME_TRIAL_FAILED\n\n原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可先点<mark>“导出可读副本”</mark>保存数据。\n\n任务未完成。请按上方原因处理后重试；本页不会自动覆盖环境。',
+  pend:'上次维护未完成，请先恢复原环境。恢复前不会再次更新。',
+  inc:'维护步骤已结束，但环境就绪检查未通过。已停止自动跳转，请查看原因或进入受限主界面。',
+  rescue:'导出可读副本',
+  pill:{busy:'2 / 5',failed:'失败',pending:'待恢复',incomplete:'未就绪'},
+  banner:'受限模式：环境需要恢复 · 点击处理',
+  dataTitle:'数据与备份',dataSub:'备份、导出与恢复你的对话、配置和插件',
+  heroPend:'有未完成的环境维护',
+  heroPendOld:'原环境尚未确认，备份和恢复暂不可用。请先恢复中断维护。',
+  heroPendNew:'原环境尚未确认，常规备份和恢复暂不可用。可先导出可读副本保存数据，再恢复中断维护。',
+  heroFail:'上次备份未完成',heroFailBody:'最近 7 天内没有成功的手动备份。',
+  heroBusy:'数据任务进行中',heroBusyBody:'请勿关闭应用。',
+  stManual:'最近手动备份',stAuto:'自动备份',stPlace:'保存位置',never:'从未',autoV:'每天 03:00',place:'下载/DSHA',
+  backup:'立即备份',restore:'从备份恢复',
+  secBackup:'备份选项',secFiles:'存储与文件',secRepair:'维护与恢复',
+  eAuto:['自动备份','备份时机 · 本机保留最近 3 份已验证副本'],eExport:['自定义导出','选择范围 · 项目目录 · 是否包含 API Key'],eHist:['备份与维护记录','手动备份、自动副本和维护结果'],
+  eStore:['存储与文件','占用空间 · 清理缓存'],eFiles:['作品与文件导出','浏览工作区 · 保存到手机 · 分享'],
+  eGuide:['储存指南','数据位置 · 导出备份 · 恢复与清理'],eRet:['保留副本与旧环境','旧环境、插件原件和隔离项，不自动删除'],
+  eRepair:['环境修复与数据救援','只读救援导出 · 恢复中断提交 · 回退运行时'],eReset:['重置配置','保留原件，插件、对话和凭据不受影响'],
+  available:'可用',
+  nav:['启动','插件','设置','终端'],
+  panes:['通用','模型与密钥','数据与备份','设备能力授权','关于'],
+  ndTitle:'应用数据与救援',ndSub:'运行环境不可用时，也能检查并保护可读取的数据。',
+  ndExport:['导出应用数据','将停止 Web、终端和写入任务后建立快照，导出无需密码的 tar.gz 备份。'],
+  ndRescue:['只读救援导出','救援不会停止当前写入，结果将标明尽力救援或部分数据。不能据此删除原件。导出为无需密码的 tar.gz。'],
+  ndImport:['导入备份','先验证备份内容，再确认恢复范围。'],
+  dlgTitle:'救援导出',dlgBody:'救援不会停止当前写入，结果将标明尽力救援或部分数据。不能据此删除原件。导出为无需密码的 tar.gz。',
+  pick:'选择保存位置',cancel:'取消',
+  before:'改前（build271 当前）',after:'改后（建议）',
+  pathOld:'到达救援导出：4 次点击，且「环境修复与数据救援」在待恢复时置灰，实际无法到达',
+  pathNew:'到达救援导出：维护页 1 次点击；受限主界面 设置 → 数据与备份 → 导出可读副本 3 次点击',
+  pathConfirm:'确认框与按钮沿用现有 DshaDialogBuilder，仅新增“打开即弹出”',
+  saf:'→ 系统保存位置：DSHA-data-v5-<UUID>.tar.gz',
+  go:{retry:'→ RuntimeMaintenanceStarter.confirmRetry',limited:'→ proceed()（受限主界面）',logs:'→ DiagnosticActivity.downloadLogs',copy:'已复制本机环境摘要。',emer:'→ RecoveryActivity',disabled:'置灰：维护未完成时不可用'}},
+ en:{
+  title:'Runtime maintenance',st:'Updating runtime',lead:'Same base: only dsh and built-in plugins are updated and personal data stays in place. A new base protects data before rebuilding. Failed verification can restore the original.',
+  steps:['Stop Web and terminal tasks','Extract new dsh','Prepare built-in plugins and UI','Keep and switch managed files','Isolated trial and readiness check'],
+  line:(i,n,s)=>`Step ${i} / ${n} · ${s}`,
+  retryUpdate:'Retry runtime update',recover:'Recover interrupted maintenance',rebuild:'Protect data and rebuild',busy:'Updating runtime',
+  limited:'Enter limited interface · logs and settings',limitedShort:'Limited interface',
+  logs:'Record',copy:'Copy for support',emer:'Emergency DSH',
+  failOld:'Incomplete operation: runtime update\nLast recorded stage: isolated trial and readiness check\n\nRUNTIME_TRIAL_FAILED\n\nOriginal state: recovery has not been confirmed. Inspect the record and use Recover interrupted maintenance, or enter the limited interface to export readable copies.\n\nThe task did not finish. Fix the reason above and retry; this page never overwrites the environment automatically.',
+  failNew:'Incomplete operation: runtime update\nLast recorded stage: isolated trial and readiness check\n\nRUNTIME_TRIAL_FAILED\n\nOriginal state: recovery has not been confirmed. Inspect the record and use Recover interrupted maintenance, or first save your data with <mark>Export readable copy</mark>.\n\nThe task did not finish. Fix the reason above and retry; this page never overwrites the environment automatically.',
+  pend:'The last maintenance did not finish. Recover the original environment first.',
+  inc:'Maintenance ended, but readiness checks did not pass. Automatic navigation stopped. Review the reason or enter the limited interface.',
+  rescue:'Export readable copy',
+  pill:{busy:'2 / 5',failed:'Failed',pending:'Pending',incomplete:'Not ready'},
+  banner:'Limited mode: environment needs recovery · Tap to resolve',
+  dataTitle:'Data and backup',dataSub:'Back up, export and restore conversations, settings and plugins',
+  heroPend:'Environment maintenance is unfinished',
+  heroPendOld:'The original environment is unconfirmed, so backup and restore are unavailable. Resume the interrupted maintenance first.',
+  heroPendNew:'The original environment is unconfirmed, so regular backup and restore are unavailable. Export a readable copy first, then resume the interrupted maintenance.',
+  heroFail:'The last backup did not finish',heroFailBody:'No successful manual backup in the last 7 days.',
+  heroBusy:'Data task in progress',heroBusyBody:'Keep the app open.',
+  stManual:'Last manual backup',stAuto:'Automatic backup',stPlace:'Location',never:'Never',autoV:'Daily 03:00',place:'Download/DSHA',
+  backup:'Back up now',restore:'Restore from backup',
+  secBackup:'Backup options',secFiles:'Storage and files',secRepair:'Maintenance and recovery',
+  eAuto:['Automatic backup','Schedule · keeps the latest 3 verified copies on this device'],eExport:['Custom export','Choose scope · project folders · API key'],eHist:['Backup and maintenance history','Manual backups, automatic copies and maintenance'],
+  eStore:['Storage and files','Usage · clear caches'],eFiles:['Work and file export','Browse workspace · save to phone · share'],
+  eGuide:['Storage guide','Data locations · export · restore and cleanup'],eRet:['Retained copies and old environments','Old environments, original and quarantined plugins; never deleted automatically'],
+  eRepair:['Environment repair and data rescue','Read-only rescue export · interrupted commits · runtime rollback'],eReset:['Reset configuration','Originals retained; plugins, conversations and credentials are kept'],
+  available:'Available',
+  nav:['Launch','Plugins','Settings','Terminal'],
+  panes:['General','Models and keys','Data and backup','Device permissions','About'],
+  ndTitle:'Application data and recovery',ndSub:'Inspect and protect readable data even when the runtime is unavailable.',
+  ndExport:['Export application data','Web, terminals and write tasks stop before the snapshot. The tar.gz backup needs no password.'],
+  ndRescue:['Read-only rescue export','Rescue does not stop current writers. The result is best-effort or partial and cannot justify deleting originals. The tar.gz export needs no password.'],
+  ndImport:['Import backup','Verify backup contents before confirming what to restore.'],
+  dlgTitle:'Rescue export',dlgBody:'Rescue does not stop current writers. The result is best-effort or partial and cannot justify deleting originals. The tar.gz export needs no password.',
+  pick:'Choose destination',cancel:'Cancel',
+  before:'Before (build271)',after:'After (proposed)',
+  pathOld:'Reaching rescue export: 4 taps, and the repair row is disabled while recovery is pending, so it cannot be reached',
+  pathNew:'Reaching rescue export: 1 tap on the maintenance page; 3 taps from the limited interface (Settings → Data and backup → Export readable copy)',
+  pathConfirm:'Dialog and buttons reuse the existing DshaDialogBuilder; only "open on arrival" is new',
+  saf:'→ System save picker: DSHA-data-v5-<UUID>.tar.gz',
+  go:{retry:'→ RuntimeMaintenanceStarter.confirmRetry',limited:'→ proceed() (limited interface)',logs:'→ DiagnosticActivity.downloadLogs',copy:'Copied the device summary.',emer:'→ RecoveryActivity',disabled:'Disabled while maintenance is unfinished'}}};
+const IC={
+ logs:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>',
+ copy:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>',
+ emer:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M12 8v5M12 16v.5"/></svg>',
+ export:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v7h14v-7"/></svg>',
+ wrench:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L4 16.7 7.3 20l5.3-5.3a4 4 0 0 0 5.1-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>',
+ clock:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>',
+ db:'<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></svg>',
+ folder:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z"/></svg>',
+ book:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h10a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4z"/></svg>',
+ refresh:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg>',
+ shield:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>',
+ import:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 13v7h14v-7"/></svg>',
+ chev:'<svg viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2"><path d="M9 6l6 6-6 6"/></svg>'};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mk=n=>n?' new-mark':'';
+const wideDev=()=>S.dev==='tp'||S.dev==='tl';
+
+/* ① 维护页 */
+function extract(t,isNew){
+  const st=S.state, cur=st==='incomplete'?5:st==='busy'?1:4;
+  const steps=t.steps.map((s,i)=>{let c=i<cur?'done':(i===cur&&st!=='busy')?'fail':'';if(st==='incomplete')c='done';
+    return `<div class="stp ${c}"><span class="d">${c==='done'?'✓':c==='fail'?'!':''}</span>${esc(s)}</div>`}).join('');
+  const segs=t.steps.map((_,i)=>`<i class="${i<cur||st==='incomplete'?'on':i===cur&&st!=='busy'?'x':i===cur?'on':''}"></i>`).join('');
+  const msgText={failed:isNew?t.failNew:esc(t.failOld),pending:esc(t.pend),incomplete:esc(t.inc)}[st];
+  const tone={failed:'bad',pending:'bad',incomplete:'warn'}[st];
+  const rescue=isNew&&st!=='busy';
+  // 入口放在说明上方：失败说明较长，放在下方时手机竖屏首屏看不到（2026-11-02 原型核对）。
+  const focus=(msgText||rescue)?`<div class="focus">${rescue?`<button class="btn rescue${mk(1)}" data-act="rescue" aria-label="${esc(t.rescue)}">${IC.export}<span>${esc(t.rescue)}</span></button>`:''}
+     ${msgText?`<div class="msg ${tone}" role="status">${msgText}</div>`:''}</div>`:'';
+  const split=S.dev==='tl'&&focus;
+  const side=S.dev!=='phone';
+  let pri;
+  if(st==='busy')pri=`<div class="btn" aria-disabled="true" style="background:var(--raised)">${esc(t.busy)} · 2 / 5</div>`;
+  else{const lbl={failed:t.retryUpdate,pending:t.recover,incomplete:t.rebuild}[st];pri=`<button class="btn ${st==='incomplete'?'p':'bad'}" data-act="retry">${esc(lbl)}</button>`;}
+  const sec=`<button class="btn ${st==='incomplete'?'acc':''}" data-act="limited">${esc(side?t.limitedShort:t.limited)}</button>`;
+  const hot=st==='failed'||st==='pending'?'emer':st==='incomplete'?'logs':'';
+  const chips=[['logs',t.logs],['copy',t.copy],['emer',t.emer]].map(([a,l])=>`<button data-act="${a}" class="${hot===a?(a==='logs'?'warn':'hot'):''}">${IC[a]}<span>${esc(l)}</span></button>`).join('');
+  return `<div class="ex ${wideDev()?'wide':''} ${S.dev==='land'?'land':''}" style="--colw:${S.dev==='tl'?1040:640}px;display:flex;flex-direction:column;flex:1;min-height:0">
+    <div class="scroll body"><div class="hd"><h3>${esc(t.title)}</h3><span class="pill ${tone||''}">${esc(t.pill[st])}</span></div>
+    <p class="st">${esc(t.st)}</p><p class="lead">${esc(t.lead)}</p>
+    <div class="cols ${split?'split':''}"><div class="card stagecard"><div style="font-weight:600">${esc(t.line(Math.min(cur+1,5),5,t.steps[Math.min(cur,4)]))}</div><div class="segs">${segs}</div>${steps}</div>${focus}</div></div>
+    <div class="foot"><div class="row ${side?'':'vert'}">${side?sec+pri:pri+sec}</div><div class="chips">${chips}</div></div></div>`;
+}
+
+/* ② 受限主界面 · 数据与备份 */
+function entry(icon,[title,sub],opt={}){
+  return `<button class="ent${mk(opt.mark)}" data-act="${opt.act||'nav'}" ${opt.disabled?'disabled aria-disabled="true"':''}>
+    <span class="ic">${IC[icon]}</span><span class="tx"><b>${esc(title)}${opt.tag?`<span class="tag">${esc(opt.tag)}</span>`:''}</b><small>${esc(sub)}</small></span><span class="chev">${IC.chev}</span></button>`;
+}
+function workspace(t,isNew){
+  const st=S.state, busy=st==='busy', pending=st==='pending'||st==='failed';
+  // 真实实现：failed 后若原件未确认恢复同样是 pendingMaintenance；原型里 failed 与 pending 同样处理。
+  const title=busy?t.heroBusy:pending?t.heroPend:t.heroFail;
+  const body=busy?t.heroBusyBody:pending?(isNew?t.heroPendNew:t.heroPendOld):t.heroFailBody;
+  const narrow=S.dev==='phone';
+  const secBtn=pending&&isNew
+    ?`<button class="btn${mk(1)}" data-act="rescue">${IC.export}<span>${esc(t.rescue)}</span></button>`
+    :`<button class="btn" data-act="${pending||busy?'disabled':'nav'}" ${pending||busy?'disabled':''}>${esc(t.restore)}</button>`;
+  const vert=narrow&&S.fs==='1.3';
+  const dis=busy||pending;
+  const repairDisabled=busy||(pending&&!isNew);
+  const ws=`<div class="ws ${S.dev==='tp'?'center':''}" style="--pad:${narrow?16:24}px">
+    <h3>${esc(t.dataTitle)}</h3><p class="sub">${esc(t.dataSub)}</p>
+    <div class="card hero"><div class="top"><span class="tile">${IC.wrench}</span><div style="min-width:0"><h4>${esc(title)}</h4><p${pending&&isNew?' class="new-mark"':''}>${esc(body)}</p></div></div>
+      ${busy?'':`<div class="stats ${narrow?'stack':''}"><div><small>${esc(t.stManual)}</small><b>${esc(t.never)}</b></div><div><small>${esc(t.stAuto)}</small><b>${esc(t.autoV)}</b></div><div><small>${esc(t.stPlace)}</small><b>${esc(t.place)}</b></div></div>
+      <div class="acts ${vert?'vert':''}"><button class="btn p" data-act="${pending?'retry':'nav'}">${esc(pending?t.recover:t.backup)}</button>${secBtn}</div>`}</div>
+    <div class="sec-label">${esc(t.secBackup)}</div><div class="group">${entry('clock',t.eAuto)}${entry('export',t.eExport,{disabled:dis,act:'disabled'})}${entry('logs',t.eHist)}</div>
+    <div class="sec-label">${esc(t.secFiles)}</div><div class="group">${entry('db',t.eStore)}${entry('folder',t.eFiles)}</div>
+    <div class="sec-label">${esc(t.secRepair)}</div><div class="group">${entry('book',t.eGuide)}${entry('logs',t.eRet)}
+      ${entry('wrench',t.eRepair,{disabled:repairDisabled,act:repairDisabled?'disabled':'repair',mark:isNew&&pending,tag:isNew&&pending?t.available:''})}
+      ${entry('refresh',t.eReset,{disabled:dis,act:'disabled'})}</div></div>`;
+  const two=S.dev==='tl';
+  const list=two?`<div class="pane-list">${t.panes.map((p,i)=>`<div class="it ${i===2?'on':''}">${esc(p)}</div>`).join('')}</div>`:'';
+  const nav=`<div class="nav">${t.nav.map((n,i)=>`<span class="${i===2?'on':''}"><i></i>${esc(n)}</span>`).join('')}</div>`;
+  return `<div class="ma"><div class="banner">${esc(t.banner)}</div><div class="mainrow">${list}<div class="scroll">${ws}</div></div>${nav}</div>`;
+}
+
+/* ③ 救援确认：NativeDataActivity rescue 模式 */
+function confirmPage(t,isNew){
+  const narrow=S.dev==='phone';
+  const card=`<div class="ws ${narrow?'':'center'}" style="--pad:${narrow?16:24}px"><h3>${esc(t.ndTitle)}</h3><p class="sub">${esc(t.ndSub)}</p>
+    <div class="group" style="margin-top:16px">${entry('export',t.ndExport)}${entry('shield',t.ndRescue,{act:'rescue'})}${entry('import',t.ndImport)}</div></div>`;
+  const dlg=isNew?`<div class="scrim"><div class="dlg${mk(1)}" role="dialog" aria-modal="true" aria-label="${esc(t.dlgTitle)}"><h4>${esc(t.dlgTitle)}</h4><p>${esc(t.dlgBody)}</p>
+    <div class="ft"><button class="btn t" data-act="cancel">${esc(t.cancel)}</button><button class="btn t" data-act="pick" style="font-weight:700">${esc(t.pick)}</button></div></div></div>`:'';
+  return `<div class="ma"><div class="scroll">${card}</div>${dlg}</div>`;
+}
+
+function device(kind,t){
+  const [w,h]=DEV[S.dev];const isNew=kind==='new';
+  const inner=S.page==='extract'?extract(t,isNew):S.page==='workspace'?workspace(t,isNew):confirmPage(t,isNew);
+  return `<div class="dev ${wideDev()?'tab':''}"><div class="scr ${S.fs==='1.3'?'fs13':''}" style="--fs:${S.fs};width:${w}px;height:${h}px">
+    <div class="sb"><span>16:54</span><span>▮▮▮ ◯</span></div>${inner}<div class="toast" role="status" aria-live="polite"></div></div></div>`;
+}
+function path(t,k){
+  if(S.page==='confirm')return k==='old'?t.pathOld:t.pathConfirm;
+  return k==='old'?t.pathOld:t.pathNew;
+}
+function render(){
+  const t=T[S.lang];
+  document.documentElement.dataset.theme=S.theme;document.documentElement.lang=S.lang==='zh'?'zh-CN':'en';
+  document.body.classList.toggle('hide-mark',S.mark==='off');
+  const kinds=S.cmp==='both'?['old','new']:['new'];
+  const [w,h]=DEV[S.dev], pad=wideDev()?28:20;
+  const avail=Math.max(320,(Math.min(window.innerWidth,1700)-60-28*(kinds.length-1))/kinds.length);
+  const scale=Math.min(1,avail/(w+pad),(window.innerHeight*1.1)/(h+pad));
+  document.getElementById('stage').innerHTML=kinds.map(k=>`<div class="col" data-kind="${k}"><h2>${k==='old'?t.before:t.after}</h2>
+    <div class="fit" style="width:${Math.round((w+pad)*scale)}px;height:${Math.round((h+pad)*scale)}px">${device(k,t).replace('class="dev','style="transform:scale('+scale.toFixed(3)+')" class="dev')}</div>
+    <div class="meter">${esc(path(t,k))}</div></div>`).join('');
+}
+function set(k,v){S[k]=v;document.querySelectorAll(`[data-k=${k}] button`).forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===v));render();}
+document.querySelectorAll('.seg').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('button');if(b)set(g.dataset.k,b.dataset.v);}));
+document.getElementById('stage').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;
+  const t=T[S.lang],scr=b.closest('.scr'),toast=scr.querySelector('.toast'),a=b.dataset.act;
+  const say=s=>{toast.textContent=s;toast.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>toast.classList.remove('show'),1600)};
+  if(a==='rescue'||a==='repair'){if(b.closest('[data-kind=new]')||a==='rescue')set('page','confirm');return;}
+  if(a==='pick'){say(t.saf);return;}
+  if(a==='cancel'){set('page','workspace');return;}
+  if(a==='retry'){set('state','busy');return;}
+  if(a==='nav')return;
+  say(t.go[a]||a);
+});
+window.addEventListener('resize',render);
+const q=new URLSearchParams(location.search);for(const k of Object.keys(S))if(q.has(k))S[k]=q.get(k);
+document.querySelectorAll('.seg').forEach(g=>g.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===S[g.dataset.k])));
+render();
+</script>
+</body>
+</html>

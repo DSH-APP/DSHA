@@ -1,4 +1,10 @@
 name: Complete unsigned package checks
+
+# 节点图：
+#   inputs（只还原、不重建运行时）─┬─► native-repro（描述符字节、第三方声明、原生可复现）
+#                                  └─► package（verify-stability --stage package 的单一回执）
+# package 节点保持一次完整回执：单测 / Lint / 资产 / 包检查共享同一源码快照，
+# 由 tools/verify-ci-package.py 按 run 路径与 commit 复核。
 on:
   workflow_dispatch:
     inputs:
@@ -10,37 +16,39 @@ on:
         description: Fixed SHA-256 for that input bundle
         required: true
         type: string
+      asset_archive_format:
+        description: Layout of the verified input archive
+        required: false
+        type: choice
+        default: bundle
+        options: [bundle, source-archive]
 permissions:
   contents: read
 jobs:
-  package:
+  inputs:
+    uses: ./.github/workflows/_node-inputs.yml
+    with:
+      asset_bundle_url: ${{ inputs.asset_bundle_url }}
+      asset_bundle_sha256: ${{ inputs.asset_bundle_sha256 }}
+      asset_archive_format: ${{ inputs.asset_archive_format }}
+      rebuild_runtime: false
+      artifact: package-inputs
+  native-repro:
+    name: Descriptor bytes, notices and native reproducibility
+    needs: inputs
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Verify toolchain against source configuration
-        id: toolchain
-        run: python3 tools/ci-toolchain.py --github-output
-      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+      - uses: ./.github/actions/setup-toolchain
+      - uses: ./.github/actions/android-sdk
         with:
-          distribution: temurin
-          java-version: ${{ steps.toolchain.outputs.java }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+          ndk: 'true'
+      - uses: ./.github/actions/restore-handoff
         with:
-          node-version: ${{ steps.toolchain.outputs.node }}
-      - name: Restore exact offline inputs
-        env:
-          INPUT_URL: ${{ inputs.asset_bundle_url }}
-          INPUT_SHA: ${{ inputs.asset_bundle_sha256 }}
-        run: python3 tools/ci-assets.py --url "$INPUT_URL" --sha256 "$INPUT_SHA"
-      - name: Android SDK
-        run: |
-          platform=$(python3 tools/ci-toolchain.py --field androidPlatform)
-          buildtools=$(python3 tools/ci-toolchain.py --field buildTools)
-          ndk=$(python3 tools/ci-toolchain.py --field ndk)
-          sdkmanager "platforms;$platform" "build-tools;$buildtools" "ndk;$ndk"
+          artifact: ${{ needs.inputs.outputs.artifact }}
       - name: Full descriptor bytes, notices and native reproducibility
         run: |
           ndk=$(python3 tools/ci-toolchain.py --field ndk)
@@ -48,16 +56,31 @@ jobs:
           python3 tools/generate-third-party-notices.py --check
           python3 tools/check-third-party-notices.py --archive app/src/main/assets/dsh-runtime.bin
           python3 tools/native-session/build.py --ndk "$ANDROID_HOME/ndk/$ndk" --check
-      - name: Current verified host runtime fixture
-        run: python3 tools/prepare-test-runtime.py
-      - name: Complete unit, lint, assets and package checks without signing secrets
-        run: python3 tools/verify-stability.py --stage package --java-home "$JAVA_HOME" --sdk "$ANDROID_HOME"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+  package:
+    name: Complete Standard unit, lint, assets and package checks
+    needs: inputs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-toolchain
+      - uses: ./.github/actions/android-sdk
+        with:
+          ndk: 'true'
+      - uses: ./.github/actions/restore-handoff
+        with:
+          artifact: ${{ needs.inputs.outputs.artifact }}
+          fixture: 'true'
+      - name: Complete Standard unit, lint, assets and package checks without signing secrets
+        run: python3 tools/verify-stability.py --stage package --flavors standard --java-home "$JAVA_HOME" --sdk "$ANDROID_HOME"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: UNSIGNED-NOT-FOR-INSTALLATION
           path: |
-            app/build/outputs/apk/*/release/*-unsigned.apk
+            app/build/outputs/apk/standard/release/*-unsigned.apk
             app/build/stability-acceptance
           if-no-files-found: error
           retention-days: 14

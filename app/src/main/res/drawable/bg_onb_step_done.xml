@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 左栏步骤序号（完成）：强调色实心圆。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><solid android:color="@color/shell_accent" /></shape>

@@ -5,6 +5,9 @@ from pathlib import Path, PurePosixPath
 MANIFEST = 'app/src/main/assets/managed-runtime-inputs.json'
 ASSETS = 'app/src/main/assets'
 JAVA = 'app/src/main/java/com/deepseekharness/app'
+BUILTIN_RUNTIME_SUFFIXES = {'.js', '.cjs', '.mjs', '.json', '.yml', '.yaml', '.css', '.wasm',
+                            '.html', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico',
+                            '.woff', '.woff2', '.ttf', '.otf'}
 
 
 def relative(value):
@@ -36,7 +39,38 @@ def load(root):
     if not isinstance(generators,list) or len(set(generators))!=len(generators):
         raise ValueError('RUNTIME_GENERATOR_SOURCE_LIST')
     for value in generators:relative(value)
+    verify_builtin_installs(root, spec)
     return spec
+
+
+def verify_builtin_installs(root, spec):
+    """APK presence and a descriptor digest do not prove delivery to a guest entity.
+
+    Every runtime file in each signed builtin must have its exact installer row.
+    TypeScript source, declaration files, source maps and documentation stay outside
+    this runtime rule; this never adds user/plugin paths to the managed boundary.
+    """
+    root = Path(root)
+    registry = root / ASSETS / 'builtin-plugins.json'
+    if not registry.is_file():
+        return  # Small isolated descriptor fixtures need not contain the plugin registry.
+    rows = {row['asset']: row for row in spec['installs']}
+    for plugin in json.loads(registry.read_text(encoding='utf-8'))['plugins']:
+        name, guest = plugin['name'], plugin['guestDirectory']
+        tree = 'app-integration' if name == 'dsh-app-integration' else 'builtin-plugins/' + name
+        directory = root / ASSETS / tree
+        if not directory.is_dir():
+            raise ValueError('BUILTIN_RUNTIME_TREE_MISSING:' + name)
+        for path in directory.rglob('*'):
+            suffix = path.relative_to(directory).as_posix()
+            if not path.is_file() or suffix.startswith('src/') or path.suffix not in BUILTIN_RUNTIME_SUFFIXES:
+                continue
+            asset = tree + '/' + suffix
+            expected = guest.lstrip('/') + '/' + suffix
+            if asset not in rows:
+                raise ValueError('BUILTIN_RUNTIME_FILE_UNINSTALLED:' + asset)
+            if rows[asset]['target'] != expected:
+                raise ValueError('BUILTIN_RUNTIME_TARGET_MISMATCH:' + asset)
 
 
 def _file(root, relative_path):

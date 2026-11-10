@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 下载记录行：按下水波；双栏中选中行用 accent_soft 底（state_selected）。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/shell_nav_ripple">
+    <item android:id="@android:id/mask">
+        <color android:color="#FFFFFFFF" />
+    </item>
+    <item>
+        <selector>
+            <item android:state_selected="true">
+                <color android:color="@color/shell_accent_soft" />
+            </item>
+            <item>
+                <color android:color="@android:color/transparent" />
+            </item>
+        </selector>
+    </item>
+</ripple>

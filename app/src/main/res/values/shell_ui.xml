@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  UI v5 原生外壳 token：顶栏 / 手机胶囊导航 / 平板左栏。
+  数值取自设计源 base.html 的 .app(light) 与 refinement.css 覆盖层：
+  层级色走 refinement 的 bg/surface/lift，强调色走设计源的 blue。
+  与既有 colors.xml 的语义色分开命名，外壳改版不再牵动全站按钮与卡片配色。
+-->
+<resources>
+    <!-- 画布与层级 -->
+    <color name="shell_line">#131D3A60</color>
+    <color name="shell_line_strong">#251D3A60</color>
+
+    <!-- 文字 -->
+    <color name="shell_text">#18273F</color>
+    <color name="shell_text_secondary">#50617A</color>
+    <color name="shell_text_muted">#5A6B86</color>
+
+    <!-- 强调与状态 -->
+    <!-- 进度条流光叠层：日间 38% 白，夜间压到 16%，只叠在强调色填充内。 -->
+    <color name="shell_sheen">#61FFFFFF</color>
+    <color name="shell_good">#287453</color>
+    <color name="shell_warn">#8C600D</color>
+    <color name="shell_bad">#AF404B</color>
+    <!-- 状态软底：只用于状态条/危险按钮的浅色背景，不用于正文。 -->
+    <color name="shell_good_soft">#14287453</color>
+    <color name="shell_warn_soft">#148C600D</color>
+    <color name="shell_bad_soft">#14AF404B</color>
+
+    <!-- 画布、卡片、强调色、玻璃层与导航底随调色板切换，见 theme_palettes.xml。 -->
+
+    <!-- 手机胶囊导航 -->
+    <!-- 对应 labelVisibilityMode：1 = labeled；手机竖屏见 values-port 只显示图标 -->
+    <integer name="shell_nav_label_visibility">1</integer>
+    <dimen name="shell_nav_height">64dp</dimen>
+    <dimen name="shell_nav_margin_horizontal">12dp</dimen>
+    <dimen name="shell_nav_margin_bottom">10dp</dimen>
+    <dimen name="shell_nav_icon_size">22dp</dimen>
+    <dimen name="shell_nav_label">10sp</dimen>
+    <dimen name="shell_nav_item_padding_top">8dp</dimen>
+    <dimen name="shell_nav_item_padding_bottom">6dp</dimen>
+
+    <!-- 顶栏 -->
+    <dimen name="shell_header_min_height">60dp</dimen>
+    <dimen name="shell_brand_size">34dp</dimen>
+    <dimen name="shell_brand_icon_size">18dp</dimen>
+    <dimen name="shell_title_text">16sp</dimen>
+    <dimen name="shell_context_text">11sp</dimen>
+
+    <!-- 平板左栏 -->
+    <dimen name="shell_rail_width">80dp</dimen>
+    <dimen name="shell_rail_padding_horizontal">7dp</dimen>
+    <dimen name="shell_rail_item_width">56dp</dimen>
+    <dimen name="shell_rail_item_height">64dp</dimen>
+    <dimen name="shell_rail_item_gap">8dp</dimen>
+    <dimen name="shell_rail_icon_size">22dp</dimen>
+    <dimen name="shell_rail_label">10sp</dimen>
+    <dimen name="shell_rail_foot">8sp</dimen>
+
+    <!-- 导航标签：胶囊与左栏共用 10sp 字号，保证两种外壳的字阶一致 -->
+    <style name="Widget.DSHA.ShellNavLabel" parent="">
+        <item name="android:textSize">@dimen/shell_nav_label</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+</resources>

@@ -10,6 +10,9 @@ final class StartupPipeline {
   interface Actions {
     boolean current();
 
+    /** 用户启动优先：在插件脚本/写入开始前取消低优先级自动查询。 */
+    default void yieldPluginQuery() throws Exception {}
+
     void stage(String stage);
 
     void status(String status);
@@ -50,7 +53,30 @@ final class StartupPipeline {
 
     String legacyPlugins() throws Exception;
 
-    com.deepseekharness.app.util.BoundedProcessRunner.Result materializeCasLinks() throws Exception;
+    default Plugins startupPlugins() throws Exception {
+      return new Plugins() {
+        public String register() throws Exception {
+          return Runtime.this.register();
+        }
+
+        public String legacy() throws Exception {
+          return Runtime.this.legacyPlugins();
+        }
+
+        public void close() {}
+      };
+    }
+
+    com.deepseekharness.app.util.BoundedProcessRunner.Result materializeCasLinks(
+        java.util.function.Consumer<String> timing) throws Exception;
+  }
+
+  interface Plugins extends AutoCloseable {
+    String register() throws Exception;
+
+    String legacy() throws Exception;
+
+    void close();
   }
 
   interface Diagnostics {
@@ -121,10 +147,28 @@ final class StartupPipeline {
                 "PLUGIN_LEGACY_ACTIVATION");
           }
 
-          public com.deepseekharness.app.util.BoundedProcessRunner.Result materializeCasLinks()
-              throws Exception {
-            return boot.execAndReadWithProotResult(
-                "python3 /root/.dsh/plugin-manager.py materialize-cas-links", 120_000);
+          public Plugins startupPlugins() throws Exception {
+            var scripts = boot.prepareStartupPlugins();
+            return new Plugins() {
+              public String register() throws Exception {
+                return com.deepseekharness.app.util.GuestCommandOutcome.requireCompleted(
+                    scripts.register(), "BUILTIN_REGISTER");
+              }
+
+              public String legacy() throws Exception {
+                return com.deepseekharness.app.util.GuestCommandOutcome.requireCompleted(
+                    scripts.legacy(), "PLUGIN_LEGACY_ACTIVATION");
+              }
+
+              public void close() {
+                scripts.close();
+              }
+            };
+          }
+
+          public com.deepseekharness.app.util.BoundedProcessRunner.Result materializeCasLinks(
+              java.util.function.Consumer<String> timing) throws Exception {
+            return boot.materializeCasLinksResult(timing);
           }
         },
         new Diagnostics() {
@@ -144,6 +188,8 @@ final class StartupPipeline {
 
   String prepare(long generation, boolean safeMode, Actions actions) throws Exception {
     if (!actions.current()) return null;
+    actions.yieldPluginQuery();
+    var timing = new StartupPreparationTiming(line -> diagnostics.message(generation, line));
     // The native key is a legacy environment fallback. Its unavailable state remains
     // explicit, but must not prevent opening Web's own credential configuration.
     try {
@@ -155,26 +201,51 @@ final class StartupPipeline {
     }
     runtime.stopLan();
     actions.stage(com.deepseekharness.app.util.UiText.text("停止旧 Web 进程"));
-    String stopError = runtime.stopWeb();
+    String stopError = timing.run("stop-web", runtime::stopWeb);
     if (!stopError.isEmpty()) throw new java.io.IOException(stopError);
-    actions.releasePrior();
+    timing.run(
+        "retire-prior-launchers",
+        () -> {
+          actions.releasePrior();
+          return null;
+        });
     if (!actions.current()) return null;
     actions.stage(com.deepseekharness.app.util.UiText.text("检查随包运行工具"));
-    runtime.tools();
+    timing.run(
+        "runtime-tools",
+        () -> {
+          runtime.tools();
+          return null;
+        });
     if (!runtime.ready()) {
       if (!runtime.offlineBundle()) {
         throw new IOException("BUNDLED_ENVIRONMENT_MISSING");
       }
       actions.status(com.deepseekharness.app.util.UiText.text("正在解压内置环境（首次约需几分钟，请勿退出）…"));
       actions.stage(com.deepseekharness.app.util.UiText.text("解压运行环境"));
-      runtime.extract();
+      timing.run(
+          "extract-environment",
+          () -> {
+            runtime.extract();
+            return null;
+          });
       actions.status(com.deepseekharness.app.util.UiText.text("环境解压完成，正在启动 dsh web…"));
     }
     if (!actions.current()) return null;
     actions.stage(com.deepseekharness.app.util.UiText.text("恢复数据事务"));
-    actions.recoverData();
+    timing.run(
+        "recover-data",
+        () -> {
+          actions.recoverData();
+          return null;
+        });
     try {
-      actions.cleanup();
+      timing.run(
+          "cleanup-retired",
+          () -> {
+            actions.cleanup();
+            return null;
+          });
     } catch (IOException cleanup) {
       actions.status(
           com.deepseekharness.app.util.UiText.format("部分旧环境待清理：%s", cleanup.getMessage()));
@@ -183,7 +254,8 @@ final class StartupPipeline {
     // rc1 会在第一次真实启动时迁移 Session/settings/profile。先在 .dsh
     // 隔离区留住旧源和摘要；迁移保护失败时不继续启动，避免上游先 rename
     // settings.yaml 后因插件 pending 造成不可重试的导入。
-    String migration = runtime.migration(diagnostics.recordId());
+    String migration =
+        timing.run("rc-one-migration", () -> runtime.migration(diagnostics.recordId()));
     Map<String, Object> migrationState =
         com.deepseekharness.app.util.Rc1MigrationResult.parse(migration);
     if (!com.deepseekharness.app.util.Rc1MigrationResult.isRoutineReceipt(migrationState))
@@ -201,63 +273,83 @@ final class StartupPipeline {
       actions.stage(
           com.deepseekharness.app.util.UiText.choose(
               "检查旧插件文件链接", "Checking legacy plugin file links"));
+      var outcome =
+          timing.run(
+              "legacy-cas-links",
+              () -> runtime.materializeCasLinks(line -> diagnostics.message(generation, line)));
+      relayCasTiming(outcome.output, generation);
       long copied =
           requireCasCopyReceipt(
               com.deepseekharness.app.util.GuestCommandOutcome.requireCompleted(
-                  runtime.materializeCasLinks(), "PLUGIN_CAS_COPY"));
+                  outcome, "PLUGIN_CAS_COPY"));
       if (copied > 0)
         diagnostics.message(
             generation,
             com.deepseekharness.app.util.UiText.format("已修复 %s 个旧包文件链接，原链接已保留。", copied));
       if (!actions.current()) return null;
       actions.stage(com.deepseekharness.app.util.UiText.text("注册插件"));
-      // 内置插件注册：rootfs 烘焙的实体要登记进 web profile 才会被 dsh 加载。
-      // 覆盖安装（rootfs 保留）与全新安装（rootfs 重新解压）都靠这一步补齐；
-      // 注册失败时停止在原生恢复页，不能带着一半旧插件继续启动 Web。
-      String r;
-      try {
-        r = runtime.register();
-        diagnostics.message(generation, r);
-      } catch (IOException incomplete) {
-        diagnostics.issue(
-            generation,
-            "",
-            com.deepseekharness.app.util.UiText.format(
-                "插件注册失败：%s",
-                com.deepseekharness.app.util.SensitiveData.redact(incomplete.getMessage())));
-        throw incomplete;
+      try (Plugins plugins = timing.run("prepare-plugin-helpers", runtime::startupPlugins)) {
+        // 内置插件注册：rootfs 烘焙的实体要登记进 web profile 才会被 dsh 加载。
+        // 覆盖安装（rootfs 保留）与全新安装（rootfs 重新解压）都靠这一步补齐；
+        // 注册失败时停止在原生恢复页，不能带着一半旧插件继续启动 Web。
+        String r;
+        try {
+          r = timing.run("register-builtins", plugins::register);
+          diagnostics.message(generation, r);
+        } catch (IOException incomplete) {
+          diagnostics.issue(
+              generation,
+              "",
+              com.deepseekharness.app.util.UiText.format(
+                  "插件注册失败：%s",
+                  com.deepseekharness.app.util.SensitiveData.redact(incomplete.getMessage())));
+          throw incomplete;
+        }
+        if (!r.contains("BUILTIN_REGISTER_OK")) {
+          String detail = com.deepseekharness.app.util.SensitiveData.redact(String.valueOf(r));
+          if (detail.length() > 1200) detail = detail.substring(detail.length() - 1200);
+          diagnostics.issue(
+              generation, "", com.deepseekharness.app.util.UiText.format("插件注册失败：%s", detail));
+          throw new java.io.IOException(
+              com.deepseekharness.app.util.UiText.format("内置插件未完整注册，请先修复环境：%s", detail));
+        }
+        // 覆盖升级时只解除旧版自动生成的待审阅标记；尊重用户主动禁用。
+        if (!actions.current()) return null;
+        String migratedPlugins = timing.run("legacy-plugin-reviews", plugins::legacy);
+        diagnostics.message(generation, migratedPlugins);
       }
-      if (!r.contains("BUILTIN_REGISTER_OK")) {
-        String detail = com.deepseekharness.app.util.SensitiveData.redact(String.valueOf(r));
-        if (detail.length() > 1200) detail = detail.substring(detail.length() - 1200);
-        diagnostics.issue(
-            generation, "", com.deepseekharness.app.util.UiText.format("插件注册失败：%s", detail));
-        throw new java.io.IOException(
-            com.deepseekharness.app.util.UiText.format("内置插件未完整注册，请先修复环境：%s", detail));
-      }
-      // 覆盖升级时只解除旧版自动生成的待审阅标记；尊重用户主动禁用。
-      String migratedPlugins = runtime.legacyPlugins();
-      diagnostics.message(generation, migratedPlugins);
     }
     if (!actions.current()) return null;
     String startupProfile = "web";
-    if (!safeMode) actions.beforeLaunch(diagnostics.recordId());
+    if (!safeMode)
+      timing.run(
+          "plugin-activation",
+          () -> {
+            actions.beforeLaunch(diagnostics.recordId());
+            return null;
+          });
     if (safeMode) {
       actions.stage(com.deepseekharness.app.util.UiText.text("准备独立基础配置"));
-      startupProfile = actions.safeProfile();
+      startupProfile = timing.run("safe-profile", actions::safeProfile);
       actions.status(
           com.deepseekharness.app.util.UiText.text("安全启动仅加载官方基础界面；原插件开关和配置保留，点普通重启可返回。"));
     }
-    if (!actions.unlockStartup()) return null;
+    if (!timing.run("unlock-startup", actions::unlockStartup)) return null;
     actions.stage(com.deepseekharness.app.util.UiText.text("创建 Web 进程"));
     if (!safeMode)
       try {
-        actions.checkpoint(diagnostics.recordId());
+        timing.run(
+            "configuration-checkpoint",
+            () -> {
+              actions.checkpoint(diagnostics.recordId());
+              return null;
+            });
       } catch (Exception error) {
         diagnostics.message(
             generation,
             com.deepseekharness.app.util.UiText.format(
-                "本次配置快照暂不可用：%s", error.getClass().getSimpleName()));
+                "本次配置快照暂不可用：%s",
+                com.deepseekharness.app.backup.ConfigurationSnapshots.errorCode(error)));
       }
     return startupProfile;
   }
@@ -275,14 +367,26 @@ final class StartupPipeline {
   }
 
   private static String legacyCredentialWarning(com.deepseekharness.app.util.CredentialRead read) {
-    return "LEGACY_NATIVE_KEY_"
-        + read.state.name()
-        + "/"
-        + read.reason.name()
-        + ": "
-        + com.deepseekharness.app.util.UiText.choose(
-            "旧原生 API Key 无法读取，原记录已保留。本次不注入兼容凭据；可继续在网页配置模型和凭据。",
-            "The legacy native API key is unavailable and its saved record was retained. No compatibility key will be injected; configure the model and credentials in Web.");
+    return com.deepseekharness.app.util.UiText.format(
+        com.deepseekharness.app.util.UiText.choose(
+            "LEGACY_NATIVE_KEY_%s/%s: 旧原生 API Key 无法读取，原记录已保留。本次不注入兼容凭据；可继续在网页配置模型和凭据。",
+            "LEGACY_NATIVE_KEY_%s/%s: The legacy native API key is unavailable and its saved record was retained. No compatibility key will be injected; configure the model and credentials in Web."),
+        read.state.name(),
+        read.reason.name());
+  }
+
+  /** 只转送有界阶段诊断；阶段行不能代替完成回执和真实进程退出。 */
+  private void relayCasTiming(String output, long generation) {
+    int count = 0;
+    if (output == null) return;
+    for (String line : output.split("\\r?\\n")) {
+      if (!line.startsWith("CAS_TIMING: ")) continue;
+      if (++count > 24) break;
+      diagnostics.message(
+          generation,
+          com.deepseekharness.app.util.SensitiveData.redact(
+              line.substring(0, Math.min(line.length(), 4096))));
+    }
   }
 
   /** One completed repair receipt authorizes proceeding; errors and pending work never do. */

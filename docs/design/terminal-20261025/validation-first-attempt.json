@@ -1,0 +1,29 @@
+{
+  "startedAt": "2026-10-25T10:38:17.832Z",
+  "scope": "offline HTML prototype only; not Android validation",
+  "checks": [
+    {
+      "name": "内嵌脚本语法",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "禁止网络的 CSP",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "无执行/网络/用户持久化 API",
+      "passed": true,
+      "detail": ""
+    }
+  ],
+  "screenshots": [],
+  "pageErrors": [],
+  "externalRequests": [],
+  "browser": "141.0.7390.37",
+  "passed": false,
+  "failure": "page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"file://<workspace>/DSHA-Sunset-mod-3090-Q/docs/design/terminal-20261025/preview.html\", waiting until \"load\"\n\n    at makePage (<workspace>/DSHA-Sunset-mod-3090-Q/docs/design/terminal-20261025/check-preview.cjs:84:18)\n    at async <workspace>/DSHA-Sunset-mod-3090-Q/docs/design/terminal-20261025/check-preview.cjs:88:20",
+  "finishedAt": "2026-10-25T10:38:58.199Z",
+  "checkCount": 3
+}

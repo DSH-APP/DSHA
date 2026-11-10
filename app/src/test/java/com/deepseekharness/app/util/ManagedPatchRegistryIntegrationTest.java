@@ -8,6 +8,15 @@ import static org.junit.Assert.*;
 
 /** Exercise current locked module bytes with the production Java chain engine. */
 public class ManagedPatchRegistryIntegrationTest {
+  private static final Set<String> BUILD192_RECIPES =
+      Set.of(
+          "deepseek-web-search-headers-patch.json",
+          "file-upload-capacity-patch.json",
+          "file-upload-binary-client-patch.json",
+          "file-deliverables-patch.json",
+          "file-image-actions-patch.json");
+  private static final Set<String> BUILD193_RECIPES = Set.of("plugin-pnpm-argv-patch.json");
+
   private static String text(Path file) throws Exception {
     return Files.readString(file).replace("\r\n", "\n");
   }
@@ -57,7 +66,8 @@ public class ManagedPatchRegistryIntegrationTest {
     if (root.getFileName().toString().equals("app")) root = root.getParent();
     Path assets = root.resolve("app/src/main/assets"),
         pointer = root.resolve("app/build/test-runtimes/current.json");
-    org.junit.Assume.assumeTrue("current raw host runtime required", Files.isRegularFile(pointer));
+    com.deepseekharness.app.runtime.SourceOnlyTestInputs.requireRegularFile(
+        pointer, "请先运行 tools/prepare-test-runtime.py");
     JsonObject selected = json(pointer), registry = json(assets.resolve("runtime-patches.json"));
     Path raw = Path.of(selected.get("raw").getAsString()).resolve("node_modules");
     assertEquals(
@@ -99,6 +109,44 @@ public class ManagedPatchRegistryIntegrationTest {
     for (var group : groups.entrySet()) {
       String canonical = text(raw.resolve(group.getKey()));
       String patched = ManagedPatchChain.apply(canonical, group.getValue(), () -> canonical);
+      if (group.getValue().stream().anyMatch(recipe -> BUILD193_RECIPES.contains(recipe.id()))) {
+        var prefixWithoutArgv =
+            group.getValue().stream()
+                .filter(recipe -> !BUILD193_RECIPES.contains(recipe.id()))
+                .toList();
+        String currentSourceWithoutArgv =
+            ManagedPatchChain.apply(canonical, prefixWithoutArgv, () -> canonical);
+        assertEquals(
+            "Current official source with the pre-argv overlay must upgrade: " + group.getKey(),
+            patched,
+            ManagedPatchChain.apply(
+                currentSourceWithoutArgv,
+                group.getValue(),
+                () -> {
+                  throw new AssertionError("Supported current source prefix must upgrade in place");
+                }));
+      }
+      var previous =
+          group.getValue().stream()
+              .filter(recipe -> !BUILD192_RECIPES.contains(recipe.id()))
+              .toList();
+      if (previous.size() != group.getValue().size()) {
+        // Exercise a synthetic prefix on the current official source only.
+        // This is not an extraction of a historical build191 module. Exact
+        // published192 bytes and the generation boundary are covered by
+        // tools/test-build193-patch-chain.py.
+        String currentSourceWithoutTransfers =
+            ManagedPatchChain.apply(canonical, previous, () -> canonical);
+        assertEquals(
+            "Current official source with the pre-transfer overlay must upgrade: " + group.getKey(),
+            patched,
+            ManagedPatchChain.apply(
+                currentSourceWithoutTransfers,
+                group.getValue(),
+                () -> {
+                  throw new AssertionError("Supported current source prefix must upgrade in place");
+                }));
+      }
       assertEquals(
           group.getKey(),
           patched,
@@ -127,5 +175,7 @@ public class ManagedPatchRegistryIntegrationTest {
     assertTrue(groups.get("@deepseek-ai/dsh-client-ui-conversation/lib/client.js").size() > 1);
     assertFalse(active.contains("agent-preset-patch.json"));
     assertFalse(active.contains("models-navigation-patch.json"));
+    assertTrue(active.containsAll(BUILD192_RECIPES));
+    assertTrue(active.containsAll(BUILD193_RECIPES));
   }
 }

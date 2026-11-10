@@ -1,0 +1,198 @@
+/*
+ * DSHA UI 模板基准 · 外壳与通用组件。1 CSS px = 1dp（导出时 deviceScaleFactor=2 → @2x）。
+ * 组件名对应原生实现：CardPage（内页骨架）、SettingsFragment 行、MainActivity 外壳、ShellRail。
+ */
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;font-size:14px}
+button,input,select,textarea{font:inherit;color:inherit}
+.i{display:inline-flex;flex:none;width:1em;height:1em;line-height:0}
+.i svg{width:100%;height:100%;overflow:visible}
+
+/* ---------- 设备画布（预览示意，不属于 App） ---------- */
+.dev{position:relative;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;
+  width:var(--dev-w);height:var(--dev-h)}
+.sb{flex:none;height:var(--sb-h);display:flex;align-items:center;justify-content:space-between;padding:0 16px;
+  font-size:12px;font-weight:600;color:var(--sys-fg);background:var(--bg);letter-spacing:.02em}
+.sb .sys-icons{display:flex;gap:5px;align-items:center}
+.sb .sys-icons i{display:block;background:currentColor;opacity:.85;border-radius:1.5px}
+.gb{flex:none;height:var(--gb-h);display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.gb::after{content:"";width:108px;height:4px;border-radius:4px;background:var(--sys-fg);opacity:.55}
+.app{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+
+/* ---------- 主外壳（activity_main.xml / layout-sw600dp） ---------- */
+.appbar{flex:none;display:flex;align-items:center;min-height:var(--header-h);padding:0 12px 0 18px;border-bottom:1px solid var(--line)}
+.brand{flex:none;width:var(--brand);height:var(--brand);border-radius:10px;background:var(--accent-soft);
+  border:1px solid var(--line-strong);display:grid;place-items:center;color:var(--accent);font-size:var(--brand-icon)}
+.appbar .words{flex:1;min-width:0;margin-left:10px}
+.appbar .t{font-size:var(--title-text);font-weight:700;letter-spacing:.06em;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appbar .c{margin-top:1px;font-size:var(--context-text);color:var(--text-2);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ibtn{flex:none;width:44px;height:44px;border:0;background:none;border-radius:50%;display:grid;place-items:center;color:var(--text-2);font-size:18px;padding:0}
+.ibtn.lg{font-size:20px}
+.body{flex:1;min-height:0;display:flex}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
+.rail{flex:none;width:var(--rail-w);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px var(--rail-px) 8px}
+.rail .items{flex:1;display:flex;flex-direction:column;gap:var(--rail-gap)}
+.rail-item{width:var(--rail-item-w);min-height:var(--rail-item-h);border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:10px 3px 9px;color:var(--text-2);font-size:var(--rail-icon)}
+.rail-item>.lbl{font-size:var(--rail-label);margin-top:5px;line-height:1}
+.rail-item.on{background:var(--accent-soft);color:var(--accent)}
+.rail-foot{font-size:var(--rail-foot);letter-spacing:.08em;color:var(--text-2);margin-top:var(--rail-gap)}
+.nav{position:absolute;left:var(--nav-mx);right:var(--nav-mx);bottom:var(--nav-mb);min-height:var(--nav-h);z-index:5;
+  background:var(--nav-bg);border:1px solid var(--line-strong);border-radius:22px;box-shadow:var(--shadow);display:flex}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px 0 6px;color:var(--muted);font-size:var(--nav-icon)}
+.nav-item .pill{width:56px;height:30px;border-radius:15px;display:grid;place-items:center}
+.nav-item.on{color:var(--accent)}
+.nav-item.on .pill{background:var(--accent-tonal)}
+.nav-item>.lbl{font-size:var(--nav-label);margin-top:4px;line-height:1;font-weight:500}
+.banner{margin:8px 12px 2px;padding:10px 12px;border-radius:14px;background:var(--warn-soft);color:var(--warn);font-size:12px;display:flex;gap:8px;align-items:center}
+
+/* ---------- 内页骨架（CardPage / UiNavigation.addHeader） ---------- */
+.subhead{flex:none;display:flex;align-items:center;height:52px;padding:0 18px 0 6px}
+.subhead .ibtn{width:48px;height:52px;border-radius:24px;font-size:20px}
+.subhead .st{font-size:15px;font-weight:600;margin-left:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.pg{padding:var(--page-top) var(--page-pad) var(--page-bottom);margin:0 auto;width:100%}
+.pg.narrow{max-width:var(--content-max,none)}
+.pg-title{margin:0;font-size:var(--page-title);font-weight:700;line-height:1.25;letter-spacing:.005em}
+.pg-desc{margin:8px 0 20px;font-size:var(--page-desc);line-height:1.55;color:var(--text-2)}
+.pg-title.only{margin-bottom:18px}
+.label{font-size:var(--section-label);font-weight:700;letter-spacing:.03em;color:var(--text-2);padding:10px 0 8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:12px 16px;margin-bottom:14px}
+.card.flush{padding:0}
+.card.pad{padding:var(--card-pad)}
+.footer{flex:none;padding:8px var(--page-pad) 16px;border-top:1px solid var(--line);background:var(--bg)}
+.footer.float{border-top:0}
+
+/* 行 */
+.entry{display:flex;align-items:center;min-height:var(--row-min);padding:10px 0}
+.card.flush .entry{padding:12px 16px}
+.tile{flex:none;width:var(--row-icon);height:var(--row-icon);border-radius:10px;background:var(--logo-top);color:var(--accent);display:grid;place-items:center;font-size:18px}
+.tile.warn{background:var(--warn-soft);color:var(--warn)}.tile.bad{background:var(--bad-soft);color:var(--bad)}.tile.good{background:var(--good-soft);color:var(--good)}
+.entry .w{flex:1;min-width:0;margin:0 8px 0 12px}
+.entry .h{font-size:var(--row-title);font-weight:700;line-height:1.3}
+.entry .s{font-size:var(--row-sub);color:var(--muted);margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.entry .v{flex:none;font-size:var(--row-value);color:var(--text-2);margin-right:6px;max-width:45%;text-align:end;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chev{flex:none;color:var(--muted);font-size:16px}
+.entry.sel{background:var(--accent-soft);border-radius:14px}
+.divider{height:1px;background:var(--line);margin-left:44px}
+.divider.full{margin-left:0}
+.kv{display:flex;align-items:center;min-height:44px;gap:12px}
+.kv .k{flex:1;font-size:12px;color:var(--text-2)}
+.kv .vv{font-size:13px;text-align:end;max-width:210px;overflow-wrap:anywhere}
+.mono{font-family:var(--mono)}
+
+/* 按钮（bg_btn_primary / bg_btn / ShellLaunchQuiet） */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--btn2-h);padding:0 18px;border-radius:var(--r-control);
+  border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:14px;font-weight:700;white-space:nowrap}
+.btn.pri{min-height:var(--btn-h);background:var(--accent);border-color:transparent;color:var(--on-accent)}
+.btn.quiet{border-color:transparent;background:none;color:var(--accent);padding:0 14px;min-height:var(--touch)}
+.btn.danger{color:var(--bad)}
+.btn.block{display:flex;width:100%}
+.btn.sm{min-height:36px;padding:0 12px;font-size:13px;border-radius:11px}
+.btn:disabled,.btn.off{background:var(--disabled);color:var(--muted);border-color:transparent}
+.btn .i{font-size:18px}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap}
+.btn-row>.btn{flex:1}
+.stack{display:flex;flex-direction:column;gap:10px}
+
+/* 小件 */
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 12px;border-radius:var(--r-pill);border:1px solid var(--line-strong);font-size:12px;color:var(--text-2);background:var(--surface);white-space:nowrap}
+.chip.on{background:var(--accent-tonal);color:var(--accent);border-color:transparent}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:7px;font-size:11px;font-weight:600;background:var(--raised);color:var(--text-2);white-space:nowrap}
+.tag.good{background:var(--good-soft);color:var(--good)}.tag.warn{background:var(--warn-soft);color:var(--warn)}.tag.bad{background:var(--bad-soft);color:var(--bad)}.tag.acc{background:var(--accent-soft);color:var(--accent)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
+.dot.good{background:var(--good)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}.dot.acc{background:var(--accent)}
+.seg{display:flex;padding:3px;border-radius:12px;background:var(--raised);gap:4px}
+.seg>*{flex:1;min-height:36px;display:grid;place-items:center;border-radius:9px;font-size:13px;color:var(--text-2);font-weight:500}
+.seg>.on{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.switch{flex:none;width:44px;height:26px;border-radius:13px;background:var(--raised);border:1px solid var(--line-strong);position:relative}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--muted)}
+.switch.on{background:var(--accent);border-color:transparent}
+.switch.on::after{left:21px;background:var(--on-accent)}
+.input{display:flex;align-items:center;min-height:var(--input-h);padding:0 14px;border-radius:var(--r-control);border:1px solid var(--line-strong);background:var(--surface);font-size:14px;color:var(--text);gap:8px}
+.input.ph{color:var(--muted)}
+.field-label{font-size:12px;color:var(--text-2);margin:12px 0 6px;font-weight:600}
+.hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px}
+.note{border-radius:14px;padding:12px 14px;font-size:12.5px;line-height:1.55;background:var(--accent-soft);color:var(--text-2);display:flex;gap:10px}
+.note.warn{background:var(--warn-soft)}.note.bad{background:var(--bad-soft)}.note.good{background:var(--good-soft)}
+.note .i{font-size:18px;color:var(--accent);margin-top:1px}.note.warn .i{color:var(--warn)}.note.bad .i{color:var(--bad)}.note.good .i{color:var(--good)}
+.progress{height:6px;border-radius:3px;background:var(--raised);overflow:hidden}
+.progress>i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.grid{display:grid;gap:12px}
+.cols{display:flex;gap:24px;align-items:flex-start}
+.cols>*{flex:1;min-width:0}
+
+/* 弹层（DshaDialogBuilder / CardSheet） */
+.scrim{position:absolute;inset:0;background:rgba(9,16,30,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.scrim.center{align-items:center}
+.sheet{width:100%;max-height:88%;background:var(--surface);border-radius:24px 24px 0 0;padding:8px 16px 16px;overflow:hidden;display:flex;flex-direction:column}
+.sheet .grab{width:36px;height:4px;border-radius:2px;background:var(--line-strong);margin:4px auto 10px}
+.dialog{width:min(540px,calc(100% - 32px));max-height:calc(100% - 24px);background:var(--surface);border-radius:24px;padding:22px 24px 16px;overflow:hidden;display:flex;flex-direction:column}
+.dialog h3,.sheet h3{margin:0 0 8px;font-size:20px;font-weight:700}
+.dialog p,.sheet p{margin:0 0 12px;font-size:13px;line-height:1.6;color:var(--text-2)}
+.dialog .acts{display:flex;justify-content:flex-end;gap:4px;margin-top:8px}
+
+/* 双栏（SettingsFragment.twoPaneShell：320dp 列表 + 1dp 线 + 详情） */
+.two-pane{flex:1;min-height:0;display:flex}
+.two-pane>.list{flex:none;width:320px;border-right:1px solid var(--line);display:flex;flex-direction:column}
+.two-pane>.detail{flex:1;min-width:0;display:flex;flex-direction:column}
+
+/* ================================================================
+ * 打磨提案层（?variant=proposal）。只在 .dev[data-variant=proposal] 下生效，原样基准不受影响。
+ * 每条对应 README §8 的提案编号；落地到原生时改的是共享资源 / CardPage，不是逐页补丁。
+ * ================================================================ */
+/* P1 手机横屏紧凑侧栏：56dp 宽、图标 + 10sp 标签，替代悬浮胶囊（胶囊在 316dp 高的屏上占 74dp）。 */
+.rail.compact{width:57px;padding:6px 4px;justify-content:center}
+.rail.compact .items{flex:none;gap:2px;justify-content:center}
+.rail.compact .rail-item{width:48px;min-height:48px;border-radius:12px}
+.rail.compact .rail-item>.lbl{margin-top:3px}
+/* P2 短屏顶栏 60 → 48dp，内页返回行 52 → 44dp；品牌块 34 → 28。 */
+.dev[data-variant=proposal][data-short] .appbar{min-height:48px}
+.dev[data-variant=proposal][data-short] .brand{width:28px;height:28px;border-radius:8px}
+.dev[data-variant=proposal][data-short] .appbar .c{display:none}
+.dev[data-variant=proposal][data-short] .subhead{height:44px}
+.dev[data-variant=proposal][data-short] .subhead .ibtn{height:44px}
+/* P3 短屏页标题 26 → 20sp，说明段落间距 8/20 → 4/12（CardPage compact 已有同值）。 */
+.dev[data-variant=proposal][data-short] .pg{padding-top:8px}
+.dev[data-variant=proposal][data-short] .pg-title{font-size:20px}
+.dev[data-variant=proposal][data-short] .pg-desc{margin:4px 0 12px;font-size:12px}
+.dev[data-variant=proposal][data-short] .pg-title.only{margin-bottom:12px}
+/* P5 CardPage 页脚：短屏或宽屏时改为横排一行（主按钮在右），不再竖排 3 个整宽按钮。 */
+.dev[data-variant=proposal][data-short] .dt-foot,
+.dev[data-variant=proposal][data-wide] .dt-foot{display:flex;flex-direction:row-reverse;gap:10px;padding-top:6px;padding-bottom:10px}
+.dev[data-variant=proposal][data-short] .dt-foot>.btn,
+.dev[data-variant=proposal][data-wide] .dt-foot>.btn{margin-top:0;flex:1 1 0;min-width:0;width:auto;min-height:44px;
+  padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dev[data-variant=proposal][data-wide] .dt-foot>.btn{flex:0 1 240px}
+.dev[data-variant=proposal][data-wide] .dt-foot{justify-content:flex-start}
+/* P6 宽屏单栏阅读宽度：CardPage 内容与页脚限宽 760dp 居中（主外壳双栏页不受影响）。 */
+.dev[data-variant=proposal][data-wide] .pg{max-width:760px}
+.dev[data-variant=proposal][data-wide] .dt-foot{width:100%;max-width:760px;margin:0 auto;box-sizing:border-box}
+
+/* ---------- 自适应弹层（kit popup；几何见 kit.js popupGeom） ---------- */
+.pp-scrim{position:absolute;inset:0;z-index:30;background:rgba(9,16,30,.45);display:flex;align-items:center;justify-content:center}
+.pp-scrim.m-bottom{align-items:flex-end}
+.pp{display:flex;flex-direction:column;overflow:hidden;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:22px;box-sizing:border-box}
+.pp.m-bottom{border-radius:22px 22px 0 0;border-bottom:0}
+.pp.m-side{flex-direction:row}
+.pp>.pp-body{flex:1 1 auto;min-height:0;padding:var(--pp-pad) var(--pp-pad) 4px}
+.pp h3{margin:0;font-weight:700;line-height:1.3}
+.pp .pp-sub{margin:0;padding:8px 0 14px;font-size:12px;line-height:1.55;color:var(--text-2)}
+.pp h3:last-child{margin-bottom:12px}
+.pp-acts{flex:none;display:flex;padding:8px var(--pp-pad) 12px;gap:10px}
+.pp-acts.col{flex-direction:column}
+.pp-acts.col>.btn{width:100%}
+.pp-acts.row{flex-direction:row}
+.pp-acts.row>.btn{flex:1 1 0;min-width:0;min-height:44px;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-acts.text{justify-content:flex-end;gap:4px}
+.pp-acts.text>.btn{flex:none}
+.pp.dialog .pp-acts.row:not(.text){justify-content:flex-end}
+.pp.dialog .pp-acts.row:not(.text)>.btn{flex:0 1 128px}
+.pp-side{flex:none;display:flex;flex-direction:column;padding:var(--pp-pad);border-right:1px solid var(--line);background:var(--raised)}
+.pp-side .pp-acts{margin-top:auto;padding:12px 0 0}
+.pp.m-side>.pp-body{padding:var(--pp-pad)}
+.pp .field{display:flex;align-items:center;min-height:48px;padding:0 14px;border:1px solid var(--line-strong);border-radius:var(--r-control);font-size:15px;margin:6px 0 4px}
+.pp .field.focus{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.pp .hint{font-size:12px;color:var(--muted);margin-bottom:8px}

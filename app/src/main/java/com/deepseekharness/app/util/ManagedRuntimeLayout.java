@@ -16,6 +16,7 @@ public final class ManagedRuntimeLayout {
     out.add("usr/local/share/dsha/dsh-runtime.version");
     out.add("usr/local/share/dsha/ca-certificates.crt");
     out.add("usr/local/share/dsha/dns-compat.cjs");
+    out.add("usr/local/share/dsha/net-epoch.cjs");
     out.add("usr/local/share/dsha/managed-assets-v2");
     out.add("etc/profile.d/dsha-runtime-env.sh");
     out.add("usr/local/lib/dsha-pnpm");
@@ -31,6 +32,7 @@ public final class ManagedRuntimeLayout {
           "plugin-lifecycle.py",
           "plugin-dependencies.py",
           "plugin-transactions.py",
+          "materialize-cas-links.py",
           "backup-plugin-graph.py",
           "rc1-migration.py",
           "rc1-settings-migration.cjs",
@@ -47,8 +49,13 @@ public final class ManagedRuntimeLayout {
           "bridge-token-compat.cjs"
         }) out.add("root/.dsh/" + name);
     for (String name :
-        new String[] {"dsh", "npm", "npx", "dsha-plugin", "adb-shell", "install-ubuntu-tools"})
-      out.add("root/dsh-bin/" + name);
+        new String[] {
+          "dsh", "npm", "npx", "gh", "dsha-plugin", "adb-shell", "install-ubuntu-tools"
+        }) out.add("root/dsh-bin/" + name);
+    out.add("usr/local/share/dsha/gh-proxy.mjs");
+    // Managed gh binary (extracted from the pinned release archive). It is owned here so a
+    // full environment rebuild re-injects it instead of treating it as user data under /opt.
+    out.add("opt/gh/bin/gh");
     return out;
   }
 

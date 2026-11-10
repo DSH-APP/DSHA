@@ -21,7 +21,6 @@ import com.deepseekharness.app.runtime.ProotBootstrap;
 import com.deepseekharness.app.util.Constants;
 import com.deepseekharness.app.util.SensitiveData;
 import com.deepseekharness.app.util.AdbResult;
-import com.deepseekharness.app.util.AdbEnvironmentTask;
 
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -81,7 +80,7 @@ public class DeviceBridgeService extends Service {
   private volatile long lastFullVerifyAt = 0L;
   private volatile long lastKickAt = 0L;
 
-  private android.net.ConnectivityManager.NetworkCallback netCallback;
+  private com.deepseekharness.app.device.NetworkStateMonitor.Listener netListener;
   private android.content.BroadcastReceiver screenReceiver;
 
   private static final long OK_INTERVAL_MS = 60_000L;
@@ -89,6 +88,23 @@ public class DeviceBridgeService extends Service {
   private static final long LONG_FAIL_INTERVAL_MS = 120_000L;
   private static final long KICK_DEBOUNCE_MS = 1_500L;
   private static final long FULL_VERIFY_INTERVAL_MS = 30 * 60 * 1000L;
+
+  /** 主界面入口检查开始的单调时钟；0 表示没有进行中的入口检查（T25，实验性）。 */
+  private static volatile long entryCheckStartedAt = 0L;
+
+  /** 开机加载页出现时调用；返回本次窗口的令牌，收尾时原样交回。 */
+  public static long entryCheckBegan() {
+    long now = Math.max(1L, android.os.SystemClock.elapsedRealtime());
+    entryCheckStartedAt = now;
+    return now;
+  }
+
+  /** 只结束自己开始的窗口；较新的入口检查不被旧 Activity 收尾覆盖。 */
+  public static void entryCheckEnded(long token) {
+    if (token > 0 && entryCheckStartedAt == token) entryCheckStartedAt = 0L;
+  }
+
+  private volatile boolean deferredProbePending = false;
 
   public static volatile String adbState = "unknown";
   public static volatile String adbDetail = "";
@@ -223,11 +239,10 @@ public class DeviceBridgeService extends Service {
     adbDetail = com.deepseekharness.app.util.UiText.text("ADB 保活已停止");
     watchHandler.removeCallbacksAndMessages(null);
     try {
-      if (netCallback != null) {
-        android.net.ConnectivityManager cm =
-            (android.net.ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (cm != null) cm.unregisterNetworkCallback(netCallback);
-      }
+      // 只退订本服务；共享监听随进程存活，容器 DNS 刷新仍需要它。
+      if (netListener != null)
+        com.deepseekharness.app.device.NetworkStateMonitor.ensureStarted(this)
+            .removeListener(netListener);
     } catch (Throwable ignored) {
     }
     try {
@@ -267,17 +282,11 @@ public class DeviceBridgeService extends Service {
         .build();
   }
 
-  /** 通知正文点击回到 DSHA；不会直接跳到外部页面或自动启动 Web。 */
+  /** 通知正文点击回到 DSHA（经应用入口中转，按启动目标进入）；不会跳到外部页面。 */
   private PendingIntent dshaNotificationIntent(boolean openWeb) {
-    Intent intent =
-        new Intent(this, com.deepseekharness.app.ui.MainActivity.class)
-            .addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK
-                    | Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            .putExtra("open_launch", true);
+    Intent intent = com.deepseekharness.app.ui.MainActivity.homeIntent(this);
     if (openWeb) intent.putExtra("open_web", true);
-    return PendingIntent.getActivity(
+    return com.deepseekharness.app.ui.AppEntryRouterActivity.pending(
         this, 3006, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
   }
 
@@ -288,34 +297,23 @@ public class DeviceBridgeService extends Service {
     AdbKeepAliveReceiver.schedule(this);
   }
 
-  /** 网络恢复立刻重连（不然要等下一个周期，WiFi 切换后能白等半分钟）。 */
+  /**
+   * 网络恢复立刻重连（不然要等下一个周期，WiFi 切换后能白等半分钟）。
+   *
+   * <p>订阅全 App 唯一的 {@link com.deepseekharness.app.device.NetworkStateMonitor}，与容器 DNS
+   * 刷新看到同一份网络事实；切网时旧网络迟到的 LOST 已在监听源头过滤。
+   */
   private void startNetworkWatcher() {
     try {
-      final android.net.ConnectivityManager cm =
-          (android.net.ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-      if (cm == null) return;
-      netCallback =
-          new android.net.ConnectivityManager.NetworkCallback() {
-            @Override
-            public void onAvailable(android.net.Network network) {
+      netListener =
+          (event, snapshot) -> {
+            if (event == com.deepseekharness.app.device.NetworkStateMonitor.Event.AVAILABLE)
               kick(com.deepseekharness.app.util.UiText.text("网络恢复"));
-            }
-
-            @Override
-            public void onLost(android.net.Network network) {
+            else if (event == com.deepseekharness.app.device.NetworkStateMonitor.Event.LOST)
               setAdbState("network_lost", com.deepseekharness.app.util.UiText.text("网络断开，等待恢复"));
-            }
           };
-      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-        cm.registerDefaultNetworkCallback(netCallback);
-      } else {
-        // Android 6 没有 registerDefaultNetworkCallback，退回到显式网络请求监听
-        cm.registerNetworkCallback(
-            new android.net.NetworkRequest.Builder()
-                .addCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .build(),
-            netCallback);
-      }
+      com.deepseekharness.app.device.NetworkStateMonitor.ensureStarted(this)
+          .addListener(netListener);
     } catch (Throwable e) {
       Log.w(
           "DSHA-ADB",
@@ -331,7 +329,11 @@ public class DeviceBridgeService extends Service {
           new android.content.BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-              kick(com.deepseekharness.app.util.UiText.text("屏幕点亮/解锁"));
+              // 解锁正是用户重新打开 DSHA 的时刻：先让入口检查与 Web 启动拿到环境租约，
+              // 稍后再探活（探活持独占租约最长约 60 秒）。
+              watchHandler.postDelayed(
+                  () -> kick(com.deepseekharness.app.util.UiText.text("屏幕点亮/解锁")),
+                  com.deepseekharness.app.util.AdbProbeDeferral.SCREEN_DELAY_MS);
             }
           };
       android.content.IntentFilter f = new android.content.IntentFilter();
@@ -370,6 +372,30 @@ public class DeviceBridgeService extends Service {
   }
 
   private void probeAsync(final String reason) {
+    probeWhenEntryIdle(reason, android.os.SystemClock.elapsedRealtime());
+  }
+
+  /** 入口检查进行中时有界延后探活；累计避让与窗口有效期均有上限，见 AdbProbeDeferral。 */
+  private void probeWhenEntryIdle(final String reason, final long firstRequestedAt) {
+    if (!running || !isAdbEnabled(this)) return;
+    long delay =
+        com.deepseekharness.app.util.AdbProbeDeferral.delayMs(
+            firstRequestedAt, entryCheckStartedAt, android.os.SystemClock.elapsedRealtime());
+    if (delay > 0) {
+      if (deferredProbePending) return; // 已有一次延后探活，合并为同一次。
+      deferredProbePending = true;
+      watchHandler.postDelayed(
+          () -> {
+            deferredProbePending = false;
+            probeWhenEntryIdle(reason, firstRequestedAt);
+          },
+          delay);
+      return;
+    }
+    startProbe(reason);
+  }
+
+  private void startProbe(final String reason) {
     if (!running || !isAdbEnabled(this) || AdbBridge.isPairing()) return;
     if (!probing.compareAndSet(false, true)) return;
     final long probeIntentEpoch = ADB_INTENT_EPOCH.get();
@@ -379,15 +405,10 @@ public class DeviceBridgeService extends Service {
         new Thread(
             () -> {
               try {
-                AdbBridge.runEnvironmentTask(
-                    this,
-                    com.deepseekharness.app.util.UiText.text("ADB 后台准备与探活"),
-                    () -> {
-                      runProbe(reason, probeIntentEpoch, repairIntentEpoch);
-                      return null;
-                    });
-              } catch (AdbEnvironmentTask.Busy e) {
-                setAdbState("environment_busy", e.getMessage());
+                // 不再用一个环境租约包住整轮探活（握手 + mDNS 发现 + 重开无线调试可达数分钟，
+                // 期间 Web 启动 / 终端 / 插件全被拒绝，T38）。每个容器命令各自短暂持有租约，
+                // 发现与等待阶段不占锁；被占用时本轮记为环境忙，不计失败。
+                runProbe(reason, probeIntentEpoch, repairIntentEpoch);
               } catch (Throwable e) {
                 Log.w(
                     "DSHA-ADB",
@@ -453,6 +474,7 @@ public class DeviceBridgeService extends Service {
     }
     // 2) 完整握手验证（无副作用探活失败时才做）
     String r = probeCommand(proot, null);
+    if (environmentBusy(r)) return;
     if (AdbResult.shellReady(r)) {
       lastFullVerifyAt = System.currentTimeMillis();
       onProbeOk(reason, r, probeIntentEpoch, repairIntentEpoch);
@@ -480,6 +502,7 @@ public class DeviceBridgeService extends Service {
     AdbBridge.Endpoint endpoint = discoverConnPortSync();
     if (endpoint != null) {
       String r2 = probeCommand(proot, endpoint);
+      if (environmentBusy(r2)) return;
       if (AdbResult.shellReady(r2)) {
         lastFullVerifyAt = System.currentTimeMillis();
         onProbeOk(
@@ -514,6 +537,7 @@ public class DeviceBridgeService extends Service {
       }
       if (p2 != null) {
         String r3 = probeCommand(proot, p2);
+        if (environmentBusy(r3)) return;
         if (AdbResult.shellReady(r3)) {
           lastFullVerifyAt = System.currentTimeMillis();
           onProbeOk(
@@ -593,6 +617,13 @@ public class DeviceBridgeService extends Service {
         this, "_adb-tls-connect._tcp.", 5000, detail -> setAdbState("reconnecting", detail));
   }
 
+  /** 容器命令因环境任务占用而未执行：本轮结束、不计失败，等下一周期。 */
+  private boolean environmentBusy(String result) {
+    if (!AdbResult.marker(result, "ENVIRONMENT_BUSY")) return false;
+    setAdbState("environment_busy", result);
+    return true;
+  }
+
   private String probeCommand(ProotBootstrap proot, AdbBridge.Endpoint endpoint) {
     if (!running || !isAdbEnabled(this) || Thread.currentThread().isInterrupted()) return "STOPPED";
     return AdbBridge.probe(proot, endpoint);
@@ -623,6 +654,9 @@ public class DeviceBridgeService extends Service {
     if (!running || current != this) return; // 服务停止后的迟到回调不能覆盖新实例状态。
     adbState = state;
     adbDetail = detail == null ? "" : detail;
+    // 连续失败后自动留证（限频），卡死后重启手机也能看到当时的通道与进程状态。
+    if ("need_manual".equals(state) && consecutiveFailures >= 3)
+      com.deepseekharness.app.device.DeviceChannelDiagnostics.record(this, "adb-need-manual");
   }
 
   private void notifyAdbProblem(String title, String text) {

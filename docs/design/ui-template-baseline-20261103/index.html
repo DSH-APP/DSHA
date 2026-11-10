@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSHA · UI 模板基准预览（build280 / 核对 build296）</title>
+<link rel="stylesheet" href="kit/tokens.css">
+<link rel="stylesheet" href="kit/kit.css">
+<style>
+/* 设计台（不属于 App） */
+body.desk{padding:0 0 40px}
+.desk-top{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 18px;background:var(--page);border-bottom:1px solid var(--line-strong)}
+.desk-top h1{margin:0;font-size:15px}
+.desk-top select,.desk-top label{font-size:13px}
+.desk-group{padding:18px 18px 0}
+.desk-group h2{font-size:14px;margin:0 0 10px;color:var(--text-2)}
+.desk-row{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start;margin-bottom:22px}
+.desk-cell{display:flex;flex-direction:column;gap:6px}
+.desk-cell .cap{font-size:12px;color:var(--muted)}
+.desk-box{position:relative;overflow:hidden;border-radius:14px;box-shadow:0 0 0 1px var(--line-strong)}
+.desk-box>.dev{position:absolute;left:0;top:0;transform-origin:0 0}
+body.solo{background:var(--bg)}
+</style>
+</head>
+<body>
+<script src="kit/icons.js"></script>
+<script src="kit/kit.js"></script>
+<!-- 页面模块：按组拆分，顺序即设计台显示顺序。 -->
+<script src="pages/launch.js"></script>
+<script src="pages/plugins.js"></script>
+<script src="pages/settings.js"></script>
+<script src="pages/terminal.js"></script>
+<script src="pages/onboarding.js"></script>
+<script src="pages/maintenance.js"></script>
+<script src="pages/system.js"></script>
+<script src="pages/data.js"></script>
+<script src="pages/popups.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search);
+  const D = window.DSHA;
+  if (q.get('page')) {
+    // 单屏：导出与自检用。
+    document.body.className = 'solo';
+    const theme = q.get('theme') || 'light';
+    document.documentElement.dataset.theme = theme;
+    D.mount(document.body, q.get('page'), q.get('profile') || 'phone', theme, q.get('state'));
+    document.body.dataset.ready = '1';
+    return;
+  }
+  if (q.get('list')) {
+    // 清单：给导出脚本枚举。
+    document.body.textContent = JSON.stringify(D.pages().map(p => ({ id: p.id, group: p.group, title: p.title, source: p.source, states: p.states })));
+    document.body.dataset.ready = '1';
+    return;
+  }
+  document.body.className = 'desk';
+  const top = document.createElement('div');
+  top.className = 'desk-top';
+  top.innerHTML = `<h1>DSHA UI 模板基准 · build280</h1>
+    <label>主题 <select id="th"><option value="light">浅色</option><option value="dark">深色</option></select></label>
+    <label>档位 <select id="pf"><option value="main">三个主档位</option><option value="edge">边界档</option><option value="all">全部</option></select></label>
+    <label>缩放 <select id="sc"><option>0.3</option><option selected>0.4</option><option>0.5</option><option>0.75</option></select></label>
+    <label>页面 <select id="pg"><option value="">全部</option></select></label>`;
+  document.body.appendChild(top);
+  const list = document.createElement('div');
+  document.body.appendChild(list);
+  const pg = top.querySelector('#pg');
+  D.pages().forEach(p => pg.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.group} · ${p.title}</option>`));
+  function draw() {
+    const theme = top.querySelector('#th').value, scale = +top.querySelector('#sc').value;
+    const which = top.querySelector('#pf').value;
+    const profiles = which === 'main' ? D.MAIN_PROFILES : which === 'edge' ? D.EDGE_PROFILES : D.MAIN_PROFILES.concat(D.EDGE_PROFILES);
+    document.documentElement.dataset.theme = theme;
+    list.innerHTML = '';
+    let group = null, holder;
+    D.pages().filter(p => !pg.value || p.id === pg.value).forEach(p => {
+      if (p.group !== group) {
+        group = p.group;
+        holder = document.createElement('section');
+        holder.className = 'desk-group';
+        holder.innerHTML = `<h2>${group}</h2>`;
+        list.appendChild(holder);
+      }
+      p.states.forEach(s => {
+        const row = document.createElement('div');
+        row.className = 'desk-row';
+        profiles.forEach(id => {
+          const P = D.PROFILES[id];
+          const cell = document.createElement('div');
+          cell.className = 'desk-cell';
+          cell.innerHTML = `<div class="cap">${p.title}${p.states.length > 1 ? ' · ' + s.title : ''} — ${P.label} ${P.w}×${P.h}</div>`;
+          const box = document.createElement('div');
+          box.className = 'desk-box';
+          box.style.width = P.w * scale + 'px';
+          box.style.height = P.h * scale + 'px';
+          cell.appendChild(box);
+          row.appendChild(cell);
+          const dev = D.mount(box, p.id, id, theme, s.id);
+          dev.style.transform = `scale(${scale})`;
+        });
+        holder.appendChild(row);
+      });
+    });
+  }
+  top.addEventListener('change', draw);
+  draw();
+})();
+</script>
+</body>
+</html>

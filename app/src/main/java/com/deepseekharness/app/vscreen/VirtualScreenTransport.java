@@ -29,8 +29,11 @@ final class VirtualScreenTransport {
       boolean observationRoute =
           route.equals("/vscreen/observation-region")
               || route.equals("/vscreen/observation-release");
-      if ((!route.matches("/vscreen/[a-z]+") && !observationRoute) || target.length() > 24_000)
-        throw new IOException("VSCREEN_REQUEST_TARGET_INVALID");
+      // 实体屏特权 Core 与虚拟屏共用同一握手/传输，但只接受 /priv/* 的固定动词表。
+      boolean privilegedRoute =
+          !com.deepseekharness.app.util.PrivilegedScreenRoutes.coreOperation(route).isEmpty();
+      if ((!route.matches("/vscreen/[a-z]+") && !observationRoute && !privilegedRoute)
+          || target.length() > 24_000) throw new IOException("VSCREEN_REQUEST_TARGET_INVALID");
       for (int i = 0; i < target.length(); i++)
         if (target.charAt(i) <= 32 || target.charAt(i) >= 127 || target.charAt(i) == '#')
           throw new IOException("VSCREEN_REQUEST_TARGET_INVALID");
@@ -82,11 +85,10 @@ final class VirtualScreenTransport {
       }
       return new JSONObject(output.toString(StandardCharsets.UTF_8.name()));
     } catch (Exception unavailable) {
-      return failure(
+      boolean mutates =
           VirtualScreenRoutes.mutatesCore(route)
-              ? "INPUT_RESULT_UNKNOWN"
-              : "VSCREEN_TRANSPORT_UNAVAILABLE",
-          VirtualScreenRoutes.mutatesCore(route));
+              || com.deepseekharness.app.util.PrivilegedScreenRoutes.mutatesCore(route);
+      return failure(mutates ? "INPUT_RESULT_UNKNOWN" : "VSCREEN_TRANSPORT_UNAVAILABLE", mutates);
     }
   }
 

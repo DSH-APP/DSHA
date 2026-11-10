@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 插件空状态：surface 卡片 + 虚线描边，居中说明文字；不带任何伪数据。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_surface" />
+    <corners android:radius="@dimen/shell_launch_radius_card" />
+    <stroke android:width="1dp" android:color="@color/shell_line_strong" android:dashWidth="5dp" android:dashGap="4dp" />
+</shape>

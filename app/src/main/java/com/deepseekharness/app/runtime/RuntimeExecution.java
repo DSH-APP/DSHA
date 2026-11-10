@@ -129,15 +129,27 @@ final class RuntimeExecution {
     }
   }
 
-  record Probe(String runtimeMode, BoundedProcessRunner.Result command) {}
+  record Probe(String runtimeMode, String runtimeDetail, BoundedProcessRunner.Result command) {}
 
   Probe probe() throws IOException, InterruptedException {
     try (RuntimeHostPorts.Scope ignored = ports.open()) {
       nativeFiles();
       ensurePatches();
       ContainerRuntime selected = runtime();
-      return new Probe(selected.id(), collect("/bin/echo SMOKE_OK", 60_000, false, selected));
+      String detail = modeKey(selected);
+      return new Probe(
+          selected.id(), detail, collect("/bin/echo SMOKE_OK", 60_000, false, selected));
     }
+  }
+
+  /** 诊断键：proot 带 seccomp 状态；须在与启动参数相同的配置 scope 内读取。 */
+  static String modeKey(ContainerRuntime runtime) {
+    return com.deepseekharness.app.util.RuntimeModeLabel.key(runtime.id(), seccompOff(runtime));
+  }
+
+  static boolean seccompOff(ContainerRuntime runtime) {
+    return runtime instanceof ContainerRuntime.Proot
+        && ((ContainerRuntime.Proot) runtime).seccompDisabled();
   }
 
   String smokeText() {
@@ -190,9 +202,15 @@ final class RuntimeExecution {
   }
 
   Process install(String command, boolean pipedInput) throws IOException {
+    return install(command, pipedInput, null);
+  }
+
+  private Process install(String command, boolean pipedInput, RuntimeCommandTiming timing)
+      throws IOException {
     try (RuntimeHostPorts.Scope ignored = ports.open()) {
       nativeFiles();
-      return start(command, launch(proot()).pipedInput(pipedInput).build());
+      if (timing != null) timing.mark("native-files");
+      return launcher.start(command, launch(proot()).pipedInput(pipedInput).build(), timing);
     }
   }
 
@@ -233,20 +251,66 @@ final class RuntimeExecution {
 
   BoundedProcessRunner.Result collect(String command, long timeoutMs, boolean proot)
       throws IOException, InterruptedException {
-    return collect(command, timeoutMs, proot, null);
+    return collect(command, timeoutMs, proot, (ContainerRuntime) null);
   }
 
   BoundedProcessRunner.Result collect(
       String command, long timeoutMs, boolean proot, ContainerRuntime selected)
       throws IOException, InterruptedException {
+    return collect(command, timeoutMs, proot, selected, null);
+  }
+
+  BoundedProcessRunner.Result collect(
+      String command, long timeoutMs, boolean proot, java.util.function.Consumer<String> onLine)
+      throws IOException, InterruptedException {
+    return collect(command, timeoutMs, proot, null, null, onLine);
+  }
+
+  BoundedProcessRunner.Result collectCasLinks(java.util.function.Consumer<String> timing)
+      throws IOException, InterruptedException {
+    // #209：link() 被 ROM 拒绝的设备上，实体化旧 pnpm CAS 链接退化为逐文件全量
+    // 复制（实测一例 420MB），固定 120 秒会在复制中段 SIGKILL，把事务留在
+    // pending、卡死在下一次启动。脚本本身带进度回调和取消票据，这里的超时
+    // 只兜底真正的挂死，不再按快设备的正常耗时定值。
+    return collect(
+        "python3 -u /root/.dsh/materialize-cas-links.py",
+        900_000,
+        true,
+        null,
+        new RuntimeCommandTiming(timing),
+        null);
+  }
+
+  private BoundedProcessRunner.Result collect(
+      String command,
+      long timeoutMs,
+      boolean proot,
+      ContainerRuntime selected,
+      RuntimeCommandTiming timing)
+      throws IOException, InterruptedException {
+    return collect(command, timeoutMs, proot, selected, timing, null);
+  }
+
+  private BoundedProcessRunner.Result collect(
+      String command,
+      long timeoutMs,
+      boolean proot,
+      ContainerRuntime selected,
+      RuntimeCommandTiming timing,
+      java.util.function.Consumer<String> onLine)
+      throws IOException, InterruptedException {
     RuntimeWorkPort.Work work = RuntimeWorkPort.begin("容器命令");
     Process process = null;
     Throwable original = null;
     try {
-      process = proot ? install(command, false) : bounded(command, selected);
-      return BoundedProcessRunner.collect(process, timeoutMs, 256 * 1024, Compat::destroy);
+      process = proot ? install(command, false, timing) : bounded(command, selected);
+      BoundedProcessRunner.Result result =
+          BoundedProcessRunner.collect(process, timeoutMs, 256 * 1024, Compat::destroy, onLine);
+      if (timing != null) timing.mark("process-collect");
+      return result;
     } catch (IOException | InterruptedException | RuntimeException | Error failure) {
       original = failure;
+      if (timing != null) timing.mark("command-failed");
       throw failure;
     } finally {
       Process ending = process;
@@ -258,7 +322,11 @@ final class RuntimeExecution {
           ending instanceof IsolatedInstallProcess
               ? ((IsolatedInstallProcess) ending)::markRecordUncertain
               : null;
-      BoundedGuestLifetime.finish(ending, close, uncertain, work, original);
+      try {
+        BoundedGuestLifetime.finish(ending, close, uncertain, work, original);
+      } finally {
+        if (timing != null) timing.mark("exit-finalize");
+      }
     }
   }
 

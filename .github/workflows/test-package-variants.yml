@@ -1,0 +1,264 @@
+name: Test package variants (on demand)
+
+# 同一 run 内拆成独立 job、各自带 Gradle 缓存的三个产物（不创建 tag/Release，不接触正式签名私钥）：
+#   prod-unsigned：正式包名 io.github.sunsetrne.dsha（/ upstream dsh.android.client）的 unsigned 验证包，
+#                   不可安装，只用于确认正式包能编译；
+#   debug：         .debug 共存包，debuggable=true，测试证书签名，供开发环境调试；
+#   dev：           .dev 共存包，release 构建、非 debuggable，测试证书签名，供开发/测试环境覆盖升级。
+# 两个测试包共用同一测试证书（SUNSET_TEST_KEYSTORE_B64；未配置时每次生成一次性密钥，不能覆盖升级）。
+# 测试证书必须与 mod、upstream 两个正式证书都不同；正式包名不进入签名产物。
+#
+# 节点图：
+#   contracts ────────────────────────────┐
+#   inputs ─┬─► patch-chains（quick 跳过）┤
+#           ├─► unit（quick 或关闭时跳过）┼─► package-tests → _node-test-packages.yml（matrix: debug/dev）
+#           └─► lint ─────────────────────┘─► package-prod-unsigned
+#
+# package-tests 复用正式 Release 同款的 _node-test-packages.yml（构建 + 测试证书签名 + 逐项校验）；
+# 本工作流只负责按 target 选择变体，未配置测试证书时允许一次性密钥（正式 Release 不允许）。
+on:
+  workflow_dispatch:
+    inputs:
+      identity:
+        description: Release identity whose package names to build (mod or upstream)
+        required: false
+        type: choice
+        options: [mod, upstream]
+        default: mod
+      targets:
+        description: Build targets
+        required: false
+        type: choice
+        options: [all, debug, dev, prod-unsigned]
+        default: all
+      run_unit_tests:
+        description: Run complete fixed-input unit tests before packaging
+        required: false
+        type: boolean
+        default: true
+      quick:
+        description: Skip full unit tests and runtime patch-chain checks for fast dev iteration
+        required: false
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: test-package-variants-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  contracts:
+    uses: ./.github/workflows/_node-contracts.yml
+  inputs:
+    uses: ./.github/workflows/_node-inputs.yml
+    with:
+      rebuild_runtime: true
+      artifact: test-package-variants-inputs
+  patch-chains:
+    name: Runtime patch upgrades and managed recovery consent
+    if: ${{ !inputs.quick }}
+    needs: inputs
+    uses: ./.github/workflows/_node-host-tests.yml
+    with:
+      stage: runtime
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      playwright: true
+      output: patch-chains
+      artifact: test-package-variants-patch-chains
+      only: >-
+        test-plugin-management-patch-chain.py
+        test-android-image-wire.mjs
+        test-web-fetch-unicode.py
+        test-language-patch-chain.py
+        test-ui-language.mjs
+        test-prompt-language.mjs
+        test-app-activity.mjs
+        test-plugin-runtime-evidence.mjs
+        test-plugin-discovery.py
+        test-plugin-review.py
+        test-plugin-management-probe.mjs
+        test-session-interaction-patch-upgrade.py
+        test-preset-pending-patch-upgrade.py
+        test-recovery-native-consent.mjs
+        test-mobile-server-compression-carrier.mjs
+  unit:
+    if: ${{ !inputs.quick && inputs.run_unit_tests }}
+    needs: inputs
+    uses: ./.github/workflows/_node-unit-tests.yml
+    with:
+      mode: full
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      require_fixtures: true
+      artifact: test-package-variants-unit-results
+  lint:
+    needs: inputs
+    uses: ./.github/workflows/_node-lint.yml
+    with:
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      artifact: test-package-variants-lint-results
+  package-tests:
+    name: Build, sign and verify co-installable test packages
+    needs: [contracts, inputs, patch-chains, unit, lint]
+    # quick 会跳过 patch-chains / unit；其余节点必须成功。
+    if: >-
+      !cancelled()
+      && inputs.targets != 'prod-unsigned'
+      && needs.contracts.result == 'success' && needs.inputs.result == 'success'
+      && needs.lint.result == 'success'
+      && (needs.patch-chains.result == 'success' || needs.patch-chains.result == 'skipped')
+      && (needs.unit.result == 'success' || needs.unit.result == 'skipped')
+    uses: ./.github/workflows/_node-test-packages.yml
+    with:
+      variants: ${{ inputs.targets == 'all' && 'debug+dev' || inputs.targets }}
+      release_identity: ${{ inputs.identity || 'mod' }}
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      fixture: true
+      asset_sha: ${{ needs.inputs.outputs.sha256 }}
+      asset_format: ${{ needs.inputs.outputs.format }}
+      unit_tests_run: ${{ inputs.run_unit_tests && !inputs.quick }}
+      patch_chains_run: ${{ !inputs.quick }}
+      require_configured_key: false
+      artifact_prefix: test-package
+      apk_name_prefix: dsha
+      retention_days: 14
+    secrets:
+      SUNSET_TEST_KEYSTORE_B64: ${{ secrets.SUNSET_TEST_KEYSTORE_B64 }}
+      SUNSET_TEST_STORE_PASSWORD: ${{ secrets.SUNSET_TEST_STORE_PASSWORD }}
+  package-prod-unsigned:
+    name: Build unsigned production-named APK (verification only)
+    needs: [contracts, inputs, patch-chains, unit, lint]
+    if: >-
+      !cancelled()
+      && (inputs.targets == 'all' || inputs.targets == 'prod-unsigned')
+      && needs.contracts.result == 'success' && needs.inputs.result == 'success'
+      && needs.lint.result == 'success'
+      && (needs.patch-chains.result == 'success' || needs.patch-chains.result == 'skipped')
+      && (needs.unit.result == 'success' || needs.unit.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      ASSET_SHA: ${{ needs.inputs.outputs.sha256 }}
+      ASSET_FORMAT: ${{ needs.inputs.outputs.format }}
+      UNIT_TESTS_RUN: ${{ inputs.run_unit_tests && !inputs.quick }}
+      PATCH_CHAINS_RUN: ${{ !inputs.quick }}
+      RELEASE_IDENTITY: ${{ inputs.identity || 'mod' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          gradle-cache: 'true'
+      - uses: ./.github/actions/android-sdk
+        with:
+          ndk: 'true'
+      - uses: ./.github/actions/restore-handoff
+        with:
+          artifact: ${{ needs.inputs.outputs.artifact }}
+      - name: Build unsigned production-named APK
+        run: |
+          set -eu
+          chmod +x gradlew
+          python3 tools/release-identity.py --check --identity "$RELEASE_IDENTITY" >/dev/null
+          ./gradlew :app:assembleStandardRelease -Pdsha.unsignedPackage=true \
+            "-Pdsha.identity=$RELEASE_IDENTITY" --no-daemon --max-workers=2
+      - name: Verify unsigned production identity
+        id: verify
+        run: |
+          set -eu
+          buildtools=$(python3 tools/ci-toolchain.py --field buildTools)
+          sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          apksigner="$sdk_root/build-tools/$buildtools/apksigner"
+          aapt2="$sdk_root/build-tools/$buildtools/aapt2"
+          shopt -s nullglob
+          candidates=(app/build/outputs/apk/standard/release/*-unsigned.apk)
+          test "${#candidates[@]}" -eq 1
+          mkdir -p out
+          apk="out/dsha-prod-unsigned-${GITHUB_SHA:0:8}.apk"
+          cp "${candidates[0]}" "$apk"
+          "$aapt2" dump badging "$apk" > out/apk-badging.txt
+          package=$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" out/apk-badging.txt)
+          expected=$(python3 tools/release-identity.py --identity "$RELEASE_IDENTITY" --field packageName)
+          test "$package" = "$expected"
+          if grep -q "versionName='.*-Sunset" out/apk-badging.txt; then exit 1; fi
+          if grep -q 'application-debuggable' out/apk-badging.txt; then exit 1; fi
+          if "$apksigner" verify "$apk" >/dev/null 2>&1; then
+            echo 'UNSIGNED_PACKAGE_MUST_NOT_VERIFY'; exit 1
+          fi
+          if unzip -l "$apk" | grep -Eq 'META-INF/.*\.(RSA|DSA|EC)'; then
+            echo 'UNSIGNED_PACKAGE_HAS_SIGNATURE'; exit 1
+          fi
+          production=$(python3 -c "import json;print(json.load(open('ci/release-identity.json'))['certificateSha256'])")
+          printf 'apk=%s\npackage=%s\ncertificate=%s\n' "$apk" "$package" "$production" > out/apk-unsigned-check.txt
+          printf 'apk=%s\npackage=%s\n' "$apk" "$package" >> "$GITHUB_OUTPUT"
+      - name: Write commit-bound build receipt
+        env:
+          APK: ${{ steps.verify.outputs.apk }}
+          PACKAGE: ${{ steps.verify.outputs.package }}
+        run: |
+          python3 - <<'PYCODE'
+          import hashlib, json, os
+          from pathlib import Path
+          apk = Path(os.environ['APK'])
+          meta = json.load(open('app/build/outputs/apk/standard/release/output-metadata.json', encoding='utf-8'))['elements'][0]
+          value = {
+              'schema': 1,
+              'kind': 'dsha-prod-unsigned-verification',
+              'commit': os.environ['GITHUB_SHA'],
+              'ref': os.environ['GITHUB_REF'],
+              'runId': os.environ['GITHUB_RUN_ID'],
+              'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'packageName': os.environ['PACKAGE'],
+              'releaseIdentity': os.environ['RELEASE_IDENTITY'],
+              'versionCode': meta['versionCode'],
+              'versionName': meta['versionName'],
+              'apkFile': apk.name,
+              'apkSize': apk.stat().st_size,
+              'apkSha256': hashlib.sha256(apk.read_bytes()).hexdigest(),
+              'signed': False,
+              'assetBundleSha256': os.environ['ASSET_SHA'],
+              'inputArchiveFormat': os.environ['ASSET_FORMAT'],
+              'unitTestsRun': os.environ['UNIT_TESTS_RUN'] == 'true',
+              'patchChainsRun': os.environ['PATCH_CHAINS_RUN'] == 'true',
+              'note': 'UNSIGNED VERIFICATION ONLY - NOT FOR INSTALL',
+          }
+          Path('out/build-info.json').write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          names = [apk.name, 'build-info.json']
+          Path('out/SHA256SUMS').write_text(''.join(
+              hashlib.sha256((Path('out') / name).read_bytes()).hexdigest() + '  ' + name + '\n' for name in names),
+              encoding='utf-8')
+          print(json.dumps(value, indent=2))
+          PYCODE
+      - name: Upload unsigned APK without archiving
+        id: upload_apk
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          archive: false
+          path: ${{ steps.verify.outputs.apk }}
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload unsigned package evidence
+        id: upload_evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-package-evidence-prod-unsigned
+          path: |
+            out/SHA256SUMS
+            out/build-info.json
+            out/apk-badging.txt
+            out/apk-unsigned-check.txt
+          if-no-files-found: error
+          retention-days: 14
+      - name: Show commit-bound download links
+        env:
+          APK_URL: ${{ steps.upload_apk.outputs.artifact-url }}
+          EVIDENCE_URL: ${{ steps.upload_evidence.outputs.artifact-url }}
+          PACKAGE: ${{ steps.verify.outputs.package }}
+        run: |
+          {
+            echo "### prod-unsigned 验证包（不可安装、非发布）"
+            echo
+            echo "Commit \`$GITHUB_SHA\` · package \`$PACKAGE\`"
+            echo
+            echo "[APK]($APK_URL) · [回执]($EVIDENCE_URL)"
+          } >> "$GITHUB_STEP_SUMMARY"

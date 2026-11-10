@@ -155,6 +155,17 @@ class DiscoveryTest(unittest.TestCase):
                 self.assertEqual(before, lock.read_bytes(), 'read query must leave the existing writer lock alone')
                 result.assert_not_called()
 
+    def test_list_names_a_stale_profile_lock_without_waiting(self):
+        lock = Path(self.builtin.local(self.builtin.MANIFEST) + '.lock')
+        lock.write_text('2147483647\n', encoding='ascii')
+        with self.assertRaisesRegex(ValueError, 'PLUGIN_PROFILE_LOCK_STALE'):
+            self.manager.list_state_revision()
+        lock.write_text(str(os.getpid()) + '\n', encoding='ascii')
+        with self.assertRaisesRegex(ValueError, '配置正在修改'):
+            self.manager.list_state_revision()
+        lock.unlink()
+        self.assertGreater(len(self.manager.list_state_revision()), 0)
+
     def test_short_state_commands_read_back_intent_without_scan_or_content_proof(self):
         name = '@deepseek-ai/dsh-experimental-voice-input-bundle'
         self.plugin('usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules', name)
@@ -435,11 +446,25 @@ class DiscoveryTest(unittest.TestCase):
     def test_old_builtin_file_cannot_shrink_signed_minimum_or_enable_name_spoof(self):
         self.put('root/dsha-builtin.txt', 'dsh-web-mobile\n../../fake\n')
         names = self.builtin.builtin_names()
-        self.assertTrue(set(self.builtin.DEFAULT_BUILTINS).issubset(names))
+        self.assertEqual(list(self.builtin.DEFAULT_BUILTINS), names)
         self.assertNotIn('../../fake', names)
         spoof = self.plugin('incoming', 'dsh-web-mobile', version='999.0.0')
         with self.assertRaisesRegex(ValueError, '签名 APK'):
             self.manager.plugin_package(str(spoof))
+
+    def test_signed_builtin_names_ignore_legacy_file_io_and_return_detached_copy(self):
+        # 旧可写文本既不是签名清单，也不是缓存失效依据；缺失、损坏或不可读都不能
+        # 削弱受管插件保护。查询不得为了这个无效输入额外访问 guest 文件系统。
+        legacy = self.put('root/dsha-builtin.txt', 'dsh-web-mobile\nthird-party-spoof\n')
+        with patch.object(self.builtin.os, 'stat', side_effect=AssertionError('legacy stat')):
+            with patch('builtins.open', side_effect=AssertionError('legacy read')):
+                names = self.builtin.builtin_names()
+                names.clear()
+                self.assertEqual(list(self.builtin.DEFAULT_BUILTINS), self.builtin.builtin_names())
+        legacy.write_bytes(b'\xff\x00broken-list')
+        self.assertEqual(list(self.builtin.DEFAULT_BUILTINS), self.builtin.builtin_names())
+        legacy.unlink()
+        self.assertEqual(list(self.builtin.DEFAULT_BUILTINS), self.builtin.builtin_names())
 
     def test_old_profile_builtin_entity_is_quarantined_and_current_apk_entity_wins(self):
         old = self.plugin('root/.dsh/profiles/web/node_modules', 'dsh-web-mobile', version='1.0.0')
@@ -518,7 +543,8 @@ class DiscoveryTest(unittest.TestCase):
             self.assertTrue(items[name]['internal'])
         visible = [item for item in items.values() if not item['internal']]
         self.assertEqual({'dsh-device-shell-guide','dsh-task-notifier','dsh-status-overlay','dsh-web-mobile',
-                          'dsh-computer-use-android','@deepseek-ai/dsh-experimental-auto-review','dsh-tool-vscreen'}, {item['name'] for item in visible})
+                          'dsh-computer-use-android','@deepseek-ai/dsh-experimental-auto-review','dsh-tool-vscreen',
+                          'dsh-launch-target','dsh-fs-read-hint','dsh-fs-search-scope'}, {item['name'] for item in visible})
 
     def test_auto_review_web_off_survives_register_and_removes_both_aliases(self):
         aliases = self.builtin.AUTO_REVIEW_ALIASES
@@ -614,7 +640,7 @@ class DiscoveryTest(unittest.TestCase):
         self.assertFalse(any(Path(self.builtin.marker_path(alias)).exists() for alias in aliases))
         self.assertEqual(original, (runtime/'package.json').read_bytes())
 
-    def test_symlinked_shared_runtime_is_not_a_user_plugin(self):
+    def test_symlinked_shared_runtime_requires_current_content_proof_before_hiding(self):
         runtime = self.plugin('usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules')
         link = self.root / 'root/.dsh/node_modules/test-plugin'
         link.parent.mkdir(parents=True)
@@ -622,7 +648,25 @@ class DiscoveryTest(unittest.TestCase):
             link.symlink_to(runtime, target_is_directory=True)
         except OSError as error:
             self.skipTest('此宿主无创建符号链接权限：' + str(error))
+        original = (runtime / 'package.json').read_bytes()
+        # 运行时位置和软链不能证明系统所有权；未验证的真实 bundle 仍须可见。
+        row = self.items()['test-plugin']
+        self.assertTrue(row['runtimeLocated'])
+        self.assertFalse(row['runtimeProvided'])
+        self.assertEqual('user', row['origin'])
+        self.authenticate_runtime('test-plugin', runtime)
         self.assertNotIn('test-plugin', self.items())
+        # 下次查询必须重新证明内容；同一软链下的用户修改不能被旧证明隐藏。
+        user_file = runtime / 'user-edit.js'
+        user_file.write_text('preserve user override', encoding='utf-8')
+        row = self.items()['test-plugin']
+        self.assertTrue(row['runtimeLocated'])
+        self.assertFalse(row['runtimeProvided'])
+        self.assertEqual('user', row['origin'])
+        self.assertFalse(row['deletable'])
+        self.assertEqual(original, (runtime / 'package.json').read_bytes())
+        self.assertEqual('preserve user override', user_file.read_text(encoding='utf-8'))
+        self.assertEqual(runtime.resolve(), link.resolve())
 
     def test_detected_profile_plugin_can_be_enabled_without_deleting_original(self):
         probe = self.root / 'link-permission-probe'

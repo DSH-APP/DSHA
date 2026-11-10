@@ -739,17 +739,17 @@ public class TarGzipExtractorTest {
             IOException.class,
             () ->
                 scripts.manager(
-                    "refresh",
+                    "import fixture",
                     "",
                     com.deepseekharness.app.util.PluginDownloadSource.AUTO,
                     200,
                     true));
-    assertTrue(failure.getMessage(), failure.getMessage().contains("PLUGIN_QUERY_TIMEOUT"));
+    assertTrue(failure.getMessage(), failure.getMessage().contains("PLUGIN_INTENT_TIMEOUT"));
     assertTrue("单次写入先真实返回，不能强抢其所有权", (System.nanoTime() - started) / 1_000_000 >= 300);
     assertOriginalAndNoParts(root);
     assertEquals(0, executions.get());
     fs.firstWriteDelay = 0;
-    scripts.manager("refresh", "", com.deepseekharness.app.util.PluginDownloadSource.AUTO);
+    scripts.manager("import fixture", "", com.deepseekharness.app.util.PluginDownloadSource.AUTO);
     assertEquals(1, executions.get());
     assertEquals(2 * 1024 * 1024, new File(root, "tool").length());
   }
@@ -768,13 +768,16 @@ public class TarGzipExtractorTest {
             IOException.class,
             () ->
                 scripts.manager(
-                    "list", "", com.deepseekharness.app.util.PluginDownloadSource.AUTO));
-    assertTrue(failure.getMessage(), failure.getMessage().contains("PLUGIN_QUERY_CANCELLED"));
+                    "enable-state 'fixture'",
+                    "",
+                    com.deepseekharness.app.util.PluginDownloadSource.AUTO));
+    assertTrue(failure.getMessage(), failure.getMessage().contains("PLUGIN_INTENT_CANCELLED"));
     assertOriginalAndNoParts(root);
     assertEquals(0, executions.get());
     fs.cancelOnWrite = false;
     fs.cancel.set(false);
-    scripts.manager("list", "", com.deepseekharness.app.util.PluginDownloadSource.AUTO);
+    scripts.manager(
+        "enable-state 'fixture'", "", com.deepseekharness.app.util.PluginDownloadSource.AUTO);
     assertEquals(1, executions.get());
   }
 

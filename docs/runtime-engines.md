@@ -1,6 +1,8 @@
 # Android 上的 Ubuntu、proot 与 proroot
 
-本文对照 **2026-10-21 F10 / build190** 的实际源码工作树 `C:\Users\18768\.codex\worktrees\build190-from170\DSHA_RESTART`。当前应用内置 DSH **0.2.1-rc.2**，Ubuntu 基础环境身份 **10**。旧 `F:\DSHA_RESTART` 的 build173/bxroot 实现不代表当前构建。
+> build191入口核对（2026-10-23）：旧插件CAS链接兼容检查使用固定proot运行 `python3 -u /root/.dsh/materialize-cas-links.py`，不跟随主Web的proroot选项；轻入口/FD扫描和分段时序不改变事务执行域或退出屏障。[本轮范围与待验项](releases/v0.2.1-rc.2-build191-startup-20261023.md)。本页下方link2symlink概述须按入口理解：主Web使用实际硬链接探测结果；CAS所走install路径不执行同一探测，默认LaunchSpec仍可选择link2symlink，不能把主Web的探测结论移用于该入口。
+
+本文原于 **2026-10-21 F10 / build190** 工作树核对；当前应用内置 DSH **0.2.1-rc.5**，Ubuntu 基础环境身份 **10**，单一 Standard。旧 build173/bxroot 实现与 F10–F13 记录不代表当前构建。
 
 整体入口见[项目架构手册](project-architecture-handbook.md)，数据、插件与命令环境见[运行时数据和插件架构](runtime-data-plugin-architecture.md)，外部项目、许可证与证据层次见[来源与权威参考](references-and-provenance.md)。本页讲运行机制，不新增设备验收结论；F10 的实际验证范围以[发布记录](releases/v0.2.1-rc.2-build190-prerelease-20261020.md)为准。
 
@@ -19,7 +21,7 @@
 
 用户在[配置页 ConfigFragment](../app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java)的高级选项选择 proroot、静态加载器及 proot seccomp 选项，`config_save` 保存。选项决定后续新进程的 argv/env，不能替换已经运行的 Web/终端引擎；先正常停止，再启动才可核对实际运行方式。`RuntimeHostPorts` 为一次调用提供配置作用域，不能让执行到一半的命令读到另一套设置。
 
-[RuntimeExecution.runtime()](../app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java) 还要求 Android API >= 26、没有本次 `forceProot`，且 proroot 的五个原始文件与两个兼容文件可用并准备成功。否则记录 `RUNTIME_SELECTION_FALLBACK`，选择 proot。这是**启动前可用性选择**，和“guest 已执行后再次运行命令”是两件事。Low 最低 API 23 不意味着 API 23–25 会使用 proroot。
+[RuntimeExecution.runtime()](../app/src/main/java/com/deepseekharness/app/runtime/RuntimeExecution.java) 还要求 Android API >= 26、没有本次 `forceProot`，且 proroot 的五个原始文件与两个兼容文件可用并准备成功。否则记录 `RUNTIME_SELECTION_FALLBACK`，选择 proot。这是**启动前可用性选择**，和“guest 已执行后再次运行命令”是两件事。build209 起不再有 Low/API23 构建线。
 
 [CHANGELOG 历史段](../CHANGELOG.md)的“v1.1.6 起默认 proroot”说的是 **DSHA v1.1.6**，不是当前 proroot 二进制的版本号。该段还记录旧 vivo/Android14 的速度数据与旧兜底规则；“快 5–6 倍”、`+58%` 和“连续三次失败切换”等不能当成 build190 的全设备性能或当前重试契约。应分别阅读历史和上面的当前配置。
 
@@ -31,7 +33,7 @@ Linux Node、Bash、glibc 与原生 npm 模块需要 Linux 路径和 ABI。Andro
 
 `-0` 使 guest 看到 root 身份，但 **Android 内核仍按应用真实 UID、SELinux 与系统权限执行**。这没有授予 Android root、真实挂载权限、其他应用私有文件访问或系统后台豁免。所有 guest 和后代仍受系统进程回收、前台服务规则及 Android 权限约束。工具确认、路径校验也不是针对任意本地代码的强沙箱；终端、第三方插件及其生命周期脚本保有项目允许的执行能力。[AOSP 的应用沙箱说明](https://source.android.com/docs/security/app-sandbox)阐明了 UID 对 Java 和原生代码共同生效的边界。
 
-两个引擎共享 `ContainerRuntime.binds()` 的显式映射：`/dev`、`/proc`、`/sys`、`/system`、`/apex`、fd、随机设备及已可访问的共享存储。不存在或不可访问的源记录 `BIND_SKIPPED`。没有映射 `/linkerconfig`，避免将应用没有权限的目录反复当作可用依赖。`/sdcard` 映射不授予存储权限；SAF 等原生能力仍由各自受控接口提供。正式个人数据映射由 `UserDataBindings` 追加；独立应急根明确使用独立数据域，不从正式环境父目录猜测用户数据。
+两个引擎共享 `ContainerRuntime.binds(includePublicStorage)` 的显式映射：`/dev`、`/proc`、`/sys`、`/system`、`/apex`、fd、随机设备及已可访问的共享存储。不存在或不可访问的源记录 `BIND_SKIPPED`。没有映射 `/linkerconfig`，避免将应用没有权限的目录反复当作可用依赖。`/sdcard` 映射不授予存储权限；SAF 等原生能力仍由各自受控接口提供。正式个人数据映射由 `UserDataBindings` 追加；独立应急根明确使用独立数据域，不从正式环境父目录猜测用户数据。
 
 ## 3. 一次启动经过哪些层
 
@@ -67,15 +69,14 @@ flowchart TD
 
 ## 4. proot 实际调用与原生来源
 
-当前 proot 使用 Termux 分支的 ptrace 路径翻译。`baseArgv()` 传入 `-L --kill-on-exit -0 --rootfs=<私有根> --cwd=/root` 及 bind。`--link2symlink` 仅在实际硬链接探测不支持时启用，另设置 `.l2s` 目录及 `PROOT_L2S_DIR`；不能为追求“兼容”无条件开启并破坏原子文件发布语义。
+当前 proot 使用 Termux 分支的 ptrace 路径翻译。`baseArgv()` 传入 `-L --kill-on-exit -0 --rootfs=<私有根> --cwd=/root` 及 bind。`--link2symlink` 取决于该入口的LaunchSpec，并设置 `.l2s` 目录及 `PROOT_L2S_DIR`；主Web用实际硬链接探测选择，CAS/install等入口的默认值和探测路径须分别核对，不能宣称每个proot命令都先完成同一硬链接探测。`baseArgv()` 另绑定运行根的 canonical 自镜像（`-b <canonical rootfs>:<canonical rootfs>`）：proot 用宿主路径 exec/mmap，guest 按 `/proc/self/maps` 记录的宿主路径回读自身文件时必须有该视图；proroot v1.2.8 已由 vendor 绑定同一 canonical 根，App 侧不重复加。
 
 `applyEnv()` 设置 `PROOT_LOADER`、存在时的 `PROOT_LOADER_32`、`PROOT_TMP_DIR`、依赖搜索路径。`PROOT_NO_SECCOMP=1` 对应显式关闭加速；这不会取消应用本身的安全边界。[RuntimeNativeFiles.prepare()](../app/src/main/java/com/deepseekharness/app/runtime/RuntimeNativeFiles.java) 从随包原生库准备 `libtalloc.so.2` 与 `libandroid-shmem.so` 别名，不把缺失依赖当成环境已就绪。
 
 | 当前文件 / 来源 | 已知边界 |
 |---|---|
 | Standard `libproot.so`、`libprootloader.so`、`libprootloader32.so` | Termux proot / GPL-2.0；[第三方声明](../THIRD_PARTY_NOTICES.md)明确：原始二进制的精确源码修订仍未核实。不能称 Standard 已按 Low 脚本复现。 |
-| Low `libproot_legacy.so`、`libprootloader_legacy.so` | [build-low-proot.py](../tools/build-low-proot.py) 固定 Termux `v5.1.107.92` 源码归档，SHA `29385d1ddb619a9c4449ab512bfd55032034b22f724ddf98fc95ff300ea32135`；API23 本地构建标识 `5.1.107.92-dsha-android23`。 |
-| Low 本地差异 | 移除一个不适用于 Android 命名 fd 的 canon 断言；旧 API 下通过 `dlsym` 查询 `getifaddrs/freeifaddrs`，不存在则明确 ENOSYS；shmem 映射到随包实现。不是通用内核仿真。 |
+| 历史 Low 兼容库 | 已随 low 源集在 build209 删除；当前只随包发布 Standard 的三个 proot 原生库 |
 | NDK / 自有会话启动器 | [ci/toolchain.lock.json](../ci/toolchain.lock.json) 固定 NDK `26.3.11579264`；[native-session/build.py](../tools/native-session/build.py) 构建 API23 ARM64 会话启动器，4KiB/common 与 16KiB LOAD 对齐。对齐检查不等于全部 16KiB 手机实测。 |
 
 本次只读核对的 Standard 三件原件 SHA-256，供查找对应字节，不补造源码来源：
@@ -116,7 +117,7 @@ proroot argv 还包括 `-r <根> -0 -w /root`、公共 bind、私有 cache 的 `
 
 | 自有组件 | 修复和限制 |
 |---|---|
-| `libdsha-proroot-compat.so` | GNU AArch64 `sysconf/__sysconf` 代理，只处理 GNU 枚举 75、249、250（线程最小栈、最小信号栈、信号栈）。从内核 `/proc/self/auxv` 获取真实辅助向量；完整但没有 `AT_MINSIGSTKSZ=51` 时使用 AArch64 glibc 默认 5120。其他查询转发 `RTLD_NEXT` 并保持查找前 errno。 |
+| `libdsha-proroot-compat.so` | GNU AArch64 `sysconf/__sysconf` 代理，只处理 GNU 枚举 75、249、250（线程最小栈、最小信号栈、信号栈）。从内核 `/proc/self/auxv` 获取真实辅助向量；完整但没有 `AT_MINSIGSTKSZ=51` 时使用 AArch64 glibc 默认 5120。其他查询转发 `RTLD_NEXT` 并保持查找前 errno。另导出 `fcntl`：vendor v1.2.8 的包装把所有失败改写成 EPERM（JDK 文件锁因此报 Operation not permitted），代理对 `F_DUPFD`/`F_DUPFD_CLOEXEC` 仍转发 vendor，其余命令直接发内核系统调用并恢复真实 errno。 |
 | `libdsha-proroot-linker.so` | 无依赖的入口适配器，给原始 bridge/linker 增加一个直接 `--preload <shim>`，同时保留原始 runtime 的直接预加载。只把 runtime 作为另一个库的间接依赖，曾造成路径 hook 不生效，因此不能替代此连接方式。 |
 
 原始 Android13 故障出现 glibc 信号栈/线程栈断言；“加载器可能没有初始化相应 glibc 内部状态”是支持该修复的**推断**，不是已审计闭源源码后的定论。代理不写私有 glibc 字段、不依赖私有偏移、没有构造器。auxv 无法读、截断、重复、零值、溢出或没有终止项时以固定诊断退出 126，不伪造成功。
@@ -133,7 +134,21 @@ ABI、源码及输出摘要、五件 vendor 原件摘要均由 `abi.lock.json` �
 - `NARB_DISABLE_NATIVE_CACHE=1`：避免原生扩展复制缓存的 link/unlink 在 link2symlink 路径下形成悬链，不能据此删除实际原生依赖。
 - [runtime-patches.json](../app/src/main/assets/runtime-patches.json)：当前 DSH 精确版本的补丁注册表，由 `RuntimeTools.applyPatchChain()` 统一准备；历史 `DT_UNKNOWN`/JSON 重开修复不能脱离当前注册表继续照搬旧模块补丁。
 - [bridge-token-compat.cjs](../app/src/main/assets/bridge-token-compat.cjs)：固定受管启动预加载的一部分，与 GNU loader shim 分属不同层；其职责不授予本机桥的额外权限。
-- Low proot 的 API23 兼容、PTY JNI 的出生握手、网页 ES/PDF 兼容分别有独立实现和验证；网页浏览器兼容成功不能证明 guest 原生加载成功。
+- PTY JNI 的出生握手、网页 ES/PDF 兼容分别有独立实现和验证；网页浏览器兼容成功不能证明 guest 原生加载成功。
+
+### 5.4 本机 git 大 diff 的 SIGSEGV（工具层保护）
+
+build330（Android 14 / 6.1.124，proroot v1.2.8 + `libdsha-proroot-compat.so`）下，`git show --stat`、`git diff --stat` / `--numstat` 对某些提交或一次 ≥8 个路径的组合会确定性崩溃：exit 139、stdout 0 字节，stderr 只有 `[proroot] SIGSEGV pc=… lr=…`。同一环境里 `git diff --name-status`、`--dirstat`、`git log` 与拆成 ≤7 个路径的分片不崩；GitHub Linux runner 不受影响。T81 只读排查与 @main 均在本机复现 2/2，2026-10-31 至 11-05 的会话日志里有 94 条同签名记录（其中 14 条 exit 139），最新出现在外部 PR 复审会话。
+
+危险在于失败方式：崩溃时输出为空，而历史命令常写成 `git show --stat … | head` 或 `git diff --stat …; …`，管道 / 分号让最终 rc 变成 0，审查或合入会静默拿到空数据。因此这里不把该崩溃当成可重试的普通失败：
+
+- 共享封装 [tools/git_guard.py](../tools/git_guard.py) 用 `subprocess` 捕获 stdout / stderr；命中 `rc=139` / `-11` 或 stderr 含 `[proroot] SIGSEGV` 时立即抛 `GitSigsegvError`。它不重试、不降级、不返回部分输出，错误里带命令、cwd、stderr 首行以及安全替代命令。
+- 仓库内所有调用 git 的工具统一走 `git_output(...)`：[check-source-hygiene.py](../tools/check-source-hygiene.py)、[ci-handoff.py](../tools/ci-handoff.py)、[format-java.py](../tools/format-java.py)、[verify-stability.py](../tools/verify-stability.py)、[verify-ci-package.py](../tools/verify-ci-package.py)。Linux CI 上的行为不变。
+- 需要临时统计大 diff 时用 `python3 tools/git_guard.py -- <git 参数...>`；命中签名会以 rc 139 和清晰 stderr 失败，而不是安静地给出空输出。
+- 审查 / 合入优先 `git --no-pager show --name-status --oneline <commit>`、`git --no-pager diff --name-status <a> <b>`、`git --no-pager diff --dirstat=files <a> <b>`；大范围 diff 按 ≤7 个路径分片。仍失败时重启环境或改用 proot，而不是反复重试同一条命令。
+- 回归测试 [tools/test-git-guard.py](../tools/test-git-guard.py) 覆盖 `rc=139`、stderr 带签名（含 rc=0 的防御性分支）、正常 `rc=0`、普通失败不吞 rc、崩溃只执行一次（不重试）与 CLI 退出码，已登记 [host-tests.manifest.json](../tools/host-tests.manifest.json)。
+
+根因在 proroot 闭源 runtime（崩溃 pc / lr offset 稳定），不在 git；本页只记录工具层保护，proroot 本体与升级评估另见 T83，本仓库未修改 proroot。
 
 ## 6. 没有 --kill-on-exit 时，停止怎么成立
 
@@ -171,8 +186,9 @@ proot 的实际 argv 包含 `--kill-on-exit`；proroot 当前集成没有这一�
 | [IsolatedInstallProcessTest](../app/src/test/java/com/deepseekharness/app/runtime/IsolatedInstallProcessTest.java)、[BoundedGuestLifetimeTest](../app/src/test/java/com/deepseekharness/app/runtime/BoundedGuestLifetimeTest.java)、[BoundedGuestSessionsTest](../app/src/test/java/com/deepseekharness/app/runtime/BoundedGuestSessionsTest.java) | 前台状态与整组退出分离、未确认状态与工作锁。 |
 | [ColdInstallPlanTest](../app/src/test/java/com/deepseekharness/app/util/ColdInstallPlanTest.java) | 探针顺序、包写一次、未知退出拒绝和窄动态 loader 条件。 |
 | [test-proroot-compat.py](../tools/test-proroot-compat.py) | 锁定来源/输出 ELF 依赖与原始 vendor 字节；不执行 Android guest。 |
+| [test-proroot-fcntl.py](../tools/test-proroot-fcntl.py) | 假 vendor 复现 v1.2.8 的 EPERM；代理在前时恢复 EAGAIN/EBADF/EINVAL、成功不改 errno、dup 仍转发 vendor。不执行专有加载器。 |
 | [test-host.py](../tools/proroot-compat/test-host.py) | GNU/Linux 上实际 sysconf 转发、auxv 拒绝及 direct preload；不是 ARM64 专有加载器或手机执行。 |
 | [test-arm64.py](../tools/proroot-compat/test-arm64.py) | QEMU/WSL 上原始 ARM64 bridge/loader 接线与自有入口拒绝条件；binfmt/二次 exec 限制按结果记录，不能替代应用域测试。 |
 | [native-session/build.py --check](../tools/native-session/build.py)、[test-native-session-handshake.py](../tools/test-native-session-handshake.py)、[test-proot-runtime-libs.py](../tools/test-proot-runtime-libs.py) | 自有监督器可复现字节、宿主内核出生握手及参数/依赖契约；不覆盖全部 ROM 进程信息权限。 |
 
-真正判断一个正式 APK 的某引擎可用，还需记录该 APK 的签名/摘要、实际选择与实际运行方式、Node/路径 hook、后端鉴权、网页就绪以及正常停止后的 guest 与 launcher 退出。Standard 与 Low、Android13 与 Android16、宿主测试与应用域测试分别记账；proot 回退成功不能替 proroot 签字。没有数据比对、长时或全设备证据时，也不把本文的架构说明写成这些验收已完成。
+真正判断一个正式 APK 的某引擎可用，还需记录该 APK 的签名/摘要、实际选择与实际运行方式、Node/路径 hook、后端鉴权、网页就绪以及正常停止后的 guest 与 launcher 退出。Standard 与 Android13/Android16、宿主测试与应用域测试分别记账；proot 回退成功不能替 proroot 签字。没有数据比对、长时或全设备证据时，也不把本文的架构说明写成这些验收已完成。

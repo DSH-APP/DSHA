@@ -24,7 +24,25 @@ public final class HarnessSessionState {
       new java.util.concurrent.CopyOnWriteArraySet<>();
   volatile WebLifecycleController.WebRun currentRun;
   volatile boolean restoreChecking, restoreChecked, restoreUnknown;
+
+  /** 最近一次恢复的稳定原因码、已完成的鉴权次数与面向用户的结论；不含凭据或异常正文。 */
+  volatile String restoreReason = "";
+
+  volatile int restoreAttempts;
+  volatile String restoreNotice = "";
+
+  /** 核对旧实例期间用户明确请求的启动；恢复结束后最多续接一次。 */
+  volatile PendingStart pendingStart;
+
   boolean recheckPending;
+
+  /** 启动意图连同前台保护票据；generation 绑定请求时的会话代次，停止会令其失效。 */
+  record PendingStart(
+      com.deepseekharness.app.util.WebStartProtection.Ticket ticket,
+      boolean safe,
+      java.util.function.Consumer<String> status,
+      long generation) {}
+
   final java.util.concurrent.CopyOnWriteArrayList<Runnable> recheckListeners =
       new java.util.concurrent.CopyOnWriteArrayList<>();
   volatile com.deepseekharness.app.util.WebSessionProof.Saved retainedWebStopProof;

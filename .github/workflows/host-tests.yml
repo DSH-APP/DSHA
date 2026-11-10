@@ -1,0 +1,42 @@
+name: Host regressions (on demand)
+
+# 手动宿主回归：按阶段或 --only 子集运行 tools/run-host-tests.py。
+# 两个阶段都先经 inputs 节点还原固定输入并准备 raw/managed 夹具（fast 中也有依赖 raw 的用例）。
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: run-host-tests.py stage
+        required: true
+        type: choice
+        default: fast
+        options: [fast, runtime]
+      only:
+        description: Optional space-separated test file names (e.g. test-ci-assets.py)
+        required: false
+        type: string
+        default: ''
+      playwright:
+        description: Install the pinned Playwright Chromium fixture
+        required: false
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: host-tests-${{ github.ref }}-${{ inputs.stage }}
+  cancel-in-progress: true
+jobs:
+  inputs:
+    uses: ./.github/workflows/_node-inputs.yml
+    with:
+      rebuild_runtime: true
+  host:
+    needs: inputs
+    uses: ./.github/workflows/_node-host-tests.yml
+    with:
+      stage: ${{ inputs.stage }}
+      only: ${{ inputs.only }}
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      toolchains: true
+      playwright: ${{ inputs.playwright }}

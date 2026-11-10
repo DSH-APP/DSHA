@@ -5,7 +5,7 @@ import com.deepseekharness.app.util.SensitiveData;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 
-/** 只记录应用操作阶段及脱敏结果；不采集模型消息、终端输入或配置全文。 */
+/** 不主动读取业务正文；自由格式操作错误仍可能引用业务内容，导出前须检查。 */
 public final class DiagnosticLog {
   private static final Object LOCK = new Object();
 
@@ -15,7 +15,8 @@ public final class DiagnosticLog {
     synchronized (LOCK) {
       try {
         String safe =
-            SensitiveData.redact(String.valueOf(message)).replaceAll("[\\p{Cntrl}&&[^\\n]]", " ");
+            com.deepseekharness.app.util.DiagnosticOperationSummary.safe(String.valueOf(message))
+                .replaceAll("[\\p{Cntrl}&&[^\\n]]", " ");
         if (safe.length() > 800) safe = safe.substring(0, 800) + "…";
         var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
         File folder =
@@ -36,20 +37,31 @@ public final class DiagnosticLog {
   }
 
   public static String read(Context context) {
-    synchronized (LOCK) {
-      try {
-        var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
-        File folder =
-            com.deepseekharness.app.util.ColdInstallPackages.privateFiles(
-                fs, new File(context.getApplicationInfo().dataDir), context.getFilesDir());
-        String value = DiagnosticHistory.read(fs, folder);
-        return value.isEmpty()
-            ? com.deepseekharness.app.util.UiText.text("暂无失败或操作记录\n")
-            : com.deepseekharness.app.util.LogCompactor.compact(SensitiveData.redact(value), 8000);
-      } catch (Exception e) {
-        return com.deepseekharness.app.util.UiText.text("无法读取操作记录\n");
-      }
+    try {
+      String value = readExportTail(context);
+      return value.isEmpty()
+          ? com.deepseekharness.app.util.UiText.text("暂无失败或操作记录\n")
+          : com.deepseekharness.app.util.LogCompactor.compact(value, 8000);
+    } catch (java.io.IOException | RuntimeException error) {
+      return com.deepseekharness.app.util.UiText.text("无法读取操作记录\n");
     }
+  }
+
+  /** Bounded original operation records, without display-only clue/context duplication. */
+  public static String readExportTail(Context context) throws java.io.IOException {
+    synchronized (LOCK) {
+      var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
+      File folder =
+          com.deepseekharness.app.util.ColdInstallPackages.privateFiles(
+              fs, new File(context.getApplicationInfo().dataDir), context.getFilesDir());
+      return exportTail(fs, folder);
+    }
+  }
+
+  static String exportTail(com.deepseekharness.app.backup.BackupFileSystem fs, File folder)
+      throws java.io.IOException {
+    return com.deepseekharness.app.util.DiagnosticOperationSummary.history(
+        DiagnosticHistory.read(fs, folder));
   }
 
   public static void installCrashHandler(Context context) {

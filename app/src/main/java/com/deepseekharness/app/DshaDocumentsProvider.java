@@ -2,6 +2,7 @@ package com.deepseekharness.app;
 
 import android.database.Cursor;
 import android.database.MatrixCursor;
+import android.database.sqlite.SQLiteException;
 import android.os.CancellationSignal;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,8 +16,14 @@ import android.webkit.MimeTypeMap;
 import com.deepseekharness.app.core.RuntimeTasks;
 import com.deepseekharness.app.util.DocumentPaths;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.nio.file.DirectoryIteratorException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -38,10 +45,33 @@ public class DshaDocumentsProvider extends DocumentsProvider {
   private final com.deepseekharness.app.backup.AndroidBackupFileSystem mutations =
       new com.deepseekharness.app.backup.AndroidBackupFileSystem();
   private String authority;
+  private static final ThreadLocal<CancellationSignal> LOCAL_QUERY_SIGNAL = new ThreadLocal<>();
+
+  /** DocumentsProvider's final Bundle query drops the child-query cancellation signal.
+   * Same-process callers keep their signal on the synchronous provider call stack instead.
+   * External SAF clients still have the framework's child-query cancellation limitation. */
+  public static AutoCloseable withQueryCancellation(CancellationSignal signal) {
+    CancellationSignal previous = LOCAL_QUERY_SIGNAL.get();
+    LOCAL_QUERY_SIGNAL.set(signal);
+    return () -> {
+      if (previous == null) LOCAL_QUERY_SIGNAL.remove();
+      else LOCAL_QUERY_SIGNAL.set(previous);
+    };
+  }
+
+  private static void checkQueryCancellation() throws InterruptedIOException {
+    CancellationSignal signal = LOCAL_QUERY_SIGNAL.get();
+    if (signal != null) signal.throwIfCanceled();
+    if (Thread.currentThread().isInterrupted()) throw new InterruptedIOException("CANCELLED");
+  }
 
   // 测试子类只替换目录，生产入口不接受任意宿主路径。
   protected File documentBase() {
     return getContext().getFilesDir();
+  }
+
+  protected com.deepseekharness.app.backup.BackupFileSystem documentFileSystem() {
+    return new com.deepseekharness.app.backup.AndroidBackupFileSystem();
   }
 
   @Override
@@ -55,10 +85,8 @@ public class DshaDocumentsProvider extends DocumentsProvider {
     try {
       dataLayout =
           new com.deepseekharness.app.backup.UserDataLayout(
-              new com.deepseekharness.app.backup.AndroidBackupFileSystem(),
-              documentBase().getCanonicalFile());
-      paths =
-          new DocumentPaths(documentBase(), DshaDocumentsProvider::link, dataLayout.documents());
+              documentFileSystem(), documentBase().getCanonicalFile());
+      paths = new DocumentPaths(documentBase(), this::link, dataLayout.documents());
       return true;
     } catch (IOException error) {
       android.util.Log.e("DshaDocs", com.deepseekharness.app.util.UiText.text("文件接口初始化失败"), error);
@@ -82,7 +110,7 @@ public class DshaDocumentsProvider extends DocumentsProvider {
     return result;
   }
 
-  private static String link(File file) throws IOException {
+  protected String link(File file) throws IOException {
     try {
       return Os.readlink(file.getPath());
     } catch (ErrnoException error) {
@@ -94,7 +122,18 @@ public class DshaDocumentsProvider extends DocumentsProvider {
   }
 
   private static FileNotFoundException failure(Exception error) {
-    FileNotFoundException failure = new FileNotFoundException(error.getMessage());
+    String message = error.getMessage();
+    if ("DOCUMENT_LIST_BUSY".equals(message))
+      message =
+          com.deepseekharness.app.util.UiText.choose(
+              "打开的目录过多，请关闭其他文件窗口后重试。",
+              "Too many folders are open. Close other file windows and retry.");
+    else if ("DOCUMENT_LIST_STORAGE".equals(message) || error instanceof SQLiteException)
+      message =
+          com.deepseekharness.app.util.UiText.choose(
+              "无法暂存目录列表，请检查手机可用存储空间后重试。",
+              "The folder listing could not be cached. Check available device storage and retry.");
+    FileNotFoundException failure = new FileNotFoundException(message);
     failure.initCause(error);
     return failure;
   }
@@ -189,23 +228,33 @@ public class DshaDocumentsProvider extends DocumentsProvider {
   public Cursor queryChildDocuments(String id, String[] projection, String sortOrder)
       throws FileNotFoundException {
     try (RuntimeTasks ignored = lease(false)) {
+      checkQueryCancellation();
       File dir = existing(id);
       if (!dir.isDirectory())
         throw new IOException(com.deepseekharness.app.util.UiText.text("所选文档不是目录"));
-      MatrixCursor result = documents(projection, id);
-      String[] names = dir.list();
-      if (names == null)
-        throw new IOException(com.deepseekharness.app.util.UiText.text("目录暂时无法读取"));
-      java.util.Arrays.sort(names, String.CASE_INSENSITIVE_ORDER);
-      for (String name : names) {
+      try (DocumentRowsSnapshot snapshot = new DocumentRowsSnapshot(getContext().getCacheDir());
+          DirectoryStream<Path> entries = Files.newDirectoryStream(dir.toPath())) {
+        for (Path entry : entries) {
+          checkQueryCancellation();
+          try {
+            snapshot.add(values(paths.child(id, entry.getFileName().toString()), DOCUMENT_COLUMNS));
+          } catch (IOException unavailable) {
+            /* 并发移除或不允许访问的外部链接，不伪报可读文件。 */
+          }
+        }
+        checkQueryCancellation();
+        Cursor result = snapshot.finish(projection, LOCAL_QUERY_SIGNAL.get());
         try {
-          include(result, paths.child(id, name));
-        } catch (IOException unavailable) {
-          /* 并发移除或不允许访问的外部链接，不伪报可读文件。 */
+          result.setNotificationUri(
+              getContext().getContentResolver(),
+              DocumentsContract.buildChildDocumentsUri(authority, id));
+          return result;
+        } catch (RuntimeException error) {
+          result.close();
+          throw error;
         }
       }
-      return result;
-    } catch (IOException error) {
+    } catch (IOException | DirectoryIteratorException | SQLiteException | SecurityException error) {
       throw failure(error);
     }
   }
@@ -241,20 +290,29 @@ public class DshaDocumentsProvider extends DocumentsProvider {
       Set<String> visited = new HashSet<>();
       int entries = 0;
       while (!pending.isEmpty() && result.getCount() < 200 && entries < 20_000) {
+        checkQueryCancellation();
         String parent = pending.removeFirst();
-        File dir = resolve(parent, true);
-        if (!visited.add(dir.getPath())) continue;
-        String[] names = dir.list();
-        if (names == null) continue;
-        for (String name : names) {
-          if (++entries > 20_000 || result.getCount() >= 200) break;
-          String id = paths.child(parent, name);
-          try {
-            File file = resolve(id, true);
-            if (name.toLowerCase(Locale.ROOT).contains(wanted)) include(result, id);
-            if (file.isDirectory()) pending.addLast(id);
-          } catch (IOException unavailable) {
+        try {
+          File dir = resolve(parent, true);
+          if (!visited.add(dir.getPath())) continue;
+          try (DirectoryStream<Path> children = Files.newDirectoryStream(dir.toPath())) {
+            for (Path entry : children) {
+              checkQueryCancellation();
+              if (++entries > 20_000 || result.getCount() >= 200) break;
+              String name = entry.getFileName().toString();
+              try {
+                String id = paths.child(parent, name);
+                File file = resolve(id, true);
+                if (name.toLowerCase(Locale.ROOT).contains(wanted)) include(result, id);
+                if (file.isDirectory()) pending.addLast(id);
+              } catch (IOException unavailable) {
+              }
+            }
           }
+        } catch (InterruptedIOException cancelled) {
+          throw cancelled;
+        } catch (IOException | DirectoryIteratorException unavailable) {
+          // A disappearing or unreadable queued directory must not discard unrelated matches.
         }
       }
       return result;
@@ -278,18 +336,23 @@ public class DshaDocumentsProvider extends DocumentsProvider {
       int openMode =
           parsed & ~ParcelFileDescriptor.MODE_TRUNCATE & ~ParcelFileDescriptor.MODE_CREATE;
       boolean writing = (parsed & ParcelFileDescriptor.MODE_WRITE_ONLY) != 0;
-      fd =
-          ParcelFileDescriptor.open(
-              file,
-              openMode,
-              new Handler(Looper.getMainLooper()),
-              error -> {
-                try {
-                  if (writing) changed(id);
-                } finally {
-                  task.close();
-                }
-              });
+      // isFile() is only an observation: the runtime may replace that pathname with a FIFO
+      // before open(). Pin a NONBLOCK, NOFOLLOW regular descriptor before the listener-backed
+      // open, so that replacement cannot indefinitely block a Binder thread and its lease.
+      try (ParcelFileDescriptor pinned = pinRegular(file, parsed)) {
+        fd =
+            ParcelFileDescriptor.open(
+                new File("/proc/self/fd/" + pinned.getFd()),
+                openMode,
+                new Handler(Looper.getMainLooper()),
+                error -> {
+                  try {
+                    if (writing) changed(id);
+                  } finally {
+                    task.close();
+                  }
+                });
+      }
       String actual = Os.readlink("/proc/self/fd/" + fd.getFd());
       if (!actual.equals(file.getAbsolutePath())
           || !DocumentPaths.within(paths.base(), new File(actual)))
@@ -308,6 +371,29 @@ public class DshaDocumentsProvider extends DocumentsProvider {
       if (error instanceof android.os.OperationCanceledException)
         throw (android.os.OperationCanceledException) error;
       throw failure(error);
+    }
+  }
+
+  private static ParcelFileDescriptor pinRegular(File file, int parsed)
+      throws IOException, ErrnoException {
+    int access = parsed & ParcelFileDescriptor.MODE_READ_WRITE;
+    int flags =
+        access == ParcelFileDescriptor.MODE_READ_ONLY
+            ? OsConstants.O_RDONLY
+            : access == ParcelFileDescriptor.MODE_WRITE_ONLY
+                ? OsConstants.O_WRONLY
+                : OsConstants.O_RDWR;
+    FileDescriptor raw =
+        Os.open(
+            file.getPath(),
+            flags | OsConstants.O_NONBLOCK | OsConstants.O_NOFOLLOW | OsConstants.O_CLOEXEC,
+            0);
+    try {
+      if (!OsConstants.S_ISREG(Os.fstat(raw).st_mode))
+        throw new IOException(com.deepseekharness.app.util.UiText.text("目录或特殊文件不能直接打开"));
+      return ParcelFileDescriptor.dup(raw);
+    } finally {
+      Os.close(raw);
     }
   }
 
@@ -406,13 +492,14 @@ public class DshaDocumentsProvider extends DocumentsProvider {
       if (!file.exists())
         throw new IOException(com.deepseekharness.app.util.UiText.format("文件不存在：%s", ids.get(i)));
       if (!file.isDirectory()) continue;
-      String[] names = file.list();
-      if (names == null)
-        throw new IOException(com.deepseekharness.app.util.UiText.text("无法完整读取目录"));
-      for (String name : names) {
-        if (ids.size() >= 100_000)
-          throw new IOException(com.deepseekharness.app.util.UiText.text("目录项目过多，请分批操作"));
-        ids.add(paths.child(ids.get(i), name));
+      try (DirectoryStream<Path> children = Files.newDirectoryStream(file.toPath())) {
+        for (Path child : children) {
+          if (ids.size() >= 100_000)
+            throw new IOException(com.deepseekharness.app.util.UiText.text("目录项目过多，请分批操作"));
+          ids.add(paths.child(ids.get(i), child.getFileName().toString()));
+        }
+      } catch (DirectoryIteratorException error) {
+        throw error.getCause();
       }
     }
     return ids;
@@ -435,6 +522,10 @@ public class DshaDocumentsProvider extends DocumentsProvider {
   }
 
   private void include(MatrixCursor result, String id) throws IOException {
+    result.addRow(values(id, result.getColumnNames()));
+  }
+
+  private Object[] values(String id, String[] columns) throws IOException {
     File entry = resolve(id, false), file = resolve(id, true);
     boolean symbolic = link(entry) != null;
     if (!file.exists() && !symbolic)
@@ -449,8 +540,9 @@ public class DshaDocumentsProvider extends DocumentsProvider {
           file.isDirectory()
               ? DocumentsContract.Document.FLAG_DIR_SUPPORTS_CREATE
               : file.isFile() ? DocumentsContract.Document.FLAG_SUPPORTS_WRITE : 0;
-    MatrixCursor.RowBuilder row = result.newRow();
-    for (String column : result.getColumnNames()) {
+    Object[] row = new Object[columns.length];
+    for (int i = 0; i < columns.length; i++) {
+      String column = columns[i];
       Object value;
       switch (column) {
         case "document_id":
@@ -474,8 +566,9 @@ public class DshaDocumentsProvider extends DocumentsProvider {
         default:
           value = null;
       }
-      row.add(value);
+      row[i] = value;
     }
+    return row;
   }
 
   private static String mime(File file) {

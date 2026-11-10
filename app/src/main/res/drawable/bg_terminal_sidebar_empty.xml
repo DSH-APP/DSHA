@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 分组空态占位框：透明底 + line_strong 虚线描边 + 10dp 圆角（原型 .group-empty）。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#00000000" />
+    <corners android:radius="@dimen/terminal_sidebar_empty_radius" />
+    <stroke
+        android:width="@dimen/stroke"
+        android:color="@color/terminal_line_strong"
+        android:dashWidth="4dp"
+        android:dashGap="3dp" />
+</shape>

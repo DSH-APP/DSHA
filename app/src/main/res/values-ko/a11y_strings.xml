@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_label" formatted="false">"DSH-A-Su 화면 제어"</string>
+    <string name="accessibility_desc" formatted="false">"용도는 두 가지입니다. Android 무선 디버깅의 페어링 코드를 자동으로 읽고, AI 어시스턴트가 화면 읽기, 탭, 입력, 키 누르기, 스크린샷으로 기기를 제어하도록 돕습니다. DSH-A-Su는 백그라운드에서 화면을 기록하지 않으며 어시스턴트가 요청할 때만 현재 화면을 읽습니다."</string>
+</resources>

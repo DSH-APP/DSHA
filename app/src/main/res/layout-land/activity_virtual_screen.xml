@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 虚拟识屏页横屏：顶栏通栏；预览在左占主要宽度，右侧为结果条与操作区（可随内容滚动）。 -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/vscreen_scroll" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/shell_bg" android:fillViewport="true">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="12dp" android:paddingEnd="12dp" android:paddingBottom="8dp">
+    <include layout="@layout/vscreen_header" />
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:baselineAligned="false" android:orientation="horizontal">
+      <FrameLayout android:id="@+id/vscreen_stage" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1.6" android:minHeight="200dp" android:background="@drawable/bg_shell_card" android:padding="1dp">
+        <include layout="@layout/vscreen_stage_content" />
+      </FrameLayout>
+
+      <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="12dp" android:gravity="bottom" android:orientation="vertical">
+        <include layout="@layout/vscreen_controls" />
+      </LinearLayout>
+    </LinearLayout>
+  </LinearLayout>
+</ScrollView>

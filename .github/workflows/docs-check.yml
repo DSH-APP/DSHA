@@ -1,0 +1,59 @@
+name: Documentation checks
+
+# 文档变更的快速门禁：链接、更新记录生成、界面文案目录。只读源码，不需要固定输入或 JDK。
+on:
+  push:
+    paths:
+      - '**/*.md'
+      - 'docs/**'
+      - 'tools/i18n/**'
+      - 'app/src/main/res/raw/changelog.md'
+      - 'tools/check-document-links.py'
+      - 'tools/generate-changelog.py'
+      - 'tools/check-ui-i18n.py'
+  pull_request:
+    paths:
+      - '**/*.md'
+      - 'docs/**'
+      - 'tools/i18n/**'
+      - 'app/src/main/res/raw/changelog.md'
+      - 'tools/check-document-links.py'
+      - 'tools/generate-changelog.py'
+      - 'tools/check-ui-i18n.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  links:
+    name: Document links
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check document links
+        run: python3 tools/check-document-links.py
+  changelog:
+    name: Generated changelog
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check generated changelog
+        run: python3 tools/generate-changelog.py --check
+  i18n:
+    name: UI language catalog
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check UI i18n
+        run: python3 tools/check-ui-i18n.py

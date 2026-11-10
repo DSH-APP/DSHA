@@ -14,7 +14,26 @@ import java.util.*;
 
 /** 真实设置入口、英文页面与返回中文。忽略用户输入及历史日志，不导出任何配置值。 */
 public final class LanguageSettingsAudit extends Instrumentation {
+  public static final class PluginFixture extends androidx.lifecycle.ViewModel {
+    final androidx.lifecycle.MutableLiveData<com.deepseekharness.app.core.PluginRepository.State>
+        states = new androidx.lifecycle.MutableLiveData<>();
+  }
+
+  /** 只验证状态文案跨语言重渲染；不创建或修改生产/Activity Repository。 */
   public static final class CachedPluginFragment extends PluginFragment {
+    @Override
+    com.deepseekharness.app.plugins.PluginManagementEngine managementEngine() {
+      return null;
+    }
+
+    @Override
+    androidx.lifecycle.LiveData<com.deepseekharness.app.core.PluginRepository.State>
+        installedState() {
+      return new androidx.lifecycle.ViewModelProvider(requireActivity())
+          .get(PluginFixture.class)
+          .states;
+    }
+
     @Override
     void syncInstalledState() {}
   }
@@ -147,7 +166,9 @@ public final class LanguageSettingsAudit extends Instrumentation {
       try (var fd =
               getUiAutomation()
                   .executeShellCommand(
-                      "am start -W -n com.dsh.client/com.deepseekharness.app.ui.MainActivity");
+                      "am start -W -n "
+                          + app.getPackageName()
+                          + "/com.deepseekharness.app.ui.MainActivity");
           var input = new android.os.ParcelFileDescriptor.AutoCloseInputStream(fd)) {
         while (input.read() != -1) {}
       }
@@ -179,6 +200,15 @@ public final class LanguageSettingsAudit extends Instrumentation {
       choose("English");
       check("en".equals(new ConfigStore(app).getUiLanguagePreference()), "英语选择未保存");
       check("Settings".equals(page.getString(R.string.ui2_settings)), "资源没有切换成英文");
+      PluginFixture[] pluginFixture = {null};
+      var initialPluginState =
+          FragmentEntrySelfTest.fixtureState(Collections.emptyList(), false, "", false);
+      ui(
+          () -> {
+            pluginFixture[0] =
+                new androidx.lifecycle.ViewModelProvider(page).get(PluginFixture.class);
+            pluginFixture[0].states.setValue(initialPluginState);
+          });
       for (androidx.fragment.app.Fragment fragment :
           new androidx.fragment.app.Fragment[] {
             new SettingsFragment(),
@@ -186,25 +216,24 @@ public final class LanguageSettingsAudit extends Instrumentation {
             new WorkspaceFragment(),
             new InstallFragment(),
             new DeviceGrantsFragment(),
-            new PluginFragment()
+            new CachedPluginFragment()
           }) {
         mount(fragment);
         ui(() -> scan(fragment.requireView(), fragment.getClass().getSimpleName()));
       }
-      var repository =
-          new androidx.lifecycle.ViewModelProvider(page)
-              .get(com.deepseekharness.app.core.PluginRepository.class);
-      long endRefresh = System.currentTimeMillis() + 30000;
-      while (repository.isBusy() && System.currentTimeMillis() < endRefresh) Thread.sleep(100);
       String detection = "插件检测完成；新检测到的插件可开启开关加入 Web，变更后重启 Web 生效";
-      ui(() -> repository.selectionMessage(UiText.text(detection)));
+      var englishPluginState =
+          FragmentEntrySelfTest.fixtureState(
+              Collections.emptyList(), false, UiText.text(detection), false);
+      ui(() -> pluginFixture[0].states.setValue(englishPluginState));
       mount(new SettingsFragment());
       choose("Simplified Chinese");
       check("zh".equals(new ConfigStore(app).getUiLanguagePreference()), "中文选择未保存");
       check("设置".equals(page.getString(R.string.ui2_settings)), "未返回中文资源");
-      mount(new CachedPluginFragment());
+      CachedPluginFragment cachedPlugin = new CachedPluginFragment();
+      mount(cachedPlugin);
       check(
-          detection.equals(((TextView) page.findViewById(R.id.statusText)).getText().toString()),
+          detection.equals(((TextView) cachedPlugin.find(R.id.statusText)).getText().toString()),
           "英文缓存的检测结果没有回到中文");
       check(untranslated.isEmpty(), "未翻译的应用控件：\n" + String.join("\n", untranslated));
       result.putString("result", "PASS");

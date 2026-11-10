@@ -69,14 +69,20 @@ export function verifyRuntimeSession(directory,proof){
   if(!record)return false;
   if(record.directory!==selected||sha(path.join(selected,'dsha-test-runtime.json'))!==record.markerSha256)throw Error('TEST_FIXTURE_SESSION_MARKER_CHANGED');
   if(proof.kind!==record.kind||proof.contentProof?.digest!==record.contentDigest)throw Error('TEST_FIXTURE_SESSION_CONTENT_BINDING');
+  // The recorded metadata was produced by the creator interpreter; both consumers must
+  // bind that exact path/bytes/version, or a foreign session could reuse another proof.
+  const runtime=data.metadataRuntime||{},python=typeof runtime.python==='string'?runtime.python:'';
+  if(process.env.DSHA_PYTHON!==python)throw Error('TEST_FIXTURE_SESSION_METADATA_RUNTIME_CHANGED');
+  let pythonStat;
+  try{pythonStat=fs.lstatSync(python);}catch(error){throw Error('TEST_FIXTURE_SESSION_METADATA_RUNTIME_CHANGED');}
+  if(pythonStat.isSymbolicLink()||!pythonStat.isFile()||fs.realpathSync(python).toLowerCase()!==python.toLowerCase()||sha(python)!==runtime.pythonSha256)throw Error('TEST_FIXTURE_SESSION_METADATA_RUNTIME_CHANGED');
+  const version=spawnSync(python,['-B','-c','import sys;print(sys.version.split()[0])'],{env:process.env,encoding:'utf8',windowsHide:true,timeout:120000,maxBuffer:1048576});
+  if(version.error||version.status!==0||version.stdout.trim()!==runtime.pythonVersion)throw Error('TEST_FIXTURE_SESSION_METADATA_RUNTIME_CHANGED');
   if(process.platform==='win32'){
     // libuv exposes a 32-bit volume ID, while Python 3.12 preserves all 64 bits;
     // Windows file IDs may also exceed libuv's inode width. Never truncate either.
     // The same creator interpreter checks the full IDs and live Node -> owner chain.
-    const runtime=data.metadataRuntime;
-    if(!runtime||process.env.DSHA_PYTHON!==runtime.python||fs.realpathSync(process.execPath).toLowerCase()!==runtime.node?.toLowerCase()||sha(process.execPath)!==runtime.nodeSha256)throw Error('TEST_FIXTURE_SESSION_METADATA_RUNTIME_CHANGED');
-    const pythonStat=fs.lstatSync(runtime.python);
-    if(pythonStat.isSymbolicLink()||!pythonStat.isFile()||fs.realpathSync(runtime.python).toLowerCase()!==runtime.python.toLowerCase()||sha(runtime.python)!==runtime.pythonSha256)throw Error('TEST_FIXTURE_SESSION_METADATA_RUNTIME_CHANGED');
+    if(fs.realpathSync(process.execPath).toLowerCase()!==runtime.node?.toLowerCase()||sha(process.execPath)!==runtime.nodeSha256)throw Error('TEST_FIXTURE_SESSION_METADATA_RUNTIME_CHANGED');
     const worker=spawnSync(runtime.python,['-B',path.join(root,'tools/runtime_fixture_session.py'),'--verify-node-receipt',file,selected],{env:process.env,encoding:'utf8',windowsHide:true,timeout:120000,maxBuffer:1048576});
     if(worker.error||worker.status!==0||worker.stdout.trim()!=='PASS_WINDOWS_FULL_PRECISION_METADATA'){
       const code=/TEST_FIXTURE_SESSION_[A-Z_]+/.exec(worker.stderr||'')?.[0]||'TEST_FIXTURE_SESSION_METADATA_WORKER_FAILED';

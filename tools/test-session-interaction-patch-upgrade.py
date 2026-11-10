@@ -158,7 +158,8 @@ def reject_old(data, chain):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--module', type=Path, help='exact locked original rc.2 workspace lib/client.js')
+    parser.add_argument('--module', type=Path, help='exact current locked rc3 workspace lib/client.js')
+    parser.add_argument('--historical-module', type=Path, help='exact SHA-pinned rc2 source; defaults to preserved official fixture')
     parser.add_argument('--jdk', type=Path, help='JDK17 home; defaults to JAVA_HOME/PATH')
     parser.add_argument('--output', type=Path, help='parent for a new private numbered evidence directory')
     args = parser.parse_args()
@@ -166,8 +167,10 @@ def main():
         raise RuntimeError('TEST_ASSERTIONS_REQUIRE_UNOPTIMIZED_PYTHON')
     module = args.module
     if module is None:
-        selected = json.loads((ROOT / 'app/build/test-runtimes/current.json').read_text(encoding='utf-8'))
-        module = Path(selected['raw']) / 'node_modules' / MODULE
+        selected = os.environ.get('DSHA_TEST_RUNTIME')
+        if selected is None:
+            selected = json.loads((ROOT / 'app/build/test-runtimes/current.json').read_text(encoding='utf-8'))['raw']
+        module = Path(selected) / 'node_modules' / MODULE
     provenance = json.loads((HISTORY / 'provenance.json').read_text(encoding='utf-8'))
     assert provenance['kind'] == 'actual-preserved-recipe-and-helper'
     assert provenance['module'] == MODULE and provenance['canonicalSha256'] == CANONICAL_SHA
@@ -176,11 +179,14 @@ def main():
     for name, expected_sha in HISTORICAL_SHAS.items():
         assert sha((HISTORY / name).read_bytes()) == expected_sha, 'historical V3 fixture identity: ' + name
     original_input = module.read_bytes()
-    assert sha(original_input) == CANONICAL_SHA, 'unknown canonical upstream bytes'
+    historical_module = args.historical_module or ROOT / 'tools/fixtures/rc2-upgrade-source/dsh-client-ui-workspace.js'
+    historical_input = historical_module.read_bytes()
+    assert sha(historical_input) == CANONICAL_SHA, 'unknown historical rc2 canonical bytes'
     historical = json.loads((HISTORY / 'session-interaction-patch.json').read_text(encoding='utf-8'))
     current = json.loads((ASSETS / 'session-interaction-patch.json').read_text(encoding='utf-8'))
-    assert historical['dshVersion'] == current['dshVersion'] == '0.2.1-rc.2'
-    actual_v3 = apply_recipe(original_input, historical, HISTORY)
+    assert historical['dshVersion'] == '0.2.1-rc.2' and current['dshVersion'] == json.loads((ROOT / 'tools/dsh-runtime/package.json').read_text(encoding='utf-8'))['dependencies']['@deepseek-ai/dsh']
+    assert sha(original_input) == current['sourceSha256'], 'unknown current rc3 canonical bytes'
+    actual_v3 = apply_recipe(historical_input, historical, HISTORY)
     assert sha(actual_v3) == HISTORICAL_MANAGED_SHA, 'derived V3 must match the independently retained managed baseline'
     expected = apply_recipe(original_input, current, ASSETS)
     assert actual_v3 != expected and b'DSHA_SESSION_INTERACTION_V3' in actual_v3
@@ -250,9 +256,10 @@ def main():
     assert ran.returncode == 0, 'Java regression failed: ' + str(output / 'java.log')
     assert before_business == {str(p.relative_to(business)): sha(p.read_bytes()) for p in business.rglob('*') if p.is_file()}
     assert module.read_bytes() == original_input, 'canonical source was modified'
+    assert historical_module.read_bytes() == historical_input, 'historical source was modified'
     result = dict(status='PASS', historicalKind=provenance['kind'], historicalV3=HISTORICAL_SHAS,
                   actualHistoricalV2Tested=False, syntheticV2MarkerNegativeControl=True,
-                  canonicalSha256=sha(original_input), actualV3ModuleSha256=sha(actual_v3), currentV4ModuleSha256=sha(expected),
+                  canonicalSha256=sha(original_input), historicalCanonicalSha256=sha(historical_input), actualV3ModuleSha256=sha(actual_v3), currentV4ModuleSha256=sha(expected),
                   recipeSha256=sha((ASSETS / 'session-interaction-patch.json').read_bytes()),
                   helperSha256=sha((ASSETS / 'web-integration/session-interaction.js').read_bytes()),
                   registrySha256=sha((ASSETS / 'runtime-patches.json').read_bytes()),

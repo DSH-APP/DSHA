@@ -38,7 +38,7 @@ for(const [index,name] of names.entries()){
  proofs[name]=contentProof(root);
 }
 const library='@fixture/unused-library',libraryDir=path.join(sdk,'node_modules',library);fs.mkdirSync(libraryDir,{recursive:true});fs.writeFileSync(path.join(libraryDir,'package.json'),JSON.stringify({name:library,version:'1.0.0'}));fs.writeFileSync(path.join(libraryDir,'large.bin'),Buffer.alloc(1024*1024,9));proofs[library]=contentProof(libraryDir);
-fs.writeFileSync(path.join(sdk,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh',version:'0.2.1-rc.2',dependencies:Object.fromEntries([...names,library].map(name=>[name,'1.0.0']))}));
+fs.writeFileSync(path.join(sdk,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh',version:JSON.parse(fs.readFileSync(path.join(assets,'runtime-patches.json'))).dshVersion,dependencies:Object.fromEntries([...names,library].map(name=>[name,'1.0.0']))}));
 const manifestPath=path.join(profileDir,'package.json');fs.writeFileSync(manifestPath,JSON.stringify({name:'private-worker-fixture',private:true,dsh:{profile:{bundles:names}}}));fs.writeFileSync(path.join(profileDir,'cordis.patch.yml'),'[]\n');
 const proofFile=path.join(home,'managed-package-proofs.json');fs.writeFileSync(proofFile,JSON.stringify({version:1,packages:proofs}));
 const previous=process.env.DSHA_MANAGED_PACKAGE_PROOFS_SHA256;process.env.DSHA_MANAGED_PACKAGE_PROOFS_SHA256=sha(fs.readFileSync(proofFile));

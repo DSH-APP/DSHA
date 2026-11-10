@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- “结束全部”停止图标：同 36dp 圆形，按压用危险浅底，提醒这是破坏性动作（点后仍需确认）。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/terminal_danger_soft">
+    <item
+        android:id="@android:id/mask"
+        android:bottom="6dp"
+        android:left="6dp"
+        android:right="6dp"
+        android:top="6dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFFFF" />
+        </shape>
+    </item>
+</ripple>

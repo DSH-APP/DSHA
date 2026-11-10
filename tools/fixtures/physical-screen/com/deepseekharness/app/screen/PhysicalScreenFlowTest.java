@@ -130,10 +130,285 @@ public final class PhysicalScreenFlowTest {
 
   @After
   public void tearDown() {
+    com.deepseekharness.app.control.OwnedScreenOverlay.clear("physical-fixture");
     Platform.captureRelease.countDown();
     Platform.gestureRelease.countDown();
     Platform.windowsRelease.countDown();
     if (main != null) main.revoke();
+  }
+
+  @Test
+  public void exactOwnedCompactOverlayIsMaskedWhileForeignOverlayStillRefusesCoordinates() throws Exception {
+    var overlay = window(77,20,AccessibilityWindowInfo.TYPE_SYSTEM,false,new Rect(5,3,7,5));
+    var ownRoot = AccessibilityNodeInfo.obtain();
+    ownRoot.setPackageName(service.getPackageName());
+    ((ShadowAccessibilityWindowInfo)Shadow.extract(overlay)).setRoot(ownRoot);
+    com.deepseekharness.app.control.OwnedScreenOverlay.publish("physical-fixture",77,
+        new com.deepseekharness.app.util.ScreenWindowRegion.Bounds(5,3,7,5),false);
+    windows = new ArrayList<>(windows); windows.add(overlay); register(service);
+    JSONObject shot = shot();
+    assertTrue(shot.getBoolean("coordinatesAvailable"));
+    assertEquals(1,shot.getJSONArray("excludedRegions").length());
+    byte[] png = android.util.Base64.decode(shot.getString("data"),android.util.Base64.NO_WRAP);
+    Bitmap returned = android.graphics.BitmapFactory.decodeByteArray(png,0,png.length);
+    try { assertEquals(android.graphics.Color.BLACK,returned.getPixel(5,3)); }
+    finally { returned.recycle(); }
+    assertEquals("GESTURE_OUTSIDE_OBSERVED_REGION",call("swipe",new JSONObject()
+        .put("observationId",shot.getString("observationId")).put("x1",3).put("y1",4)
+        .put("x2",6).put("y2",4),2000).getString("code"));
+    assertEquals(0,Platform.sends.get());
+    assertEquals("COMPLETED",call("tap",new JSONObject().put("observationId",shot().getString("observationId"))
+        .put("x",3).put("y",8),2000).getString("state"));
+    windows.add(window(78,21,AccessibilityWindowInfo.TYPE_SYSTEM,false,new Rect(2,3,4,5)));
+    register(service);
+    assertFalse(shot().getBoolean("coordinatesAvailable"));
+  }
+
+  @Test
+  public void registeredViewInsidePaddedWindowMasksWholeWindowAndLayoutChangeConsumesFrame() throws Exception {
+    var overlay = window(77,20,AccessibilityWindowInfo.TYPE_SYSTEM,false,new Rect(4,3,8,6));
+    var ownRoot = AccessibilityNodeInfo.obtain();
+    ownRoot.setPackageName(service.getPackageName());
+    ((ShadowAccessibilityWindowInfo)Shadow.extract(overlay)).setRoot(ownRoot);
+    com.deepseekharness.app.control.OwnedScreenOverlay.publish("physical-fixture",77,
+        new com.deepseekharness.app.util.ScreenWindowRegion.Bounds(5,4,7,5),false);
+    windows = new ArrayList<>(windows); windows.add(overlay); register(service);
+    JSONObject observed = shot();
+    assertTrue(observed.getBoolean("coordinatesAvailable"));
+    JSONObject excluded = observed.getJSONArray("excludedRegions").getJSONObject(0).getJSONObject("bounds");
+    assertEquals(4, excluded.getInt("left"));
+    assertEquals(8, excluded.getInt("right"));
+    byte[] png = android.util.Base64.decode(observed.getString("data"),android.util.Base64.NO_WRAP);
+    Bitmap image = android.graphics.BitmapFactory.decodeByteArray(png,0,png.length);
+    try { assertEquals(android.graphics.Color.BLACK,image.getPixel(4,3)); }
+    finally { image.recycle(); }
+    assertEquals("GESTURE_OUTSIDE_OBSERVED_REGION",call("tap", point(observed.getString("observationId"))
+        .put("x",4).put("y",4),2000).getString("code"));
+    String frame = shot().getString("observationId");
+    ((ShadowAccessibilityWindowInfo)Shadow.extract(overlay)).setBoundsInScreen(new Rect(3,3,8,6));
+    JSONObject moved = call("tap",point(frame).put("x",3).put("y",8),2000);
+    assertEquals("STALE_FRAME", moved.getString("code"));
+    assertEquals(4, moved.getJSONObject("observedGeometry").getJSONArray("excludedRegions")
+        .getJSONObject(0).getJSONObject("bounds").getInt("left"));
+    assertEquals(3, moved.getJSONObject("currentGeometry").getJSONArray("excludedRegions")
+        .getJSONObject(0).getJSONObject("bounds").getInt("left"));
+    assertTrue(moved.getBoolean("observationConsumed"));
+    assertFalse(moved.getBoolean("automaticRetry"));
+    assertEquals("FRAME_NOT_OBSERVED",tap(frame,2000).getString("code"));
+    assertEquals(0,Platform.sends.get());
+    ownRoot.setPackageName("org.example.foreign");
+    JSONObject foreign = shot();
+    assertFalse(foreign.getBoolean("coordinatesAvailable"));
+    assertEquals(77,foreign.getJSONObject("geometry").getJSONArray("occludingWindows")
+        .getJSONObject(0).getInt("windowId"));
+    ownRoot.setPackageName(service.getPackageName());
+    com.deepseekharness.app.control.OwnedScreenOverlay.publish("physical-fixture",77,
+        new com.deepseekharness.app.util.ScreenWindowRegion.Bounds(5,4,7,5),true);
+    assertFalse(shot().getBoolean("coordinatesAvailable"));
+  }
+
+  @Test
+  public void treeAdvertisesRealScrollActionsAndDispatchesOneFreshNodeWithoutTouchFallback() throws Exception {
+    AccessibilityNodeInfo scroll = semanticButton(new Rect(0,2,8,10));
+    scroll.setClickable(false);
+    scroll.setScrollable(true);
+    scroll.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
+    scroll.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
+    AtomicInteger performed = new AtomicInteger();
+    AtomicInteger last = new AtomicInteger();
+    ((ShadowAccessibilityNodeInfo)Shadow.extract(scroll)).setOnPerformActionListener((action,bundle) -> {
+      performed.incrementAndGet(); last.set(action); return true;
+    });
+    for (String name : List.of("scroll_forward","scroll_backward")) {
+      JSONObject tree = call("tree",new JSONObject(),2000);
+      JSONObject node = tree.getJSONArray("nodes").getJSONObject(0);
+      assertTrue(node.getJSONArray("supportedActions").toString().contains(name));
+      assertTrue(tree.getString("text").contains(name));
+      JSONObject action = new JSONObject().put("treeId",tree.getString("treeId"))
+          .put("nodeId",node.getString("nodeId")).put("action",name);
+      JSONObject result = call("node",action,2000);
+      assertEquals("SCREEN_ACTION_SUBMITTED",result.getString("code"));
+      assertEquals(name.equals("scroll_forward") ? AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+          : AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD,last.get());
+      assertFalse(result.getBoolean("effectVerified"));
+      assertFalse(result.getBoolean("automaticRetry"));
+      assertEquals("STALE_NODE",call("node",action,2000).getString("code"));
+    }
+    assertEquals(2,performed.get());
+    scroll.removeAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
+    JSONObject tree = call("tree",new JSONObject(),2000);
+    JSONObject action = new JSONObject().put("treeId",tree.getString("treeId"))
+        .put("nodeId",tree.getJSONArray("nodes").getJSONObject(0).getString("nodeId"))
+        .put("action","scroll_forward");
+    assertEquals("NODE_SCROLL_ACTION_UNAVAILABLE",call("node",action,2000).getString("code"));
+    assertEquals(2,performed.get());
+    assertEquals(0,Platform.sends.get());
+  }
+
+  @Test
+  public void scrollAllowsPartlyVisibleContainerButRejectsForeignOrFullyCoveredContainer() throws Exception {
+    AccessibilityNodeInfo scroll = semanticButton(new Rect(0,2,8,10));
+    scroll.setScrollable(true);
+    scroll.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
+    AtomicInteger performed = new AtomicInteger();
+    ((ShadowAccessibilityNodeInfo)Shadow.extract(scroll)).setOnPerformActionListener((action,bundle) -> {
+      performed.incrementAndGet(); return true;
+    });
+    var overlay = window(77,20,AccessibilityWindowInfo.TYPE_SYSTEM,false,new Rect(4,3,8,6));
+    var ownRoot = AccessibilityNodeInfo.obtain(); ownRoot.setPackageName(service.getPackageName());
+    ((ShadowAccessibilityWindowInfo)Shadow.extract(overlay)).setRoot(ownRoot);
+    windows = new ArrayList<>(windows); windows.add(overlay); register(service);
+    com.deepseekharness.app.control.OwnedScreenOverlay.publish("physical-fixture",77,
+        new com.deepseekharness.app.util.ScreenWindowRegion.Bounds(5,4,7,5),false);
+    assertEquals("SCREEN_ACTION_SUBMITTED",scrollNode().getString("code"));
+    assertEquals(1,performed.get());
+    ownRoot.setPackageName("org.example.foreign");
+    assertEquals("NODE_SCROLL_REGION_UNAVAILABLE",scrollNode().getString("code"));
+    ownRoot.setPackageName(service.getPackageName());
+    ((ShadowAccessibilityWindowInfo)Shadow.extract(overlay)).setBoundsInScreen(new Rect(0,2,8,10));
+    assertEquals("NODE_SCROLL_REGION_UNAVAILABLE",scrollNode().getString("code"));
+    assertFalse(shot().getBoolean("coordinatesAvailable"));
+    assertEquals(1,performed.get());
+    assertEquals(0,Platform.sends.get());
+  }
+
+  private JSONObject scrollNode() throws Exception {
+    JSONObject tree = call("tree",new JSONObject(),2000);
+    return call("node",new JSONObject().put("treeId",tree.getString("treeId"))
+        .put("nodeId",tree.getJSONArray("nodes").getJSONObject(0).getString("nodeId"))
+        .put("action","scroll_forward"),2000);
+  }
+
+  @Test
+  public void productionMcpNodeCallTraversesHttpIntoRealSemanticExecutorWithoutGestureFallback()
+      throws Exception {
+    AccessibilityNodeInfo scroll = semanticButton(new Rect(0,2,8,10));
+    scroll.setScrollable(true);
+    scroll.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
+    scroll.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
+    AtomicInteger actions = new AtomicInteger(), requests = new AtomicInteger();
+    var dispatched = new java.util.concurrent.CopyOnWriteArrayList<Integer>();
+    ((ShadowAccessibilityNodeInfo)Shadow.extract(scroll)).setOnPerformActionListener((action,bundle) -> {
+      dispatched.add(action);
+      if (actions.incrementAndGet() == 3) throw new IllegalStateException("CONTROLLED_SCROLL_UNKNOWN");
+      return true;
+    });
+    var authority = new com.deepseekharness.app.control.ControlTaskAuthority();
+    var binding = new com.deepseekharness.app.control.ControlTaskAuthority.Binding(
+        com.deepseekharness.app.control.ControlTaskAuthority.Owner.LOCAL_DSH,
+        "physical-bridge", "fixture-mcp-node-task", "1");
+    var lease = authority.begin(binding);
+    var failure = new java.util.concurrent.atomic.AtomicReference<Throwable>();
+    var http = com.sun.net.httpserver.HttpServer.create(new java.net.InetSocketAddress("127.0.0.1",0),0);
+    var workers = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+      Thread worker = new Thread(r,"physical-mcp-node-http"); worker.setDaemon(true); return worker;
+    });
+    http.setExecutor(workers);
+    http.createContext("/app/ui/", exchange -> {
+      String result;
+      try {
+        requests.incrementAndGet();
+        assertEquals("fixture-token",exchange.getRequestHeaders().getFirst("X-Token"));
+        String operation = exchange.getRequestURI().getPath().substring("/app/ui/".length());
+        assertTrue("No coordinate fallback route",java.util.Set.of("dump","node").contains(operation));
+        var args = new JSONObject();
+        for (String part : exchange.getRequestURI().getRawQuery().split("&")) {
+          String[] pair = part.split("=",2);
+          args.put(java.net.URLDecoder.decode(pair[0],java.nio.charset.StandardCharsets.UTF_8),
+              java.net.URLDecoder.decode(pair.length==2 ? pair[1] : "",java.nio.charset.StandardCharsets.UTF_8));
+        }
+        assertEquals(binding.taskSessionId(),args.getString("taskSessionId"));
+        assertEquals(binding.turnId(),args.getString("turnId"));
+        CapabilityRequest request = request(operation,5000);
+        com.deepseekharness.app.control.ScreenAuthorityBindings.bind(request,
+            binding.identity()+"\0"+lease.revision(),()->authority.current(lease));
+        assertTrue(broker.authorize(request));
+        result = executeOffMain(request,operation,args);
+      } catch (Throwable unexpected) {
+        failure.set(unexpected); result="[ERR] HOST_FIXTURE_FAILURE";
+      }
+      byte[] bytes;
+      try { bytes = new JSONObject().put("result",result).toString().getBytes(java.nio.charset.StandardCharsets.UTF_8); }
+      catch (org.json.JSONException impossible) { throw new java.io.IOException(impossible); }
+      exchange.getResponseHeaders().set("Content-Type","application/json");
+      exchange.sendResponseHeaders(200,bytes.length);
+      try (var body = exchange.getResponseBody()) { body.write(bytes); }
+    });
+    http.start();
+    try {
+      String script = """
+          const assert=require('node:assert/strict'),server=require(process.argv[1]);
+          const base=process.argv[2], task={sessionId:'fixture-mcp-node-task',turnId:'1'};
+          const deps={fs:{async readFile(path){assert.equal(path,'/root/.dsh/.bridge_token');return 'fixture-token';}},
+            fetch(url,options){return fetch(base+url.pathname+url.search,options);}};
+          const receipts=[];
+          async function call(name,args){const result=await server.call(name,args,new AbortController().signal,deps,task);
+            const native=JSON.parse(result.content[0].text);receipts.push({name,code:native.code,isError:result.isError});
+            return {result,native};}
+          async function nodeArgs(action){const {native}=await call('android_get_state',{});
+            const node=native.nodes.find(node=>node.supportedActions.includes(action));assert.ok(node);
+            return {treeId:native.treeId,nodeId:node.nodeId,action};}
+          (async()=>{
+            for(const action of ['scroll_forward','scroll_backward']){
+              const args=await nodeArgs(action),{result,native}=await call('android_node',args);
+              assert.equal(result.isError,false);assert.equal(native.code,'SCREEN_ACTION_SUBMITTED');
+              assert.equal(native.accessibilityAction,action==='scroll_forward'?4096:8192);
+              assert.equal(native.effectVerified,false);assert.equal(native.automaticRetry,false);
+              if(action==='scroll_forward')assert.equal((await call('android_node',args)).native.code,'STALE_NODE');
+            }
+            const args=await nodeArgs('scroll_forward'),unknown=await call('android_node',args);
+            assert.equal(unknown.result.isError,true);assert.equal(unknown.native.state,'UNKNOWN');
+            assert.equal(unknown.native.executionUnknown,true);
+            assert.equal((await call('android_node',args)).native.code,'STALE_NODE');
+            await assert.rejects(server.call('android_node',{...args,action:'swipe'},new AbortController().signal,deps,task),/INVALID_action/);
+            console.log(JSON.stringify({scope:'PRODUCTION_MCP_CALL_HTTP_REAL_SCREEN_EXECUTOR',receipts}));
+          })().catch(error=>{console.error(error);process.exitCode=1;});
+          """;
+      java.nio.file.Path server = java.nio.file.Path.of(
+          "app/src/main/assets/builtin-plugins/dsh-computer-use-android/lib/server.cjs").toAbsolutePath();
+      Process process = new ProcessBuilder("node","-e",script,server.toString(),
+          "http://127.0.0.1:"+http.getAddress().getPort()).redirectErrorStream(true).start();
+      assertTrue("bounded production MCP host test",process.waitFor(20,TimeUnit.SECONDS));
+      String output = new String(process.getInputStream().readAllBytes(),java.nio.charset.StandardCharsets.UTF_8);
+      assertEquals(output,0,process.exitValue());
+      if (failure.get()!=null) throw new AssertionError(failure.get());
+      assertEquals(8,requests.get());
+      assertEquals(java.util.List.of(4096,8192,4096),dispatched);
+      assertEquals(3,actions.get());
+      assertEquals(0,Platform.sends.get());
+      String evidence = System.getProperty("physical.evidence");
+      if (evidence != null) java.nio.file.Files.writeString(
+          java.nio.file.Path.of(evidence,"mcp-node-chain.json"),output);
+    } finally { http.stop(0); workers.shutdownNow(); }
+  }
+
+  @Test
+  public void pauseFencesBoundNativeRequestAndFreshResumeCannotReuseItsFrame() throws Exception {
+    var authority = new com.deepseekharness.app.control.ControlTaskAuthority();
+    var binding = new com.deepseekharness.app.control.ControlTaskAuthority.Binding(
+        com.deepseekharness.app.control.ControlTaskAuthority.Owner.LOCAL_DSH,
+        "authenticated-native-connection","full-task-session","17");
+    var lease = authority.begin(binding);
+    CapabilityRequest shotRequest = request("screenshot",2000);
+    com.deepseekharness.app.control.ScreenAuthorityBindings.bind(shotRequest,
+        binding.identity()+"\0"+lease.revision(),()->authority.current(lease));
+    assertTrue(broker.authorize(shotRequest));
+    JSONObject observed = new JSONObject(executeOffMain(shotRequest,"screenshot",new JSONObject().put("format","mcp")));
+    String id = observed.getString("observationId");
+    CapabilityRequest stale = request("tap",2000);
+    com.deepseekharness.app.control.ScreenAuthorityBindings.bind(stale,
+        binding.identity()+"\0"+lease.revision(),()->authority.current(lease));
+    assertTrue(broker.authorize(stale));
+    authority.pause("LOCAL_USER_PAUSE");
+    assertEquals("NOT_SENT",new JSONObject(executeOffMain(stale,"tap",point(id))).getString("state"));
+    authority.resume();
+    var resumed = authority.lease(binding);
+    CapabilityRequest next = request("tap",2000);
+    com.deepseekharness.app.control.ScreenAuthorityBindings.bind(next,
+        binding.identity()+"\0"+resumed.revision(),()->authority.current(resumed));
+    assertTrue(broker.authorize(next));
+    assertEquals("FRAME_NOT_OBSERVED",new JSONObject(executeOffMain(next,"tap",point(id))).getString("code"));
+    assertEquals(0,Platform.sends.get());
   }
 
   @Test
@@ -169,6 +444,8 @@ public final class PhysicalScreenFlowTest {
     JSONObject moved = tap(id, 2000);
     assertEquals("NOT_SENT", moved.getString("state"));
     assertEquals("TARGET_WINDOW_GEOMETRY_OR_OCCLUSION_CHANGED", moved.getString("reason"));
+    assertEquals(0,moved.getJSONObject("observedGeometry").getJSONObject("windowBounds").getInt("left"));
+    assertEquals(1,moved.getJSONObject("currentGeometry").getJSONObject("windowBounds").getInt("left"));
     assertEquals(0, Platform.sends.get());
   }
 
@@ -205,6 +482,9 @@ public final class PhysicalScreenFlowTest {
     assertTrue(text.contains("effectVerified:false"));
     assertTrue(text.contains("gesture=long_press"));
     assertTrue(text.contains("gesture=double_tap"));
+    assertTrue(text.contains("/app/ui/node?treeId="));
+    assertTrue(text.contains("supportedActions"));
+    assertTrue(text.contains("scroll_backward"));
     assertFalse(text.contains("/app/ui/swipe?x1="));
     assertEquals(0, Platform.sends.get());
   }

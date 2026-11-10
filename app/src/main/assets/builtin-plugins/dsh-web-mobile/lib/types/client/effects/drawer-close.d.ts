@@ -30,6 +30,13 @@ export declare const TAP_CLOSE_NAV_SELECTOR = "button[data-dsh-taskboard-entry],
  * transition — that is the 快捷键弹层「抽搐/闪」 root cause. Routing every
  * closer through here removes the window at the source instead of relying on
  * the band to cover it.
+ *
+ * An OPEN (frame still collapsed) goes through openDrawerAfterKeyboard: a
+ * focused composer is blurred first and the drawer opens once the soft keyboard
+ * has gone, so the host's own focus move into the drawer cannot close the
+ * keyboard mid-slide (2026-11-05 drawer-jank report, R2). Every tap opener —
+ * the header toggle (index.tsx) and the FAB — routes through here. The opening
+ * hook runs right before the flip so the backdrop joins the same commit (R3).
  */
 export declare function toggleDrawer(ctx: ClientContext): void;
 export declare function installOverlayInteractions(ctx: ClientContext): void;

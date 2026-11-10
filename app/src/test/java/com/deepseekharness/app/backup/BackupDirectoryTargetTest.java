@@ -23,10 +23,7 @@ import org.robolectric.shadows.ShadowContentResolver;
 
 /** 真实 DocumentsContract/ContentResolver 配合隔离 Provider，不接触共享存储。 */
 @RunWith(RobolectricTestRunner.class)
-@Config(
-    sdk = BuildConfig.LOW_ANDROID ? 23 : 34,
-    manifest = Config.NONE,
-    application = android.app.Application.class)
+@Config(sdk = false ? 23 : 34, manifest = Config.NONE, application = android.app.Application.class)
 public final class BackupDirectoryTargetTest {
   private static final String AUTH = "test.dsha.backup.directory";
   private static final String TREE = "content://" + AUTH + "/tree/root";
@@ -99,7 +96,7 @@ public final class BackupDirectoryTargetTest {
 
   @Before
   public void register() {
-    assertEquals(BuildConfig.LOW_ANDROID ? 23 : 34, Build.VERSION.SDK_INT);
+    assertEquals(false ? 23 : 34, Build.VERSION.SDK_INT);
     provider = new Provider();
     ProviderInfo info = new ProviderInfo();
     info.authority = AUTH;

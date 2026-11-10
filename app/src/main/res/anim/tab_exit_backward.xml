@@ -1,0 +1,5 @@
+<!-- 主 tab 横移：切到左侧 tab 时旧页向右淡出 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android" android:duration="160" android:interpolator="@android:interpolator/fast_out_slow_in">
+    <alpha android:fromAlpha="1" android:toAlpha="0" />
+    <translate android:fromXDelta="0" android:toXDelta="8%" />
+</set>

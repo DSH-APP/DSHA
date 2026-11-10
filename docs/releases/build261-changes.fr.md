@@ -1,0 +1,4 @@
+# DSHA 0.2.1-rc.3-20261102.0530-dsh0.2.1-rc.5 / build261
+
+- Coller un long texte dans le terminal ne bloque plus l'app : chaque caractère saisi relançait une vérification complète de l'environnement sur le fil d'interface, si bien qu'un long collage pouvait dépasser 5 secondes et provoquer le message L'application ne répond pas. La saisie et le changement d'onglet lisent désormais un résultat de vérification en cache ; une vérification complète a toujours lieu pendant la maintenance de l'environnement ou quand les fichiers concernés changent.
+- Portée de la vérification : l'utilisateur a confirmé le collage sur un paquet de test ; tests unitaires et contrôles de source locaux réussis. versionCode porté à 261 (basé sur build260). La révision DSHA reste 0.2.1-rc.3 et le DSH intégré reste 0.2.1-rc.5.

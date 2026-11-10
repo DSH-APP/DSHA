@@ -2,7 +2,7 @@
 
 “重置配置”入口另外使用 `NativeConfigurationReset`，将 settings.yaml 与当前私有工作目录的 .env 作为两根事务保存和切换。记录在 `host-backup-operations/<UUID>/config-reset.json`，中断由统一宿主恢复入口处理；不影响下述六文件检查点的固定范围。凭据先检查解密，失败时不生成空配置覆盖原件。外部目录、配置软链接或跨文件系统目标不强行重置。
 
-`StartupRepairs` 的 list、prepare、healthy、before、new、restore、recover 已由 Android 宿主文件系统执行。插件管理的安装/删除继续使用独立的既有管理器；它失败不会阻止原生配置记录显示。
+`StartupRepairs` 的 list、prepare、healthy、before、new、restore、recover、discard、discard-retained 已由 Android 宿主文件系统执行；轮换、隔离与删除规则见[配置快照](config-snapshots.md#轮换隔离与删除)。插件管理的安装/删除继续使用独立的既有管理器；它失败不会阻止原生配置记录显示。
 
 只处理六个固定文件：`profiles/web/package.json`、`profiles/web/cordis.patch.yml`、`profiles/web/pnpm-workspace.yaml`、`profiles/web/pnpm-lock.yaml`、`settings.yaml`、`cordis.patch.yml`。不遍历会话、附件、工作区或 KeyVault。符号链接与不可读路径明确报错，不作为空数据处理。
 
@@ -18,4 +18,4 @@
 
 原生界面会列出检查点中原本缺失、恢复时将回到缺失状态的固定文件。部分配置修复只作用于所选固定文件；Rootfs 损坏、配置检查点损坏、缺少日志和恢复成功分别记录，不以“新建空目录”伪造环境就绪。
 
-验证见 `ConfigurationSnapshotsTest` 和 `ConfigurationCrashProcess`。进程强杀测试使用真实临时目录；Windows 下没有进行目录掉电持久性测试，Android 设备验证仍按用户要求延期。
+验证见 `ConfigurationSnapshotsTest`、`ConfigurationSnapshotsRetentionTest` 和 `ConfigurationCrashProcess`。进程强杀测试使用真实临时目录；Windows 下没有进行目录掉电持久性测试，Android 设备验证仍按用户要求延期。

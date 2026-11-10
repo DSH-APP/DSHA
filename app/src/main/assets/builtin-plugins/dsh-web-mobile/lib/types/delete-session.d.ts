@@ -5,10 +5,8 @@ type TrashStage = 'rename-payloads' | 'stash';
  * `partial` 仍有 payload 带着 `.trash`（必须如实暴露残留映射，禁止对外说 untouched）；
  * `not-needed` 尚未发生任何改名。 */
 type TrashRecovery = 'rolled-back' | 'partial' | 'not-needed';
-/** One entry of `persistence.list()` in either host generation's shape. */
+/** One entry of `persistence.list()`: a snapshot carrying the stored header. */
 export interface PersistenceListEntry {
-    readonly id?: unknown;
-    readonly cwd?: unknown;
     readonly header?: {
         readonly id?: unknown;
         readonly cwd?: unknown;
@@ -28,12 +26,12 @@ export interface DeleteSessionDeps {
         flush(session: unknown): Promise<unknown>;
     };
     agents?: {
-        /** 0.1.3 returns an AgentHandle (cancel + whenIdle); 0.1.1/0.1.2 a plain Agent. */
+        /** The live agent (agent-loop: callable cancel + whenIdle), or undefined. */
         get(id: string): unknown;
     };
     workspaceRegistry?: {
         list(): readonly {
-            detachSession?(id: string): Promise<void>;
+            detachSession(id: string): Promise<void>;
         }[];
     };
     /** 测试专用 seam：默认用 node:fs 的 rename。仅用于在隔离 fixture 里构造

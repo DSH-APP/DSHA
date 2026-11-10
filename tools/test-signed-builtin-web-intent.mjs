@@ -10,7 +10,7 @@ const raw=testRuntime('raw'),managed=testRuntime('managed'),root=process.cwd();
 const {PluginManager}=await import(pathToFileURL(path.join(managed,'node_modules/@deepseek-ai/dsh-plugin-manager/lib/index.js')));
 const registry=JSON.parse(fs.readFileSync('app/src/main/assets/builtin-plugins.json','utf8'));
 const targets=registry.plugins.filter(p=>p.name!=='dsh-auto-review').map(p=>p.name);
-assert.equal(targets.length,7);
+assert.equal(targets.length,10);
 const owned=fs.mkdtempSync(path.join(os.tmpdir(),'dsha-signed-web-intent-'));
 const nativeScript=path.resolve('app/src/main/assets/register-builtin-plugins.py');
 const python=process.env.DSHA_TEST_PYTHON??process.env.DSHA_PYTHON??'python';
@@ -56,7 +56,7 @@ try {
     assert.equal((await manager.setBundleEnabled(name,true)).application,'restart-required',name);
     assert.equal(selected().includes(name),true);assert.equal(fs.existsSync(marker(name)),false);
   }
-  console.log('PASS: all seven actual Host OFF -> two native register -> Host ON roundtrips preserve intent and current APK metadata aliases.');
+  console.log('PASS: all ten actual Host OFF -> two native register -> Host ON roundtrips preserve intent and current APK metadata aliases.');
   for(const content of ['', 'unknown historical native intent', 'DSHA_SAFE_MODE\n']){
     for(const name of targets)fs.writeFileSync(marker(name),content);
     native();
@@ -67,7 +67,7 @@ try {
     }
   }
   assert.deepEqual(fs.readFileSync(path.join(other,'package.json')),otherBefore);
-  console.log('PASS: empty, unknown, and safe-mode native markers beat Web ON for all seven; the other profile is unchanged.');
+  console.log('PASS: empty, unknown, and safe-mode native markers beat Web ON for all ten; the other profile is unchanged.');
   // Explicit native enable is authorized only for these synthetic fixtures.
   // Node can prepare junctions on Windows, where Python symlink creation may
   // require a privilege the test host lacks. Native code still verifies them.
@@ -96,5 +96,5 @@ try {
   }
   assert.deepEqual(fs.readFileSync(path.join(other,'package.json')),otherBefore);
   assert.deepEqual(JSON.parse(fs.readFileSync(path.join(profile,'package.json'),'utf8')).fixtureUntouched,{keep:'same bytes and values'});
-  console.log('PASS: all seven real native OFF processes wait for actual Host Web ON lock ownership, then win after release; unrelated profile/settings remain unchanged.');
+  console.log('PASS: all ten real native OFF processes wait for actual Host Web ON lock ownership, then win after release; unrelated profile/settings remain unchanged.');
 } finally {fs.rmSync(owned,{recursive:true,force:true});}

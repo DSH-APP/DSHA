@@ -67,6 +67,8 @@ public final class StartupText {
           + choose(language, " 个内置插件注册就绪", " built-in plugins registered");
     if (text.startsWith("BUILTIN_REGISTER_FAIL: "))
       return "BUILTIN_REGISTER_FAIL: " + render(text.substring(23), language);
+    String registerFailure = registerFailure(text, language);
+    if (registerFailure != null) return registerFailure;
     String direct = exact(text, language);
     if (!direct.equals(text)) return direct;
     for (Map.Entry<String, String> entry : PREFIXES.entrySet()) {
@@ -82,13 +84,39 @@ public final class StartupText {
   }
 
   public static String choose(String language, String zh, String en) {
-    return "en".equals(language) ? en : zh;
+    return UiText.choose(language, zh, en);
+  }
+
+  /**
+   * 注册失败的显示边界：结论只保留「注册超时 / 未完成 / 待确认的锁，可直接重试」，
+   * 不再把 exit=、timedOut= 与 guest JSON 贴给用户；原文仍留在启动历史与日志里。
+   */
+  private static String registerFailure(String text, String language) {
+    String zhPrefix = "插件注册失败：", enPrefix = "Plugin registration failed: ";
+    String rest;
+    if (text.startsWith(zhPrefix)) rest = text.substring(zhPrefix.length());
+    else if (text.startsWith(enPrefix)) rest = text.substring(enPrefix.length());
+    else return null;
+    String reason;
+    if (rest.contains("PLUGIN_PROFILE_LOCK_STALE") || rest.contains("PLUGIN_PROFILE_LOCK_TIMEOUT"))
+      reason =
+          choose(
+              language,
+              "插件配置有待确认的锁，可直接重试。",
+              "a plugin configuration lock needs confirmation; retry directly.");
+    else if (rest.contains("BUILTIN_REGISTER_TIMEOUT"))
+      reason = choose(language, "插件注册超时，可直接重试。", "plugin registration timed out; retry directly.");
+    else if (rest.contains("BUILTIN_REGISTER_EXIT_")
+        || rest.contains("BUILTIN_REGISTER_RECEIPT_MISSING")
+        || rest.contains("BUILTIN_REGISTER_NO_RESULT"))
+      reason =
+          choose(
+              language, "插件注册未完成，可直接重试。", "plugin registration did not complete; retry directly.");
+    else return null;
+    return choose(language, zhPrefix, enPrefix) + reason;
   }
 
   private static String exact(String value, String language) {
-    if ("en".equals(language)) return UiMessages.EN.getOrDefault(value, value);
-    for (Map.Entry<String, String> entry : UiMessages.EN.entrySet())
-      if (entry.getValue().equals(value)) return entry.getKey();
-    return value;
+    return UiStateText.exact(value, language);
   }
 }

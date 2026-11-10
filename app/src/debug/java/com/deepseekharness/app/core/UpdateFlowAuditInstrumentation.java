@@ -327,7 +327,8 @@ public final class UpdateFlowAuditInstrumentation extends Instrumentation {
     idle();
     runOnMainSync(
         () -> {
-          renderProgress(root[0], engine.state().getValue(), false, false, false, true, true, -1);
+          // 新进度按钮：空闲时只显示“安装更新”，字节数只在下载中出现。
+          renderProgress(root[0], engine.state().getValue(), false, false, false, true, false, -1);
           engine.check();
           renderProgress(root[0], engine.state().getValue(), false, false, true, true, false, -1);
         });
@@ -371,18 +372,22 @@ public final class UpdateFlowAuditInstrumentation extends Instrumentation {
           renderProgress(root[0], ready, true, true, true, true, false, -1);
           check(
               !root[0].findViewById(com.deepseekharness.app.R.id.update_check).isEnabled()
-                  && !root[0].findViewById(com.deepseekharness.app.R.id.update_install).isEnabled(),
+                  && !action(root[0]).isEnabled(),
               "安装校验时操作未锁定");
           // READY 结果等待页面领取时已结束校验，不能继续显示转圈。
-          renderProgress(root[0], ready, true, false, false, true, true, -1);
+          renderProgress(root[0], ready, true, false, false, true, false, -1);
+          check(!action(root[0]).isEnabled(), "待领取安装结果重复开放按钮");
+          renderProgress(root[0], ready, false, false, false, true, false, -1);
           check(
-              !root[0].findViewById(com.deepseekharness.app.R.id.update_install).isEnabled(),
-              "待领取安装结果重复开放按钮");
-          renderProgress(root[0], ready, false, false, false, true, true, -1);
-          check(
-              root[0].findViewById(com.deepseekharness.app.R.id.update_install).isEnabled(),
+              action(root[0]).isEnabled()
+                  && action(root[0]).action().command
+                      == com.deepseekharness.app.util.UpdateActionPolicy.Command.INSTALL,
               "空闲时安装入口未恢复");
         });
+  }
+
+  private static com.deepseekharness.app.ui.UpdateProgressButton action(android.view.View root) {
+    return root.findViewById(com.deepseekharness.app.R.id.update_action);
   }
 
   private void renderProgress(
@@ -405,16 +410,12 @@ public final class UpdateFlowAuditInstrumentation extends Instrumentation {
                   boolean.class);
       render.setAccessible(true);
       render.invoke(null, root, state, installing, verifying);
-      android.widget.ProgressBar bar =
-          root.findViewById(com.deepseekharness.app.R.id.update_progress);
-      check((bar.getVisibility() == android.view.View.VISIBLE) == visible, "进度动画可见性与任务阶段不符");
-      check(bar.isIndeterminate() == indeterminate, "检查/校验复用了下载百分比");
-      check(
-          (root.findViewById(com.deepseekharness.app.R.id.update_bytes).getVisibility()
-                  == android.view.View.VISIBLE)
-              == bytes,
-          "非下载阶段冒充字节传输进度");
-      if (percent >= 0) check(bar.getProgress() == percent, "真实下载进度未保留");
+      // 主按钮本身就是进度条：流光 / 填充 / 核验为“可见进度”，填充为确定进度，字节数只在下载中写进按钮。
+      com.deepseekharness.app.ui.UpdateProgressButton bar = action(root);
+      check(bar.animating() == visible, "进度动画可见性与任务阶段不符");
+      check(bar.indeterminate() == indeterminate, "检查/校验复用了下载百分比");
+      check(bar.action().showsBytes() == bytes, "非下载阶段冒充字节传输进度");
+      if (percent >= 0) check(bar.action().percent == percent, "真实下载进度未保留");
     } catch (ReflectiveOperationException error) {
       throw new AssertionError("无法渲染更新页自测", error);
     }
@@ -570,8 +571,8 @@ public final class UpdateFlowAuditInstrumentation extends Instrumentation {
   private static JSONObject release(String channel, int increment) throws Exception {
     JSONObject apk =
         new JSONObject()
-            .put("flavor", BuildConfig.LOW_ANDROID ? "low" : "standard")
-            .put("minSdk", BuildConfig.LOW_ANDROID ? 23 : 30)
+            .put("flavor", "standard")
+            .put("minSdk", false ? 23 : 30)
             .put("abi", "arm64-v8a")
             .put("url", "https://example.invalid/update.apk")
             .put("sha256", HASH)

@@ -5,7 +5,7 @@
   function rewrite(input,init){
     if(typeof root.URL!=='function'||typeof root.Headers!=='function')return null;
     var url;try{url=new root.URL(isRequest(input)?input.url:String(input));}catch(ignored){return null;}
-    if(url.protocol!=='http:'||(url.hostname!=='127.0.0.1'&&url.hostname!=='[::1]')||url.port!=='3090'||url.username||url.password)return null;
+    var port=Number(url.port);if(url.protocol!=='http:'||(url.hostname!=='127.0.0.1'&&url.hostname!=='[::1]')||!(port>=3090&&port<=3099)||url.username||url.password)return null;
     var method=String(init&&init.method!==undefined?init.method:isRequest(input)?input.method:'GET').toUpperCase();if(method!=='GET')return null;
     if(!url.searchParams||typeof url.searchParams.forEach!=='function')return null;
     var entries=[];url.searchParams.forEach(function(value,name){if(name.toLowerCase()==='token')entries.push([name,value]);});if(!entries.length)return null;

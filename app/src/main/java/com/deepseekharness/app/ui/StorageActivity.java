@@ -9,7 +9,15 @@ import com.deepseekharness.app.util.UiText;
 
 public final class StorageActivity extends AppCompatActivity {
   private CardPage page;
-  private LinearLayout rows;
+  private LinearLayout rows, usage;
+  private TextView total;
+
+  /** 分布条色板：主题 token（含夜间），不另造硬编码颜色。 */
+  private static final int[] PALETTE = {
+    R.color.shell_accent, R.color.shell_good, R.color.shell_warn,
+    R.color.shell_bad, R.color.primary_dark, R.color.shell_text_muted
+  };
+
   private TextView state;
   private Button clean, refresh;
   private boolean busy;
@@ -23,11 +31,15 @@ public final class StorageActivity extends AppCompatActivity {
     super.onCreate(saved);
     page =
         new CardPage(
-            this,
-            t("存储与文件", "Storage and files"),
-            t(
-                "完整 Linux 环境约占 1 GB。历史环境和回退副本另行保留；它们不等于聊天数据。以下为文件大小估算。",
-                "The full Linux environment uses about 1 GB. Older environments and rollback copies are retained separately from chats. Sizes below are estimates."));
+            this, t("存储与文件", "Storage and files"), t("空间占用与清理", "Storage usage and cleanup"));
+    // 摘要进页首，完整说明点开 ⓘ（审计 D-06）。
+    InfoHint.bind(
+        page.subtitle,
+        t("存储与文件", "Storage and files"),
+        t("空间占用与清理", "Storage usage and cleanup"),
+        t(
+            "完整 Linux 环境约占 1 GB。历史环境和回退副本另行保留；它们不等于聊天数据。以下为文件大小估算。",
+            "The full Linux environment uses about 1 GB. Older environments and rollback copies are retained separately from chats. Sizes below are estimates."));
     UiNavigation.addHeader(this, page.root, t("存储与文件", "Storage and files"), this::finish);
     var files = page.card();
     page.kv(
@@ -44,9 +56,25 @@ public final class StorageActivity extends AppCompatActivity {
                 this,
                 t("文件共享", "File sharing"),
                 t(
-                    "在文件管理器中添加本地存储，选择 DocumentsProvider → DSHA。找不到 DSHA 时，先打开本 App 后重试。",
+                    "在文件管理器中添加本地存储，选择 DocumentsProvider → DSHA。找不到 DSHA 时，先打开本应用后重试。",
                     "Add local storage in your file manager and select DocumentsProvider → DSHA. Open this app first if DSHA is missing.")));
-    rows = page.card();
+    LinearLayout overview = page.card();
+    total = page.text("", 22, R.color.shell_text);
+    total.setTypeface(null, android.graphics.Typeface.BOLD);
+    total.setPadding(0, page.dp(6), 0, 0);
+    overview.addView(total);
+    usage = new LinearLayout(this);
+    usage.setOrientation(LinearLayout.HORIZONTAL);
+    usage.setBackgroundResource(R.drawable.bg_data_status_tile);
+    usage.setBackgroundTintList(
+        android.content.res.ColorStateList.valueOf(getColor(R.color.shell_raised)));
+    usage.setClipToOutline(true);
+    LinearLayout.LayoutParams bar = new LinearLayout.LayoutParams(-1, page.dp(14));
+    bar.topMargin = page.dp(12);
+    bar.bottomMargin = page.dp(6);
+    overview.addView(usage, bar);
+    usage.setImportantForAccessibility(android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+    rows = overview;
     state = page.text("", 12, R.color.text_secondary);
     page.content.addView(state);
     clean =
@@ -66,6 +94,7 @@ public final class StorageActivity extends AppCompatActivity {
                     .show());
     refresh = page.button(page.footer, t("重新统计", "Refresh sizes"), false, () -> load(false));
     setContentView(page.root);
+    PressFeedback.attachButtons(findViewById(android.R.id.content));
     load(false);
   }
 
@@ -83,23 +112,13 @@ public final class StorageActivity extends AppCompatActivity {
                 runOnUiThread(
                     () -> {
                       if (isFinishing() || isDestroyed()) return;
-                      rows.removeAllViews();
-                      for (var entry : sizes.entrySet()) {
-                        page.kv(
-                            rows,
-                            com.deepseekharness.app.util.StorageCategoryLabels.label(
-                                entry.getKey(), "en".equals(UiText.language())),
-                            com.deepseekharness.app.util.Fmt.bytes(entry.getValue().bytes)
-                                + (entry.getValue().unreadable > 0
-                                    ? t(" + 部分不可读", " + unreadable entries")
-                                    : ""));
-                      }
+                      renderUsage(sizes);
                       state.setText(
                           remove
                               ? UiText.format(
                                   "已释放 %s", com.deepseekharness.app.util.Fmt.bytes(reclaimed))
                               : t(
-                                  "已完成统计。清理只移除可再生缓存和已核验的多余运行时副本，个人数据与备份保留。",
+                                  "统计完成；清理只删可再生缓存",
                                   "Sizes updated. Cleanup removes only reproducible caches and verified excess runtime copies. Personal data and backups are retained."));
                       done();
                     });
@@ -116,6 +135,52 @@ public final class StorageActivity extends AppCompatActivity {
             },
             "storage-maintenance")
         .start();
+  }
+
+  /** 总量 + 分布条 + 图例行；图例保留原有「部分不可读」提示，色块与条形一一对应。 */
+  private void renderUsage(java.util.Map<String, StorageMaintenance.Size> sizes) {
+    java.util.Map<String, Long> bytes = new java.util.LinkedHashMap<>();
+    for (var entry : sizes.entrySet()) bytes.put(entry.getKey(), entry.getValue().bytes);
+    RollingNumber.bytes(total, com.deepseekharness.app.util.StorageUsage.total(bytes));
+    usage.removeAllViews();
+    while (rows.getChildCount() > 2) rows.removeViewAt(2);
+    var segments = com.deepseekharness.app.util.StorageUsage.segments(bytes, PALETTE.length);
+    java.util.Map<String, Integer> colors = new java.util.HashMap<>();
+    for (int i = 0; i < segments.size(); i++) {
+      var segment = segments.get(i);
+      int color = getColor(PALETTE[i]);
+      if (segment.key != null) colors.put(segment.key, color);
+      android.view.View part = new android.view.View(this);
+      part.setBackgroundColor(color);
+      usage.addView(
+          part, new LinearLayout.LayoutParams(0, -1, (float) Math.max(segment.fraction, 0.004)));
+    }
+    UiMotion.reveal(usage);
+    int other =
+        segments.isEmpty() || segments.get(segments.size() - 1).key != null
+            ? 0
+            : getColor(PALETTE[segments.size() - 1]);
+    for (var entry : sizes.entrySet()) {
+      int before = rows.getChildCount();
+      page.kv(
+          rows,
+          com.deepseekharness.app.util.StorageCategoryLabels.label(entry.getKey()),
+          com.deepseekharness.app.util.Fmt.bytes(entry.getValue().bytes)
+              + (entry.getValue().unreadable > 0 ? t(" + 部分不可读", " + unreadable entries") : ""));
+      if (rows.getChildCount() == before) continue;
+      Integer color = colors.get(entry.getKey());
+      if (color == null && entry.getValue().bytes > 0 && other != 0) color = other;
+      TextView label =
+          (TextView) ((LinearLayout) rows.getChildAt(rows.getChildCount() - 1)).getChildAt(0);
+      android.graphics.drawable.GradientDrawable dot =
+          new android.graphics.drawable.GradientDrawable();
+      dot.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+      dot.setColor(color == null ? getColor(R.color.shell_raised) : color);
+      int size = page.dp(10);
+      dot.setSize(size, size);
+      label.setCompoundDrawablesRelativeWithIntrinsicBounds(dot, null, null, null);
+      label.setCompoundDrawablePadding(page.dp(8));
+    }
   }
 
   private void done() {
