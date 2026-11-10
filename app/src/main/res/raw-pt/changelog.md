@@ -1,4 +1,4 @@
-# DSHA 0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1 / build356
+# DSHA 0.2.2-20261111.0200-dsh0.2.2-rc.1 / build357
 
 - Correção do layout do build355 (T143 v3, `d3c07b4f8`): o pacote oficial build355 continha na prática o primeiro layout da T143 (um único cartão com dois itens lado a lado e o espaçamento antigo da página de definições); esta versão passa ao v3 que o utilizador confirmou na pré-visualização build353 `.debug`. Só mudam dois ficheiros de layout — `app/src/main/res/layout/fragment_settings.xml` e `plugin_list_footer.xml` — sem Java, sem chaves de texto e sem alteração do comportamento de toque.
 - Espaço superior da página de definições reduzido: agora que o título grande «Definições» saiu da página, o `paddingTop` do contentor passa de `shell_page_top` para `shell_section_margin` (10dp) e o primeiro `ShellSectionLabel` perde `layout_marginTop="@dimen/shell_section_gap"` (24dp), pelo que o primeiro grupo deixa de somar dois espaços e encosta diretamente ao cabeçalho da página da shell.

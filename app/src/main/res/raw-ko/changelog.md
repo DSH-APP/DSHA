@@ -1,4 +1,4 @@
-# DSHA 0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1 / build356
+# DSHA 0.2.2-20261111.0200-dsh0.2.2-rc.1 / build357
 
 - build355 레이아웃 수정(T143 v3, `d3c07b4f8`): build355 정식 패키지에는 실제로 T143 초판 레이아웃(카드 하나에 나란히, 설정 페이지의 예전 간격)이 들어 있었고, 이번 버전에서 사용자가 build353 `.debug` 미리보기에서 확인한 v3로 바꿉니다. 변경은 `app/src/main/res/layout/fragment_settings.xml`과 `plugin_list_footer.xml` 두 레이아웃 파일뿐이며 Java, 문구 키, 탭 동작은 바뀌지 않습니다.
 - 설정 페이지 상단 여백 축소: 페이지 안의 「설정」 큰 제목이 사라진 상태에서 컨테이너 `paddingTop`을 `shell_page_top`에서 `shell_section_margin`(10dp)으로 바꾸고, 첫 `ShellSectionLabel`의 `layout_marginTop="@dimen/shell_section_gap"`(24dp)을 제거해 첫 그룹이 두 겹의 여백을 쌓지 않고 셸 페이지 헤더에 바로 이어지게 했습니다.

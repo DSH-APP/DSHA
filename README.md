@@ -7,8 +7,8 @@
 | 项目 | 值 |
 |---|---|
 | 应用名 | **DSHA**（测试变体为 `DSHA Test`） |
-| 版本 | `0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1` |
-| versionCode | 356 |
+| 版本 | `0.2.2-20261111.0200-dsh0.2.2-rc.1` |
+| versionCode | 357 |
 | 包名 | `dsh.android.client`（测试变体 `dsh.android.client.SunsetRNE`） |
 | 并行安装 | 与旧 Mod 包 `io.github.sunsetrne.dsha` 完全独立；覆盖升级沿用原包名与历史 E7E3 证书 |
 | 签名 | 历史发布证书，SHA-256 `e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5` |

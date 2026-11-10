@@ -1,4 +1,4 @@
-# DSHA 0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1 / build356
+# DSHA 0.2.2-20261111.0200-dsh0.2.2-rc.1 / build357
 
 - Correctio dispositionis build355 (T143 v3, `d3c07b4f8`): saccus officialis build355 re vera primam dispositionem T143 continebat (una charta duobus elementis iuxta se positis et vetus spatium paginae ordinationum); haec editio eam in v3 vertit, quam usor in praevisu build353 `.debug` confirmavit. Solum duo fasciculi dispositionis mutantur — `app/src/main/res/layout/fragment_settings.xml` et `plugin_list_footer.xml` — sine Java, sine clavibus textuum et sine mutatione actionis tactus.
 - Spatium superius paginae ordinationum contractum: sublato titulo magno «Ordinationes» intra paginam, `paddingTop` continentis ex `shell_page_top` in `shell_section_margin` (10dp) mutatur, et primus `ShellSectionLabel` amittit `layout_marginTop="@dimen/shell_section_gap"` (24dp); ita primus grex non iam duo spatia accumulat et ad caput paginae testae directe accedit.

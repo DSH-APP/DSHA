@@ -1,3 +1,10 @@
+## 0.2.2-20261111.0200-dsh0.2.2-rc.1 / build357（0.2.2 正式版：内容与 build356 一致，发布资产按官方格式交付）
+
+- 正式发布 0.2.2：源码与 build356 相同（身份 upstream / 包名 dsh.android.client / E7E3 证书），仅提升 versionCode 到 357 并去掉预发布标记。
+- 发布资产对齐官方旧格式：`dsha-0.2.2.apk` + `dsha-0.2.2.apk.sha256` + `DSHA-0.2.2-<时间戳>-source.zip` + `.sha256`；构建证据留在 Actions artifact，不再作为 284MB 资产随包分发。
+- Release 说明分为「更新内容」与折叠的「构建与校验」两段；校验段保留 commit / run / 证书 / 固定输入摘要，便于下载后核对。
+- 未改变：受管运行时（runtimeId `8e54085c`）、固定输入 `fixed-inputs-20261105e`、内置 DSH 0.2.2-rc.1。
+
 ## 0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1 / build356（官方发行身份正式接续：切回 dsh.android.client / 历史 E7E3 证书，版本号由 0.2.1-rc.5 提升为 0.2.2-rc.1；内容与 build356 源码一致）
 
 - 发布身份切回官方：`-Pdsha.identity` 默认值由 `mod` 改为 `upstream`，构建产物回到包名 `dsh.android.client`、显示名 `DSHA`、历史 E7E3 发布证书（SHA-256 `e7e3a31a…b22a53f5`）；旧 Mod 身份 `io.github.sunsetrne.dsha` / A4B0 证书保留为非默认身份，仅用于历史包与共存验证（`app/build.gradle`、`ci/release-identity.upstream.json`）。

@@ -5,7 +5,7 @@ plugins {
 // DSHA 官方发行版（单一 Standard 变体）：Android 11（API 30）及以上；发布身份见下方 dsha.identity。
 // 旧 low/GeckoView 兼容线与独立上岛包都已移除：上岛能力并入正式包。
 // 文件名独立于可诊断版本名，保持当前用户下载入口不变。
-ext.dshaApkNameVersion = '0.2.2-rc.1'
+ext.dshaApkNameVersion = '0.2.2'
 def bundledTools = new groovy.json.JsonSlurper().parse(rootProject.file('tools/runtime-tools.lock.json'))
 if (bundledTools.schema != 1 || !(bundledTools.pnpm.version ==~ /[0-9]+\.[0-9]+\.[0-9]+/))
     throw new GradleException('随包工具身份格式错误')
@@ -93,9 +93,9 @@ android {
         // 上岛能力已并入正式包；不再有独立上岛包名或独立显示名。
         // 显示名随发布身份（DSH-A-Su / DSHA）；测试变体加后缀，便于桌面上区分两个包。
         resValue 'string', 'app_name', testVariantLabel ? releaseIdentity.appName + ' ' + testVariantLabel : releaseIdentity.appName
-        versionCode 356
+        versionCode 357
         // DSHA 修订号 + 固定的北京时间戳 + 内置 DSH 版本；同一交付重建不变。
-        versionName "0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1"
+        versionName "0.2.2-20261111.0200-dsh0.2.2-rc.1"
         testInstrumentationRunner project.findProperty('dsha.testRunner') ?: "com.deepseekharness.app.Rc13Instrumentation"
         ndk {
             abiFilters 'arm64-v8a'

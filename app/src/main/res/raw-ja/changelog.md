@@ -1,4 +1,4 @@
-# DSHA 0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1 / build356
+# DSHA 0.2.2-20261111.0200-dsh0.2.2-rc.1 / build357
 
 - build355 のレイアウト修正（T143 v3、`d3c07b4f8`）：build355 の正式パッケージには実際には T143 の初版レイアウト（1 枚のカードに並べる形と設定ページの旧い間隔）が入っていたため、本版でユーザーが build353 `.debug` プレビューで確認した v3 に切り替えます。変更は `app/src/main/res/layout/fragment_settings.xml` と `plugin_list_footer.xml` の 2 つのレイアウトファイルのみで、Java・文言キー・タップ動作の変更はありません。
 - 設定ページ上部の余白を詰める：ページ内の「設定」大見出しを外したうえで、コンテナの `paddingTop` を `shell_page_top` から `shell_section_margin`（10dp）に変更し、最初の `ShellSectionLabel` の `layout_marginTop="@dimen/shell_section_gap"`（24dp）を削除しました。先頭グループが二重の余白を積まず、シェルのページヘッダーに直接続きます。

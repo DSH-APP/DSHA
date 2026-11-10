@@ -1,7 +1,7 @@
 # AGENTS.md
 
 
-> **当前状态**：`0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1` / build356 / `dsh.android.client` / DSHA / 单一 Standard。
+> **当前状态**：`0.2.2-20261111.0200-dsh0.2.2-rc.1` / build357 / `dsh.android.client` / DSHA / 单一 Standard。
 > 主线分支 `main`；Android 11+（API 30）/ arm64；proot 默认、proroot 可选；内置 DSH 0.2.2-rc.1。
 > 上岛能力已并入正式包；旧 low/GeckoView 兼容线与独立上岛包已删除；签名使用历史 E7E3 发布证书（见 BUILD.md）。
 

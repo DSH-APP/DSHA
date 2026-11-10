@@ -1,4 +1,4 @@
-# DSHA 0.2.2-rc.1-20261111.0100-dsh0.2.2-rc.1 / build356
+# DSHA 0.2.2-20261111.0200-dsh0.2.2-rc.1 / build357
 
 - build355 布局修正（T143 v3，`d3c07b4f8`）：build355 正式包内实际是 T143 首版布局（单卡片并排、设置页旧间距），本版改成用户在 build353 `.debug` 预览包上确认的 v3。只改 `app/src/main/res/layout/fragment_settings.xml` 与 `plugin_list_footer.xml` 两个布局文件，无 Java、无文案键、无点击行为变化。
 - 设置页顶部空白收紧：页内「设置」大标题已移除后，容器 `paddingTop` 由 `shell_page_top` 改为 `shell_section_margin`（10dp），第一组 `ShellSectionLabel` 去掉 `layout_marginTop="@dimen/shell_section_gap"`（24dp），首组不再叠加两段留白，直接接外壳页头。
