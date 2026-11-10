@@ -250,11 +250,12 @@ jobs:
           PYCODE
           )
           test "$pem_cert" = "$cert"
-          # 固定测试证书：签名证书必须与 ci/test-signing.json 的指纹一致（发布/固定模式缺钉直接失败）。
-          if [ "$REQUIRE_PINNED_CERT" = true ]; then
+          # 固定测试证书：用配置证书或发布模式时，签名证书必须与 ci/test-signing.json 的指纹一致；
+          # 一次性密钥不可能对上钉值，只告警（产物不能覆盖升级），不在这里假装通过。
+          if [ "$SIGNING_KEY_SOURCE" = configured-secret ] || [ "$REQUIRE_PINNED_CERT" = true ]; then
             python3 tools/test-signing.py --check-pem out/test-cert.pem --require-pinned
           else
-            python3 tools/test-signing.py --check-pem out/test-cert.pem
+            echo "::warning::一次性测试证书未与 ci/test-signing.json 比对；该产物不能覆盖升级"
           fi
           python3 tools/verify-dsh-upgrade-apk.py "$apk" > out/apk-runtime-verification.txt
           python3 tools/verify-recovery-apk.py "$apk" > out/apk-recovery-verification.txt
