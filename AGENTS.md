@@ -20,27 +20,27 @@ DSHA 的 AI / 新贡献者入口。本文让你不扫全库就能上手 —— �
 
 ---
 
-## 目录地图（build170历史数量；当前职责导航）
+## 目录地图（build357 统计；当前职责导航）
 
 ```
 app/src/main/java/com/deepseekharness/app/
-├── *.java（根包，27 个）      设备与服务层：无障碍、桥、LAN、悬浮条、Shizuku/Root、PTY
-├── ui/      （69 个）         界面：MainActivity + 各 Fragment / Activity / 对话框
-├── core/    （27 个）         编排：HarnessController、维护屏障、备份任务、诊断
-├── runtime/ （18 个）         容器：ProotBootstrap、ContainerRuntime、WebProcessManager、装机
-├── backup/  （62 个）         数据：v5 加密备份、恢复、迁移、格式化、自动备份（最大的包）
-├── vscreen/ （10 个）         独立虚拟屏：通道 / 预览 / 输入 / 无障碍桥
-├── recovery/(4 个)            独立应急 DSH：与正式环境完全分开的生命周期
-├── bridge/  （3 个）          AppBridge 契约、AdbBridge、LAN 访问
-├── data/    （3 个）          KeyVault（Keystore）、便携设置、导出
-└── util/    （118 个）        纯逻辑：不 import 任何 Android API，必须配单测
+├── *.java（根包，36 个）      设备与服务层：无障碍、桥、LAN、悬浮条、Shizuku/Root、PTY
+├── ui/      （169 个）        界面：MainActivity + 各 Fragment / Activity / 对话框
+├── core/    （55 个）         编排：HarnessController、维护屏障、备份任务、诊断
+├── runtime/ （63 个）         容器：ProotBootstrap、ContainerRuntime、WebProcessManager、装机
+├── backup/  （83 个）         数据：v5 备份（导出无密码，内部副本加密）、恢复、迁移、自动备份（最大的包）
+├── vscreen/ （36 个）         独立虚拟屏：通道 / 预览 / 输入 / 无障碍桥
+├── recovery/(5 个)            独立应急 DSH：与正式环境完全分开的生命周期
+├── bridge/  （12 个）         AppBridge 契约、AdbBridge、LAN 访问
+├── data/    （4 个）          KeyVault（Keystore）、便携设置、导出
+└── util/    （397 个）        纯逻辑：不 import 任何 Android API，必须配单测
 ```
 
 ### 根包（`com.deepseekharness.app`）——设备与系统服务
 
 | 类 | 职责 |
 |---|---|
-| `HttpShellService` | **3090 桥本体**（约 105 KB，最大的类）：`/exec` 与 `/app/*` 共 24 个端点，token 门控 |
+| `HttpShellService` | **3090 桥本体**（约 253 KB / 4.9k 行，最大的类）：`/exec` 与 `/app/*` 共 55 条精确路由（另有前缀族），token 门控 |
 | `DshaAccessibilityService` | 无障碍：`uiDump / uiTap / uiTapText / uiInput / uiKey / uiSwipe / uiScreenshot` + 虚拟屏转发 |
 | `DeviceBridgeService` | 设备通道总管：ADB / Shizuku / Root 三通道选择与保活 |
 | `DeviceShellExecutor` / `DeviceAppInventory` / `DeviceSense` | 设备命令执行（白名单在 util）、应用清单、传感器 / 位置 / 手电 |
@@ -61,25 +61,25 @@ Root 维护以 [权限架构](docs/device-permissions-architecture.md) 与 [固�
 | 层 | 关键类 | 职责 |
 |---|---|---|
 | `ui/` | MainActivity / OnboardingActivity / ExtractActivity（维护详情） / Launch·Config·Settings·Plugin·Workspace Fragment / WebPreviewActivity | 界面与启动门禁；首次部署在引导内后台进行并以部署胶囊显示；覆盖更新进入整屏维护页 |
-| `core/` | `HarnessController`（约 57 KB，编排核心） | 启动 / 停止 dsh、鉴权链接捕获；**不要再往里塞新职责**，新逻辑写成独立协作者 |
+| `core/` | `HarnessController`（约 8 KB / 300 行，编排入口；主要流程已拆到 `WebLifecycleController` 等协作者） | 启动 / 停止 dsh、鉴权链接捕获；**不要再往里塞新职责**，新逻辑写成独立协作者 |
 | `core/` | `ConfigStore` | 配置唯一读写入口（端口 / 模型 / workdir / API key） |
 | `core/` | `InstallRepository` / `MaintenanceCoordinator` / `RuntimeTasks` / `StartupDiagnostics` | 安装状态、维护屏障、运行任务锁、启动诊断 |
 | `runtime/` | `ProotBootstrap` / `ContainerRuntime` / `WebProcessManager` | proot 命令组装；运行时选择 + BINDS 挂载清单；停止 Web（哨兵 + pid + 出生身份核验） |
 | `runtime/` | `InstallPipeline` / `ManagedRuntimeAssets` / `RuntimeTrial` | 六步安装编排、受管资产、更新试运行 |
-| `backup/` | `NativeBackupJobs` / `BackupArchive` / `HostDataTransaction` / `AutomaticBackups` / `FactoryReset` | v5 加密备份 / 恢复 / 数据事务 / 自动计划 / 格式化 |
+| `backup/` | `NativeBackupJobs` / `BackupArchive` / `HostDataTransaction` / `AutomaticBackups` / `FactoryReset` | v5 备份（导出无密码，内部副本加密）/ 恢复 / 数据事务 / 自动计划 / 格式化 |
 | `recovery/` | `RecoveryController` / `RecoveryRuntime` / `RecoveryRepairBroker` | 独立应急 DSH，不经正式环境的迁移与启动锁 |
 | `vscreen/` | `VirtualScreenManager` / `VirtualScreenAccessibility` / `VirtualScreenPreviewView` | App 持有认证连接与心跳；输入必须带最新帧号 |
 | `bridge/` | `AppBridge`（契约）/ `AdbBridge`（无线配对 TLS1.3-PSK + SPAKE2）/ `LocalNetworkAccess` | 桥接缝与设备通道 |
 | `data/` | `KeyVault` | Keystore AES/GCM 加密 API key |
-| `util/` | `Constants` / `ShellQuote` / `Query` / `WebProcSel` / `DeviceShellPolicy` / `HttpProtocol` / `BackupScope` 等 118 个 | 纯逻辑，全包零 Android import，**必须配单测** |
+| `util/` | `Constants` / `ShellQuote` / `Query` / `WebProcSel` / `DeviceShellPolicy` / `HttpProtocol` / `BackupScope` 等 397 个 | 纯逻辑，全包零 Android import，**必须配单测** |
 
 ---
 
-## 测试布局（build170历史快照）
+## 测试布局（build357 统计）
 
 下列数量仅描述基座历史分布；F13实际选择类/XML、失败/错误/跳过与最终软件结果以[F13记录](docs/releases/v0.2.1-rc.2-build190-fix13-20261021.md)及统一回执为准，不从静态文件数推导执行数。
 
-`app/src/test/java/com/deepseekharness/app/` 共 172 个测试类，分布：`util/` 112、`backup/` 45、`core/` 6、`runtime/` 6、`vscreen/` 1、`ui/` 1、根包 1（`LanAuthTest`）。
+`app/src/test/java/com/deepseekharness/app/` 共 704 个测试类，分布：`util/` 378、`ui/` 78、`backup/` 71、`core/` 48、`runtime/` 43、`vscreen/` 32、`plugins/` 8、根包 10。
 
 ```bash
 bash build.sh :app:testStandardDebugUnitTest   # 全量单测
@@ -113,7 +113,7 @@ bash build.sh :app:testStandardDebugUnitTest   # 全量单测
 
 ### 版本与构建
 
-- **当前身份以 `app/build.gradle`、`ci/release-identity.json` 与 [CHANGELOG.md](CHANGELOG.md) 为准**：build356 / DSHA 修订 `0.2.2-rc.1`（内置 DSH 0.2.2-rc.1）/ `dsh.android.client` / DSHA / 单一 Standard；`-Pdsha.identity=upstream`（默认）为官方发行身份，`mod`（`io.github.sunsetrne.dsha` / Mod 证书）仅保留用于历史包与共存验证。
+- **当前身份以 `app/build.gradle`、`ci/release-identity.json` 与 [CHANGELOG.md](CHANGELOG.md) 为准**：build357 / DSHA 修订 `0.2.2`（内置 DSH 0.2.2-rc.1）/ `dsh.android.client` / DSHA / 单一 Standard；`-Pdsha.identity=upstream`（默认）为官方发行身份，`mod`（`io.github.sunsetrne.dsha` / Mod 证书）仅保留用于历史包与共存验证。
 - `standard`：minSdk 30（Android 11+），系统 WebView，arm64-v8a，是唯一构建线，任务为 `assembleStandardRelease`。`low`/GeckoView 兼容线已整体删除（含 `assembleLowRelease`、legacy proot/loader），**不再声明 Android 10 及以下可用**；测试变体通过 `-Pdsha.sunsetTest=true`（`.test`）、`-Pdsha.debugPackage=true`（`.debug`，debuggable 的 debug 构建）或 `-Pdsha.devPackage=true`（`.dev`，release 构建）生成，三者互斥，且必须用 `-Pdsha.unsignedPackage=true` 由测试证书签名。
 - 离线 rootfs（`assets/offline-rootfs.bin`）**不提交**，由准备脚本生成；APK 用 `offline-rootfs.layout=split-runtime-v1` 标记 Ubuntu 与 `dsh-runtime.bin` 分包，构建核验两份摘要。
 - 新 dsh 依赖由 `tools/dsh-runtime/package-lock.json` 锁定；`tools/prepare-runtime-descriptor.py` 生成独立受管契约描述，APK 版本仅作诊断来源。相同基础版本更新受管树，个人数据保持原位；**不因 UI-only APK 更新替换环境，不因普通 dsh 更新递增 Ubuntu 基础环境版本**。
