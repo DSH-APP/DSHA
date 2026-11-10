@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.5-20261106.0010-dsh0.2.2-rc.1 / build328
+
+- Fixes `gh` failing with "managed GitHub CLI is unavailable" in the 0.2.2 environment: the official GitHub CLI v2.103.3 (linux-arm64) becomes the 12th fixed input `gh-cli.tar.gz` and a managed asset; the installer extracts only the pinned member, verifies its SHA-256 again and atomically publishes it to `/opt/gh/bin/gh`; whole-tree rebuilds inject it as a managed asset instead of relying on a manual user install.
+- When the binary is missing or corrupt, the gh wrapper bootstraps it from the fixed URL and fixed digest, fails closed at any step and prints a copyable recovery command; the misleading claim that the binary was bundled has been removed.
+- Adds the explicit `util/MaintenanceToolPaths` contract and a bounded pre-check before rebuilds: `/opt` is preserved as user tools, `/usr/local/bin` belongs to the system tree and is not preserved, and `usr/local/share/dsha` is manager-injected; a rebuild is refused before moving the old tree when `/opt` holds more than 100,000 entries.
+- Verification scope: host tests, the full contracts group and source/descriptor/third-party-notice gates; no device validation was performed locally. Raises versionCode to 328 (based on build327); the APK grows by about 13.0 MiB because of the bundled gh archive.

@@ -148,4 +148,35 @@ public class EnvironmentTaskGateTest {
     }
     assertFalse(EnvironmentTaskGate.isBusy());
   }
+
+  @Test
+  public void sharedUsesCoexistAndExclusiveWaitsForThemToDrain() throws Exception {
+    try (var query = EnvironmentTaskGate.tryAcquireShared("插件查询");
+        var terminal = EnvironmentTaskGate.tryAcquireShared("启动终端")) {
+      assertNotNull(query);
+      assertNotNull(terminal);
+      assertEquals(2, EnvironmentTaskGate.sharedCount());
+      assertTrue(EnvironmentTaskGate.hasSharedUse());
+      assertFalse("共享使用不能显示成独占环境忙", EnvironmentTaskGate.isBusy());
+      assertNull(EnvironmentTaskGate.tryAcquire("install"));
+      java.util.concurrent.atomic.AtomicBoolean inShared =
+          new java.util.concurrent.atomic.AtomicBoolean();
+      query.run(
+          () -> {
+            assertTrue(EnvironmentTaskGate.ownsCurrentThread());
+            assertFalse(EnvironmentTaskGate.ownsExclusiveCurrentThread());
+            assertFalse(EnvironmentTaskGate.canExecuteCurrentThread());
+            inShared.set(true);
+            return null;
+          });
+      assertTrue(inShared.get());
+    }
+    assertFalse(EnvironmentTaskGate.hasSharedUse());
+    assertEquals(0, EnvironmentTaskGate.sharedCount());
+    try (var exclusive = EnvironmentTaskGate.tryAcquire("install")) {
+      assertNotNull(exclusive);
+      assertNull(EnvironmentTaskGate.tryAcquireShared("插件查询"));
+    }
+    assertFalse(EnvironmentTaskGate.isBusy());
+  }
 }

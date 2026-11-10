@@ -25,12 +25,20 @@ app/src/main/assets/dsh-runtime.bin
 app/src/main/assets/dsh-runtime.inputs.json
 app/src/main/assets/ubuntu-tools.bin
 app/src/main/assets/ubuntu-tools.inputs.json
+app/src/main/assets/glibc-python.tar.gz
+app/src/main/assets/adb-wheels.tar.gz
+app/src/main/assets/gh-cli.tar.gz
+app/src/main/assets/pnpm-runtime.bin
+app/src/main/assets/python-support.bin
 
 # 发布 APK：走 GitHub Release 资产，不进 git
 release/*.apk
 release/*.sha256
 release/_data_backup/
 release/history/
+
+# build195 起 Java 编译依赖的固定输入：由 tools/ci-assets.py 按锁定 URL/SHA 还原，不入库
+app/libs/
 
 # 本地临时/中间产物
 tmp_*/

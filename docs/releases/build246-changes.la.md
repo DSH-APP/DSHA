@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.3-20261101.1600-dsh0.2.1-rc.5 / build246
+
+- Correctum: fenestra adiutoris fluitantis a claviatura non segregabatur. Adiutor contractus in ima parte scrinii iacet, et cum campum textus in alia applicatione tangeres, una cum claviatura eius applicationis sursum movebatur et contenta prope aream inscriptionis tegebat.
+- Adiutor fluitans numquam textum accipit (emendatio in pagina adiutoris separata fit). Nunc fenestra eius solas vectes systematis vitat neque claviaturis aliarum applicationum respondet, et area exclusionis quam ad observationem scrinii inscribit non iam mutatur cum claviatura aperitur aut clauditur.
+- Ambitus probationis: solae probationes unitatum locales/CI; **in instrumento vero non probatum**. Haec correctio in quibusdam versionibus Android aut ROM fortasse non valet (adiutor fortasse adhuc cum claviatura sursum movetur); responsa usorum postea requiruntur ut confirmetur. versionCode ad 246 auctus. Recensio DSHA manet 0.2.1-rc.3 et DSH inclusum manet 0.2.1-rc.5.

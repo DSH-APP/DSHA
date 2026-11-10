@@ -43,7 +43,11 @@ public final class ScreenConnectionEpoch<T> {
   }
 
   /** 这里只领取公共票据；不得在连接锁中等待系统调用或调用外部授权回调。 */
-  public synchronized <R> R claim(Lease<T> lease, Supplier<R> claim) {
-    return current(lease) ? claim.get() : null;
+  public <R> R claim(Lease<T> lease, Supplier<R> claim) {
+    if (!current(lease)) return null;
+    R result = claim.get();
+    // A blocked authority supplier cannot hold up service teardown. Its result is useful only
+    // while the same service/epoch still owns it; callers must separately fence platform dispatch.
+    return current(lease) ? result : null;
   }
 }

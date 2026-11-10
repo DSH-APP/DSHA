@@ -49,12 +49,16 @@ def verify_reader_contracts(source,manifest,repository=ROOT):
         name=logical(name)
         if name not in deployed:raise ValueError('ASSET_READER_UNDEPLOYED:'+reader+':'+name)
     managed=json.loads((source/'managed-runtime-inputs.json').read_text(encoding='utf-8'))
-    for row in managed['installs']:require(row['asset'],'managed-runtime installs')
+    transforms=manifest.get('sourceTransforms',{})
+    def require_managed(name,reader):
+        # 受管清单保留源名（摘要与安装目标绑定它）；APK 内实际成员按 sourceTransforms 改名。
+        require(transforms.get(name,name),reader)
+        if name in transforms:
+            source_path=source/name
+            if not source_path.is_file() or source_path.is_symlink():raise ValueError('ASSET_TRANSFORM_SOURCE:'+name)
+    for row in managed['installs']:require_managed(row['asset'],'managed-runtime installs')
     for name in managed['assetFiles']:
-        if name in manifest.get('sourceTransforms',{}):
-            if not (source/name).is_file() or (source/name).is_symlink():raise ValueError('ASSET_TRANSFORM_SOURCE:'+name)
-            require(manifest['sourceTransforms'][name],'managed-runtime transformed assetFiles')
-        else:require(name,'managed-runtime assetFiles')
+        require_managed(name,'managed-runtime assetFiles')
     for tree in managed['assetTrees']:
         if tree not in manifest['packagedTrees']:raise ValueError('ASSET_READER_TREE:'+tree)
     patches=json.loads((source/'runtime-patches.json').read_text(encoding='utf-8'))
@@ -80,7 +84,7 @@ def verify_reader_contracts(source,manifest,repository=ROOT):
     # Supplemental Java literals catch new reads; they never select/prune assets.
     # Explicit deployment roots and structured dynamic registries own selection.
     pattern=re.compile(r'(?:(?:getAssets\(\)\.open|readAsset|readAssetString|assetText|assetObject|profileAsset)\(\s*(?:\w+\s*,\s*)?|\bread\(\s*context\s*,\s*)"([^"\n]+)"')
-    for base in ('main','standard','low'):
+    for base in ('main','standard'):
         for file in (repository/'app/src'/base/'java').rglob('*.java'):
             for name in pattern.findall(file.read_text(encoding='utf-8')):
                 if name in deployed or name in manifest.get('optionalHistoricalReads',[]):continue

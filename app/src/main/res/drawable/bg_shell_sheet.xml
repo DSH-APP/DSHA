@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 底部弹层容器：只圆上方两角，贴住屏幕底部；颜色与卡片同一 token。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/shell_surface" />
+    <corners
+        android:topLeftRadius="22dp"
+        android:topRightRadius="22dp" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/shell_line" />
+</shape>

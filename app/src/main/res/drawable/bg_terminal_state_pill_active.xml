@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 活动会话状态胶囊：accent_soft_2 底 + accent_line 描边 + 全圆角。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/terminal_accent_soft_2" />
+    <corners android:radius="999dp" />
+    <stroke android:width="@dimen/stroke" android:color="@color/terminal_accent_line" />
+</shape>

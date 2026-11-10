@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  夜间外壳 token：与 values/shell_ui.xml 一一对应。
+  颜色取自设计源 .app(dark) + refinement.css 的夜间覆盖；
+  尺寸与日间相同，仍集中写在这里，避免同名资源只落在单边配置而漏改。
+-->
+<resources>
+    <!-- 画布与层级 -->
+    <color name="shell_line">#12CBDCFF</color>
+    <color name="shell_line_strong">#20D0E1FF</color>
+
+    <!-- 文字 -->
+    <color name="shell_text">#EDF1F7</color>
+    <color name="shell_text_secondary">#B0BBCC</color>
+    <color name="shell_text_muted">#8895AA</color>
+
+    <!-- 强调与状态 -->
+    <!-- 进度条流光叠层：夜间 16% 白，避免在深底上发糊。 -->
+    <color name="shell_sheen">#29FFFFFF</color>
+    <color name="shell_good">#93CCAF</color>
+    <color name="shell_warn">#E4BE83</color>
+    <color name="shell_bad">#EEA3A6</color>
+    <!-- 状态软底：夜间同样只作浅色背景，不与正文文字混用。 -->
+    <color name="shell_good_soft">#1493CCAF</color>
+    <color name="shell_warn_soft">#14E4BE83</color>
+    <color name="shell_bad_soft">#14EEA3A6</color>
+
+    <!-- 玻璃层 -->
+
+    <!-- 手机胶囊导航 -->
+    <dimen name="shell_nav_height">64dp</dimen>
+    <dimen name="shell_nav_margin_horizontal">12dp</dimen>
+    <dimen name="shell_nav_margin_bottom">10dp</dimen>
+    <dimen name="shell_nav_icon_size">22dp</dimen>
+    <dimen name="shell_nav_label">10sp</dimen>
+    <dimen name="shell_nav_item_padding_top">8dp</dimen>
+    <dimen name="shell_nav_item_padding_bottom">6dp</dimen>
+
+    <!-- 顶栏 -->
+    <dimen name="shell_header_min_height">60dp</dimen>
+    <dimen name="shell_brand_size">34dp</dimen>
+    <dimen name="shell_brand_icon_size">18dp</dimen>
+    <dimen name="shell_title_text">16sp</dimen>
+    <dimen name="shell_context_text">11sp</dimen>
+
+    <!-- 平板左栏 -->
+    <dimen name="shell_rail_width">80dp</dimen>
+    <dimen name="shell_rail_padding_horizontal">7dp</dimen>
+    <dimen name="shell_rail_item_width">56dp</dimen>
+    <dimen name="shell_rail_item_height">64dp</dimen>
+    <dimen name="shell_rail_item_gap">8dp</dimen>
+    <dimen name="shell_rail_icon_size">22dp</dimen>
+    <dimen name="shell_rail_label">10sp</dimen>
+    <dimen name="shell_rail_foot">8sp</dimen>
+</resources>

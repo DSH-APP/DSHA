@@ -7,23 +7,22 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import com.deepseekharness.app.util.AccessibilityServiceLifecycleEvents;
 
 /**
- * 接收窗口事件的无障碍服务。事件处理仅在用户开启的短暂配对窗口扫描设置页，
- * 配对码读取后关闭窗口；读屏、截图由已授权的设备能力请求单独触发。
- * 清单不限定设置应用，不能宣称系统不投递其他应用事件。
- * 普通截图写入应用私有 Pictures/DSHA；MCP请求返回同一次截图的内存图片。
- * 不将配对码或敏感屏幕内容写入公开日志；撤销和运行代次约束见对应能力实现。
+ * 接收窗口事件的无障碍服务。事件处理仅在用户开启的短暂配对窗口扫描设置页， 配对码读取后关闭窗口；读屏、截图由已授权的设备能力请求单独触发。 清单不限定设置应用，不能宣称系统不投递其他应用事件。
+ * 普通截图写入应用私有 Pictures/DSHA；MCP请求返回同一次截图的内存图片。 不将配对码或敏感屏幕内容写入公开日志；撤销和运行代次约束见对应能力实现。
  */
 public class DshaAccessibilityService extends AccessibilityService {
 
   private static final String TAG = "DSHA";
   private static final String SETTINGS_PKG = "com.android.settings";
+  private long lifecycleServiceEpoch;
 
   /** 与配对码本身的有效期对齐：Android 的配对弹窗约 2 分钟失效 */
   private static final long WATCH_MS = 120_000L;
 
-  /** 读到配对信息后的回调（在无障碍服务线程上调用，实现方自己切主线程） */
+  /** 读到配对信息后的回调（在配对读取工作线程调用，实现方自己切主线程） */
   public interface PairInfoListener {
     void onPairInfo(String code, String ip, String port, String connectPort);
   }
@@ -33,12 +32,15 @@ public class DshaAccessibilityService extends AccessibilityService {
   private static long watchEpoch;
   private static volatile PairInfoListener listener;
   private static volatile String observedConnectHost = "", observedConnectPort = "";
+  private static final com.deepseekharness.app.screen.AccessibilityReadDispatcher PAIR_READS =
+      new com.deepseekharness.app.screen.AccessibilityReadDispatcher();
 
-  /** 三态：YES 确认已开 / NO 确认未开 / UNKNOWN 读不到设置（别当成未开）。
+  /**
+   * 三态：YES 确认已开 / NO 确认未开 / UNKNOWN 读不到设置（别当成未开）。
    *
-   *  服务实例存在是最硬的证据 —— 系统能把它连起来，就一定是开着的。
-   *  只在拿不到实例时才去解析 Settings 字符串，而那串在各家 ROM 上格式不一，
-   *  解析失败时必须承认「不知道」，不能报「未开启」害用户反复去开。 */
+   * <p>服务实例存在是最硬的证据 —— 系统能把它连起来，就一定是开着的。 只在拿不到实例时才去解析 Settings 字符串，而那串在各家 ROM 上格式不一，
+   * 解析失败时必须承认「不知道」，不能报「未开启」害用户反复去开。
+   */
   public static String enabledState(Context ctx) {
     if (instance != null) return "YES";
     try {
@@ -159,6 +161,13 @@ public class DshaAccessibilityService extends AccessibilityService {
 
   @Override
   public void onAccessibilityEvent(AccessibilityEvent event) {
+    // 手机任务期间的活动摘要：有界内存记录，任务结束/暂停/断开即清空；没有记录任务时零成本返回，不读节点。
+    com.deepseekharness.app.screen.ScreenActivityRecorder.recordAccessibilityEvent(event);
+    // 动作等待只借事件判断“界面动过没有”，不读节点、不缓存内容；没有等待者时这里零成本返回。
+    if (event != null && SCREEN_EVENTS.watching())
+      SCREEN_EVENTS.record(
+          event.getWindowId(),
+          event.getPackageName() == null ? "" : event.getPackageName().toString());
     // 平时一律不读屏幕：没有用户主动开的窗口，这里立刻返回
     if (instance != this || !watching()) return;
     if (event == null) return;
@@ -171,19 +180,44 @@ public class DshaAccessibilityService extends AccessibilityService {
       expectedListener = listener;
       if (expectedListener == null || !watching()) return;
     }
+    var serviceLease = CONNECTION.snapshot();
+    if (serviceLease == null || serviceLease.service != this) return;
+    java.util.function.BooleanSupplier current =
+        () -> {
+          synchronized (WATCH_LOCK) {
+            return instance == this
+                && CONNECTION.current(serviceLease)
+                && watching()
+                && watchEpoch == expectedWatch
+                && listener == expectedListener;
+          }
+        };
+    // Never read another app's accessibility tree from the service main/event thread.
+    PAIR_READS.submit(current, () -> scanPairingWindow(expectedWatch, expectedListener, current));
+  }
 
+  private void scanPairingWindow(
+      long expectedWatch,
+      PairInfoListener expectedListener,
+      java.util.function.BooleanSupplier current) {
     AccessibilityNodeInfo root = null;
     try {
+      if (!current.getAsBoolean()) return;
       root = getRootInActiveWindow();
-      if (root == null) return;
+      if (root == null || !SETTINGS_PKG.contentEquals(root.getPackageName())) return;
       StringBuilder sb = new StringBuilder();
-      collectText(root, sb, 0, new com.deepseekharness.app.util.AccessibilityTreeBudget());
+      collectText(
+          root,
+          sb,
+          0,
+          new com.deepseekharness.app.screen.ScreenReadBudget(
+              android.os.SystemClock::elapsedRealtime, current));
       String all = sb.toString();
       var connection = com.deepseekharness.app.util.AdbPairingInfo.connection(all);
       var pair = com.deepseekharness.app.util.AdbPairingInfo.pairing(all);
       String connectPort;
       synchronized (WATCH_LOCK) {
-        if (watchEpoch != expectedWatch || listener != expectedListener || instance != this) return;
+        if (!current.getAsBoolean()) return;
         if (connection != null) {
           observedConnectHost = connection.host;
           observedConnectPort = connection.port;
@@ -211,7 +245,7 @@ public class DshaAccessibilityService extends AccessibilityService {
       AccessibilityNodeInfo node,
       StringBuilder sb,
       int depth,
-      com.deepseekharness.app.util.AccessibilityTreeBudget budget) {
+      com.deepseekharness.app.screen.ScreenReadBudget budget) {
     if (node == null || !budget.enter(depth, 0) || sb.length() > 8000) return;
     if (node.isPassword()) return;
     CharSequence t = node.getText();
@@ -242,8 +276,13 @@ public class DshaAccessibilityService extends AccessibilityService {
   private static volatile DshaAccessibilityService instance;
   private static final com.deepseekharness.app.util.ScreenConnectionEpoch<DshaAccessibilityService>
       CONNECTION = new com.deepseekharness.app.util.ScreenConnectionEpoch<>();
+
+  /** 动作等待期间的事件脉冲；没有等待者时不记录任何事件，不构成读屏缓存。 */
+  public static final com.deepseekharness.app.util.ScreenEventPulse SCREEN_EVENTS =
+      new com.deepseekharness.app.util.ScreenEventPulse(android.os.SystemClock::elapsedRealtime);
+
   private static final com.deepseekharness.app.screen.MainScreenActions MAIN_SCREEN =
-      new com.deepseekharness.app.screen.MainScreenActions(CONNECTION);
+      new com.deepseekharness.app.screen.MainScreenActions(CONNECTION, SCREEN_EVENTS);
 
   public static boolean connected() {
     return CONNECTION.snapshot() != null;
@@ -320,6 +359,19 @@ public class DshaAccessibilityService extends AccessibilityService {
       target = root.root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT);
       if (target == null || !target.isEditable() || !target.isEnabled())
         return com.deepseekharness.app.screen.ScreenReply.refused("VIRTUAL_INPUT_NOT_FOCUSED");
+      // 与 editor/set_text 同一条硬边界：语义 type 也不能把文字写进密码框（T97）。
+      if (target.isPassword()) {
+        org.json.JSONObject refused =
+            com.deepseekharness.app.screen.ScreenReply.refused("PASSWORD_INPUT_UNAVAILABLE");
+        try {
+          refused
+              .put("nextAction", "REPORT_TO_USER")
+              .put("retryable", false)
+              .put("sensitive", "PASSWORD");
+        } catch (org.json.JSONException ignored) {
+        }
+        return refused;
+      }
       if (text == null || text.length() > 16000)
         return com.deepseekharness.app.screen.ScreenReply.refused("TEXT_LIMIT");
       android.os.Bundle args = new android.os.Bundle();
@@ -388,6 +440,31 @@ public class DshaAccessibilityService extends AccessibilityService {
   public static String windowDiagnostic() {
     String value = WINDOW_DIAGNOSTIC.get();
     return value == null ? "ROOT_UNAVAILABLE" : value;
+  }
+
+  /**
+   * 只读诊断：该显示当前的窗口解析结果（READABLE / NO_WINDOWS / …）与最小窗口证据（T98）。不返回节点、
+   * 不登记目标证据、不改变任何门控；只用于在失败回复里说明原因和下一步。
+   */
+  public static com.deepseekharness.app.screen.ScreenTargetResolver.Diagnostics
+      displayWindowSnapshot(int display) {
+    var lease = CONNECTION.snapshot();
+    if (lease == null || display < 0)
+      return new com.deepseekharness.app.screen.ScreenTargetResolver.Diagnostics(
+          "ACCESSIBILITY_UNAVAILABLE", null);
+    try (var result =
+        com.deepseekharness.app.screen.ScreenTargetResolver.resolve(lease.service, display)) {
+      return new com.deepseekharness.app.screen.ScreenTargetResolver.Diagnostics(
+          CONNECTION.current(lease) ? result.diagnostic : "ACCESSIBILITY_UNAVAILABLE",
+          result.evidence);
+    } catch (RuntimeException unavailable) {
+      return new com.deepseekharness.app.screen.ScreenTargetResolver.Diagnostics(
+          "ACCESSIBILITY_UNAVAILABLE", null);
+    }
+  }
+
+  public static String displayWindowDiagnostic(int display) {
+    return displayWindowSnapshot(display).diagnostic;
   }
 
   private static AccessibilityNodeInfo displayRoot(DshaAccessibilityService service, int display) {
@@ -526,8 +603,12 @@ public class DshaAccessibilityService extends AccessibilityService {
   @Override
   protected void onServiceConnected() {
     super.onServiceConnected();
+    com.deepseekharness.app.screen.ScreenActivityRecorder.clear();
     CONNECTION.connect(this);
     instance = this;
+    var ownLease = CONNECTION.snapshot();
+    if (ownLease != null && ownLease.service == this) lifecycleServiceEpoch = ownLease.epoch;
+    recordLifecycle(AccessibilityServiceLifecycleEvents.Kind.CONNECTED);
     MAIN_SCREEN.revoke();
     com.deepseekharness.app.screen.AccessibilityRepairOwner.serviceConnected();
     HttpShellService.revokeDisconnectedScreenGrant(this);
@@ -537,12 +618,19 @@ public class DshaAccessibilityService extends AccessibilityService {
   @Override
   public void onInterrupt() {
     // 不提供持续反馈；interrupt不等于服务已解绑。
+    recordLifecycle(AccessibilityServiceLifecycleEvents.Kind.INTERRUPTED);
+  }
+
+  private void recordLifecycle(AccessibilityServiceLifecycleEvents.Kind kind) {
+    com.deepseekharness.app.screen.AccessibilityRepairOwner.recordServiceLifecycle(
+        this, kind, lifecycleServiceEpoch);
   }
 
   private void disconnectCurrentService() {
     if (!CONNECTION.disconnect(this)) return;
     if (instance == this) instance = null;
     MAIN_SCREEN.revoke();
+    com.deepseekharness.app.screen.ScreenActivityRecorder.clear();
     // Platform disconnect always fences old screen authority, including our own planned disable.
     HttpShellService.revokeDisconnectedScreenGrant(this);
     com.deepseekharness.app.screen.AccessibilityRepairOwner.platformDisconnected();
@@ -552,12 +640,14 @@ public class DshaAccessibilityService extends AccessibilityService {
   @Override
   public boolean onUnbind(android.content.Intent intent) {
     disconnectCurrentService();
+    recordLifecycle(AccessibilityServiceLifecycleEvents.Kind.UNBOUND);
     return super.onUnbind(intent);
   }
 
   @Override
   public void onDestroy() {
     disconnectCurrentService();
+    recordLifecycle(AccessibilityServiceLifecycleEvents.Kind.DESTROYED);
     super.onDestroy();
   }
 }

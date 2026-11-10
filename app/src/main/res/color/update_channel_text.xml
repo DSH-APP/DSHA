@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 更新通道文字：选中为正文色，未选中次要色；任务进行中禁用时降为弱化色。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false" android:color="@color/shell_text_muted" />
+    <item android:state_checked="true" android:color="@color/shell_text" />
+    <item android:color="@color/shell_text_secondary" />
+</selector>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 卡片底栏 / 属性表内的无框按钮：只有按下水波，不画框。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/shell_nav_ripple">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+</ripple>

@@ -1,0 +1,290 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="about_close_button" formatted="false">"閉じる"</string>
+    <string name="about_community" formatted="false">"QQ コミュニティ"</string>
+    <string name="about_tagline" formatted="false">"DSHA Android ランチャー"</string>
+    <string name="adb_pairing_service_label" formatted="false">"ADB のワイヤレス ペア設定"</string>
+    <string name="alpha_no_seccomp" formatted="false">"seccomp 高速化を無効にする"</string>
+    <string name="alpha_static_loader" formatted="false">"静的ローダー（proroot）"</string>
+    <string name="build190_auto_port" formatted="false">"ポートを自動割り当て"</string>
+    <string name="build190_restore_port_drafts" formatted="false">"以前のポートの下書きを復元"</string>
+    <string name="computer_use_title" formatted="false">"画面操作"</string>
+    <string name="copy_text" formatted="false">"コピー"</string>
+    <string name="device_checking" formatted="false">"権限の状態を確認しています…"</string>
+    <string name="device_open_access" formatted="false">"ファイルへのアクセス権を管理"</string>
+    <string name="diag248_copy" formatted="false">"診断レポートをコピー"</string>
+    <string name="diag248_copy_sub" formatted="false">"マスク済みテキスト。フィードバックに貼り付け可能"</string>
+    <string name="diag248_empty" formatted="false">"結果はまだありません。確認は端末の状態を読むだけです"</string>
+    <string name="diag248_export" formatted="false">"診断情報をエクスポート"</string>
+    <string name="diag248_export_sub" formatted="false">"構造化ログパッケージ"</string>
+    <string name="diag248_feedback" formatted="false">"フィードバック"</string>
+    <string name="diag248_idle_sub" formatted="false">"コンポーネントと環境を確認"</string>
+    <string name="diag248_idle_title" formatted="false">"未確認"</string>
+    <string name="diag248_plugins" formatted="false">"プラグインマネージャー"</string>
+    <string name="diag248_plugins_sub" formatted="false">"プラグインによる起動の問題を調べる"</string>
+    <string name="diag248_repair_sub" formatted="false">"証明書と実行コンポーネントを再インストール"</string>
+    <string name="diag248_start" formatted="false">"検査"</string>
+    <string name="diag248_status" formatted="false">"状態"</string>
+    <string name="diag248_tools" formatted="false">"ツール"</string>
+    <string name="dns_auto" formatted="false">"自動互換モード（推奨）"</string>
+    <string name="dns_ipv4" formatted="false">"IPv4 DNS 互換モード"</string>
+    <string name="dns_native" formatted="false">"ネイティブのデュアルスタック名前解決"</string>
+    <string name="nh_sub" formatted="false">"ネットワーク異常は記録のみで修復しません"</string>
+    <string name="nh_title" formatted="false">"ネットワーク診断"</string>
+    <string name="paste_text" formatted="false">"貼り付け"</string>
+    <string name="phone_assistant" formatted="false">"フローティングアシスタント"</string>
+    <string name="phone_assistant_detail" formatted="false">"この端末の実際の DSH セッションを選び、フローティングチャットや一時停止の操作に使用します。"</string>
+    <string name="picture_in_picture_allowed" formatted="false">"システムで許可されています。ホームに戻ったりアプリを切り替えたりしても、小さなウィンドウでチャットを表示します。"</string>
+    <string name="picture_in_picture_disabled" formatted="false">"システムで無効になっています。バックグラウンドでは小さなウィンドウを表示しません。タップして変更できます。"</string>
+    <string name="picture_in_picture_enable" formatted="false">"チャットのピクチャー イン ピクチャーを有効化"</string>
+    <string name="picture_in_picture_landscape" formatted="false">"横向きに切り替え"</string>
+    <string name="picture_in_picture_opted_out" formatted="false">"既定では無効です。上のスイッチを有効にすると、ホームに戻ったときも小さなウィンドウでチャットを表示します。"</string>
+    <string name="picture_in_picture_portrait" formatted="false">"縦向きに切り替え"</string>
+    <string name="picture_in_picture_settings_unavailable" formatted="false">"システムのピクチャー イン ピクチャー設定を開けませんでした。"</string>
+    <string name="picture_in_picture_title" formatted="false">"システムのピクチャー イン ピクチャー設定"</string>
+    <string name="picture_in_picture_unsupported" formatted="false">"ピクチャー イン ピクチャーには Android 8.0 以降と対応端末が必要です。"</string>
+    <string name="plugin_sort_az" formatted="false">"名前 A–Z"</string>
+    <string name="plugin_sort_enabled" formatted="false">"有効なものを先に表示"</string>
+    <string name="plugin_sort_title" formatted="false">"プラグインの並べ替え"</string>
+    <string name="plugin_sort_updates" formatted="false">"更新可能なものを優先"</string>
+    <string name="plugin_sort_za" formatted="false">"名前 Z–A"</string>
+    <string name="text_selection_more" formatted="false">"その他…"</string>
+    <string name="ui134_adb_hint" formatted="false">"Android 11 以降：同じ Wi-Fi に接続してワイヤレスデバッグをペアリングします。root は不要です。ネットワークが変わったら検証または再ペアリングしてください。"</string>
+    <string name="ui134_candidate" formatted="false">"候補リリースを表示"</string>
+    <string name="ui134_candidate_sub" formatted="false">"リリースノート、サイズ、インストール"</string>
+    <string name="ui134_changelog" formatted="false">"このリリース"</string>
+    <string name="ui134_check_ready" formatted="false">"検査を準備"</string>
+    <string name="ui134_code" formatted="false">"バージョンコード"</string>
+    <string name="ui134_current" formatted="false">"現在のアプリ"</string>
+    <string name="ui134_disconnect" formatted="false">"ADB を切断"</string>
+    <string name="ui134_edition" formatted="false">"エディション"</string>
+    <string name="ui134_recent_startups" formatted="false">"直近 5 回の起動"</string>
+    <string name="ui134_recent_startups_sub" formatted="false">"段階、実際のエラー、終了コード"</string>
+    <string name="ui134_results" formatted="false">"確認結果"</string>
+    <string name="ui134_root_hint" formatted="false">"root 化済みの端末では、ADB のペアリングなしで su を直接使用できます。初回実行時に root マネージャーで DSHA を許可してください。以下でコマンド遮断レベルを選択できます。SMS 読み取りなどのネイティブチェックは 3 つのレベルすべてで有効です。"</string>
+    <string name="ui134_screen_setup" formatted="false">"画面操作を設定 · 2 つの手順"</string>
+    <string name="ui134_shizuku_hint" formatted="false">"Shizuku の管理アプリでサービスを起動してから、ここで DSHA を許可してください。通常は端末を再起動するたびにサービスの再起動が必要です。"</string>
+    <string name="ui134_start_records" formatted="false">"起動記録"</string>
+    <string name="ui134_startup_recovery" formatted="false">"起動の復旧"</string>
+    <string name="ui134_startup_recovery_sub" formatted="false">"問題と復旧方法を確認"</string>
+    <string name="ui2_about" formatted="false">"DSHA について"</string>
+    <string name="ui2_about_sub" formatted="false">"バージョン、ライセンス、フィードバック"</string>
+    <string name="ui2_adb" formatted="false">"ADB のワイヤレス ペア設定"</string>
+    <string name="ui2_adb_intro" formatted="false">"システムのワイヤレスデバッグからペア設定コードを取得します"</string>
+    <string name="ui2_address" formatted="false">"アクセスアドレス"</string>
+    <string name="ui2_address_sub" formatted="false">"端末内と LAN のアドレスを表示"</string>
+    <string name="ui2_app_version" formatted="false">"アプリのバージョン"</string>
+    <string name="ui2_backup_restore" formatted="false">"バックアップと復元"</string>
+    <string name="ui2_backup_restore_sub" formatted="false">"エクスポート、インポート、自動バックアップ"</string>
+    <string name="ui2_base" formatted="false">"Ubuntu のベース環境"</string>
+    <string name="ui2_check_all" formatted="false">"すべてのコンポーネントを検査"</string>
+    <string name="ui2_community" formatted="false">"コミュニティのプラグイン"</string>
+    <string name="ui2_community_sub" formatted="false">"プラグインとインストール元を探す"</string>
+    <string name="ui2_component1" formatted="false">"Ubuntu 環境"</string>
+    <string name="ui2_component2" formatted="false">"オフラインの基本ツール"</string>
+    <string name="ui2_component3" formatted="false">"Node.js 24"</string>
+    <string name="ui2_component4" formatted="false">"pnpm"</string>
+    <string name="ui2_component5" formatted="false">"DeepSeek Harness"</string>
+    <string name="ui2_component6" formatted="false">"起動と実行環境の検査"</string>
+    <string name="ui2_component_hint" formatted="false">"検査結果と修復オプションを確認"</string>
+    <string name="ui2_config_sub" formatted="false">"ポートと実行方式は次回起動時に反映されます"</string>
+    <string name="ui2_connection" formatted="false">"接続状態"</string>
+    <string name="ui2_data_ops" formatted="false">"バックアップと復元"</string>
+    <string name="ui2_data_sub" formatted="false">"エクスポート、復元、ファイル共有。"</string>
+    <string name="ui2_data_title" formatted="false">"バックアップとデータ"</string>
+    <string name="ui2_device_channels" formatted="false">"端末コマンドの実行経路"</string>
+    <string name="ui2_device_grants" formatted="false">"デバイスの権限"</string>
+    <string name="ui2_diagnostics" formatted="false">"診断"</string>
+    <string name="ui2_diagnostics_intro" formatted="false">"コンポーネント、ストレージ、サービスを検査し、機密情報を除去したレポートを生成します。"</string>
+    <string name="ui2_diagnostics_sub" formatted="false">"動作確認と診断ログ"</string>
+    <string name="ui2_display" formatted="false">"表示と起動"</string>
+    <string name="ui2_dns" formatted="false">"DNS の解決方針"</string>
+    <string name="ui2_environment" formatted="false">"実行環境"</string>
+    <string name="ui2_environment_page" formatted="false">"インストールと実行環境"</string>
+    <string name="ui2_environment_recovery" formatted="false">"環境の修復と復旧"</string>
+    <string name="ui2_environment_recovery_sub" formatted="false">"起動の依存関係と中断したメンテナンスを確認"</string>
+    <string name="ui2_environment_state" formatted="false">"環境の状態"</string>
+    <string name="ui2_environment_sub" formatted="false">"コンポーネントごとに状態を検査し、対応が必要な部分を修復します。"</string>
+    <string name="ui2_error_logs" formatted="false">"エラーログ"</string>
+    <string name="ui2_experience" formatted="false">"使い心地"</string>
+    <string name="ui2_export" formatted="false">"プラグインをエクスポート"</string>
+    <string name="ui2_export_sub" formatted="false">"インストール済みプラグインのコピーを保存"</string>
+    <string name="ui2_floating" formatted="false">"フローティングステータス"</string>
+    <string name="ui2_floating_settings" formatted="false">"オーバーレイの外観と動作"</string>
+    <string name="ui2_floating_settings_sub" formatted="false">"スタイル、表示内容、プレビューを編集"</string>
+    <string name="ui2_from_link" formatted="false">"リンクからインストール"</string>
+    <string name="ui2_grants_sub" formatted="false">"必要な機能だけ有効にできます。通常の会話やターミナルには端末の操作権限は不要です。"</string>
+    <string name="ui2_import" formatted="false">"プラグインをインポート"</string>
+    <string name="ui2_import_sub" formatted="false">"端末からプラグインの ZIP を選択"</string>
+    <string name="ui2_install_environment" formatted="false">"インストールと実行環境"</string>
+    <string name="ui2_installation_log" formatted="false">"検査とインストールのログ"</string>
+    <string name="ui2_installed" formatted="false">"インストール済みプラグイン"</string>
+    <string name="ui2_launch_hint" formatted="false">"次のタスクをいつでも始められます。"</string>
+    <string name="ui2_local_plugins" formatted="false">"ローカルプラグイン"</string>
+    <string name="ui2_logs" formatted="false">"起動ログ"</string>
+    <string name="ui2_maintenance" formatted="false">"メンテナンスと復旧"</string>
+    <string name="ui2_managed" formatted="false">"管理対象ランタイム"</string>
+    <string name="ui2_managed_sub" formatted="false">"同梱コンポーネントを更新し、個人データを保持"</string>
+    <string name="ui2_managed_update" formatted="false">"管理対象ランタイムを更新"</string>
+    <string name="ui2_management" formatted="false">"管理"</string>
+    <string name="ui2_meet" formatted="false">"DSHA を知る"</string>
+    <string name="ui2_network_runtime" formatted="false">"実行環境とネットワーク"</string>
+    <string name="ui2_offline_badge" formatted="false">"オフライン設定  ·  root 不要  ·  %1$s"</string>
+    <string name="ui2_online_notice" formatted="false">"オンラインモデルを使うと、メッセージと選択した添付ファイルが設定済みのモデルサービスに送信されます。"</string>
+    <string name="ui2_overlay" formatted="false">"フローティングステータス"</string>
+    <string name="ui2_overlay_sub" formatted="false">"表示内容、不透明度、表示時間"</string>
+    <string name="ui2_plugin_link" formatted="false">"リポジトリまたはダウンロード URL"</string>
+    <string name="ui2_port" formatted="false">"使用中の Web ポート"</string>
+    <string name="ui2_port_hint" formatted="false">"ポートが使用中のときは空きポートを自動で使います"</string>
+    <string name="ui2_port_preferred" formatted="false">"優先 Web ポート"</string>
+    <string name="ui2_recovery_tools" formatted="false">"環境とデータの復旧"</string>
+    <string name="ui2_repair_parts" formatted="false">"コンポーネントを修復"</string>
+    <string name="ui2_repair_parts_sub" formatted="false">"不足部分を検査し、使用可能なコンポーネントを保持"</string>
+    <string name="ui2_reproduction" formatted="false">"再現手順の補足"</string>
+    <string name="ui2_resolve" formatted="false">"解析してインストール"</string>
+    <string name="ui2_restart" formatted="false">"再起動"</string>
+    <string name="ui2_rollback" formatted="false">"互換性のあるランタイムにロールバック"</string>
+    <string name="ui2_rollback_sub" formatted="false">"隔離試運転で検証してから切り替え"</string>
+    <string name="ui2_runtime_compat" formatted="false">"ランタイムの互換性設定"</string>
+    <string name="ui2_runtime_config" formatted="false">"実行設定"</string>
+    <string name="ui2_sensitive" formatted="false">"機密性の高い機能"</string>
+    <string name="ui2_settings" formatted="false">"設定"</string>
+    <string name="ui2_settings_hint" formatted="false">"使い慣れたワークスペースに整えましょう。"</string>
+    <string name="ui2_shortcuts" formatted="false">"クイックアクセス"</string>
+    <string name="ui2_six_steps" formatted="false">"6 つのインストール手順"</string>
+    <string name="ui2_skip" formatted="false">"紹介をスキップ"</string>
+    <string name="ui2_start" formatted="false">"DSHA を起動"</string>
+    <string name="ui2_stop" formatted="false">"停止"</string>
+    <string name="ui2_stopped" formatted="false">"DSH は実行されていません"</string>
+    <string name="ui2_storage_files" formatted="false">"ストレージとファイル"</string>
+    <string name="ui2_storage_files_sub" formatted="false">"使用容量、キャッシュの削除、ファイル共有"</string>
+    <string name="ui2_support" formatted="false">"サポート"</string>
+    <string name="ui2_system_permissions" formatted="false">"システムの権限"</string>
+    <string name="ui2_troubleshooting" formatted="false">"トラブルシューティング"</string>
+    <string name="ui2_update_channel" formatted="false">"更新チャンネル"</string>
+    <string name="ui2_updates" formatted="false">"アプリの更新"</string>
+    <string name="ui2_updates_intro" formatted="false">"アプリと実行コンポーネントのバージョンを確認します。"</string>
+    <string name="ui2_updates_sub" formatted="false">"安定版とプレビュー版の更新"</string>
+    <string name="ui2_w1_0" formatted="false">"会話とタスク"</string>
+    <string name="ui2_w1_1" formatted="false">"本格的なターミナル"</string>
+    <string name="ui2_w1_2" formatted="false">"プラグインと端末の機能"</string>
+    <string name="ui2_w2_0" formatted="false">"会話とファイル"</string>
+    <string name="ui2_w2_1" formatted="false">"モデルと認証情報"</string>
+    <string name="ui2_w2_2" formatted="false">"端末操作"</string>
+    <string name="ui2_welcome_lead0" formatted="false">"コードを書き、ファイルを扱い、ツールを使う。\nワークスペースを持ち歩こう。"</string>
+    <string name="ui2_welcome_lead1" formatted="false">"会話、ファイル、ツールをひとつのワークスペースに。"</string>
+    <string name="ui2_welcome_lead2" formatted="false">"端末の操作権限は任意です。"</string>
+    <string name="ui2_welcome_title0" formatted="false">"AI ワークスペースを、\nあなたの端末に。"</string>
+    <string name="ui2_welcome_title1" formatted="false">"アイデアから、\n実現へ。"</string>
+    <string name="ui2_welcome_title2" formatted="false">"権限も、\nデータも、あなたのもの。"</string>
+    <string name="ui2_workspace" formatted="false">"ワークスペース"</string>
+    <string name="ui2_ws1_0" formatted="false">"モデルと協力して作業を進められます。"</string>
+    <string name="ui2_ws1_1" formatted="false">"Ubuntu コマンドと独立したセッションを使えます。"</string>
+    <string name="ui2_ws1_2" formatted="false">"必要なプラグインを追加し、端末の機能を利用できます。"</string>
+    <string name="ui2_ws2_0" formatted="false">"端末内に保存され、手動でエクスポートできます。"</string>
+    <string name="ui2_ws2_1" formatted="false">"モデルと API キーは Web UI で設定します。既存のネイティブ認証情報は保持されます。"</string>
+    <string name="ui2_ws2_2" formatted="false">"Root、Shizuku、ADB、SMS はそれぞれ個別に許可します。"</string>
+    <string name="ui_adb_code_label" formatted="false">"ペアリングコード（6 桁）"</string>
+    <string name="ui_adb_host_label" formatted="false">"端末のアドレス（空欄で自動検出）"</string>
+    <string name="ui_adb_port_label" formatted="false">"ペアリングポート（空欄で自動検出）"</string>
+    <string name="ui_lan_unencrypted" formatted="false">"ローカルネットワークの通信は暗号化されません。信頼できるネットワークと端末のみで使用してください"</string>
+    <string name="ui_language_title" formatted="false">"言語"</string>
+    <string name="ui_m0001" formatted="false">"更新をダウンロード"</string>
+    <string name="ui_m0002" formatted="false">"設定を保存"</string>
+    <string name="ui_m0003" formatted="false">"確認をキャンセル"</string>
+    <string name="ui_m0005" formatted="false">"起動"</string>
+    <string name="ui_m0006" formatted="false">"バックアップして環境を再構築"</string>
+    <string name="ui_m0007" formatted="false">"セーフ起動"</string>
+    <string name="ui_m0010" formatted="false">"ペア設定を開始"</string>
+    <string name="ui_m0011" formatted="false">"復元オプション"</string>
+    <string name="ui_m0012" formatted="false">"アドレスとポートを手動設定"</string>
+    <string name="ui_m0013" formatted="false">"プラグインを管理"</string>
+    <string name="ui_m0015" formatted="false">"Shizuku を許可"</string>
+    <string name="ui_m0016" formatted="false">"プラグイン"</string>
+    <string name="ui_m0017" formatted="false">"未確認"</string>
+    <string name="ui_m0018" formatted="false">"更新を確認"</string>
+    <string name="ui_m0020" formatted="false">"ライト"</string>
+    <string name="ui_m0021" formatted="false">"ターミナル"</string>
+    <string name="ui_m0023" formatted="false">"設定"</string>
+    <string name="ui_m0024" formatted="false">"コマンドを入力し、Enter キーで実行"</string>
+    <string name="ui_m0025" formatted="false">"ログはまだありません。"</string>
+    <string name="ui_m0026" formatted="false">"ペア設定とポートについて"</string>
+    <string name="ui_m0030" formatted="false">"ワイヤレスデバッグを使わない場合はオフのままにしてください"</string>
+    <string name="ui_m0031" formatted="false">"ADB のワイヤレス ペア設定"</string>
+    <string name="ui_m0039" formatted="false">"Shizuku は許可されていません"</string>
+    <string name="ui_m0046" formatted="false">"ログをダウンロード"</string>
+    <string name="ui_m0047" formatted="false">"エラーログをダウンロード"</string>
+    <string name="ui_m0050" formatted="false">"中止"</string>
+    <string name="ui_m0053" formatted="false">"センサーとライト"</string>
+    <string name="ui_m0054" formatted="false">"proroot ランタイムを使用"</string>
+    <string name="ui_m0055" formatted="false">"互換ブラウザーを使用"</string>
+    <string name="ui_m0057" formatted="false">"デスクトップ用の Web レイアウトを使用"</string>
+    <string name="ui_m0060" formatted="false">"修復ツール"</string>
+    <string name="ui_m0062" formatted="false">"root シェルを許可"</string>
+    <string name="ui_m0063" formatted="false">"LAN アクセスを許可"</string>
+    <string name="ui_m0066" formatted="false">"位置情報へのアクセスを許可"</string>
+    <string name="ui_m0067" formatted="false">"このアプリについて"</string>
+    <string name="ui_m0078" formatted="false">"タスクをキャンセル"</string>
+    <string name="ui_m0079" formatted="false">"操作をキャンセル"</string>
+    <string name="ui_m0080" formatted="false">"名前を付けて保存"</string>
+    <string name="ui_m0081" formatted="false">"自分で追加したプラグインのみ"</string>
+    <string name="ui_m0084" formatted="false">"バックグラウンドで切断されたときも確認を続けます。復旧前にワイヤレスデバッグをオンにしてください"</string>
+    <string name="ui_m0089" formatted="false">"起動時に更新を確認"</string>
+    <string name="ui_m0090" formatted="false">"ADB デバイスアクセスを有効化（既定ではオフ）"</string>
+    <string name="ui_m0094" formatted="false">"ブラウザーでリリースを表示"</string>
+    <string name="ui_m0095" formatted="false">"ブラウザーで開く"</string>
+    <string name="ui_m0102" formatted="false">"コピー"</string>
+    <string name="ui_m0103" formatted="false">"レポートをコピー"</string>
+    <string name="ui_m0104" formatted="false">"セーフモード：サードパーティ製プラグインを復元"</string>
+    <string name="ui_m0106" formatted="false">"プラグインをインストール"</string>
+    <string name="ui_m0107" formatted="false">"更新をインストール"</string>
+    <string name="ui_m0109" formatted="false">"レポートをエクスポート"</string>
+    <string name="ui_m0118" formatted="false">"内蔵ウェブエンジン。互換性の問題時に試せます"</string>
+    <string name="ui_m0121" formatted="false">"AI の出力をオーバーレイ表示"</string>
+    <string name="ui_m0125" formatted="false">"Shizuku 管理アプリを開く"</string>
+    <string name="ui_m0126" formatted="false">"バックアップとデータを開く"</string>
+    <string name="ui_m0128" formatted="false">"ワイヤレス デバッグの設定"</string>
+    <string name="ui_m0133" formatted="false">"プラグインマーケットプレイス"</string>
+    <string name="ui_m0134" formatted="false">"プラグインの操作状態。タップすると詳細を表示します。"</string>
+    <string name="ui_m0135" formatted="false">"プラグインマネージャー"</string>
+    <string name="ui_m0137" formatted="false">"プラグインの URL または npm パッケージ名"</string>
+    <string name="ui_m0138" formatted="false">"プラグイン名や説明を検索"</string>
+    <string name="ui_m0142" formatted="false">"新しいターミナル"</string>
+    <string name="ui_m0145" formatted="false">"ターミナルはありません\n「新規」をタップして開きます"</string>
+    <string name="ui_m0146" formatted="false">"その他"</string>
+    <string name="ui_m0158" formatted="false">"インストール済みプラグインを検出"</string>
+    <string name="ui_m0159" formatted="false">"プラグインを検出"</string>
+    <string name="ui_m0164" formatted="false">"クリア"</string>
+    <string name="ui_m0170" formatted="false">"root を許可して確認"</string>
+    <string name="ui_m0171" formatted="false">"SMS を読み取る"</string>
+    <string name="ui_m0173" formatted="false">"安定版"</string>
+    <string name="ui_m0177" formatted="false">"シンプル"</string>
+    <string name="ui_m0178" formatted="false">"シンプルターミナル"</string>
+    <string name="ui_m0179" formatted="false">"URL を貼り付け"</string>
+    <string name="ui_m0181" formatted="false">"ペア設定コードを自動取得"</string>
+    <string name="ui_m0182" formatted="false">"再現手順を追記してください。キーや非公開の会話は含めないでください。"</string>
+    <string name="ui_m0185" formatted="false">"URL を検査"</string>
+    <string name="ui_m0191" formatted="false">"バッテリー設定"</string>
+    <string name="ui_m0201" formatted="false">"前に戻る"</string>
+    <string name="ui_m0202" formatted="false">"「起動」に戻る：プラグイン / セーフ起動"</string>
+    <string name="ui_m0209" formatted="false">"もう一度確認"</string>
+    <string name="ui_m0211" formatted="false">"会話を保持して設定をリセット"</string>
+    <string name="ui_m0212" formatted="false">"再試行"</string>
+    <string name="ui_m0215" formatted="false">"プレビュー"</string>
+    <string name="ui_m0217" formatted="false">"接続を確認"</string>
+    <string name="ui_m0218" formatted="false">"＋ 新規"</string>
+    <string name="ui_m9024" formatted="false">"変更"</string>
+    <string name="upd_browser_sub" formatted="false">"すべてのリリースと APK"</string>
+    <string name="upd_copy_version" formatted="false">"バージョン情報をコピー"</string>
+    <string name="upd_full_notes" formatted="false">"すべての変更を見る"</string>
+    <string name="upd_pane_empty" formatted="false">"候補版が見つかると、変更内容、サイズ、インストール方法がここに表示されます。"</string>
+    <string name="upd_recheck" formatted="false">"再確認"</string>
+    <string name="upd_tab_candidate" formatted="false">"候補版"</string>
+    <string name="upd_tab_current" formatted="false">"このビルド"</string>
+    <string name="welcome_eyebrow0" formatted="false">"DEEPSEEK HARNESS · ANDROID"</string>
+    <string name="welcome_eyebrow1" formatted="false">"01 / あなたの作業スタイルに"</string>
+    <string name="welcome_eyebrow2" formatted="false">"02 / データも選択も、あなたの手に"</string>
+    <plurals name="plugin_count">
+        <item quantity="other">"プラグイン %d 件"</item>
+    </plurals>
+</resources>

@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.3-20261026.2115-dsh0.2.1-rc.3 / build202
+
+- Experimentum interfaciei: tegumentum prototypi interactionis v5 native effectum est — caput cum signo et contextu paginae, navigatio capsulae fluitantis in telephoniis, claustrum navigationis sinistrum in tabulis, pagina domestica principii ordinata cum taenia activitatis, et copia/sequentia/exportatio diarii. Plugina et optiones functiones veras exsistentes retinent; data simulata prototypi non conectuntur.
+- Terminale: hospes terminalis plenae imaginis et protectio sessionum ex Sunset-zhongdua-G immissa sunt. Terminale tangere TerminalActivity plenae imaginis sui iuris aperit; reditus paginam tantum claudit nec sessiones finit. Latus thematicum, claves additae 7+7 in telephonio / 8+8 in tabula, et compressio trium columnarum in situ horizontali in hac constructione insunt.
+- dsh-web-mobile inclusum in 3.2.2 et DSH inclusum in rc.3 manent; versionCode ad 202 auctus est. Identitas probatoria est dsh.android.client.SunsetRNE cum certificato probatorio locali, non sarcina officialis E7E3.
+- Fines: haec pars experimentum integrationis interfaciei et terminalis est. Instrumen installatio, TalkBack, ampliatio litterarum et probatio plena rotationis non factae sunt. Subpaginae pluginum/optionum et nonnullae paginae prototypi (files, copiae, diagnosis) adhuc effectum exsistentem adhibent.

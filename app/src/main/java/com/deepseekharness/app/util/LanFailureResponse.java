@@ -12,6 +12,7 @@ public final class LanFailureResponse {
     TOKEN_MISSING("token-missing"),
     TOKEN_INVALID("token-invalid"),
     TOKEN_UNAVAILABLE("token-unavailable"),
+    LOGIN_RATE_LIMIT("login-rate-limit"),
     BACKEND_AUTH_NOT_READY("backend-auth-not-ready"),
     PROXY_BUSY("proxy-busy"),
     BACKEND_UNREACHABLE("backend-unreachable"),
@@ -42,12 +43,15 @@ public final class LanFailureResponse {
               "The LAN address has no access credential. Open the DSHA Launch page, tap the LAN address, and copy the complete connection link.");
       case TOKEN_INVALID ->
           UiText.choose(
-              "局域网访问凭据已失效或不匹配。请回到 DSHA 启动页重新复制连接链接；DSH 重启或关闭局域网访问后，旧链接和浏览器凭据会失效。",
-              "The LAN credential has expired or does not match. Copy a new connection link from the DSHA Launch page. Restarting DSH or turning LAN access off invalidates old links and browser credentials.");
+              "请输入用户名 dsha 和在 DSHA 设置的局域网密码。",
+              "Enter username dsha and the LAN password configured in DSHA.");
       case TOKEN_UNAVAILABLE ->
           UiText.choose(
               "局域网访问凭据尚未就绪。请在 DSHA 中启动 DSH，等待局域网地址出现后重新复制连接链接。",
               "The LAN credential is not ready. Start DSH in DSHA, wait for the LAN address, then copy a new connection link.");
+      case LOGIN_RATE_LIMIT ->
+          UiText.choose(
+              "密码尝试过多，请等待一分钟后重试。", "Too many password attempts. Wait one minute and retry.");
       case BACKEND_AUTH_NOT_READY ->
           UiText.choose(
               "局域网代理正在等待 DSH 认证。请回到 DSHA 确认 DSH 已启动，再刷新此页；此状态不表示局域网链接失效。",
@@ -75,6 +79,8 @@ public final class LanFailureResponse {
         switch (status) {
           case 400 -> "Bad Request";
           case 401 -> "Unauthorized";
+          case 403 -> "Forbidden";
+          case 429 -> "Too Many Requests";
           case 408 -> "Request Timeout";
           case 413 -> "Content Too Large";
           case 414 -> "URI Too Long";
@@ -96,8 +102,9 @@ public final class LanFailureResponse {
             + reason.header
             + "\r\n"
             + (status == 401
-                ? "WWW-Authenticate: Bearer realm=\"DSHA LAN\"\r\nSet-Cookie: dsha_lan=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict\r\n"
+                ? "WWW-Authenticate: Basic realm=\"DSHA LAN (username: dsha)\", charset=\"UTF-8\"\r\nSet-Cookie: dsha_lan=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict\r\n"
                 : "")
+            + (status == 429 ? "Retry-After: 60\r\n" : "")
             + "Content-Length: "
             + body.length
             + "\r\nConnection: close\r\n\r\n";

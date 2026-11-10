@@ -1,0 +1,6 @@
+# DSHA fs search-scope bundle patch: one host row. It takes over upstream glob executions only to
+# add nested-worktree excludes; disabling or removing this bundle restores upstream glob exactly.
+# Temporary fix; removal criteria in docs/fs-search-scope-plugin.md.
+- insert:
+    - id: dsh-fs-search-scope
+      name: 'dsh-fs-search-scope'

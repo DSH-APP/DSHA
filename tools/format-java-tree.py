@@ -3,20 +3,23 @@
 
 import argparse
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-SETS = ("main", "low", "standard", "debug", "androidTest", "test")
+SETS = ("main", "standard", "debug", "androidTest", "test")
 SOURCE = "java/com/deepseekharness/app"
 MANIFEST = ROOT / "tools/java-format-files.json"
 LOCK = ROOT / "tools/java-format.lock.json"
 FORMATTER = ROOT / "tools/format-java.py"
 REPORT_DIR = ROOT / "app/build/java-format"
-MAX_BATCH = 256
+# argparse 的 nargs='+' 在超长文件列表下会静默截断（实测 250+ 触发）；批次保持足够小。
+MAX_BATCH = 128
 TOOL_SOURCE = "tools/java-format/JavaTokenFingerprint.java"
 EXCLUDED_PARTS = frozenset(("history", "upstream", "vendor", "third_party", "third-party", "generated"))
 GENERATED_OWNERS = {
@@ -120,7 +123,11 @@ def main(argv=None):
     modes.add_argument("--write", action="store_true")
     parser.add_argument("--java", help="JDK 17 java executable")
     parser.add_argument("--offline", action="store_true")
+    parser.add_argument("--jobs", type=int, default=min(4, os.cpu_count() or 1),
+                        help="parallel --check batches (each batch is read-only until --write)")
     args = parser.parse_args(argv)
+    if not 1 <= args.jobs <= 16:
+        parser.error("--jobs must be 1..16")
     lock = json.loads(LOCK.read_text(encoding="utf-8"))
     generated = lock.get("generatedFiles", [])
     if set(generated) != set(GENERATED_OWNERS):
@@ -147,8 +154,12 @@ def main(argv=None):
         raise TreeFormatError("FORMAT_BATCH_SIZE")
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     snapshot = {name: digest(ROOT / name) for name in selected}
-    checks = [run_formatter("--check", names, n, args.java, args.offline, "preflight")
-              for n, (_, names) in enumerate(batches, 1)]
+    # Preflight batches only read sources and write their own numbered report, so they run in
+    # parallel; results keep batch order. --write batches below stay strictly sequential.
+    with ThreadPoolExecutor(max_workers=args.jobs) as pool:
+        checks = list(pool.map(
+            lambda item: run_formatter("--check", item[1][1], item[0], args.java, args.offline, "preflight"),
+            enumerate(batches, 1)))
     if args.write:
         if any(digest(ROOT / name) != value for name, value in snapshot.items()):
             raise TreeFormatError("FORMAT_SOURCE_CHANGED_DURING_PREFLIGHT")

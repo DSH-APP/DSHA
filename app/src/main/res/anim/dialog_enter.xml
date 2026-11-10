@@ -1,4 +1,19 @@
-<set xmlns:android="http://schemas.android.com/apk/res/android" android:duration="180" android:interpolator="@android:interpolator/fast_out_slow_in">
-    <alpha android:fromAlpha="0" android:toAlpha="1" />
-    <scale android:fromXScale="0.97" android:toXScale="1" android:fromYScale="0.97" android:toYScale="1" android:pivotX="50%" android:pivotY="50%" />
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 弹窗进入：220ms 上移 8dp + 轻微放大 + 淡入（对齐 v5 弹层动效）。 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="220"
+    android:interpolator="@interpolator/ui_standard">
+    <alpha
+        android:fromAlpha="0"
+        android:toAlpha="1" />
+    <scale
+        android:fromXScale="0.94"
+        android:toXScale="1"
+        android:fromYScale="0.94"
+        android:toYScale="1"
+        android:pivotX="50%"
+        android:pivotY="50%" />
+    <translate
+        android:fromYDelta="8dp"
+        android:toYDelta="0" />
 </set>

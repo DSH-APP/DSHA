@@ -19,7 +19,7 @@ def run(command):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--apks", type=Path, nargs=2, required=True)
+    parser.add_argument("--apks", type=Path, nargs=1, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--java-home", type=Path, default=os.environ.get("JAVA_HOME"))
     parser.add_argument("--sdk", type=Path, default=os.environ.get("ANDROID_HOME"))
@@ -47,12 +47,12 @@ def main():
     signer = tools / "lib/apksigner.jar"
     args.output.mkdir(parents=True, exist_ok=True)
     report = []
-    for flavor, source, minimum, expected_name in zip(
-            ("standard", "low"), args.apks, (30, 23), (name, name + "low")):
+    # Sunset-3090-Q 只签 Standard（API 30+）一份未签名包。
+    for flavor, source, minimum, expected_name in zip(("standard",), args.apks, (30,), (name,)):
         if not source.name.endswith("-unsigned.apk"):
             raise ValueError("ONLY_VERIFIED_UNSIGNED_INPUT")
         badging = run([tools / ("aapt" + suffix), "dump", "badging", source]).decode("utf-8")
-        expected = f"package: name='dsh.android.client' versionCode='{version}' versionName='{expected_name}'"
+        expected = f"package: name='io.github.sunsetrne.dsha' versionCode='{version}' versionName='{expected_name}'"
         if expected not in badging or "application-debuggable" in badging \
                 or f"sdkVersion:'{minimum}'" not in badging or "native-code: 'arm64-v8a'" not in badging:
             raise ValueError("UNSIGNED_INPUT_MANIFEST")
@@ -63,7 +63,7 @@ def main():
                  "--v1-signing-enabled", "true", "--v2-signing-enabled", "true", "--v3-signing-enabled", "true",
                  "--out", candidate, source])
             signature = run([args.java_home / ("bin/java" + suffix), "-jar", signer, "verify",
-                             "--min-sdk-version", "23", "--verbose", "--print-certs", candidate]).decode("utf-8")
+                             "--min-sdk-version", "30", "--verbose", "--print-certs", candidate]).decode("utf-8")
             if re.findall(r"Signer #\d+ certificate SHA-256 digest: ([a-f0-9]+)", signature) != [identity["certificateSha256"]]:
                 raise ValueError("SIGNED_CERTIFICATE_MISMATCH")
             for scheme in identity["schemes"]:

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 底部弹层进入：向上一小段 + 淡入；窗口本身由 CardSheet 贴底。 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="260"
+    android:interpolator="@interpolator/ui_standard">
+    <alpha
+        android:fromAlpha="0"
+        android:toAlpha="1" />
+    <translate
+        android:fromYDelta="14%"
+        android:toYDelta="0" />
+</set>

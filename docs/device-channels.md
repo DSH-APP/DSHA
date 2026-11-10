@@ -18,15 +18,17 @@ ADB配对与连接端口均由Android提供，不能填写Web端口或3090。依
 
 ## 一次设备命令如何派发
 
-[HttpShellService](../app/src/main/java/com/deepseekharness/app/HttpShellService.java)的自动设备执行按Root → Shizuku → ADB选择**一次**可用通道；`--su`只用于明确需要root且已授权的操作。命令先由[DeviceShellPolicy](../app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java)完整识别和限制，再进入[DeviceShellExecutor](../app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java)。同一策略适用于三通道，root也不能放行已拒绝命令。
+[HttpShellService](../app/src/main/java/com/deepseekharness/app/HttpShellService.java)的自动设备执行与虚拟屏共用[DeviceChannelOrder](../app/src/main/java/com/deepseekharness/app/util/DeviceChannelOrder.java)的顺序，选择**一次**可用通道：Root → Shizuku → ADB，Android 17（API 37）及以上且ADB连接已验证时ADB先于Shizuku。先按严格判据（Shizuku用户服务已绑定、ADB已启用且有局域网授权并已验证连接）选，都不满足时再按已授权判据（Shizuku已授权待绑定、ADB已启用且有局域网授权待连接）选；短信不走Shizuku，放宽档原始shell只走Root或ADB+su，执行失败不换通道重放；`--su`只用于明确需要root且已授权的操作。命令先由[DeviceShellPolicy](../app/src/main/java/com/deepseekharness/app/util/DeviceShellPolicy.java)判定，再进入[DeviceShellExecutor](../app/src/main/java/com/deepseekharness/app/DeviceShellExecutor.java)。root通道另有strict（默认）/relaxed/full三档，只能由用户显式切换，不是单条命令的“仍然允许”按钮；档位只改变以root身份执行时的拦截强度。
 
-只接受可完整识别的单条argv，不执行调用方提供的shell程序、管道、重定向或未知命令。块设备、分区、挂载、SELinux、刷机、系统属性等写入被拒绝；`[POLICY_BLOCKED]`没有“仍然允许”。终止应用还会核对完整包名、应用清单和用户/系统属性，不依裸PID或模糊名称强杀。
+strict只接受可完整识别的单条argv，不执行调用方提供的shell程序、管道、重定向或未知命令。relaxed放行root原始命令，但仍拒绝格式化、刷机、重启/关机、挂载、SELinux、块设备写入、清除应用数据以及递归删除存储根或一级目录等不可逆操作；full不再按命令内容拦截。放宽后的SHELL计划只交给真实root路径（本机root，或带`su=true`的ADB `su -c`）；Shizuku通用执行器与普通ADB计划仍按严格档生成，root不可用时不降级到它们。
+
+三档都保留短信读取闸门：只允许当前Android用户的单条`content query --uri content://sms`走原生授权；原始命令里出现短信provider痕迹会被拒绝，不会因放宽档变成任意shell。终止应用还会核对完整包名、应用清单和用户/系统属性，不依裸PID或模糊名称强杀。
 
 | 结果 | 含义 | 后续动作 |
 |---|---|---|
 | 124 / `*_UNAVAILABLE` / `*_NOT_READY` | 通道在派发前明确不可用或未就绪 | 修复对应授权/服务；不要把它当作业务命令的退出码解释 |
 | 125 / `[EXECUTION_UNKNOWN]` | 命令可能已发送或执行，结果无法确定 | 观察真实目标状态并保留现场，不能切通道或自动重放 |
-| 126 / `[POLICY_BLOCKED]` | 执行策略拒绝 | 报告原因；用户普通确认不能覆盖这条策略 |
+| 126 / `[POLICY_BLOCKED]` | 策略在派发前拒绝：严格档拒绝未识别命令，放宽档拒绝不可逆操作，三档都保留短信读取闸门 | 报告原因；普通确认不能覆盖；改变档位只能由用户显式切换，且只影响root |
 | 工具动作接受 | Android接受了动作/提交 | 不等于目标应用已经达成效果，重新观察 |
 
 超时不自动等于“未执行”。部分调用有独立等待预算；Shizuku服务等待、ADB连接、设备命令和虚拟屏启动的预算不混用，错误后不以换通道隐藏未知结果。

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  运行配置页（压缩版，docs/design/config-compact-20261101 v2）专用尺寸与样式。
+  颜色仍只引用 shell_* token；行高 48dp 与 touch_min 以上的触控面积保持一致。
+-->
+<resources>
+    <!-- DNS 分段的协议名，各语言一致，不翻译 -->
+    <string name="cfg_dns_ipv4" translatable="false">IPv4</string>
+    <dimen name="config_page_pad_h">16dp</dimen>
+    <dimen name="config_page_top">4dp</dimen>
+    <dimen name="config_row_min">48dp</dimen>
+    <dimen name="config_row_pad_start">14dp</dimen>
+    <dimen name="config_row_pad_end">12dp</dimen>
+    <dimen name="config_row_pad_v">5dp</dimen>
+    <dimen name="config_sub_pad_start">24dp</dimen>
+    <dimen name="config_label_top">10dp</dimen>
+    <dimen name="config_label_bottom">4dp</dimen>
+    <dimen name="config_chip_height">36dp</dimen>
+    <dimen name="config_column_gap">20dp</dimen>
+    <!-- 详情窗格达到该宽度时两列；按实际窗格宽度判断，不按设备类型。 -->
+    <integer name="config_two_column_dp">720</integer>
+    <integer name="config_max_content_dp">1080</integer>
+
+    <style name="ConfigCard" parent="">
+        <item name="android:background">@drawable/bg_settings_group</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="ConfigLabel" parent="ShellSectionLabel">
+        <item name="android:layout_marginTop">@dimen/config_label_top</item>
+        <item name="android:layout_marginBottom">@dimen/config_label_bottom</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:textColor">@color/shell_text_muted</item>
+    </style>
+
+    <style name="ConfigRow" parent="">
+        <item name="android:minHeight">@dimen/config_row_min</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">@dimen/config_row_pad_start</item>
+        <item name="android:paddingEnd">@dimen/config_row_pad_end</item>
+        <item name="android:paddingTop">@dimen/config_row_pad_v</item>
+        <item name="android:paddingBottom">@dimen/config_row_pad_v</item>
+    </style>
+
+    <style name="ConfigSubRow" parent="ConfigRow">
+        <item name="android:paddingStart">@dimen/config_sub_pad_start</item>
+        <item name="android:background">@color/shell_bg</item>
+    </style>
+
+    <style name="ConfigRowTitle" parent="">
+        <item name="android:textSize">@dimen/shell_row_title</item>
+        <item name="android:textColor">@color/shell_text</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="ConfigRowSub" parent="">
+        <item name="android:textSize">@dimen/shell_row_sub</item>
+        <item name="android:textColor">@color/shell_text_secondary</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="ConfigRowValue" parent="ShellRowValue">
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- 同一行内的开关：文字由行标题承担，开关自身不带文字。 -->
+    <style name="ConfigSwitch" parent="Widget.DSHA.Switch">
+        <item name="android:minHeight">@dimen/touch_min</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:layout_marginStart">8dp</item>
+    </style>
+
+    <!-- 带文字的整行开关（无副文案时）。 -->
+    <style name="ConfigSwitchRow" parent="ShellSwitch">
+        <item name="android:minHeight">@dimen/config_row_min</item>
+        <item name="android:paddingStart">@dimen/config_row_pad_start</item>
+        <item name="android:paddingEnd">@dimen/config_row_pad_end</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="ConfigChip" parent="">
+        <item name="android:background">@drawable/bg_config_chip</item>
+        <item name="android:minHeight">@dimen/config_chip_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/shell_accent</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="ConfigLinkChip" parent="ConfigChip">
+        <item name="android:textColor">@color/shell_text_secondary</item>
+    </style>
+
+    <style name="ConfigGhostChip" parent="ConfigChip">
+        <item name="android:background">@drawable/bg_action_plain</item>
+        <item name="android:textColor">@color/shell_text_muted</item>
+    </style>
+
+    <style name="ConfigSegment" parent="">
+        <item name="android:button">@null</item>
+        <item name="android:background">@drawable/bg_config_segment</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">@dimen/config_chip_height</item>
+        <item name="android:minWidth">44dp</item>
+        <item name="android:paddingStart">9dp</item>
+        <item name="android:paddingEnd">9dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/config_segment_text</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <style name="ConfigSaveButton" parent="ShellPrimaryButton">
+        <item name="android:minHeight">@dimen/touch_min</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:maxLines">1</item>
+    </style>
+</resources>

@@ -51,8 +51,9 @@ import { installMobileEffect } from '../platform/breakpoints.ts'
  * 菜单本来就关着时（第一击的开启路径）完全不介入。
  */
 
-/** 宿主加号按钮的类名片段；模型/权限触发器是 `_trigger`，不会被误伤。 */
-const ADD_SELECTOR = '[class*="_add"]'
+/** 宿主加号按钮（dsh-client-ui-conversation 0.2.2 的 uV2eYG_add）；带包前缀，
+ *  不再用裸 `_add` 子串——它会误中 `_addon`/`_address` 一类无关类名。 */
+const ADD_SELECTOR = '[class*="uV2eYG_add"]'
 /** slash/命令候选菜单的根：MenuView 自带这个标记，比样式哈希稳定。 */
 const MENU_SELECTOR = '[data-trigger-menu]'
 /** Lexical 的可编辑根：Escape 只在这里被宿主映射成命令。 */

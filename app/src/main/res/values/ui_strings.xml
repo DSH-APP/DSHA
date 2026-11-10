@@ -1,216 +1,88 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-
     <string name="ui_m0001" formatted="false">"下载更新"</string>
     <string name="ui_m0002" formatted="false">"保存配置"</string>
     <string name="ui_m0003" formatted="false">"取消检查"</string>
-
     <string name="ui_m0005" formatted="false">"启动"</string>
     <string name="ui_m0006" formatted="false">"备份并重建环境"</string>
     <string name="ui_m0007" formatted="false">"安全启动"</string>
-
-
     <string name="ui_m0010" formatted="false">"开始配对"</string>
     <string name="ui_m0011" formatted="false">"恢复选项"</string>
     <string name="ui_m0012" formatted="false">"手动地址与端口"</string>
     <string name="ui_m0013" formatted="false">"打开插件管理"</string>
-
     <string name="ui_m0015" formatted="false">"授权 Shizuku"</string>
     <string name="ui_m0016" formatted="false">"插件"</string>
     <string name="ui_m0017" formatted="false">"未检查"</string>
     <string name="ui_m0018" formatted="false">"检查更新"</string>
-
     <string name="ui_m0020" formatted="false">"白天"</string>
     <string name="ui_m0021" formatted="false">"终端"</string>
-
     <string name="ui_m0023" formatted="false">"设置"</string>
     <string name="ui_m0024" formatted="false">"输入命令，回车执行"</string>
     <string name="ui_m0025" formatted="false">"还没有日志。"</string>
     <string name="ui_m0026" formatted="false">"配对与端口说明"</string>
-    <string name="ui_m0030" formatted="false">"ADB 已关闭。不用无线调试就保持关闭。"</string>
+    <string name="ui_m0030" formatted="false">"不用无线调试时保持关闭"</string>
     <string name="ui_m0031" formatted="false">"ADB 无线配对"</string>
-
-
-
-
-
-
-
     <string name="ui_m0039" formatted="false">"Shizuku 未授权"</string>
-
-
-
-
-
-
     <string name="ui_m0046" formatted="false">"下载日志"</string>
     <string name="ui_m0047" formatted="false">"下载错误日志"</string>
-
     <string name="ui_m0050" formatted="false">"中止"</string>
-
-
     <string name="ui_m0053" formatted="false">"传感器与手电"</string>
     <string name="ui_m0054" formatted="false">"使用 proroot 运行时"</string>
     <string name="ui_m0055" formatted="false">"使用兼容浏览内核"</string>
-
     <string name="ui_m0057" formatted="false">"使用桌面版网页布局"</string>
-
-
     <string name="ui_m0060" formatted="false">"修复工具"</string>
-
     <string name="ui_m0062" formatted="false">"允许 Root Shell"</string>
     <string name="ui_m0063" formatted="false">"允许局域网访问"</string>
-
-
     <string name="ui_m0066" formatted="false">"允许读取位置"</string>
     <string name="ui_m0067" formatted="false">"关于"</string>
-
-
-
-
-
-
-
-
-
-
     <string name="ui_m0078" formatted="false">"取消当前任务"</string>
     <string name="ui_m0079" formatted="false">"取消当前操作"</string>
     <string name="ui_m0080" formatted="false">"另存为"</string>
     <string name="ui_m0081" formatted="false">"只看自己装的"</string>
-
-
-    <string name="ui_m0084" formatted="false">"后台断连时，可允许 DSHA 后台运行并减少电池限制。厂商仍可能暂停后台；恢复前先确认无线调试已开启，再点「验证已有连接」。"</string>
-
-
-
-
+    <string name="ui_m0084" formatted="false">"后台断连时保持检查；恢复前先开无线调试"</string>
     <string name="ui_m0089" formatted="false">"启动时检查更新"</string>
     <string name="ui_m0090" formatted="false">"启用 ADB 设备通道（默认关闭）"</string>
-
-
-
     <string name="ui_m0094" formatted="false">"在浏览器查看发布页"</string>
     <string name="ui_m0095" formatted="false">"在系统浏览器中打开"</string>
-
-
-
-
-
-
     <string name="ui_m0102" formatted="false">"复制"</string>
     <string name="ui_m0103" formatted="false">"复制反馈"</string>
-    <string name="ui_m0104" formatted="false">"安全模式：恢复此前启用的第三方插件"</string>
-
+    <string name="ui_m0104" formatted="false">"安全模式：恢复第三方插件"</string>
     <string name="ui_m0106" formatted="false">"安装插件"</string>
     <string name="ui_m0107" formatted="false">"安装更新"</string>
-
     <string name="ui_m0109" formatted="false">"导出报告"</string>
-
-
-
-
-
-
-
-
-    <string name="ui_m0118" formatted="false">"强制使用内置 Gecko，适合系统网页白屏或不兼容时；关闭后由 App 自动选择可用内核。保存后重新进入对话生效。"</string>
-
+    <string name="ui_m0118" formatted="false">"内置网页内核，兼容问题时可尝试"</string>
     <string name="ui_m0121" formatted="false">"悬浮显示 AI 输出"</string>
-
-
-
     <string name="ui_m0125" formatted="false">"打开 Shizuku 管理器"</string>
     <string name="ui_m0126" formatted="false">"打开数据与备份"</string>
-
     <string name="ui_m0128" formatted="false">"打开无线调试设置"</string>
-
-
-
-
     <string name="ui_m0133" formatted="false">"插件市场"</string>
     <string name="ui_m0134" formatted="false">"插件操作状态，点按查看完整信息"</string>
     <string name="ui_m0135" formatted="false">"插件管理"</string>
     <string name="ui_m0137" formatted="false">"插件链接或 npm 包名"</string>
     <string name="ui_m0138" formatted="false">"搜索插件名称或描述"</string>
-
-
-
     <string name="ui_m0142" formatted="false">"新建终端"</string>
-
-
-    <string name="ui_m0145" formatted="false">"暂无终端\n点击「新建」打开一个终端"</string>
+    <string name="ui_m0145" formatted="false">"暂无终端\n点「新建」打开"</string>
     <string name="ui_m0146" formatted="false">"更多"</string>
-
-
-
-
-
-
-
-
-
-
-
     <string name="ui_m0158" formatted="false">"检测已安装插件"</string>
     <string name="ui_m0159" formatted="false">"检测插件"</string>
-
-
-
-
     <string name="ui_m0164" formatted="false">"清理"</string>
-
-
-
-
-
     <string name="ui_m0170" formatted="false">"申请授权并验证 root"</string>
     <string name="ui_m0171" formatted="false">"短信读取"</string>
-
     <string name="ui_m0173" formatted="false">"稳定版"</string>
-
-
-
     <string name="ui_m0177" formatted="false">"简易"</string>
     <string name="ui_m0178" formatted="false">"简易终端"</string>
     <string name="ui_m0179" formatted="false">"粘贴链接"</string>
-
     <string name="ui_m0181" formatted="false">"自动读取本次配对码"</string>
     <string name="ui_m0182" formatted="false">"补充复现步骤，不要填写密钥或私人对话"</string>
-
-
     <string name="ui_m0185" formatted="false">"解析链接"</string>
-
-
-
-
-
     <string name="ui_m0191" formatted="false">"设置电池优化"</string>
-
-
-
-
-
-
-
-
-
     <string name="ui_m0201" formatted="false">"返回上一页"</string>
     <string name="ui_m0202" formatted="false">"返回启动页处理插件 / 安全启动"</string>
-
-
-
-
-
-
     <string name="ui_m0209" formatted="false">"重新诊断"</string>
-
     <string name="ui_m0211" formatted="false">"重置配置，保留对话"</string>
     <string name="ui_m0212" formatted="false">"重试"</string>
-
-
     <string name="ui_m0215" formatted="false">"预览版"</string>
-
     <string name="ui_m0217" formatted="false">"验证已有连接"</string>
     <string name="ui_m0218" formatted="false">"＋ 新建"</string>
+    <string name="ui_m9024" formatted="false">"更改"</string>
 </resources>

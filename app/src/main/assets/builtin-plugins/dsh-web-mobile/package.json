@@ -1,7 +1,8 @@
 {
   "name": "dsh-web-mobile",
-  "version": "3.2.1",
+  "version": "3.3.5",
   "description": "尽可能的使dsh适配竖屏等移动端设备",
+  "icon": "assets/icon.png",
   "license": "MIT",
   "author": "mexiaosh",
   "repository": {
@@ -32,12 +33,14 @@
       "default": "./lib/client.js"
     },
     "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json",
     "./package.json": "./package.json"
   },
   "files": [
     "lib",
     "src",
     "assets",
+    "locale",
     "cordis.patch.yml",
     "README.md",
     "LICENSE"
@@ -69,19 +72,29 @@
     }
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-client-locale": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0 || >=0.2.0-rc.1 <0.3.0-0",
-    "@deepseek-ai/dsh-client-ui-conversation": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0 || >=0.2.0-rc.1 <0.3.0-0",
-    "@deepseek-ai/dsh-client-ui-layout": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0 || >=0.2.0-rc.1 <0.3.0-0",
-    "@deepseek-ai/dsh-client-ui-primitives": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0 || >=0.2.0-rc.1 <0.3.0-0",
-    "@deepseek-ai/dsh-client-ui-settings": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0 || >=0.2.0-rc.1 <0.3.0-0",
-    "@deepseek-ai/dsh-client-ui-sidebar": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0 || >=0.2.0-rc.1 <0.3.0-0",
-    "@deepseek-ai/dsh-client-ui-slots": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.1.2-a <0.2.0 || >=0.2.0-rc.1 <0.3.0-0",
-    "@deepseek-ai/dsh-session-log-export": "^0.1.0-rc.6 || >=0.1.1-rc.0 <0.2.0 || >=0.2.0-rc.1 <0.3.0-0",
+    "@deepseek-ai/cordis": "^4.1.0",
+    "@deepseek-ai/dsh-client-locale": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-conversation": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-layout": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-primitives": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-settings": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-sidebar": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-slots": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-session-log-export": ">=0.2.2-rc.1 <0.3.0-0",
     "react": "^18.2.0"
   },
   "devDependencies": {
+    "@deepseek-ai/cordis": "^4.1.0",
+    "@deepseek-ai/dsh-client-locale": "0.2.2-rc.1",
     "@deepseek-ai/dsh-client-runtime": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-store": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-layout": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-settings": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-sidebar": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-session-log-export": "0.2.2-rc.1",
     "@types/node": "^22.0.0",
     "@types/react": "~18.3.1",
     "@types/react-dom": "~18.3.0",
@@ -97,17 +110,20 @@
     },
     "@deepseek-ai/dsh-client-ui-slots": {
       "optional": true
+    },
+    "react": {
+      "optional": true
     }
   },
   "dshaUpstream": {
-    "version": "3.2.1",
+    "version": "3.3.5",
     "source": "https://github.com/mexiaosqwq/dsh-web-mobile",
-    "commit": "10e58ce0c4ed424c7fbd9c91d48db06c6061b4e4",
-    "sourceDate": "2026-10-20",
+    "commit": "646fe837440f9939228bdba0024d407eaac01128",
+    "sourceDate": "2026-11-08",
     "ref": "main",
-    "releaseTag": "v3.2.1",
-    "releaseCommit": "1844bf21db47a9b942275b8118988e3f6718cf4b",
-    "clientSha256": "411f0626b4b87d40e5046892686a4685feb894b3b0740ef4b5292caedd149a64",
+    "releaseTag": "v3.3.5",
+    "releaseCommit": "14ecfccf5a6acb69e3a84229dee328d31801306f",
+    "clientSha256": "8a17dd03b5de35f1aea52c93d6e3352fcd43c781de380639f60a93bf6040a26a",
     "lock": "tools/mobile-plugin-upstream.lock.json",
     "prebuilt": true
   }

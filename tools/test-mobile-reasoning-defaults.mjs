@@ -17,7 +17,8 @@ test('actual deployed server module closure stays complete after retiring reason
     const content = readFileSync('app/src/main/assets/'+prefix+relative,'utf8');
     for (const match of content.matchAll(/from ['"]\.\/([^'"]+)['"]/g)) queue.push('lib/'+match[1]);
   }
-  assert.deepEqual([...visited].sort(), ['lib/compress.js','lib/delete-session.js','lib/index.js']);
+  // build192 起的 durable file transfers 也是服务器入口的真实依赖，闭包必须完整。
+  assert.deepEqual([...visited].sort(), ['lib/compress.js','lib/delete-session.js','lib/file-transfer.js','lib/index.js']);
 });
 
 for (const [name, models] of Object.entries({

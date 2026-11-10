@@ -1,0 +1,1748 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>DSHA · 三向态终端与四入口交互预览（源码映射 · 仅模拟）</title>
+  <style>
+    /* 三向态外观：默认跟随系统（由脚本解析为 light / dark），也可固定白天或黑夜。
+       浅色 = 浅蓝 + 白，深色 = 浅蓝 + 黑；终端输出区在两套外观下都保持黑底，
+       与原生 terminal_surface 固定深色的合同一致。 */
+    :root {
+      color-scheme: light;
+      --bg: #eef2f8;
+      --surface: #ffffff;
+      --card: #f7f9fd;
+      --raised: #eaeff7;
+      --line: #dfe6f0;
+      --line-strong: #c6d2e4;
+      --text: #152033;
+      --text-strong: #0d1727;
+      --muted: #59657a;
+      --faint: #7a879c;
+      --accent: #1e50d0;
+      --accent-strong: #1640a8;
+      --accent-soft: #e8efff;
+      --accent-soft-2: #dbe7ff;
+      --accent-line: #b9ccf4;
+      --on-accent: #ffffff;
+      --warning: #7a5300;
+      --warning-soft: #fcf3de;
+      --warning-line: #dcc18f;
+      --danger: #a93b43;
+      --danger-soft: #fbebec;
+      --danger-line: #e4b7bb;
+      --scrollbar: #b7c5da;
+      --field-bg: #ffffff;
+      --code-bg: #080d15;
+      --code-text: #c9d8ec;
+      --overlay: rgb(9 16 30 / .55);
+      --shadow: 0 16px 40px rgb(17 32 62 / .16);
+      --term-bg: #000000;
+      --term-chrome: #070a10;
+      --term-panel: #0b1018;
+      --term-line: #1d2634;
+      --term-text: #e6ecf5;
+      --term-muted: #98a7bc;
+      --term-accent: #8fbaff;
+      --term-accent-soft: #13223a;
+      --term-warning: #e5c07b;
+      --term-danger: #e08a8a;
+      --term-key: #0e1520;
+      --term-key-line: #26334a;
+      --term-scroll: #2a3850;
+      --term-font: 1rem;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 100%;
+      font-synthesis: none;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #05070b;
+      --surface: #0b0f16;
+      --card: #10151e;
+      --raised: #151c27;
+      --line: #1e2735;
+      --line-strong: #2e3b4f;
+      --text: #e4e8f0;
+      --text-strong: #f2f5fa;
+      --muted: #9da8bb;
+      --faint: #7c8aa0;
+      --accent: #8ab4ff;
+      --accent-strong: #a9c9ff;
+      --accent-soft: #13233c;
+      --accent-soft-2: #1b3050;
+      --accent-line: #2c4c7c;
+      --on-accent: #081428;
+      --warning: #e5c07b;
+      --warning-soft: #2a2417;
+      --warning-line: #5a4a2a;
+      --danger: #e08a8a;
+      --danger-soft: #2c1a1c;
+      --danger-line: #5a3236;
+      --scrollbar: #2a3850;
+      --field-bg: #0e131c;
+      --code-bg: #060a10;
+      --code-text: #c9d8ec;
+      --overlay: rgb(0 0 0 / .7);
+      --shadow: 0 16px 40px rgb(0 0 0 / .5);
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html, body { width: 100%; height: 100%; margin: 0; min-width: 0; }
+    body { background: var(--bg); color: var(--text); font-size: .875rem; line-height: 1.6; overflow: hidden; }
+    button, input { font: inherit; color: inherit; }
+    button {
+      min-width: 48px; min-height: 48px; padding: 10px 14px; border: 1px solid transparent;
+      border-radius: 4px; background: transparent; display: inline-flex; align-items: center;
+      justify-content: center; gap: 8px; line-height: 1.45; cursor: pointer; touch-action: manipulation;
+      overflow-wrap: anywhere;
+    }
+    button:active { background: var(--raised); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 3px;
+    }
+    button[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-line); }
+    h1, h2, h3, p { margin: 0; }
+    h1, h2, h3 { font-weight: 600; }
+    h2 { font-size: 1.25rem; line-height: 1.5; }
+    code, kbd, output { font: inherit; }
+    code { color: var(--accent); overflow-wrap: anywhere; }
+    svg.icon { width: 20px; height: 20px; flex: 0 0 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-button { width: 48px; padding: 10px; flex: 0 0 48px; }
+    .muted { color: var(--muted); }
+    .accent { color: var(--accent); }
+    .small { font-size: .75rem; }
+    .eyebrow { font-size: .6875rem; letter-spacing: .09em; color: var(--muted); }
+    .mono-number { font-variant-numeric: tabular-nums; }
+    .button-outline { border-color: var(--line); background: var(--surface); }
+    .button-primary { color: var(--on-accent); background: var(--accent); border-color: var(--accent); font-weight: 600; }
+    .button-primary:active { background: var(--accent-strong); }
+    .button-danger { color: var(--danger); border-color: var(--danger-line); background: var(--danger-soft); }
+    .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: 0 0 7px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    .viewport {
+      position: fixed; inset: 0; width: 100%; height: 100vh; height: 100dvh;
+      padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+      min-width: 0; min-height: 0; overflow: hidden;
+    }
+    #main-shell { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; }
+    .main-header { border-bottom: 1px solid var(--line); }
+    .main-header-inner { max-width: 1080px; margin-inline: auto; padding: 12px 24px; display: flex; align-items: center; gap: 16px; min-width: 0; }
+    .brand { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+    .brand-mark { font-size: 1.25rem; color: var(--accent); letter-spacing: -.08em; }
+    .brand h1 { font-size: 1rem; letter-spacing: .12em; }
+    .brand p { font-size: .6875rem; color: var(--muted); }
+    .demo-label { display: inline-flex; align-items: center; gap: 7px; color: var(--warning); font-size: .6875rem; line-height: 1.5; }
+    .demo-label::before { content: ""; width: 5px; height: 5px; background: currentColor; flex: 0 0 5px; }
+    .main-scroll { min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-color: var(--scrollbar) transparent; }
+    .main-content { width: 100%; max-width: 1080px; margin: 0 auto; padding: clamp(20px, 4vw, 44px) 24px 32px; }
+    .page-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 28px; }
+    .page-heading .eyebrow { margin-left: auto; }
+    .workspace-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; }
+    .workspace-primary, .guide-block { min-width: 0; }
+    .section-label { font-size: .6875rem; letter-spacing: .1em; color: var(--muted); margin-bottom: 10px; }
+    .status-list { margin: 0 0 24px; }
+    .status-row { display: grid; grid-template-columns: minmax(80px, .42fr) minmax(0, 1fr); gap: 12px; border-bottom: 1px solid var(--line); padding: 14px 0; }
+    .status-row dt { color: var(--muted); }
+    .status-row dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+    .status-value { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .terminal-entry { width: 100%; min-height: 92px; justify-content: flex-start; padding: 20px; border: 1px solid var(--accent-line); background: var(--accent-soft); text-align: left; gap: 18px; }
+    .terminal-entry .entry-glyph { color: var(--accent); font-size: 1.5rem; font-weight: 600; }
+    .terminal-entry .entry-copy { min-width: 0; flex: 1; }
+    .terminal-entry strong { display: block; font-size: 1rem; font-weight: 600; }
+    .terminal-entry .entry-copy > span { display: block; margin-top: 4px; font-size: .75rem; color: var(--muted); }
+    .entry-note { margin-top: 12px; color: var(--muted); font-size: .75rem; }
+    .memory-line { display: flex; flex-wrap: wrap; gap: 8px 20px; border-top: 1px solid var(--line); margin-top: 28px; padding-top: 18px; color: var(--muted); font-size: .75rem; }
+    .guide-block { padding-left: 18px; border-left: 1px solid var(--line); }
+    .guide-list { list-style: none; counter-reset: step; padding: 0; margin: 0; }
+    .guide-list li { counter-increment: step; display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; padding: 11px 0; font-size: .8125rem; }
+    .guide-list li::before { content: "0" counter(step); color: var(--faint); font-size: .6875rem; padding-top: 3px; }
+    .guide-list strong { font-weight: 500; color: var(--text); }
+    .guide-list span { color: var(--muted); }
+    .guide-block button { margin-top: 12px; padding-left: 0; color: var(--accent); text-align: left; justify-content: flex-start; }
+    .main-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); background: var(--surface); padding: 4px max(8px, calc((100% - 1032px) / 2)); }
+    .main-nav button { flex-direction: column; gap: 4px; padding: 10px 4px; min-width: 0; font-size: .75rem; color: var(--muted); border-radius: 0; }
+    .main-nav button[aria-current="page"] { color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 2px 0 var(--accent); }
+    .read-only-list { padding: 0; margin: 20px 0; list-style: none; }
+    .read-only-list li { border-bottom: 1px solid var(--line); padding: 18px 0; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 24px; overflow-wrap: anywhere; }
+    .plain-page { max-width: 720px; }
+    .plain-page p { margin: 16px 0; color: var(--muted); }
+    .plain-page .button-row { display: flex; flex-wrap: wrap; gap: 12px; }
+    #terminal-screen { z-index: 10; background: var(--term-bg); color: var(--term-text); display: grid; grid-template-rows: auto minmax(0, 1fr); }
+    .terminal-topbar { min-width: 0; display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto auto; align-items: center; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--surface); color: var(--text); }
+    .back-button { border-right: 1px solid var(--line); border-radius: 0; padding-inline: 10px 14px; }
+    .back-label { display: none; }
+    .terminal-heading { min-width: 0; padding-inline: 8px; }
+    .terminal-heading h2 { font-size: 1rem; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .terminal-heading .eyebrow { font-size: .6875rem; letter-spacing: .04em; color: var(--accent); }
+    #terminal-workspace { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 0; min-width: 0; overflow: hidden; }
+    #session-sidebar {
+      display: flex; flex-direction: column; height: 100%; min-height: 0; min-width: 0;
+      background: var(--surface); border-right: 1px solid var(--line); color: var(--text);
+    }
+    .sidebar-heading { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 18px 12px 12px; min-width: 0; }
+    .sidebar-identity { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+    .sidebar-mark { width: 36px; height: 36px; flex: 0 0 36px; border-radius: 10px; display: grid; place-items: center; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); }
+    .sidebar-mark .icon { width: 19px; height: 19px; }
+    .sidebar-title { min-width: 0; }
+    .sidebar-heading h2 { font-size: .9375rem; line-height: 1.35; }
+    .sidebar-heading p { margin-top: 2px; font-size: .6875rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-create { margin: 2px 12px 12px; flex-shrink: 0; justify-content: flex-start; gap: 8px; padding: 10px 14px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 600; }
+    .sidebar-create .icon { width: 18px; height: 18px; }
+    .sidebar-create .create-hint { margin-left: auto; font-size: .6875rem; font-weight: 500; opacity: .82; }
+    .session-groups { min-height: 0; flex: 1; overflow: auto; padding: 2px 8px 12px; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-color: var(--scrollbar) transparent; }
+    .session-group + .session-group { margin-top: 18px; }
+    .group-heading { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 7px; padding: 0 8px 7px; font-size: .6875rem; color: var(--muted); letter-spacing: .04em; }
+    .group-heading h3 { font-size: inherit; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .group-icon { color: var(--faint); display: grid; place-items: center; }
+    .group-icon .icon { width: 15px; height: 15px; }
+    .count-pill { min-width: 22px; height: 20px; padding: 0 7px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--raised); border: 1px solid var(--line); color: var(--muted); font-size: .6875rem; }
+    .session-list { padding: 0; margin: 0; list-style: none; }
+    .session-item { display: grid; grid-template-columns: minmax(0, 1fr) 40px; gap: 2px; align-items: stretch; margin-bottom: 4px; border: 1px solid transparent; border-left: 3px solid transparent; border-radius: 10px; contain: layout paint style; }
+    .session-item:hover { background: var(--raised); }
+    .session-item.is-active { border-color: var(--accent-line); border-left-color: var(--accent); background: var(--accent-soft); }
+    .session-select { display: grid; grid-template-columns: 30px minmax(0, 1fr); align-items: center; gap: 9px; min-width: 0; text-align: left; padding: 9px 4px 9px 8px; border-radius: 8px; }
+    .session-glyph { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: var(--raised); color: var(--muted); border: 1px solid var(--line); }
+    .session-glyph .icon { width: 16px; height: 16px; }
+    .session-item.is-active .session-glyph { background: var(--accent-soft-2); color: var(--accent); border-color: var(--accent-line); }
+    .session-body { min-width: 0; display: block; }
+    .session-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+    .session-name { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: .8125rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .session-name .dot { width: 6px; height: 6px; flex-basis: 6px; background: transparent; border: 1px solid var(--faint); }
+    .session-item[data-running="true"] .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .session-state { flex: 0 0 auto; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--muted); font-size: .6875rem; line-height: 1.5; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .session-item.is-active .session-state { background: var(--accent-soft-2); border-color: var(--accent-line); color: var(--accent); }
+    .session-item[data-running="true"] .session-state { color: var(--accent); border-color: var(--accent-line); }
+    .session-close { align-self: center; width: 40px; min-width: 40px; min-height: 40px; padding: 8px; color: var(--muted); border-radius: 8px; }
+    .session-close:hover { color: var(--danger); background: var(--danger-soft); }
+    .group-empty { display: flex; align-items: center; gap: 7px; padding: 10px 12px; color: var(--faint); font-size: .75rem; border: 1px dashed var(--line); border-radius: 8px; }
+    .group-empty::before { content: ""; width: 5px; height: 5px; border-radius: 50%; border: 1px solid var(--faint); flex: 0 0 5px; }
+    .sidebar-foot { flex-shrink: 0; padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); background: var(--card); color: var(--muted); font-size: .6875rem; }
+    #session-inventory { display: flex; align-items: center; gap: 7px; color: var(--text); font-size: .75rem; }
+    #session-inventory::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); flex: 0 0 6px; }
+    .sidebar-summary p + p { margin-top: 2px; }
+    .sidebar-summary .secondary-note, .sidebar-summary .memory-note { font-size: .6875rem; color: var(--muted); }
+    .theme-switch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; margin: 9px 0 8px; background: var(--raised); border: 1px solid var(--line); border-radius: 10px; }
+    .theme-switch button { min-width: 0; min-height: 40px; padding: 6px 4px; gap: 5px; border-radius: 7px; border-color: transparent; background: transparent; color: var(--muted); font-size: .6875rem; }
+    .theme-switch button .icon { width: 15px; height: 15px; }
+    .theme-switch button[aria-pressed="true"] { background: var(--surface); border-color: var(--accent-line); color: var(--accent); box-shadow: 0 1px 3px rgb(15 32 64 / .12); }
+    .theme-switch button[aria-pressed="true"] .icon { color: var(--accent); }
+    .sidebar-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .sidebar-actions button { justify-content: flex-start; gap: 7px; min-width: 0; min-height: 42px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--text); font-size: .75rem; }
+    .sidebar-actions button .icon { width: 17px; height: 17px; color: var(--accent); }
+    .sidebar-actions button:hover { background: var(--raised); }
+    .sidebar-actions button.is-primary { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); font-weight: 600; }
+    .sidebar-footnote { margin-top: 8px; text-align: center; color: var(--faint); font-size: .6875rem; }
+    .settings-theme { flex: 1 1 240px; min-width: 210px; margin: 0; }
+    .settings-theme button { min-height: 44px; }
+    #terminal-pane { min-width: 0; min-height: 0; overflow: auto; background: var(--term-bg); }
+    #active-session { display: flex; flex-direction: column; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: auto; scrollbar-color: var(--term-scroll) transparent; }
+    .session-info { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 16px; padding: 8px 18px; border-bottom: 1px solid var(--term-line); font-size: .6875rem; color: var(--term-muted); flex-shrink: 0; }
+    .session-info > span { min-width: 0; overflow-wrap: anywhere; }
+    #active-session-state { color: var(--term-accent); }
+    #terminal-output { flex: 1 1 100px; min-height: 80px; min-width: 0; padding: 24px 20px; overflow: auto; overscroll-behavior: contain; font-size: var(--term-font); line-height: 1.65; scrollbar-color: var(--term-scroll) var(--term-bg); }
+    .log-line { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 1.65em; tab-size: 4; }
+    #terminal-output.no-wrap .log-line { white-space: pre; overflow-wrap: normal; }
+    .log-line.tone-muted { color: var(--term-muted); }
+    .log-line.tone-accent { color: var(--term-accent); }
+    .log-line.tone-warning { color: var(--term-warning); }
+    .log-line.tone-command { color: var(--term-text); }
+    .task-strip { display: flex; align-items: center; gap: 10px; padding: 3px 10px; background: var(--term-chrome); border-top: 1px solid var(--term-line); flex-shrink: 0; min-width: 0; }
+    .task-strip button, .command-line button { color: var(--term-text); }
+    #demo-toggle { justify-content: flex-start; padding-inline: 10px; font-size: .75rem; }
+    #demo-toggle[aria-pressed="true"] { background: transparent; border-color: transparent; color: var(--term-accent); }
+    .task-meter { flex: 1; min-width: 0; color: var(--term-muted); font-size: .6875rem; overflow-wrap: anywhere; }
+    .task-meter output { color: var(--term-accent); font-size: .875rem; padding-right: 5px; }
+    .command-line { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-top: 1px solid var(--term-line); flex-shrink: 0; min-width: 0; }
+    .command-prefix { color: var(--term-accent); padding-left: 6px; font-size: 1rem; }
+    #command-input { width: 100%; min-width: 0; flex: 1; min-height: 48px; padding: 10px 4px; border: 0; border-radius: 0; background: var(--term-bg); color: var(--term-text); font-size: max(1rem, var(--term-font)); caret-color: var(--term-accent); }
+    #command-input::placeholder { color: var(--term-muted); opacity: 1; }
+    #send-command { padding-inline: 12px; border-color: var(--term-line); color: var(--term-accent); font-size: .75rem; }
+    .extra-keys { display: flex; flex: 0 0 auto; min-width: 0; overflow-x: auto; overflow-y: hidden; padding: 3px 8px; border-top: 1px solid var(--term-line); background: var(--term-chrome); gap: 3px; scrollbar-width: thin; scrollbar-color: var(--term-scroll) transparent; }
+    .extra-keys button { flex: 1 0 48px; padding: 8px 6px; border-radius: 2px; color: var(--term-text); font-size: .8125rem; }
+    .extra-keys button[aria-pressed="true"] { color: var(--term-accent); background: var(--term-accent-soft); border-color: var(--term-key-line); }
+    #terminal-pane button:active, #terminal-pane button:hover,
+    .extra-keys button:active, .extra-keys button:hover,
+    .command-line button:active, .command-line button:hover,
+    .task-strip button:active, .task-strip button:hover,
+    #simulated-keyboard button:active, #simulated-keyboard button:hover { background: var(--term-key); }
+    #terminal-pane .button-primary:active, #terminal-pane .button-primary:hover { background: var(--accent-strong); }
+    #terminal-pane .button-outline:active, #terminal-pane .button-outline:hover { background: var(--raised); }
+    #simulated-keyboard { flex-shrink: 0; min-width: 0; border-top: 1px solid var(--term-key-line); background: var(--term-panel); color: var(--term-text); padding: 2px 12px 10px; max-height: 250px; max-height: min(42dvh, 250px); overflow: auto; }
+    .keyboard-label { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .6875rem; color: var(--term-muted); }
+    .keyboard-label span { min-width: 0; }
+    .preset-keys { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    .preset-keys button { min-width: 48px; border: 1px solid var(--term-key-line); background: var(--term-key); color: var(--term-text); font-size: .75rem; }
+    .keyboard-foot { text-align: center; color: var(--term-muted); font-size: .6875rem; margin-top: 8px; }
+    .empty-inner { color: var(--term-text); }
+    .empty-inner > .entry-glyph { color: var(--term-accent); }
+    .empty-inner p { color: var(--term-muted); }
+    .empty-inner .button-outline { color: var(--text); }
+    #empty-state { min-height: 100%; display: flex; padding: 32px 24px; }
+    .empty-inner { max-width: 400px; margin: auto; }
+    .empty-inner > .entry-glyph { color: var(--term-accent); font-size: 2rem; margin-bottom: 18px; }
+    .empty-inner h2 { font-size: 1.125rem; margin-bottom: 12px; }
+    .empty-inner p { color: var(--term-muted); margin-bottom: 24px; }
+    .empty-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    dialog { color: var(--text); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; box-shadow: var(--shadow); padding: 0; width: min(480px, calc(100vw - 32px)); max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 32px); margin: auto; overflow: auto; overscroll-behavior: contain; scrollbar-color: var(--scrollbar) var(--surface); }
+    dialog::backdrop { background: var(--overlay); }
+    dialog:not([open]) { display: none; }
+    .dialog-header { padding: 18px 20px 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .dialog-header h2 { font-size: 1.0625rem; }
+    .dialog-body { padding: 8px 24px 20px; }
+    .dialog-body p { color: var(--muted); margin-bottom: 16px; overflow-wrap: anywhere; }
+    .dialog-body p:last-child { margin-bottom: 0; }
+    .dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--line); padding: 14px 20px; }
+    .dialog-actions button { flex: 1 1 140px; }
+    .type-options { display: grid; gap: 10px; border: 0; padding: 0; margin: 16px 0 0; min-width: 0; }
+    .type-options legend { color: var(--muted); font-size: .75rem; margin-bottom: 10px; }
+    .type-option { display: flex; align-items: flex-start; gap: 14px; padding: 16px; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; min-height: 72px; }
+    .type-option:has(input:checked) { border-color: var(--accent-line); background: var(--accent-soft); }
+    .type-option input { accent-color: var(--accent); width: 18px; height: 18px; flex: 0 0 18px; margin: 4px 0 0; }
+    .type-option strong { display: block; font-size: .875rem; font-weight: 500; }
+    .type-option small { display: block; margin-top: 4px; color: var(--muted); font-size: .75rem; }
+    .close-detail { border-left: 2px solid var(--warning-line); padding: 10px 14px; background: var(--warning-soft); margin: 14px 0; color: var(--warning); }
+    .settings-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .settings-row > span { flex: 1 1 120px; }
+    .font-controls { display: flex; align-items: center; gap: 8px; }
+    .font-controls output { min-width: 60px; text-align: center; font-variant-numeric: tabular-nums; }
+    .check-row { display: flex; align-items: center; gap: 12px; padding: 16px 0; cursor: pointer; min-height: 48px; }
+    .check-row input { flex: 0 0 18px; width: 18px; height: 18px; accent-color: var(--accent); }
+    #help-dialog { width: min(680px, calc(100vw - 32px)); }
+    .help-steps { padding-left: 22px; margin: 0 0 24px; }
+    .help-steps li { padding: 6px 0 6px 4px; overflow-wrap: anywhere; }
+    .help-section { border-top: 1px solid var(--line); padding-top: 18px; margin-top: 18px; }
+    .help-section h3 { font-size: .8125rem; margin-bottom: 10px; color: var(--text); }
+    .help-section p { font-size: .75rem; }
+    .command-catalog { font-size: .75rem; display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 12px; }
+    #session-drawer { position: fixed; inset: 0 auto 0 0; width: min(344px, calc(100vw - 28px)); max-width: calc(100vw - 28px); height: 100vh; height: 100dvh; max-height: none; margin: 0; border: 0; border-right: 1px solid var(--line-strong); border-radius: 0; box-shadow: var(--shadow); background: var(--surface); color: var(--text); overflow: hidden; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+    #session-drawer #session-sidebar { border: 0; }
+    body:has(#session-drawer[open]) #minimal-menu,
+    body:has(#session-drawer[open]) #prototype-stamp { opacity: 0; pointer-events: none; }
+    body:has(#session-drawer[open]) #feedback { visibility: hidden; }
+    #feedback { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 76px); left: 50%; transform: translateX(-50%); width: max-content; max-width: min(560px, calc(100vw - 32px)); z-index: 100; padding: 10px 14px; border: 1px solid var(--accent-line); border-radius: 4px; color: var(--text); background: var(--accent-soft); font-size: .75rem; pointer-events: none; overflow-wrap: anywhere; box-shadow: 0 6px 24px rgb(0 0 0 / .4); }
+    #feedback:empty { display: none; }
+    .no-script { position: fixed; inset: 0; padding: 32px; background: var(--term-bg); color: var(--term-text); z-index: 200; }
+    @media (hover: hover) {
+      button:not(:disabled):hover { background: var(--raised); }
+      .button-primary:not(:disabled):hover { background: var(--accent-strong); color: var(--on-accent); }
+      .terminal-entry:hover { background: var(--accent-soft-2) !important; }
+      .session-close:hover { color: var(--danger); }
+    }
+    @media (min-width: 600px) { .back-label { display: inline; } }
+    @media (min-width: 840px) {
+      #terminal-workspace { grid-template-columns: clamp(272px, 25vw, 320px) minmax(0, 1fr); }
+      .terminal-topbar { grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 8px; padding-inline: 16px; }
+      #sessions-toggle, .drawer-close { display: none; }
+      #terminal-output { padding: 28px 32px; }
+      .session-info { padding-inline: 28px; }
+      .command-line { padding-inline: 24px; }
+      .task-strip { padding-inline: 20px; }
+      .extra-keys { padding-inline: 20px; }
+      .extra-keys button { flex-grow: 0; min-width: 64px; }
+      .sidebar-heading { padding-top: 24px; }
+    }
+    @media (min-width: 960px) { .workspace-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, .8fr); gap: 56px; } }
+    @media (max-width: 440px) {
+      .main-header-inner { padding: 10px 16px; gap: 8px; }
+      .brand { gap: 8px; }
+      .brand p { display: none; }
+      .main-content { padding-inline: 18px; }
+      .main-header .demo-label { max-width: 74px; }
+      .terminal-topbar { padding: 6px 4px; gap: 0; }
+      .terminal-heading { padding-inline: 6px; }
+      .back-button { padding-inline: 10px; }
+      #terminal-output { padding: 18px 16px; }
+      .session-info { padding-inline: 16px; }
+      .task-strip { gap: 3px; padding-inline: 4px; }
+      #demo-toggle { padding-inline: 8px; }
+      .task-meter { padding-left: 4px; }
+      .task-meter .meter-caption { display: block; }
+      .command-line { gap: 7px; padding-inline: 8px; }
+      .dialog-body { padding-inline: 20px; }
+    }
+    @media (max-height: 560px) {
+      .terminal-topbar { padding-block: 2px; }
+      .session-info { padding-block: 3px; }
+      #terminal-output { padding-block: 12px; }
+      .sidebar-heading { padding-top: 8px; padding-bottom: 6px; }
+      .sidebar-mark { width: 30px; height: 30px; flex-basis: 30px; border-radius: 8px; }
+      .sidebar-mark .icon { width: 16px; height: 16px; }
+      .sidebar-create { margin-bottom: 8px; }
+      .sidebar-foot { padding-block: 8px; }
+      .sidebar-foot .secondary-note, .sidebar-summary .memory-note { display: none; }
+      .theme-switch { margin: 6px 0; }
+      .theme-switch button { min-height: 34px; }
+      .sidebar-actions button { min-height: 38px; }
+      .sidebar-footnote { display: none; }
+      #simulated-keyboard { max-height: 156px; max-height: min(40dvh, 156px); }
+      .main-header-inner { padding-block: 4px; }
+      .main-nav button { padding-block: 5px; }
+    }
+    /* 根据用户提供的 Termux 实图：默认极简平面，侧栏/顶栏按需出现。 */
+    /* 页面内悬浮球，不是系统悬浮窗；只在球上处理拖动，不截获终端手势。 */
+    #minimal-menu { position: absolute; left: calc(100% - 68px); top: 50%; z-index: 12; width: 52px; height: 52px; min-width: 52px; min-height: 52px; padding: 0; border-radius: 50%; border: 1px solid var(--line-strong); color: var(--text); background: var(--surface); box-shadow: 0 2px 10px rgb(0 0 0 / .45); font-size: 20px; line-height: 1; font-weight: 600; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; transition: opacity 180ms ease; }
+    #minimal-menu.is-idle:not(:focus-visible):not(:hover) { opacity: .48; }
+    #minimal-menu.is-dragging { cursor: grabbing; opacity: 1; border-color: var(--accent); }
+    #minimal-menu:focus-visible { opacity: 1; outline-offset: 3px; }
+    #minimal-menu span { pointer-events: none; }
+    #prototype-stamp { position: absolute; right: max(10px, env(safe-area-inset-right, 0px)); top: max(3px, env(safe-area-inset-top, 0px)); z-index: 11; font-size: .6875rem; color: var(--term-muted); pointer-events: none; }
+    #terminal-screen:not(.minimal) #prototype-stamp { display: none; }
+    #terminal-screen.minimal { grid-template-rows: minmax(0, 1fr); }
+    .minimal .terminal-topbar, .minimal .session-info, .minimal .task-strip { display: none; }
+    #terminal-screen.minimal #terminal-workspace { grid-template-columns: minmax(0, 1fr); }
+    .minimal #active-session { padding-top: 2px; }
+    .minimal #terminal-output { flex: 0 1 auto; min-height: 0; padding: 6px 8px 0; line-height: 1.45; }
+    .minimal .log-line { min-height: 1.45em; color: var(--term-text); }
+    .minimal .log-line.tone-warning { color: var(--term-warning); }
+    .minimal #terminal-output::before { content: ""; float: right; width: 86px; height: 24px; }
+    .minimal #terminal-output.no-wrap { padding-top: 26px; }
+    .minimal #terminal-output.no-wrap::before { display: none; }
+    .minimal .command-line { order: 2; border: 0; padding: 0 8px; gap: 6px; }
+    .minimal #command-input { padding: 0; }
+    .minimal #send-command { border: 0; color: var(--term-muted); }
+    .minimal #extra-keys { order: 3; margin-top: auto; background: var(--term-bg); border: 0; }
+    .minimal #simulated-keyboard { order: 4; }
+    #extra-keys { display: grid; grid-template-columns: repeat(7, minmax(48px, 1fr)); grid-template-rows: repeat(2, minmax(48px, auto)); gap: 0; }
+    #extra-keys button { min-width: 48px; padding: 8px 2px; font-size: .8125rem; }
+    #session-drawer .drawer-close { display: inline-flex; }
+    #session-drawer .sidebar-heading { padding-top: 12px; }
+    @media (min-width: 840px) { .minimal #extra-keys button { min-height: 56px; font-size: 1rem; } }
+    @media (max-height: 440px) { .minimal #terminal-output { padding-top: 2px; } }
+    /* 主壳沿用原生信息结构；系统字体服务设置阅读，等宽仅服务路径/日志/终端。 */
+    #main-shell, .app-dialog { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .main-header-inner { max-width: 1160px; }
+    .main-content { max-width: 1160px; padding-top: 24px; }
+    .page-heading { margin-bottom: 18px; }
+    .page-heading h2 { font-size: 1.6rem; letter-spacing: -.03em; }
+    .page-subtitle { color: var(--muted); margin: -8px 0 22px; font-size: .8125rem; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 30px; padding: 4px 9px; color: var(--muted); font-size: .6875rem; }
+    .pill.positive { color: var(--accent); border-color: var(--accent-line); }
+    .app-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .app-column { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .app-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; min-width: 0; }
+    .app-card h3 { font-size: 1rem; }
+    .app-card .caption, .row-copy small { color: var(--muted); font-size: .75rem; line-height: 1.6; }
+    .app-card .caption { margin-top: 5px; }
+    .card-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    .run-heading { display: flex; align-items: center; gap: 14px; }
+    .run-light { width: 46px; height: 46px; flex: 0 0 46px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-size: 20px; }
+    #run-state { font-size: 1.4rem; letter-spacing: -.02em; }
+    #run-subtitle { margin: 6px 0 18px; min-height: 2.8em; }
+    .button-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .button-row > button { flex: 1 1 120px; }
+    .full-width { width: 100%; }
+    .run-secondary { margin-top: 8px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+    .metric { padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+    .metric strong { display: block; font-family: ui-monospace, monospace; font-size: 1.1rem; overflow-wrap: anywhere; }
+    .metric span { display: block; color: var(--muted); font-size: .6875rem; margin-top: 4px; }
+    .app-row { width: 100%; display: flex; justify-content: flex-start; gap: 12px; text-align: left; border-radius: 0; padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .app-row:last-child { border-bottom: 0; }
+    .row-glyph { width: 36px; height: 36px; flex: 0 0 36px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-family: ui-monospace, monospace; }
+    .row-copy { display: block; flex: 1; min-width: 0; }
+    .row-copy strong, .row-copy small { display: block; }
+    .row-copy strong { font-weight: 550; }
+    .row-copy small { margin-top: 3px; }
+    .row-chevron { color: var(--muted); }
+    .app-log { margin: 0; padding: 14px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; height: 172px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: .75rem/1.7 ui-monospace, monospace; color: var(--code-text); }
+    .notice { border-left: 2px solid var(--warning-line); background: var(--warning-soft); color: var(--warning); padding: 12px 14px; font-size: .75rem; line-height: 1.7; margin: 14px 0; overflow-wrap: anywhere; }
+    .prototype-tools { margin-top: 20px; border-top: 1px dashed var(--line); padding-top: 12px; }
+    summary { cursor: pointer; min-height: 48px; display: flex; align-items: center; color: var(--muted); gap: 8px; }
+    summary::before { content: '+'; color: var(--accent); }
+    details[open] > summary::before { content: '−'; }
+    .field { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; min-width: 0; }
+    .field > span { color: var(--muted); font-size: .75rem; }
+    .app-input, select { min-height: 48px; width: 100%; min-width: 0; background: var(--field-bg); border: 1px solid var(--line-strong); border-radius: 6px; padding: 10px 12px; color: var(--text); font: inherit; }
+    select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .segments { display: flex; gap: 4px; background: var(--raised); border: 1px solid var(--line); border-radius: 8px; padding: 4px; margin-bottom: 20px; }
+    .segments button { flex: 1; min-width: 0; }
+    .segments button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+    .filter-line { display: flex; gap: 8px 16px; align-items: center; flex-wrap: wrap; }
+    .filter-line > .field { flex: 1 1 160px; margin: 6px 0; }
+    .plugin-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 12px; }
+    .plugin-card { padding: 18px; }
+    .plugin-card h3 { overflow-wrap: anywhere; font-size: .9375rem; }
+    .plugin-card .card-heading { margin-bottom: 5px; }
+    .plugin-details { color: var(--muted); font: .75rem/1.7 ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 12px; }
+    .plugin-actions { margin-top: 12px; }
+    .toggle { min-width: 64px; border: 1px solid var(--line); padding: 10px; }
+    .toggle[aria-checked="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+    .empty-list { border: 1px dashed var(--line); border-radius: 8px; padding: 28px 20px; text-align: center; color: var(--muted); }
+    .settings-group h3 { font-size: .6875rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .settings-group { padding-block: 12px; }
+    .subpage-back { padding-left: 0; color: var(--accent); margin-bottom: 12px; }
+    .subpage { max-width: 900px; margin-inline: auto; }
+    .subpage h2 { font-size: 1.4rem; }
+    .subpage-intro { color: var(--muted); margin: 8px 0 22px; font-size: .8125rem; }
+    .form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 20px; }
+    .save-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 18px 0; }
+    .save-bar p { flex: 1 1 160px; color: var(--muted); font-size: .75rem; }
+    .checklist { list-style: none; padding: 0; margin: 12px 0; }
+    .checklist li { padding: 12px 0; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .checklist span { color: var(--muted); }
+    .text-link { color: var(--accent); text-underline-offset: 4px; }
+    #app-dialog { width: min(600px, calc(100vw - 32px)); }
+    #app-dialog-body .app-log { height: auto; max-height: 260px; }
+    #app-dialog-body .notice { margin-block: 12px; }
+    #app-dialog-status { color: var(--accent); font-size: .75rem; margin-top: 10px; }
+    @media (min-width: 840px) {
+      .app-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; }
+      .plugin-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .app-card { padding: 24px; }
+    }
+    @media (max-width: 440px) {
+      .main-content { padding: 20px 16px 28px; }
+      .app-card { padding: 16px; border-radius: 10px; }
+      .main-header .demo-label { max-width: 82px; }
+      .main-header #main-help { min-width: 48px; padding: 8px; }
+      .main-header #main-help > span { display: none; }
+    }
+    @media (max-height: 430px) {
+      .sidebar-summary { display: none; }
+      .theme-switch button span { display: none; }
+      .theme-switch button { min-height: 32px; }
+      .sidebar-actions button { min-height: 36px; font-size: .6875rem; }
+    }
+    @media (max-width: 360px) {
+      .sidebar-actions button { font-size: .6875rem; padding-inline: 7px; gap: 5px; }
+      .theme-switch button { font-size: .625rem; }
+      .sidebar-create .create-hint { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true" style="position:absolute;overflow:hidden">
+    <symbol id="i-terminal" viewBox="0 0 24 24"><path d="m5 6 6 6-6 6M13 18h6"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7M5 9v11h14V9M9 20v-7h6v7"/></symbol>
+    <symbol id="i-plugin" viewBox="0 0 24 24"><path d="M8 3v5m8-5v5M5 8h14v3a7 7 0 0 1-14 0V8Zm7 10v4"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M8 3v6m8 0v6M9 15v6"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="m10 5-7 7 7 7M3 12h18"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10"/></symbol>
+    <symbol id="i-pty" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3 3-3 3M12.5 15H17"/></symbol>
+    <symbol id="i-simple" viewBox="0 0 24 24"><path d="m5 7 4 5-4 5M13 17h6"/></symbol>
+    <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-auto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.6A8.5 8.5 0 0 1 9.4 4 8.5 8.5 0 1 0 20 14.6Z"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/></symbol>
+  </svg>
+
+  <div id="main-shell" class="viewport" data-view="launch">
+    <header class="main-header">
+      <div class="main-header-inner">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">&gt;_</span><div><h1>DSHA</h1><p>本机工作台 / 源码映射原型 02</p></div></div>
+        <span class="demo-label">设计演示 · 无真实 shell</span>
+        <button id="main-theme" class="icon-button" aria-label="切换外观模式，当前跟随系统" title="外观：跟随系统"><svg class="icon" aria-hidden="true"><use href="#i-theme"/></svg></button>
+        <button id="main-help" data-open-dialog="help-dialog" aria-label="打开原型说明"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg><span>说明</span></button>
+      </div>
+    </header>
+    <main class="main-scroll" id="main-content">
+      <div class="main-content">
+        <section id="launch-page" data-page="launch" aria-labelledby="launch-title">
+          <div class="page-heading"><h2 id="launch-title" tabindex="-1">启动</h2><span class="eyebrow">LOCAL WORKSPACE</span></div>
+          <p class="page-subtitle">从本机开始，也可以连接电脑。内容映射 build197 源码；所有状态仅为演示。</p>
+          <div class="app-grid">
+            <div class="app-column">
+              <article class="app-card">
+                <div class="card-heading"><span class="section-label">本机 DSH</span><span id="run-badge" class="pill">仅模拟</span></div>
+                <div class="run-heading"><span class="run-light" aria-hidden="true">◉</span><h3 id="run-state" aria-live="polite">尚未启动</h3></div>
+                <p id="run-subtitle" class="caption">示例环境已准备。启动后等待鉴权，再进入 Web UI。</p>
+                <button id="web-start" class="button-primary full-width">启动 DSH · 模拟</button>
+                <div class="button-row run-secondary"><button id="web-restart" class="button-outline" disabled>重启 Web</button><button id="web-stop" class="button-outline" disabled>停止 Web</button></div>
+                <div class="metric-grid"><div class="metric"><strong id="web-port">—</strong><span>实际端口 · 未读取</span></div><div class="metric"><strong id="environment-state">READY</strong><span>Ubuntu 环境 · 示例</span></div></div>
+              </article>
+              <article class="app-card">
+                <button class="app-row" id="remote-workspaces" data-subpage="remote"><span class="row-glyph" aria-hidden="true">PC</span><span class="row-copy"><strong>电脑工作区</strong><small>本机与电脑分开管理 · 无需先准备本机环境</small></span><span class="row-chevron" aria-hidden="true">›</span></button>
+                <button class="app-row" id="launch-address"><span class="row-glyph" aria-hidden="true">↗</span><span class="row-copy"><strong>访问地址</strong><small id="address-summary">Web 未运行 · LAN 未开启（示例）</small></span><span class="row-chevron" aria-hidden="true">›</span></button>
+              </article>
+              <article class="app-card">
+                <div class="card-heading"><h3>启动日志</h3><button id="diagnostic-log" class="button-outline">查看诊断样例</button></div>
+                <pre id="launch-log" class="app-log" tabindex="0" aria-label="模拟启动日志">[预览] 未连接设备或 Web 服务。
+[环境] READY 是示例，不是本机检测结果。
+[等待] 点击启动，观察准备 → 鉴权 → 就绪。</pre>
+                <div class="button-row run-secondary"><button id="safe-start" class="button-outline">安全启动</button><button data-subpage="recovery" class="button-outline">启动恢复</button></div>
+              </article>
+            </div>
+            <aside class="app-column">
+              <article class="app-card">
+                <div class="card-heading"><h3>终端会话</h3><span class="pill">提案新增 · 独立于 Web</span></div>
+                <dl class="status-list"><div class="status-row"><dt>保留状态</dt><dd><span id="home-session-count">1 个会话保留</span><br><span class="small muted" id="home-session-detail">PTY 1 · pty-1</span></dd></div><div class="status-row"><dt>演示计数</dt><dd><span id="home-task-status">尚未运行</span><br><span class="small muted">累计 <output id="home-task-count">0</output> 次 · 页面内模拟</span></dd></div></dl>
+                <button id="open-terminal" class="terminal-entry" aria-controls="terminal-screen"><span class="entry-glyph" aria-hidden="true">&gt;_</span><span class="entry-copy"><strong>打开全屏终端</strong><span id="entry-description">进入全屏 · 继续 PTY 1</span></span><svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+                <p class="entry-note">保留上轮极简终端和悬浮球。本轮补齐主页面；返回不关会话，停止 Web 也不结束终端。</p>
+              </article>
+              <article class="app-card">
+                <h3>为下一次操作保留上下文</h3><p class="caption">切换主 Tab 保留筛选、配置草稿和滚动位置。从子页面进入终端，返回仍在原处。</p>
+                <div class="notice">离线单文件 · 不联网 · 不读写设备<br>不填写真实密钥。刷新后所有模拟状态归零。</div>
+                <details class="prototype-tools"><summary>原型测试台 · 非生产入口</summary><label class="field"><span>本机环境场景（不影响真实环境）</span><select id="demo-environment"><option value="ready">已准备</option><option value="missing">尚未准备</option><option value="maintenance">维护中</option></select></label><label class="check-row"><input type="checkbox" id="demo-fail-start"><span>下次模拟启动失败</span></label><button data-open-dialog="help-dialog" class="button-outline">操作说明与边界</button></details>
+              </article>
+            </aside>
+          </div>
+        </section>
+        <section id="plugins-page" data-page="plugins" hidden aria-labelledby="plugins-title">
+          <div class="page-heading"><h2 id="plugins-title" tabindex="-1">插件</h2><span class="eyebrow">EXTENSIONS</span></div>
+          <p class="page-subtitle">从可信来源扩展工作台。示例清单不是这台手机的已安装列表。</p>
+          <div class="segments" role="tablist" aria-label="插件页面"><button id="plugins-market-tab" role="tab" aria-selected="true" aria-controls="plugin-market" data-plugin-tab="market">插件市场</button><button id="plugins-installed-tab" role="tab" aria-selected="false" aria-controls="plugin-installed" tabindex="-1" data-plugin-tab="installed">插件管理</button></div>
+          <div id="plugin-market" role="tabpanel" aria-labelledby="plugins-market-tab">
+            <div class="app-grid"><div class="app-column">
+              <article class="app-card"><h3>从链接安装</h3><p class="caption">原生入口支持插件链接解析。这里仅校验文本并载入固定示例，不请求该地址。</p><form id="plugin-link-form"><label class="field"><span>npm 包名 / GitHub / HTTPS 压缩包</span><input id="plugin-url" class="app-input" type="text" placeholder="@scope/plugin 或 https://github.com/owner/repo" autocomplete="off" maxlength="240" required></label><div class="button-row"><button type="button" id="plugin-example" class="button-outline">填入演示链接</button><button id="plugin-resolve" class="button-primary" type="submit">解析 · 模拟</button></div><p id="plugin-link-status" class="caption" role="status">不读取剪贴板，不下载或执行代码。</p></form></article>
+              <article class="app-card"><h3>本地插件</h3><p class="caption">映射原生的导入与导出入口；预览只使用内置样例。</p><div class="button-row run-secondary"><button id="plugin-import" class="button-outline">导入样例包</button><button id="plugin-export" class="button-outline">导出清单预览</button></div></article>
+            </div><aside class="app-column"><article class="app-card"><button id="plugin-community" class="app-row"><span class="row-glyph" aria-hidden="true">↗</span><span class="row-copy"><strong>插件社区</strong><small>查看入口说明 · 原型不打开外部网站</small></span><span aria-hidden="true">›</span></button><label class="field"><span>下载源 · 仅预览偏好</span><select id="plugin-source"><option value="auto">自动选择（推荐）</option><option value="npm">npm 官方源</option><option value="npmmirror">npmmirror 国内镜像</option></select><small class="muted">GitHub 链接官方直连；原型不访问任何源。</small></label><div class="notice">插件可以在应用 UID 下运行代码。来源可信不等于沙箱隔离；安装检查也不代表独立安全认证。</div></article></aside></div>
+          </div>
+          <div id="plugin-installed" role="tabpanel" aria-labelledby="plugins-installed-tab" hidden>
+            <article class="app-card"><div class="card-heading"><h3>已安装 · 示例数据</h3><div class="button-row"><button id="plugins-refresh" class="button-outline">刷新样例</button><button id="plugins-updates" class="button-outline">检查更新 · 模拟</button></div></div><label class="field"><span>搜索名称或描述</span><input id="plugin-search" type="search" class="app-input" placeholder="搜索示例插件" maxlength="100"></label><div class="filter-line"><label class="check-row"><input id="hide-builtin" type="checkbox"><span>隐藏内置插件</span></label><label class="field"><span>排序</span><select id="plugin-sort"><option value="az">名称 A → Z</option><option value="za">名称 Z → A</option><option value="enabled">启用优先</option></select></label></div><p id="plugin-count" class="caption" role="status"></p></article>
+            <div id="plugin-list" class="plugin-list"></div><p id="plugin-empty" class="empty-list" hidden>没有匹配的示例插件。尝试清空搜索或取消“隐藏内置插件”。</p>
+          </div>
+        </section>
+        <section id="settings-page" data-page="settings" hidden aria-labelledby="settings-title">
+          <div class="page-heading"><h2 id="settings-title" tabindex="-1">设置</h2><span class="eyebrow">PREFERENCES</span></div>
+          <p class="page-subtitle">保持源码中的模块边界；所有更改仅保存在本页内存。</p>
+          <div class="app-grid"><div class="app-column"><article class="app-card settings-group"><h3>工作台</h3>
+            <button class="app-row" data-subpage="install"><span class="row-glyph" aria-hidden="true">□</span><span class="row-copy"><strong>安装与环境</strong><small>组件检查 · 按需修复 · 保数据维护</small></span><span aria-hidden="true">›</span></button>
+            <button class="app-row" data-subpage="config"><span class="row-glyph" aria-hidden="true">≡</span><span class="row-copy"><strong>运行配置</strong><small id="config-summary">proot · 自动端口 · DNS auto</small></span><span aria-hidden="true">›</span></button>
+            <button class="app-row" data-subpage="backup"><span class="row-glyph" aria-hidden="true">▱</span><span class="row-copy"><strong>数据与备份</strong><small>备份恢复 · 作品与文件 · 存储指南</small></span><span aria-hidden="true">›</span></button>
+            <button class="app-row" data-subpage="grants"><span class="row-glyph" aria-hidden="true">◇</span><span class="row-copy"><strong>设备能力授权</strong><small>Root · Shizuku · ADB · 独立权限</small></span><span aria-hidden="true">›</span></button>
+          </article><article class="app-card settings-group"><h3>预览附加项 · 不属于现有设置首页</h3><button class="app-row" data-open-dialog="settings-dialog"><span class="row-glyph" aria-hidden="true">&gt;_</span><span class="row-copy"><strong>终端显示选项</strong><small>沿用上轮极简 / 工作台与悬浮球方案</small></span><span aria-hidden="true">›</span></button></article></div>
+          <div class="app-column"><article class="app-card settings-group"><h3>使用体验</h3><div class="app-row"><span class="row-copy"><strong>省电模式</strong><small id="eco-summary">持续保持运行，适合长时间任务。仅模拟。</small></span><button id="eco-toggle" role="switch" aria-checked="false" aria-label="模拟省电模式" class="toggle">关闭</button></div><button id="language-choice" class="app-row"><span class="row-copy"><strong>语言 / Language</strong><small id="language-summary">跟随系统 · 简体中文（示例）</small></span><span aria-hidden="true">›</span></button><button data-subpage="overlay" class="app-row"><span class="row-copy"><strong>悬浮条</strong><small>AI 输出与助手 · 不等于终端页面内悬浮球</small></span><span aria-hidden="true">›</span></button></article>
+          <article class="app-card settings-group"><h3>支持</h3><button data-subpage="updates" class="app-row"><span class="row-copy"><strong>应用更新</strong><small>稳定版与预览版 · 未联网检查</small></span><span aria-hidden="true">›</span></button><button data-subpage="diagnostics" class="app-row"><span class="row-copy"><strong>自检诊断</strong><small>区分界面、环境和运行状态</small></span><span aria-hidden="true">›</span></button><button data-subpage="about" class="app-row"><span class="row-copy"><strong>关于 DSHA</strong><small>版本、许可与本次设计来源</small></span><span aria-hidden="true">›</span></button></article></div></div>
+          <div class="memory-line"><span>源码基线 build197 / 02f80ab</span><span>不是已安装版本检测</span><span>终端内核与 Android 业务代码未改</span></div>
+        </section>
+        <section id="app-subpage" class="subpage" hidden aria-labelledby="subpage-title"><button id="subpage-back" class="subpage-back"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg><span id="subpage-back-label">返回设置</span></button><h2 id="subpage-title" tabindex="-1"></h2><p id="subpage-intro" class="subpage-intro"></p><div id="subpage-body"></div></section>
+      </div>
+    </main>
+    <nav class="main-nav" aria-label="主界面底部导航（四个一级入口）">
+      <button id="nav-launch" data-nav="launch" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg><span>启动</span></button>
+      <button id="nav-plugins" data-nav="plugins"><svg class="icon" aria-hidden="true"><use href="#i-plugin"/></svg><span>插件</span></button>
+      <button id="nav-settings" data-nav="settings"><svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg><span>设置</span></button>
+      <button id="nav-terminal" data-nav="terminal" aria-controls="terminal-screen"><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg><span>终端</span></button>
+    </nav>
+  </div>
+
+  <section id="terminal-screen" class="viewport minimal" hidden aria-label="DSHA 全屏终端设计演示">
+    <span id="prototype-stamp">DSHA · 仅模拟</span>
+    <button id="minimal-menu" aria-label="终端悬浮球：点击打开会话与返回菜单，可拖动吸边" aria-describedby="floating-ball-help" aria-controls="session-drawer" aria-haspopup="dialog" aria-expanded="false" title="点击菜单 · 拖动吸边 · 聚焦后方向键移动"><span aria-hidden="true">&gt;_</span></button>
+    <span id="floating-ball-help" class="sr-only">只在终端页面显示，不需要系统悬浮窗权限。拖动后吸附左右边缘；聚焦后可用方向键调整位置，Enter或空格打开菜单。拖动不会向终端发送输入。</span>
+    <header class="terminal-topbar" id="terminal-header">
+      <button id="back-home" class="back-button" aria-label="返回主界面，不结束模拟会话" title="返回主界面，不结束会话"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg><span class="back-label">主界面</span></button>
+      <button id="sessions-toggle" class="icon-button" aria-label="打开会话抽屉" aria-controls="session-drawer" aria-haspopup="dialog" aria-expanded="false" title="会话"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
+      <div class="terminal-heading"><p class="eyebrow">DSHA / 设计演示 · 仅模拟</p><h2 id="terminal-title" tabindex="-1">PTY 1</h2></div>
+      <button id="terminal-settings" class="icon-button" data-open-dialog="settings-dialog" aria-label="终端显示选项" title="字号与换行"><svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg></button>
+      <button id="terminal-help" class="icon-button" data-open-dialog="help-dialog" aria-label="原型说明与演示操作" title="原型说明"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg></button>
+    </header>
+    <div id="terminal-workspace">
+      <aside id="session-sidebar" aria-labelledby="sessions-title">
+        <header class="sidebar-heading">
+          <div class="sidebar-identity">
+            <span class="sidebar-mark" aria-hidden="true"><svg class="icon"><use href="#i-terminal"/></svg></span>
+            <div class="sidebar-title"><h2 id="sessions-title">会话</h2><p>独立上下文 · 返回不结束进程</p></div>
+          </div>
+          <button id="close-drawer" class="icon-button drawer-close" aria-label="收起会话抽屉"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+        </header>
+        <button id="new-session" class="sidebar-create" aria-haspopup="dialog"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg><span>新建会话</span><span class="create-hint" aria-hidden="true">PTY / 简易</span></button>
+        <div class="session-groups">
+          <section class="session-group" aria-labelledby="pty-group-title"><div class="group-heading"><span class="group-icon" aria-hidden="true"><svg class="icon"><use href="#i-pty"/></svg></span><h3 id="pty-group-title">PTY · 交互会话</h3><span id="pty-count" class="count-pill mono-number">1</span></div><ul id="pty-sessions" class="session-list"></ul></section>
+          <section class="session-group" aria-labelledby="simple-group-title"><div class="group-heading"><span class="group-icon" aria-hidden="true"><svg class="icon"><use href="#i-simple"/></svg></span><h3 id="simple-group-title">simple · 简易会话</h3><span id="simple-count" class="count-pill mono-number">0</span></div><ul id="simple-sessions" class="session-list"></ul></section>
+        </div>
+        <footer class="sidebar-foot">
+          <div class="sidebar-summary"><p id="session-inventory">1 个会话 · 0 个计数任务运行</p><p class="secondary-note">ID 组内递增 · 显示编号可复用</p><p class="memory-note">仅本页内存，刷新即丢失</p></div>
+          <div class="theme-switch" role="group" aria-label="外观模式">
+            <button type="button" data-theme-choice="system" aria-pressed="true" aria-label="跟随系统外观"><svg class="icon" aria-hidden="true"><use href="#i-auto"/></svg><span>系统</span></button>
+            <button type="button" data-theme-choice="light" aria-pressed="false" aria-label="白天模式"><svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg><span>白天</span></button>
+            <button type="button" data-theme-choice="dark" aria-pressed="false" aria-label="黑夜模式"><svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg><span>黑夜</span></button>
+          </div>
+          <div class="sidebar-actions">
+            <button id="drawer-home" class="is-primary" title="返回主界面，不结束模拟会话"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg><span>返回主界面</span></button>
+            <button data-open-dialog="settings-dialog"><svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg><span>显示模式</span></button>
+            <button id="drawer-keyboard"><svg class="icon" aria-hidden="true"><use href="#i-keyboard"/></svg><span>模拟键盘</span></button>
+            <button data-open-dialog="help-dialog"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg><span>说明</span></button>
+          </div>
+          <p class="sidebar-footnote">返回只关页面 · 结束进程需单独核验</p>
+        </footer>
+      </aside>
+      <main id="terminal-pane" aria-label="当前模拟会话">
+        <div id="active-session">
+          <div class="session-info"><span id="active-session-id">pty-1 · 独立模拟上下文</span><span id="active-session-state">空闲 · 仅模拟</span></div>
+          <div id="terminal-output" role="region" aria-label="模拟终端输出，可滚动" tabindex="0"></div>
+          <div class="task-strip">
+            <button id="demo-toggle" aria-pressed="false" title="启动或暂停当前会话的页面计数"><span id="demo-toggle-symbol" aria-hidden="true">▷</span><span id="demo-toggle-label">演示计数</span></button>
+            <div class="task-meter"><output id="demo-count" class="mono-number" aria-label="当前会话的演示计数">0000</output><span class="meter-caption" id="demo-state">次 · 待运行</span></div>
+            <button id="keyboard-toggle" class="icon-button" aria-label="显示模拟键盘占位，不控制系统 IME" aria-controls="simulated-keyboard" aria-expanded="false" title="模拟键盘布局"><svg class="icon" aria-hidden="true"><use href="#i-keyboard"/></svg></button>
+          </div>
+          <form id="command-form" class="command-line" autocomplete="off">
+            <label for="command-input" class="sr-only">模拟命令，输入 help 查看白名单；不会运行真实 shell</label><span class="command-prefix" id="command-prefix" aria-hidden="true">$</span>
+            <input id="command-input" type="text" maxlength="512" placeholder="help · 仅模拟" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-describedby="command-boundary">
+            <button id="send-command" type="submit" aria-label="提交模拟命令">运行 ↵</button>
+            <span id="command-boundary" class="sr-only">只处理内置白名单；不会执行 shell、联网或读取文件与剪贴板。</span>
+          </form>
+          <div id="extra-keys" class="extra-keys" role="group" aria-label="两排模拟附加键，窄屏可横向滚动">
+            <button type="button" data-key="ESC" aria-label="模拟 Esc 键">ESC</button>
+            <button type="button" data-key="SLASH" aria-label="输入斜杠">/</button>
+            <button type="button" data-key="DASH" aria-label="输入短横线">−</button>
+            <button type="button" data-key="HOME" aria-label="光标移到行首">HOME</button>
+            <button type="button" data-key="UP" aria-label="上一条本会话历史命令">↑</button>
+            <button type="button" data-key="END" aria-label="光标移到行尾">END</button>
+            <button type="button" data-key="PGUP" aria-label="输出向上翻页">PGUP</button>
+            <button type="button" data-key="TAB" aria-label="补全白名单命令">TAB</button>
+            <button type="button" id="key-ctrl" data-key="CTRL" aria-pressed="false" aria-label="切换模拟 Ctrl 键，配合 C 中断演示计数">CTRL</button>
+            <button type="button" id="key-alt" data-key="ALT" aria-pressed="false" aria-label="切换模拟 Alt 键">ALT</button>
+            <button type="button" data-key="LEFT" aria-label="模拟光标左移">←</button>
+            <button type="button" data-key="DOWN" aria-label="下一条本会话历史命令">↓</button>
+            <button type="button" data-key="RIGHT" aria-label="模拟光标右移">→</button>
+            <button type="button" data-key="PGDN" aria-label="输出向下翻页">PGDN</button>
+          </div>
+          <div id="simulated-keyboard" hidden aria-label="模拟键盘占位，使用预设文字，不代表系统 IME">
+            <div class="keyboard-label"><span>模拟键盘占位 · 预设输入</span><button id="hide-keyboard" class="icon-button" aria-label="收起模拟键盘"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+            <div class="preset-keys"><button data-preset="help">help</button><button data-preset="pwd">pwd</button><button data-preset="jobs">jobs</button><button data-preset="demo start">demo start</button><button data-preset="demo stop">demo stop</button><button data-preset="clear">clear</button></div>
+            <p class="keyboard-foot">仅演示避让与预设输入；不请求、不验证系统 IME。</p>
+          </div>
+        </div>
+        <section id="empty-state" hidden aria-labelledby="empty-title"><div class="empty-inner"><div class="entry-glyph" aria-hidden="true">&gt;_</div><h2 id="empty-title">没有打开的会话</h2><p>新建一个 PTY 或 simple 模拟会话。已确认关闭的输出与计数不会恢复。</p><div class="empty-actions"><button id="empty-create" class="button-primary">新建会话</button><button id="empty-back" class="button-outline">返回主界面</button></div></div></section>
+      </main>
+    </div>
+  </section>
+
+  <!-- 窄屏将同一份会话列表移到原生 dialog 中，不复制会话或交互状态。 -->
+  <dialog id="session-drawer" aria-modal="true" aria-labelledby="sessions-title"></dialog>
+
+  <dialog id="new-session-dialog" aria-modal="true" aria-labelledby="new-session-title" aria-describedby="new-session-description">
+    <form id="new-session-form">
+      <header class="dialog-header"><h2 id="new-session-title">新建模拟会话</h2><button type="button" class="icon-button" data-close-dialog="new-session-dialog" aria-label="取消新建会话"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></header>
+      <div class="dialog-body"><p id="new-session-description">每个会话有独立输出、草稿与计数。选择类型不会迁移或覆盖现有会话。</p>
+        <fieldset class="type-options"><legend>会话类型</legend>
+          <label class="type-option"><input type="radio" name="session-type" value="pty" checked><span><strong>PTY</strong><small>交互式终端的设计模拟，不创建真实 PTY。</small></span></label>
+          <label class="type-option"><input type="radio" name="session-type" value="simple"><span><strong>simple</strong><small>独立简易会话；不会接管 PTY 的任务。</small></span></label>
+        </fieldset>
+      </div>
+      <footer class="dialog-actions"><button type="button" class="button-outline" data-close-dialog="new-session-dialog">取消</button><button id="create-session-confirm" type="submit" class="button-primary">创建并切换</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="close-session-dialog" aria-modal="true" aria-labelledby="close-session-title" aria-describedby="close-session-description">
+    <header class="dialog-header"><h2 id="close-session-title">关闭会话？</h2></header>
+    <div class="dialog-body"><p id="close-session-description">确认后移除此模拟会话及其输出、草稿与计数；其他会话不受影响。</p><div id="close-session-detail" class="close-detail"></div><p class="small">只是离开终端？请取消，然后使用「返回主界面」。那不会结束会话。</p></div>
+    <footer class="dialog-actions"><button id="cancel-close" class="button-outline" data-close-dialog="close-session-dialog">保留会话</button><button id="confirm-close" class="button-danger">确认关闭</button></footer>
+  </dialog>
+
+  <dialog id="settings-dialog" aria-modal="true" aria-labelledby="display-title" aria-describedby="display-description">
+    <header class="dialog-header"><h2 id="display-title">终端显示</h2><button class="icon-button" data-close-dialog="settings-dialog" aria-label="关闭显示选项"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></header>
+    <div class="dialog-body"><p id="display-description" class="small">外观与显示只改变这份原型，不更改系统或应用设置；终端输出区在两套外观下都保持黑底。</p>
+      <div class="settings-row"><span id="theme-label">外观模式</span><div class="theme-switch settings-theme" role="group" aria-label="外观模式" aria-labelledby="theme-label">
+        <button type="button" data-theme-choice="system" aria-pressed="true" aria-label="跟随系统外观"><svg class="icon" aria-hidden="true"><use href="#i-auto"/></svg><span>系统</span></button>
+        <button type="button" data-theme-choice="light" aria-pressed="false" aria-label="白天模式"><svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg><span>白天</span></button>
+        <button type="button" data-theme-choice="dark" aria-pressed="false" aria-label="黑夜模式"><svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg><span>黑夜</span></button>
+      </div></div>
+      <p class="small" id="theme-status" role="status">跟随系统 · 当前解析为白天（仅本页内存）</p>
+      <label class="check-row"><input id="minimal-mode" type="checkbox" checked><span>极简模式（参考 Termux 实图）</span></label><p class="small">默认隐藏应用顶栏和常驻侧栏，以可拖动吸边的悬浮球作为入口（页面内控件，无需悬浮窗权限）。关闭此选项可比较工作台模式：手机抽屉、平板侧栏。</p>
+      <div class="settings-row"><span>输出字号</span><div class="font-controls"><button id="font-smaller" class="button-outline" aria-label="减小输出字号">A−</button><output id="font-size-label" aria-live="polite">16 px</output><button id="font-larger" class="button-outline" aria-label="增大输出字号">A+</button></div></div>
+      <label class="check-row"><input id="wrap-output" type="checkbox" checked><span>长行自动换行</span></label>
+      <p class="small">关闭换行时，仅输出区横向滚动。字号范围 14–24px（相对基准）；浏览器文字缩放仍可生效。</p>
+      <button id="reset-display" class="button-outline">恢复默认显示</button>
+    </div>
+    <footer class="dialog-actions"><button class="button-primary" data-close-dialog="settings-dialog">完成</button></footer>
+  </dialog>
+
+  <dialog id="help-dialog" aria-modal="true" aria-labelledby="help-title">
+    <header class="dialog-header"><h2 id="help-title" tabindex="-1">原型说明 / 仅模拟</h2><button class="icon-button" data-close-dialog="help-dialog" aria-label="关闭原型说明"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></header>
+    <div class="dialog-body">
+      <p>DSHA 四入口交互预览。启动、插件和设置按 build197 Java/XML 的功能层级填充；终端沿用上一轮极简与悬浮球方案。不是当前手机的截图或运行状态，也不是生产 WebView 替换方案。</p>
+      <div class="help-section"><h3>本轮新增的三个主页面</h3><p>启动页演示准备、鉴权、就绪、停止和失败；停止 Web 不关闭终端。插件页提供市场/管理、源码样例、搜索、筛选、排序、详情、模拟安装启停与删除。设置页包括原有工作台、使用体验、支持三组，运行配置和数据备份有可返回子页，草稿只存当前文档。</p><p>安装、备份、电脑配对、设备授权、更新和诊断均是流程说明或页面内模拟；不联网、不申请权限、不读写文件、不生成下载。语言只保存选择摘要，不翻译整页。插件链接识别是简化演示，不替代生产解析器。</p><p>主 Tab 间保留筛选、草稿和滚动是本次设计增强，不是现有 Android 全部已具备。测试台在未准备/维护场景仍允许浏览静态主 Tab，便于评审；生产的首次准备门禁更严格，实际实施必须沿用原门禁。首页终端概览、测试台和设置中的终端显示快捷入口均为提案新增。</p></div>
+      <div class="help-section"><h3>已获取的 Termux 官方参考</h3><p>固定源码 commit 8629e632：原生 XML/Java，不是 HTML 模板。本页独立实现，不复制 GPL App/extra-keys 源码。借鉴内容优先、低频设置按需展开、输入焦点与会话生命周期分离；Termux 的原生 IME、Service 与终端协议不能由 HTML 演示代替。</p></div>
+      <ol class="help-steps"><li>主界面点「主终端」或底部「终端」，进入覆盖当前视口的工作区。</li><li>输入 <code>demo start</code>。悬浮球菜单 → 返回主界面，再进入，核对相同 ID、输出和持续计数；输入 <code>jobs</code> 看当前计数。</li><li>默认极简模式参考用户提供的 Termux 实图：无常驻标题栏/侧栏、黑底白字、两排附加键。悬浮球菜单管理会话；显示模式中关闭「极简」可比较工作台（≥840px 常驻侧栏）。「新建会话」可选择 PTY / simple；单击切换，关闭按钮或 <code>exit</code> 都先确认。</li><li>键盘图标只展开页面内的占位与预设输入。可用显示选项检查大字号和长行；短屏时相关区域可滚动。</li></ol>
+      <div class="help-section"><h3>悬浮球入口</h3><p>终端内的圆球是普通页面控件，不是跨应用悬浮窗，不需要系统悬浮窗权限。点击打开会话与返回菜单；拖动超过8px后视为移动，松手吸附左右边缘，不误触菜单。闲置2.5秒降低透明度，鼠标悬停或键盘聚焦时恢复清晰。聚焦圆球后方向键可调整位置，Enter/空格开菜单；不向终端发送这些移动按键。</p><p>圆球始终完整留在当前可用区域，布局变化时重新约束，避免附加键和模拟输入行；只能减轻遮挡，不能保证不遮住任何输出字符。极短窗口以保留可点击入口为底线。位置仅本页内存保存，返回再进保留，刷新恢复默认；真实 Android IME/手势区避让仍需原生验收。</p></div>
+      <div class="help-section"><h3>三向态外观</h3><p>顶部外观按钮与会话侧栏底部的「系统 / 白天 / 黑夜」只切换本页颜色：系统=跟随浏览器 prefers-color-scheme，白天=浅蓝+白，黑夜=浅蓝+黑。侧栏、菜单、对话框和工作台顶栏随外观变化；终端输出区固定黑底，贴近原生 terminal_surface 的合同。选择只在本页内存，刷新后回到跟随系统，不写入应用设置。</p></div>
+      <div class="help-section"><h3>有限命令白名单</h3><div class="command-catalog"><code>help</code><code>pwd</code><code>ls</code><code>whoami</code><code>echo 文本</code><code>clear</code><code>jobs</code><code>demo start</code><code>demo stop</code><code>exit</code></div><p>全是页面内固定响应。<code>echo</code> 只逐字显示文字，不展开变量或语法；管道、重定向、脚本、任意其他命令都不会执行。显示的路径和文件名均为虚构。</p></div>
+      <div class="help-section"><h3>会话与返回边界</h3><p>PTY / simple 各自维护递增 ID；显示编号复用本组最小空缺。切换与返回保留草稿、输出和计数，关闭仅移除目标会话。全部关闭后保持空状态，不偷偷新建。</p><p>仅当前页面内存；刷新、关闭页面或浏览器返回离开页面会丢失。计数根据页面内经过时间模拟；不代表真实进程、系统后台保活或任务执行。浏览器挂起与休眠不在本原型的保证范围内。</p></div>
+      <div class="help-section"><h3>输入、可达性与范围</h3><p>附加键仅模拟：Tab 补全白名单，↑ / ↓ 查当前会话历史，← / → 移动输入光标，CTRL 再按 C 或 ^C 暂停计数，ALT 只反馈组合键。Esc 优先关闭对话框，其次收起模拟键盘，再返回主界面。网页按钮无法承诺真实系统 IME 的唤起、隐藏或动画。</p><p>最多 12 个会话，每会话保留最近 240 行输出与 50 条历史；命令最多 512 个字符。无外部资源、网络、真实 shell、设备调用、剪贴板 API、用户文件读取或持久化存储。不应输入真实密钥或私密内容。</p><p>这个表单只模拟命令；生产 PTY 仍使用 <code>com.termux.view.TerminalView</code> 原生输入，不由 HTML 表单替换。本页 Esc 返回、<code>exit</code> 确认都是演示行为；真实 PTY 的 Esc 应发送给终端，shell 的 <code>exit</code> 不应被 UI 拦截。生产 simple 中止会重启 shell，本页暂停计数不代表该流程。</p><p>使用现代浏览器的原生 dialog、焦点返回和键盘环绕；支持减少动态效果偏好。没有模拟异步关闭失败／结果未知、FGS 前台服务；不验证 Android 原生手势、IME、PTY 生命周期或无障碍实现，后端未改动。</p></div>
+    </div>
+    <footer class="dialog-actions"><button class="button-primary" data-close-dialog="help-dialog">知道了，继续演示</button></footer>
+  </dialog>
+
+  <dialog id="app-dialog" class="app-dialog" aria-modal="true" aria-labelledby="app-dialog-title"><header class="dialog-header"><h2 id="app-dialog-title" tabindex="-1"></h2><button class="icon-button" data-close-dialog="app-dialog" aria-label="关闭面板"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></header><div id="app-dialog-body" class="dialog-body"></div><footer class="dialog-actions"><button id="app-dialog-cancel" class="button-outline" data-close-dialog="app-dialog">关闭</button><button id="app-dialog-confirm" class="button-primary" hidden>确认模拟</button></footer></dialog>
+
+  <div id="feedback" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="dialog-feedback" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <noscript><div class="no-script"><h1>这是离线交互原型</h1><p>需要启用 JavaScript 才能模拟会话。页面不会运行真实 shell、读取文件或联网。</p></div></noscript>
+
+  <script>
+    'use strict';
+    // 本文件只创建页面内的数据对象；没有后端连接、持久化、文件或剪贴板能力。
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const LIMITS = Object.freeze({ sessions: 12, lines: 240, history: 50, input: 512 });
+      const state = {
+        sessions: [], nextId: { pty: 1, simple: 1 }, activeId: null,
+        inTerminal: false, mainPage: 'launch', keyboard: false,
+        fontSize: 16, wrap: true, minimal: true, closeId: null, returnControl: null,
+        ctrl: false, alt: false, themeChoice: 'system'
+      };
+      const desktop = window.matchMedia('(min-width: 840px)');
+      const dialogStack = [];
+      const dialogOpeners = new WeakMap();
+      const skipRestore = new WeakSet();
+      const dialogFeedback = $('dialog-feedback');
+      let feedbackTimer = null;
+      let lastFeedback = '';
+
+      function activeSession() { return state.sessions.find((s) => s.id === state.activeId) || null; }
+      function sessionName(session) { return (session.type === 'pty' ? 'PTY ' : 'simple ') + session.number; }
+      function countOf(session) {
+        const task = session.task;
+        return task.base + (task.running ? Math.max(0, Math.floor((performance.now() - task.startedAt) / 1000)) : 0);
+      }
+      function safeFocus(element) {
+        if (!element || !element.isConnected || !element.getClientRects().length || element.closest('[hidden]')) return;
+        const top = dialogStack[dialogStack.length - 1];
+        if (top && top.open && !top.contains(element)) return;
+        element.focus({ preventScroll: true });
+      }
+      function announce(message) {
+        clearTimeout(feedbackTimer);
+        const suffix = message === lastFeedback ? ' ' : '';
+        $('feedback').textContent = message + suffix;
+        dialogFeedback.textContent = message + suffix;
+        lastFeedback = message;
+        feedbackTimer = setTimeout(() => { $('feedback').textContent = ''; dialogFeedback.textContent = ''; }, 3600);
+      }
+      function updateDialogFeedbackHost() {
+        const top = dialogStack[dialogStack.length - 1];
+        (top || document.body).append(dialogFeedback);
+      }
+
+      // 三向态外观：选择只保存在本页内存；system 由浏览器 prefers-color-scheme 解析。
+      const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const themeLabels = { system: '跟随系统', light: '白天', dark: '黑夜' };
+      function resolvedTheme() {
+        return state.themeChoice === 'system' ? (themeQuery.matches ? 'dark' : 'light') : state.themeChoice;
+      }
+      function applyTheme(announceChange = true) {
+        const resolved = resolvedTheme();
+        const root = document.documentElement;
+        root.dataset.theme = resolved;
+        root.dataset.themeChoice = state.themeChoice;
+        root.style.colorScheme = resolved;
+        document.querySelectorAll('button[data-theme-choice]').forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.themeChoice === state.themeChoice));
+        });
+        const label = themeLabels[state.themeChoice];
+        const resolvedLabel = resolved === 'dark' ? '黑夜' : '白天';
+        $('theme-status').textContent = label + (state.themeChoice === 'system' ? ' · 当前解析为' + resolvedLabel : '') + '（仅本页内存）';
+        const mainTheme = $('main-theme');
+        mainTheme.setAttribute('aria-label', '切换外观模式，当前' + label);
+        mainTheme.title = '外观：' + label;
+        if (announceChange) announce('外观已切换为' + label + (state.themeChoice === 'system' ? '（解析为' + resolvedLabel + '）' : '') + '；仅本页预览，不写入应用设置。');
+      }
+      document.querySelectorAll('button[data-theme-choice]').forEach((button) => button.addEventListener('click', () => {
+        state.themeChoice = button.dataset.themeChoice;
+        applyTheme();
+      }));
+      const onSystemThemeChange = () => { if (state.themeChoice === 'system') applyTheme(false); };
+      if (themeQuery.addEventListener) themeQuery.addEventListener('change', onSystemThemeChange);
+      else if (themeQuery.addListener) themeQuery.addListener(onSystemThemeChange);
+      $('main-theme').addEventListener('click', () => {
+        const order = ['system', 'light', 'dark'];
+        state.themeChoice = order[(order.indexOf(state.themeChoice) + 1) % order.length];
+        applyTheme();
+      });
+      function openDialog(id, focusSelector) {
+        const dialog = $(id);
+        if (dialog.open) return;
+        // 原生 close 事件异步分派；重新打开前先清除已关闭的栈条目。
+        const staleIndex = dialogStack.indexOf(dialog);
+        if (staleIndex >= 0) dialogStack.splice(staleIndex, 1);
+        dialogOpeners.set(dialog, document.activeElement);
+        skipRestore.delete(dialog);
+        dialogStack.push(dialog);
+        dialog.showModal();
+        updateDialogFeedbackHost();
+        const preferred = focusSelector ? dialog.querySelector(focusSelector) : null;
+        const focusTarget = preferred && !preferred.disabled ? preferred : dialog.querySelector('button:not(:disabled), input:not(:disabled), [tabindex]');
+        safeFocus(focusTarget || dialog);
+      }
+      function closeDialog(id, restore = true) {
+        const dialog = $(id);
+        if (!dialog.open) return;
+        if (!restore) skipRestore.add(dialog);
+        dialog.close();
+      }
+      function finishDialog(dialog) {
+        if (dialog.open) return;
+        const index = dialogStack.indexOf(dialog);
+        if (index >= 0) dialogStack.splice(index, 1);
+        if (dialog.id === 'session-drawer') $('sessions-toggle').setAttribute('aria-expanded', 'false');
+        if (dialog.id === 'close-session-dialog') state.closeId = null;
+        updateDialogFeedbackHost();
+        if (skipRestore.has(dialog)) { skipRestore.delete(dialog); return; }
+        const opener = dialogOpeners.get(dialog);
+        if (opener && opener.isConnected && opener.getClientRects().length) safeFocus(opener);
+        else if (dialogStack.length) safeFocus(dialogStack[dialogStack.length - 1].querySelector('button, input, [tabindex]'));
+        else safeFocus(state.inTerminal ? $('terminal-title') : $('open-terminal'));
+      }
+      document.querySelectorAll('dialog').forEach((dialog) => {
+        dialog.addEventListener('close', () => finishDialog(dialog));
+        dialog.addEventListener('cancel', (event) => {
+          event.preventDefault();
+          closeDialog(dialog.id);
+          announce(dialog.id === 'close-session-dialog' ? '已取消关闭，会话继续保留。' : '已关闭面板，当前会话保持不变。');
+        });
+        dialog.addEventListener('keydown', (event) => {
+          if (event.key !== 'Tab' || dialogStack[dialogStack.length - 1] !== dialog) return;
+          const focusable = Array.from(dialog.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]')).filter((el) => el.getClientRects().length);
+          if (!focusable.length) { event.preventDefault(); return; }
+          const first = focusable[0], last = focusable[focusable.length - 1];
+          if (event.shiftKey && (document.activeElement === first || !focusable.includes(document.activeElement))) { event.preventDefault(); safeFocus(last); }
+          else if (!event.shiftKey && (document.activeElement === last || !focusable.includes(document.activeElement))) { event.preventDefault(); safeFocus(first); }
+        });
+      });
+      document.querySelectorAll('[data-open-dialog]').forEach((button) => button.addEventListener('click', () => {
+        const id = button.dataset.openDialog;
+        openDialog(id, id === 'help-dialog' ? '#help-title' : '#font-smaller');
+      }));
+      document.querySelectorAll('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => {
+        const id = button.dataset.closeDialog;
+        closeDialog(id);
+        if (id === 'close-session-dialog') announce('已取消关闭，会话继续保留。');
+      }));
+
+      function createSession(type) {
+        if (state.sessions.length >= LIMITS.sessions) { announce('原型最多保留 12 个会话，请先关闭一个。'); return null; }
+        let number = 1;
+        const occupied = state.sessions.filter((s) => s.type === type).map((s) => s.number);
+        while (occupied.includes(number)) number += 1;
+        const session = {
+          id: type + '-' + state.nextId[type]++, type, number,
+          draft: '', history: [], historyIndex: 0, historyDraft: '', scrollTop: 0,
+          log: [
+            { text: 'DSHA / terminal preview', tone: 'accent' },
+            { text: '黑底、等宽、专注于当前会话。', tone: 'muted' },
+            { text: '', tone: 'muted' },
+            { text: '仅设计模拟：不连接设备，不执行真实 shell。', tone: 'warning' },
+            { text: '输入 help 查看命令；demo start 开始计数。', tone: 'muted' },
+            { text: '返回主界面会保留此会话；刷新页面则丢失。', tone: 'muted' },
+            { text: '', tone: 'muted' }
+          ],
+          task: { running: false, everStarted: false, base: 0, startedAt: 0 }
+        };
+        state.sessions.push(session);
+        return session;
+      }
+      function saveActive() {
+        const session = activeSession();
+        if (!session) return;
+        session.draft = $('command-input').value;
+        if (state.inTerminal) session.scrollTop = $('terminal-output').scrollTop;
+      }
+      function resetModifiers() {
+        state.ctrl = false; state.alt = false;
+        $('key-ctrl').setAttribute('aria-pressed', 'false');
+        $('key-alt').setAttribute('aria-pressed', 'false');
+      }
+      function renderOutput(tail = false) {
+        const session = activeSession();
+        if (!session) return;
+        const output = $('terminal-output');
+        const fragment = document.createDocumentFragment();
+        session.log.forEach((entry) => {
+          const line = document.createElement('div');
+          line.className = 'log-line tone-' + entry.tone;
+          line.textContent = entry.text || '\u00a0';
+          fragment.append(line);
+        });
+        output.replaceChildren(fragment);
+        output.scrollTop = tail ? output.scrollHeight : session.scrollTop;
+        session.scrollTop = output.scrollTop;
+        scheduleBallLayout();
+      }
+      function appendLines(session, lines) {
+        session.log.push(...lines);
+        if (session.log.length > LIMITS.lines) session.log.splice(0, session.log.length - LIMITS.lines);
+        if (session.id === state.activeId && state.inTerminal) renderOutput(true);
+      }
+      function makeIcon(name) {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'icon'); svg.setAttribute('aria-hidden', 'true');
+        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        use.setAttribute('href', '#' + name); svg.append(use);
+        return svg;
+      }
+      function renderSessions() {
+        ['pty', 'simple'].forEach((type) => {
+          const list = $(type + '-sessions');
+          const group = state.sessions.filter((s) => s.type === type);
+          $(type + '-count').textContent = String(group.length);
+          const fragment = document.createDocumentFragment();
+          if (!group.length) {
+            const empty = document.createElement('li'); empty.className = 'group-empty'; empty.textContent = '暂无会话'; fragment.append(empty);
+          }
+          group.forEach((session) => {
+            const item = document.createElement('li');
+            item.className = 'session-item' + (session.id === state.activeId ? ' is-active' : '');
+            item.dataset.sessionId = session.id; item.dataset.running = String(session.task.running);
+            const select = document.createElement('button');
+            select.className = 'session-select'; select.dataset.selectSession = session.id;
+            select.setAttribute('aria-label', '切换到 ' + sessionName(session) + '，' + session.id);
+            if (session.id === state.activeId) select.setAttribute('aria-current', 'true');
+            const glyph = document.createElement('span'); glyph.className = 'session-glyph'; glyph.setAttribute('aria-hidden', 'true');
+            glyph.append(makeIcon(session.type === 'pty' ? 'i-pty' : 'i-simple'));
+            const body = document.createElement('span'); body.className = 'session-body';
+            const line = document.createElement('span'); line.className = 'session-line';
+            const name = document.createElement('span'); name.className = 'session-name';
+            const dot = document.createElement('span'); dot.className = 'dot'; dot.setAttribute('aria-hidden', 'true');
+            name.append(dot, document.createTextNode(sessionName(session)));
+            const meta = document.createElement('span'); meta.className = 'session-state'; meta.dataset.sessionMeta = session.id;
+            line.append(name, meta); body.append(line); select.append(glyph, body);
+            select.title = session.id + ' · 独立模拟上下文';
+            select.addEventListener('click', () => {
+              saveActive(); state.activeId = session.id; resetModifiers(); renderAll();
+              if (!desktop.matches || state.minimal) closeDialog('session-drawer', false);
+              safeFocus($('terminal-title'));
+              announce('已切换到 ' + sessionName(session) + ' · ' + session.id + '，原会话继续保留。');
+            });
+            const close = document.createElement('button'); close.className = 'session-close icon-button'; close.dataset.closeSession = session.id;
+            close.setAttribute('aria-label', '关闭 ' + sessionName(session) + '，需要确认'); close.title = '关闭 ' + sessionName(session);
+            close.append(makeIcon('i-close')); close.addEventListener('click', () => askClose(session));
+            item.append(select, close); fragment.append(item);
+          });
+          list.replaceChildren(fragment);
+        });
+        renderCounters();
+      }
+      function renderActive() {
+        const session = activeSession();
+        $('active-session').hidden = !session; $('empty-state').hidden = Boolean(session);
+        $('terminal-title').textContent = session ? sessionName(session) : '无打开的会话';
+        $('terminal-screen').dataset.activeSession = session ? session.id : '';
+        if (!session) { setKeyboard(false, false); return; }
+        $('active-session-id').textContent = session.id + ' · ' + (session.type === 'pty' ? 'PTY 交互' : 'simple 简易') + ' · 独立模拟上下文';
+        $('command-prefix').textContent = session.type === 'pty' ? '$' : '>';
+        $('command-input').value = session.draft;
+        renderOutput();
+      }
+      function renderHome() {
+        const active = activeSession();
+        const ptyCount = state.sessions.filter((s) => s.type === 'pty').length;
+        $('home-session-count').textContent = state.sessions.length + ' 个会话保留';
+        $('home-session-detail').textContent = active ? sessionName(active) + ' · ' + active.id + '（最近使用）' : 'PTY ' + ptyCount + ' / simple ' + (state.sessions.length - ptyCount) + ' · 无打开会话';
+        $('entry-description').textContent = active ? '进入全屏 · 继续 ' + sessionName(active) : '进入全屏 · 查看空状态或新建';
+      }
+      function renderCounters() {
+        let running = 0, total = 0;
+        state.sessions.forEach((session) => {
+          const count = countOf(session); total += count; if (session.task.running) running += 1;
+          const meta = document.querySelector('[data-session-meta="' + session.id + '"]');
+          if (meta) meta.textContent = session.task.running ? '运行中 ' + count : session.task.everStarted ? '已暂停 ' + count : '空闲';
+          const row = document.querySelector('[data-session-id="' + session.id + '"]');
+          if (row) row.dataset.running = String(session.task.running);
+        });
+        $('session-inventory').textContent = state.sessions.length + ' 个会话 · ' + running + ' 个计数任务运行';
+        $('home-task-status').textContent = running ? running + ' 个计数任务运行中 · 返回不停止' : state.sessions.some((s) => s.task.everStarted) ? '计数已暂停 · 会话仍保留' : '尚未运行';
+        $('home-task-count').textContent = String(total);
+        const session = activeSession();
+        if (!session) return;
+        $('demo-count').textContent = String(countOf(session)).padStart(4, '0');
+        $('demo-state').textContent = '次 · ' + (session.task.running ? '运行中' : session.task.everStarted ? '已暂停' : '待运行');
+        $('demo-toggle').setAttribute('aria-pressed', String(session.task.running));
+        $('demo-toggle-symbol').textContent = session.task.running ? 'Ⅱ' : '▷';
+        $('demo-toggle-label').textContent = session.task.running ? '暂停计数' : session.task.everStarted ? '继续计数' : '演示计数';
+        $('active-session-state').textContent = session.task.running ? '计数运行中 · 仅模拟' : '空闲 · 仅模拟';
+      }
+      function renderAll() { renderSessions(); renderActive(); renderHome(); renderCounters(); }
+
+      function updateResponsiveLayout() {
+        const sidebar = $('session-sidebar');
+        if (desktop.matches && !state.minimal) {
+          closeDialog('session-drawer', false);
+          $('terminal-workspace').insertBefore(sidebar, $('terminal-pane'));
+          $('sessions-toggle').setAttribute('aria-expanded', 'false');
+          $('terminal-screen').dataset.layout = 'sidebar';
+        } else {
+          $('session-drawer').prepend(sidebar);
+          $('terminal-screen').dataset.layout = 'drawer';
+        }
+        scheduleBallLayout();
+      }
+      if (desktop.addEventListener) desktop.addEventListener('change', updateResponsiveLayout);
+      else desktop.addListener(updateResponsiveLayout);
+      $('sessions-toggle').addEventListener('click', () => {
+        if (desktop.matches) return;
+        openDialog('session-drawer', '#new-session');
+        $('sessions-toggle').setAttribute('aria-expanded', 'true');
+      });
+      const floatingBall = $('minimal-menu');
+      const ballPosition = { side: 'right', fraction: .62 };
+      let ballDrag = null, ballIdleTimer = null, ballLayoutFrame = null, suppressBallClickUntil = 0;
+      const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
+      function ballBounds() {
+        const screen = $('terminal-screen');
+        const rect = screen.getBoundingClientRect();
+        const style = getComputedStyle(screen);
+        const inset = (name) => parseFloat(style[name]) || 0;
+        const size = floatingBall.offsetWidth || 52;
+        const viewport = window.visualViewport;
+        const left = Math.max(rect.left + inset('paddingLeft'), viewport ? viewport.offsetLeft : 0);
+        const right = Math.min(rect.right - inset('paddingRight'), viewport ? viewport.offsetLeft + viewport.width : innerWidth);
+        const top = Math.max(rect.top + inset('paddingTop'), viewport ? viewport.offsetTop : 0);
+        let bottom = Math.min(rect.bottom - inset('paddingBottom'), viewport ? viewport.offsetTop + viewport.height : innerHeight);
+        for (const id of ['extra-keys', 'simulated-keyboard']) {
+          const element = $(id);
+          if (element.getClientRects().length && !element.closest('[hidden]')) bottom = Math.min(bottom, element.getBoundingClientRect().top - 8);
+        }
+        const minX = left - rect.left + 16;
+        const maxX = Math.max(minX, right - rect.left - size - 16);
+        const minY = top - rect.top + 28;
+        const maxY = Math.max(minY, bottom - rect.top - size - 8);
+        return { rect, size, minX, maxX, minY, maxY };
+      }
+      function unobstructedBallY(value, bounds) {
+        let y = clamp(value, bounds.minY, bounds.maxY);
+        const input = $('command-form');
+        if (input.getClientRects().length && !input.closest('[hidden]')) {
+          const rect = input.getBoundingClientRect();
+          const above = rect.top - bounds.rect.top - bounds.size - 8;
+          const below = rect.bottom - bounds.rect.top + 8;
+          if (y > above && y < below) {
+            const candidates = [above, below].filter(v => v >= bounds.minY && v <= bounds.maxY);
+            if (candidates.length) y = candidates.reduce((a, b) => Math.abs(a - y) < Math.abs(b - y) ? a : b);
+          }
+        }
+        return y;
+      }
+      function placeBall(x, y, bounds = ballBounds()) {
+        floatingBall.style.left = clamp(x, bounds.minX, bounds.maxX) + 'px';
+        floatingBall.style.top = unobstructedBallY(y, bounds) + 'px';
+      }
+      function layoutFloatingBall() {
+        ballLayoutFrame = null;
+        if (!state.inTerminal || !state.minimal || ballDrag) return;
+        const bounds = ballBounds();
+        placeBall(ballPosition.side === 'left' ? bounds.minX : bounds.maxX,
+          bounds.minY + ballPosition.fraction * (bounds.maxY - bounds.minY), bounds);
+      }
+      function scheduleBallLayout() {
+        if (ballLayoutFrame !== null) return;
+        ballLayoutFrame = requestAnimationFrame(layoutFloatingBall);
+      }
+      function wakeBall() {
+        clearTimeout(ballIdleTimer);
+        floatingBall.classList.remove('is-idle');
+        if (state.inTerminal && state.minimal && !ballDrag) ballIdleTimer = setTimeout(() => {
+          if (!ballDrag && !$('session-drawer').open) floatingBall.classList.add('is-idle');
+        }, 2500);
+      }
+      function finishBallDrag(event) {
+        if (!ballDrag || (event && event.pointerId !== ballDrag.id)) return;
+        const drag = ballDrag;
+        ballDrag = null;
+        if (floatingBall.hasPointerCapture(drag.id)) floatingBall.releasePointerCapture(drag.id);
+        floatingBall.classList.remove('is-dragging');
+        if (drag.moved || (event && event.type === 'pointercancel')) {
+          suppressBallClickUntil = performance.now() + 700;
+          const bounds = ballBounds();
+          const x = parseFloat(floatingBall.style.left) || bounds.maxX;
+          const y = parseFloat(floatingBall.style.top) || bounds.minY;
+          ballPosition.side = x + bounds.size / 2 < (bounds.minX + bounds.maxX + bounds.size) / 2 ? 'left' : 'right';
+          ballPosition.fraction = bounds.maxY > bounds.minY ? clamp((y - bounds.minY) / (bounds.maxY - bounds.minY), 0, 1) : 0;
+          layoutFloatingBall();
+        }
+        wakeBall();
+      }
+      floatingBall.addEventListener('pointerdown', event => {
+        if (!event.isPrimary || event.button !== 0 || ballDrag) return;
+        wakeBall(); suppressBallClickUntil = 0;
+        const rect = floatingBall.getBoundingClientRect();
+        ballDrag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, moved: false };
+        floatingBall.setPointerCapture(event.pointerId);
+      });
+      floatingBall.addEventListener('pointermove', event => {
+        if (!ballDrag || event.pointerId !== ballDrag.id) return;
+        if (Math.hypot(event.clientX - ballDrag.startX, event.clientY - ballDrag.startY) > 8) ballDrag.moved = true;
+        if (!ballDrag.moved) return;
+        event.preventDefault(); floatingBall.classList.add('is-dragging');
+        const bounds = ballBounds();
+        placeBall(event.clientX - bounds.rect.left - ballDrag.offsetX, event.clientY - bounds.rect.top - ballDrag.offsetY, bounds);
+      });
+      floatingBall.addEventListener('pointerup', finishBallDrag);
+      floatingBall.addEventListener('pointercancel', finishBallDrag);
+      floatingBall.addEventListener('lostpointercapture', event => { if (ballDrag) finishBallDrag(event); });
+      floatingBall.addEventListener('click', event => {
+        if (event.detail !== 0 && performance.now() < suppressBallClickUntil) { event.preventDefault(); return; }
+        wakeBall(); floatingBall.setAttribute('aria-expanded', 'true');
+        openDialog('session-drawer', '#new-session');
+      });
+      floatingBall.addEventListener('keydown', event => {
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        event.preventDefault(); event.stopPropagation();
+        if (event.key === 'ArrowLeft') ballPosition.side = 'left';
+        if (event.key === 'ArrowRight') ballPosition.side = 'right';
+        if (event.key === 'ArrowUp') ballPosition.fraction = Math.max(0, ballPosition.fraction - .08);
+        if (event.key === 'ArrowDown') ballPosition.fraction = Math.min(1, ballPosition.fraction + .08);
+        layoutFloatingBall(); wakeBall();
+      });
+      floatingBall.addEventListener('focus', wakeBall);
+      floatingBall.addEventListener('pointerenter', wakeBall);
+      floatingBall.addEventListener('pointerleave', wakeBall);
+      $('session-drawer').addEventListener('close', () => { if (!$('session-drawer').open) { floatingBall.setAttribute('aria-expanded', 'false'); wakeBall(); } });
+      window.addEventListener('resize', () => { if (ballDrag) finishBallDrag(null); scheduleBallLayout(); });
+      if (window.visualViewport) {
+        visualViewport.addEventListener('resize', scheduleBallLayout);
+        visualViewport.addEventListener('scroll', scheduleBallLayout);
+      }
+      $('terminal-pane').addEventListener('scroll', scheduleBallLayout);
+      window.addEventListener('pagehide', () => { clearTimeout(ballIdleTimer); if (ballLayoutFrame !== null) cancelAnimationFrame(ballLayoutFrame); });
+      $('drawer-home').addEventListener('click', () => { closeDialog('session-drawer', false); leaveTerminal(); });
+      $('drawer-keyboard').addEventListener('click', () => { closeDialog('session-drawer', false); setKeyboard(!state.keyboard); safeFocus($('command-input')); });
+      $('minimal-mode').addEventListener('change', () => {
+        state.minimal = $('minimal-mode').checked;
+        $('terminal-screen').classList.toggle('minimal', state.minimal);
+        $('minimal-menu').hidden = !state.minimal;
+        updateResponsiveLayout(); wakeBall();
+        announce(state.minimal ? '已切换极简模式，会话保持；悬浮球菜单可返回或管理会话。' : '已切换工作台模式，会话保持；宽屏侧栏自动展开。');
+      });
+      $('close-drawer').addEventListener('click', () => closeDialog('session-drawer'));
+      $('session-drawer').addEventListener('click', (event) => {
+        if (event.target !== $('session-drawer')) return;
+        const bounds = $('session-drawer').getBoundingClientRect();
+        if (event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closeDialog('session-drawer');
+      });
+
+      function enterTerminal(trigger) {
+        if (state.inTerminal) return;
+        if (app.environment !== 'ready') {
+          showAppDialog('本机终端暂不可进入', caption('当前是“' + (app.environment === 'missing' ? '尚未准备' : '维护中') + '”演示场景。保留已有模拟会话，不新建替代会话，也不绕过环境门禁。') + note('可在启动页的原型测试台切回“已准备”。电脑工作区和设置仍可访问。'));
+          return;
+        }
+        state.returnControl = trigger || $('open-terminal');
+        state.inTerminal = true;
+        $('main-shell').hidden = true;
+        $('terminal-screen').hidden = false;
+        updateResponsiveLayout(); renderAll(); safeFocus($('terminal-title'));
+        layoutFloatingBall(); wakeBall();
+        announce('已进入终端演示；点悬浮球打开菜单，拖动可吸边。返回主界面不会结束会话。');
+      }
+      function leaveTerminal() {
+        clearTimeout(ballIdleTimer);
+        if (ballDrag) finishBallDrag(null);
+        saveActive();
+        setKeyboard(false, false);
+        closeDialog('session-drawer', false);
+        state.inTerminal = false;
+        $('terminal-screen').hidden = true;
+        $('main-shell').hidden = false;
+        resetModifiers(); renderHome(); renderCounters();
+        safeFocus(state.returnControl || $('open-terminal'));
+        announce('已返回主界面，' + state.sessions.length + ' 个模拟会话保留；运行中的计数继续。');
+      }
+      $('open-terminal').addEventListener('click', (event) => enterTerminal(event.currentTarget));
+      document.querySelectorAll('[data-enter-terminal]').forEach((button) => button.addEventListener('click', () => enterTerminal(button)));
+      $('back-home').addEventListener('click', leaveTerminal);
+      $('empty-back').addEventListener('click', leaveTerminal);
+      document.querySelectorAll('[data-nav]').forEach((button) => button.addEventListener('click', () => {
+        const page = button.dataset.nav;
+        if (page === 'terminal') { enterTerminal(button); return; }
+        navigateMain(page);
+      }));
+
+      function requestNewSession() {
+        if (state.sessions.length >= LIMITS.sessions) { announce('已达到 12 个模拟会话上限，请先关闭一个。'); return; }
+        const type = activeSession() ? activeSession().type : 'pty';
+        document.querySelector('input[name="session-type"][value="' + type + '"]').checked = true;
+        openDialog('new-session-dialog', 'input:checked');
+      }
+      $('new-session').addEventListener('click', requestNewSession);
+      $('empty-create').addEventListener('click', requestNewSession);
+      $('new-session-form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const type = document.querySelector('input[name="session-type"]:checked').value;
+        saveActive();
+        const session = createSession(type);
+        if (!session) return;
+        state.activeId = session.id;
+        resetModifiers(); renderAll();
+        closeDialog('new-session-dialog', false);
+        closeDialog('session-drawer', false);
+        safeFocus($('terminal-title'));
+        announce('已创建 ' + sessionName(session) + ' · ' + session.id + '，这是独立模拟会话。');
+      });
+      function askClose(session) {
+        state.closeId = session.id;
+        $('close-session-title').textContent = '关闭 ' + sessionName(session) + '？';
+        $('close-session-detail').textContent = session.id + ' · ' + (session.task.running ? '计数任务正在运行，确认后停止并丢弃 ' + countOf(session) + ' 次计数。' : '确认后清除本会话输出、草稿与 ' + countOf(session) + ' 次计数。');
+        openDialog('close-session-dialog', '#cancel-close');
+      }
+      $('confirm-close').addEventListener('click', () => {
+        const index = state.sessions.findIndex((s) => s.id === state.closeId);
+        if (index < 0) { closeDialog('close-session-dialog'); announce('目标会话已不存在，没有关闭其他会话。'); return; }
+        saveActive();
+        const session = state.sessions[index];
+        state.sessions.splice(index, 1);
+        if (state.activeId === session.id) {
+          const sameGroup = state.sessions.find((s) => s.type === session.type);
+          state.activeId = sameGroup ? sameGroup.id : state.sessions.length ? state.sessions[Math.min(index, state.sessions.length - 1)].id : null;
+        }
+        state.closeId = null;
+        resetModifiers(); renderAll();
+        closeDialog('close-session-dialog', false);
+        if (!desktop.matches || state.minimal) closeDialog('session-drawer', false);
+        safeFocus(activeSession() ? $('terminal-title') : $('empty-create'));
+        announce('已关闭 ' + sessionName(session) + ' · ' + session.id + '。' + (state.sessions.length ? '其他会话保留。' : '全部会话已关闭，可从空状态新建。'));
+      });
+
+      function startDemo(session) {
+        if (session.task.running) { announce('当前会话的计数已在运行，不重复启动。'); return; }
+        session.task.running = true; session.task.everStarted = true; session.task.startedAt = performance.now();
+        appendLines(session, [{ text: '[模拟任务] 计数启动；返回主界面后仍按页面时间计数。', tone: 'accent' }]);
+        renderCounters(); announce(sessionName(session) + ' 的演示计数已开始。可返回主界面核对。');
+      }
+      function stopDemo(session, interrupted = false) {
+        if (!session.task.running) {
+          if (interrupted) appendLines(session, [{ text: '^C · 仅模拟，没有运行中的计数任务。', tone: 'muted' }]);
+          announce('当前会话没有运行中的计数任务。'); return;
+        }
+        session.task.base = countOf(session); session.task.running = false;
+        appendLines(session, [{ text: (interrupted ? '^C · ' : '') + '[模拟任务] 已暂停，保留 ' + session.task.base + ' 次计数。', tone: 'warning' }]);
+        renderCounters(); announce(sessionName(session) + ' 计数已暂停，其他会话不受影响。');
+      }
+      $('demo-toggle').addEventListener('click', () => {
+        const session = activeSession(); if (!session) return;
+        if (session.task.running) stopDemo(session); else startDemo(session);
+      });
+
+      function setKeyboard(open, feedback = true) {
+        state.keyboard = Boolean(open && activeSession());
+        $('simulated-keyboard').hidden = !state.keyboard;
+        $('keyboard-toggle').setAttribute('aria-expanded', String(state.keyboard));
+        $('keyboard-toggle').setAttribute('aria-label', state.keyboard ? '收起模拟键盘占位' : '显示模拟键盘占位，不控制系统 IME');
+        $('command-input').inputMode = state.keyboard ? 'none' : 'text';
+        scheduleBallLayout();
+        if (feedback) announce(state.keyboard ? '已展开页面键盘占位，不代表系统 IME；预设按钮只填入文字。' : '已收起页面键盘占位，未控制系统 IME。');
+      }
+      $('keyboard-toggle').addEventListener('click', () => setKeyboard(!state.keyboard));
+      $('hide-keyboard').addEventListener('click', () => { setKeyboard(false); safeFocus($('keyboard-toggle')); });
+      function setDraft(value) {
+        const session = activeSession(); if (!session) return;
+        session.draft = value.slice(0, LIMITS.input);
+        $('command-input').value = session.draft;
+        $('command-input').setSelectionRange(session.draft.length, session.draft.length);
+      }
+      document.querySelectorAll('[data-preset]').forEach((button) => button.addEventListener('click', () => {
+        setDraft(button.dataset.preset);
+        announce('已填入 ' + button.dataset.preset + '；点「运行」提交模拟命令。');
+      }));
+      $('command-input').addEventListener('input', () => {
+        const session = activeSession(); if (!session) return;
+        session.draft = $('command-input').value.slice(0, LIMITS.input);
+        session.historyIndex = session.history.length;
+      });
+      $('terminal-output').addEventListener('scroll', () => { const session = activeSession(); if (session) session.scrollTop = $('terminal-output').scrollTop; });
+
+      const completions = ['help', 'pwd', 'ls', 'whoami', 'echo ', 'clear', 'jobs', 'demo start', 'demo stop', 'exit'];
+      function completeCommand() {
+        const prefix = $('command-input').value.trimStart();
+        const matches = completions.filter((command) => command.startsWith(prefix));
+        if (matches.length === 1) { setDraft(matches[0]); announce('已补全为 ' + matches[0]); }
+        else announce(matches.length ? '可用补全：' + matches.join(' / ') : '没有匹配的白名单命令；输入 help 查看。');
+      }
+      function historyStep(direction) {
+        const session = activeSession(); if (!session || !session.history.length) { announce('当前会话还没有命令历史。'); return; }
+        if (session.historyIndex === session.history.length) session.historyDraft = $('command-input').value;
+        session.historyIndex = Math.max(0, Math.min(session.history.length, session.historyIndex + direction));
+        setDraft(session.historyIndex === session.history.length ? session.historyDraft : session.history[session.historyIndex]);
+        announce(session.historyIndex === session.history.length ? '已返回当前草稿。' : '已载入本会话历史 ' + (session.historyIndex + 1) + ' / ' + session.history.length);
+      }
+      function handleExtraKey(key) {
+        const session = activeSession(); if (!session) return;
+        if (key === 'CTRL' || key === 'ALT') {
+          const field = key.toLowerCase(); state[field] = !state[field];
+          $('key-' + field).setAttribute('aria-pressed', String(state[field]));
+          announce(key + (state[field] ? ' 模拟键已锁定；不会发送系统快捷键。' : ' 模拟键已释放。'));
+        } else if (key === 'ESC') {
+          resetModifiers(); if (state.keyboard) setKeyboard(false); else announce('Esc（模拟）：已释放组合键，当前会话保持。');
+        } else if (key === 'SLASH' || key === 'DASH') {
+          const input = $('command-input'); const start = input.selectionStart || 0; const end = input.selectionEnd || start;
+          const text = key === 'SLASH' ? '/' : '-';
+          setDraft(input.value.slice(0, start) + text + input.value.slice(end));
+          input.setSelectionRange(start + 1, start + 1); announce('已输入 ' + text + '，不会自动执行。');
+        } else if (key === 'HOME' || key === 'END') {
+          const input = $('command-input'); const pos = key === 'HOME' ? 0 : input.value.length;
+          input.setSelectionRange(pos, pos); announce(key === 'HOME' ? '光标已移到行首。' : '光标已移到行尾。');
+        } else if (key === 'PGUP' || key === 'PGDN') {
+          $('terminal-output').scrollBy(0, (key === 'PGUP' ? -1 : 1) * $('terminal-output').clientHeight * .8);
+          announce('已模拟输出翻页，不发送真实终端序列。');
+        } else if (key === 'TAB') completeCommand();
+        else if (key === 'UP' || key === 'DOWN') historyStep(key === 'UP' ? -1 : 1);
+        else if (key === 'INTERRUPT') { stopDemo(session, true); resetModifiers(); }
+        else {
+          const input = $('command-input');
+          const position = Math.max(0, Math.min(input.value.length, (input.selectionStart || 0) + (key === 'LEFT' ? -1 : 1)));
+          input.setSelectionRange(position, position); announce('模拟输入光标位置：' + position);
+        }
+      }
+      document.querySelectorAll('[data-key]').forEach((button) => button.addEventListener('click', () => handleExtraKey(button.dataset.key)));
+      $('command-input').addEventListener('keydown', (event) => {
+        if (event.isComposing) return;
+        if (state.ctrl && event.key.length === 1) {
+          event.preventDefault();
+          if (event.key.toLowerCase() === 'c') stopDemo(activeSession(), true);
+          else announce('CTRL+' + event.key.toUpperCase() + ' 仅作按键反馈，不执行命令。');
+          resetModifiers(); return;
+        }
+        if (state.alt && event.key.length === 1) { event.preventDefault(); announce('ALT+' + event.key.toUpperCase() + ' 已模拟；未发送系统快捷键。'); resetModifiers(); return; }
+        if (event.key === 'ArrowUp' || event.key === 'ArrowDown') { event.preventDefault(); historyStep(event.key === 'ArrowUp' ? -1 : 1); }
+        // 实体 Tab 保留浏览器焦点导航；命令补全通过附加 TAB 按钮。
+      });
+      $('command-form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const session = activeSession(); if (!session) return;
+        const raw = $('command-input').value.slice(0, LIMITS.input);
+        const command = raw.trim();
+        if (!command) { announce('请输入模拟命令，或输入 help 查看白名单。'); return; }
+        session.history.push(raw); if (session.history.length > LIMITS.history) session.history.shift();
+        session.historyIndex = session.history.length; session.historyDraft = ''; setDraft(''); resetModifiers();
+        const prompt = session.type === 'pty' ? 'preview@dsha:~$ ' : 'simple> ';
+        appendLines(session, [{ text: prompt + raw, tone: 'command' }]);
+        let response = null;
+        switch (command) {
+          case 'help': response = ['[仅模拟] 可用命令：', 'help · pwd · ls · whoami · echo 文本 · clear', 'jobs · demo start · demo stop · exit', '没有真实 shell；未知命令不会执行。']; break;
+          case 'pwd': response = ['/demo/workspace  （虚构路径，未读取文件系统）']; break;
+          case 'ls': response = ['README.demo  notes/  samples/', '以上均为虚构名称，不对应用户文件。']; break;
+          case 'whoami': response = ['preview-user  （虚构身份，非设备或 shell 用户）']; break;
+          case 'jobs': response = [session.task.everStarted ? 'demo-' + session.id + ' · ' + (session.task.running ? '运行中' : '已暂停') + ' · ' + countOf(session) + ' 次（仅页面计数）' : '当前模拟会话没有演示任务。']; break;
+          case 'clear': session.log = []; renderOutput(true); announce('已清空当前模拟输出；计数与会话仍保留。'); return;
+          case 'demo start': startDemo(session); return;
+          case 'demo stop': stopDemo(session); return;
+          case 'exit': askClose(session); return;
+          default:
+            if (command === 'echo' || command.startsWith('echo ')) response = [command === 'echo' ? '' : command.slice(5), '[echo 仅逐字回显，不解释任何 shell 语法]'];
+            else { appendLines(session, [{ text: '[未执行] 不在原型白名单中。输入 help 查看可用模拟命令。', tone: 'warning' }]); announce('未知命令未执行。此页面没有真实 shell。'); return; }
+        }
+        appendLines(session, response.map((text) => ({ text, tone: 'muted' })));
+        announce('模拟响应已追加到输出区；未执行真实 shell。');
+      });
+
+      function renderDisplay() {
+        document.documentElement.style.setProperty('--term-font', (state.fontSize / 16) + 'rem');
+        $('font-size-label').textContent = state.fontSize + ' px';
+        $('font-smaller').disabled = state.fontSize <= 14;
+        $('font-larger').disabled = state.fontSize >= 24;
+        $('wrap-output').checked = state.wrap;
+        $('terminal-output').classList.toggle('no-wrap', !state.wrap);
+      }
+      $('font-smaller').addEventListener('click', () => { state.fontSize = Math.max(14, state.fontSize - 2); renderDisplay(); announce('输出字号已设为 ' + state.fontSize + 'px 基准。'); });
+      $('font-larger').addEventListener('click', () => { state.fontSize = Math.min(24, state.fontSize + 2); renderDisplay(); announce('输出字号已设为 ' + state.fontSize + 'px 基准。'); });
+      $('wrap-output').addEventListener('change', () => { state.wrap = $('wrap-output').checked; renderDisplay(); announce(state.wrap ? '输出长行现在自动换行。' : '已关闭自动换行，长行可在输出区横向滚动。'); });
+      $('reset-display').addEventListener('click', () => { state.fontSize = 16; state.wrap = true; renderDisplay(); announce('已恢复 16px 基准字号与自动换行。'); });
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || event.defaultPrevented || dialogStack.some((dialog) => dialog.open) || !state.inTerminal) return;
+        event.preventDefault();
+        if (state.keyboard) { setKeyboard(false); safeFocus($('keyboard-toggle')); }
+        else leaveTerminal();
+      });
+
+      // 三个主 Tab 的离线状态模型。源码决定入口；样例值、事务和网络均不连接真实后端。
+      const app = {
+        environment: 'ready', web: 'stopped', webTicket: 0, webTimer: null, safe: false, liveConfig: null,
+        subpage: null, rootScroll: { launch: 0, plugins: 0, settings: 0 }, scroll: {}, opener: null,
+        pluginTab: 'market', plugins: [
+          { id: 'mobile', name: 'dsh-web-mobile', version: '3.2.1', builtin: true, enabled: true, description: '移动界面与触控布局 · 随包源码示例' },
+          { id: 'overlay', name: 'dsh-status-overlay', version: '0.1.4', builtin: true, enabled: true, description: '将 AI 输出投影到原生悬浮条 · 随包源码示例' },
+          { id: 'notifier', name: 'dsh-task-notifier', version: '0.2.0', builtin: true, enabled: true, description: '任务进度和取消入口 · 随包源码示例' },
+          { id: 'guide', name: 'dsh-device-shell-guide', version: '0.1.19', builtin: true, enabled: true, description: '受保护设备命令引导 · 随包源码示例' },
+          { id: 'notes', name: 'demo-notes', version: '0.0.0-demo', builtin: false, enabled: false, description: '用于演示启停与删除的虚构用户插件' }
+        ],
+        eco: false, language: '跟随系统', backup: false, configSaved: false,
+        config: { runtime: 'proot', autoPort: true, port: '3080', dns: 'auto', lan: false, desktop: false, pip: false, checkUpdate: true, stream: false, staticLoader: true, noSeccomp: false }
+      };
+      const esc = text => String(text).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+      const caption = text => '<p class="caption">' + esc(text) + '</p>';
+      const note = text => '<div class="notice">' + esc(text) + '</div>';
+      let appConfirm = null;
+      function showAppDialog(title, html, action = null, label = '确认模拟') {
+        $('app-dialog-title').textContent = title;
+        // html 仅来自本文件固定模板；用户/动态文本统一经 esc 或 textContent。
+        $('app-dialog-body').innerHTML = html;
+        appConfirm = action;
+        $('app-dialog-confirm').hidden = !action;
+        $('app-dialog-confirm').textContent = label;
+        $('app-dialog-cancel').textContent = action ? '取消' : '关闭';
+        openDialog('app-dialog', '#app-dialog-title');
+      }
+      $('app-dialog-confirm').addEventListener('click', () => {
+        const action = appConfirm; appConfirm = null;
+        if (!action) return;
+        closeDialog('app-dialog', false); action();
+        requestAnimationFrame(() => {
+          const opener = dialogOpeners.get($('app-dialog'));
+          if (opener && opener.isConnected && opener.getClientRects().length && !opener.closest('[hidden]')) safeFocus(opener);
+          else safeFocus(app.subpage ? $('subpage-title') : $(state.mainPage + '-title'));
+        });
+      });
+      $('app-dialog').addEventListener('close', () => { if (!$('app-dialog').open) appConfirm = null; });
+      function viewKey() { return app.subpage || state.mainPage; }
+      function rememberScroll() { app.scroll[viewKey()] = $('main-content').scrollTop; }
+      function navigateMain(page) {
+        rememberScroll(); app.subpage = null; state.mainPage = page;
+        $('app-subpage').hidden = true; $('main-shell').dataset.view = page;
+        document.querySelectorAll('[data-page]').forEach(section => { section.hidden = section.dataset.page !== page; });
+        document.querySelectorAll('[data-nav]').forEach(nav => {
+          if (nav.dataset.nav === page) nav.setAttribute('aria-current', 'page'); else nav.removeAttribute('aria-current');
+        });
+        $('main-content').scrollTop = app.scroll[page] || 0;
+        safeFocus($(page + '-title'));
+        announce('已切换到' + ({ launch: '启动', plugins: '插件', settings: '设置' }[page]) + '；草稿、筛选与终端会话保留。');
+      }
+      const subpageCache = new Map();
+      function openSubpage(name, trigger) {
+        if (!subpages[name]) return;
+        rememberScroll(); app.opener = trigger; app.subpage = name;
+        document.querySelectorAll('[data-page]').forEach(section => { section.hidden = true; });
+        const definition = subpages[name];
+        $('app-subpage').hidden = false; $('subpage-title').textContent = definition.title;
+        $('subpage-intro').textContent = definition.intro;
+        $('subpage-back-label').textContent = state.mainPage === 'launch' ? '返回启动' : '返回设置';
+        if (!subpageCache.has(name)) {
+          const container = document.createElement('div'); container.innerHTML = definition.html;
+          subpageCache.set(name, container);
+          $('subpage-body').append(container);
+        }
+        subpageCache.forEach((element, key) => { element.hidden = key !== name; });
+        $('main-content').scrollTop = app.scroll[name] || 0;
+        $('main-shell').dataset.view = name;
+        if (name === 'config') syncConfig();
+        safeFocus($('subpage-title'));
+      }
+      function backFromSubpage() {
+        const opener = app.opener; navigateMain(state.mainPage); safeFocus(opener);
+      }
+      $('subpage-back').addEventListener('click', backFromSubpage);
+      document.querySelectorAll('[data-subpage]').forEach(button => button.addEventListener('click', () => openSubpage(button.dataset.subpage, button)));
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !event.defaultPrevented && !state.inTerminal && app.subpage && !document.querySelector('dialog[open]')) { event.preventDefault(); backFromSubpage(); }
+      });
+      function logLaunch(text) {
+        const lines = $('launch-log').textContent.split('\n').concat('[模拟] ' + text).slice(-40);
+        $('launch-log').textContent = lines.join('\n'); $('launch-log').scrollTop = $('launch-log').scrollHeight;
+      }
+      function renderWeb() {
+        const busy = ['starting', 'authenticating', 'stopping'].includes(app.web);
+        const labels = { stopped: '尚未启动', starting: '正在准备', authenticating: '等待鉴权', running: app.safe ? '安全模式 · 已就绪' : 'Web 已就绪', stopping: '正在停止', failed: '启动失败 · 示例' };
+        const hints = { stopped: '示例环境已准备。模型与 API Key 在 Web UI 内配置。', starting: '准备运行入口。重复点击不会新建第二次启动。', authenticating: '等待模拟鉴权回执；不是实际网络连接。', running: '后端与页面状态分开呈现。点击下方按钮查看 Web 入口说明。', stopping: '等待模拟退出确认，不把点下按钮当成已停止。', failed: '未达到就绪。可显式重试或查看启动恢复，不自动重放。' };
+        $('run-state').textContent = app.environment !== 'ready' && app.web === 'stopped' ? (app.environment === 'missing' ? '手机环境尚未准备' : '环境维护中') : labels[app.web];
+        $('run-subtitle').textContent = app.environment !== 'ready' && app.web === 'stopped' ? '本机启动与终端入口受限；仍可查看设置和连接电脑工作区。' : hints[app.web];
+        $('web-start').textContent = app.environment === 'missing' ? '查看准备流程' : app.web === 'running' ? '进入 Web UI · 说明预览' : app.web === 'failed' ? '重新启动 · 模拟' : busy ? labels[app.web] + '…' : '启动 DSH · 模拟';
+        $('web-start').disabled = busy || app.environment === 'maintenance';
+        $('web-stop').disabled = !['running', 'starting', 'authenticating'].includes(app.web);
+        $('web-restart').disabled = app.web !== 'running';
+        $('safe-start').disabled = busy || app.environment !== 'ready';
+        $('demo-environment').disabled = busy || app.web === 'running';
+        $('run-badge').textContent = (app.web === 'running' ? '已就绪' : busy ? '处理中' : '仅模拟') + ' · 样例';
+        $('run-badge').classList.toggle('positive', app.web === 'running');
+        $('web-port').textContent = app.web === 'running' ? (app.liveConfig.autoPort ? '自动分配*' : app.liveConfig.port + '*') : '—';
+        $('environment-state').textContent = ({ ready: 'READY*', missing: '未准备*', maintenance: '维护中*' })[app.environment];
+        $('address-summary').textContent = (app.web === 'running' ? 'Web 已就绪*' : 'Web 未就绪*') + ' · LAN ' + (app.config.lan ? '启用偏好*' : '未开启*') + '（示例）';
+      }
+      function startWeb(safe = false) {
+        if (app.environment !== 'ready') { openSubpage('install', $('web-start')); return; }
+        if (['starting', 'authenticating', 'running', 'stopping'].includes(app.web)) return;
+        const ticket = ++app.webTicket; app.safe = safe; app.liveConfig = { ...app.config };
+        app.web = 'starting'; renderWeb(); logLaunch((safe ? '安全模式：' : '') + '准备运行入口。');
+        app.webTimer = setTimeout(() => {
+          if (ticket !== app.webTicket) return;
+          app.web = 'authenticating'; renderWeb(); logLaunch('等待鉴权。');
+          app.webTimer = setTimeout(() => {
+            if (ticket !== app.webTicket) return;
+            const fail = $('demo-fail-start').checked; $('demo-fail-start').checked = false;
+            app.web = fail ? 'failed' : 'running'; renderWeb();
+            logLaunch(fail ? '启动失败。原型注入的错误，不自动重试。' : '模拟就绪。没有启动真实进程或监听端口。');
+          }, 650);
+        }, 450);
+      }
+      function stopWeb(restart = false, safeRestart = false) {
+        ++app.webTicket; clearTimeout(app.webTimer); app.web = 'stopping'; renderWeb();
+        logLaunch('请求停止 Web；终端模拟会话不受影响。');
+        app.webTimer = setTimeout(() => {
+          app.web = 'stopped'; renderWeb(); logLaunch('模拟 Web 退出已确认。');
+          if (restart) startWeb(safeRestart);
+        }, 450);
+      }
+      $('web-start').addEventListener('click', () => app.web === 'running' ? showAppDialog('Web UI 入口', caption('生产应用会打开已鉴权的 Web 页面，模型、提供商和 API Key 在网页内配置。') + note('这份离线原型没有 Web 后端，不生成鉴权链接，也不会打开当前聊天或另一个服务。')) : startWeb());
+      $('web-stop').addEventListener('click', () => showAppDialog('仅停止 Web？', caption('模拟 Web 将停止。终端会话、草稿与演示计数继续保留。') + note('这是页面内状态演示，不会结束任何真实进程。'), () => stopWeb(), '停止模拟 Web'));
+      $('web-restart').addEventListener('click', () => showAppDialog('重启模拟 Web？', caption('先等待模拟停止完成，再启动一次。不会重建或关闭终端。'), () => stopWeb(true), '确认重启'));
+      $('safe-start').addEventListener('click', () => showAppDialog('安全启动', caption('映射原生安全启动入口；独立应急 DSH 是另一套运行根，二者不混用。这里只演示启动状态，不改变任何插件；运行中会先模拟停止旧 Web。'), () => app.web === 'running' ? stopWeb(true, true) : startWeb(true), '模拟安全启动'));
+      $('demo-environment').addEventListener('change', () => {
+        app.environment = $('demo-environment').value; app.web = 'stopped'; renderWeb();
+        logLaunch('环境场景切换为 ' + app.environment + '；原有模拟会话保留，但本机入口受门禁。');
+      });
+      $('diagnostic-log').addEventListener('click', () => showAppDialog('诊断内容预览 · 不下载', caption('对应原生下载日志入口。原型只展示样例，不读取日志文件、不创建导出文件。') + '<pre class="app-log">' + esc($('launch-log').textContent) + '</pre>'));
+      $('launch-address').addEventListener('click', () => showAppDialog('访问地址', '<ul class="checklist"><li>Web 状态<span>' + esc(app.web) + ' · 模拟</span></li><li>本机地址<span>未读取真实端口或鉴权凭据</span></li><li>LAN<span>' + (app.config.lan ? '偏好已开启，未验证监听' : '未开启（示例）') + '</span></li></ul>' + note('不使用固定 3080 或随机 IP 冒充真实地址。LAN HTTP 为明文，需独立启用与鉴权。')));
+      function pluginTab(name) {
+        app.pluginTab = name;
+        document.querySelectorAll('[data-plugin-tab]').forEach(button => { const active = button.dataset.pluginTab === name; button.setAttribute('aria-selected', String(active)); button.tabIndex = active ? 0 : -1; });
+        $('plugin-market').hidden = name !== 'market'; $('plugin-installed').hidden = name !== 'installed'; renderPlugins();
+      }
+      document.querySelectorAll('[data-plugin-tab]').forEach(button => {
+        button.addEventListener('click', () => pluginTab(button.dataset.pluginTab));
+        button.addEventListener('keydown', event => {
+          if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+          event.preventDefault(); const next = event.key === 'Home' ? 'market' : event.key === 'End' ? 'installed' : app.pluginTab === 'market' ? 'installed' : 'market';
+          pluginTab(next); safeFocus($(next === 'market' ? 'plugins-market-tab' : 'plugins-installed-tab'));
+        });
+      });
+      function renderPlugins() {
+        const query = $('plugin-search').value.toLocaleLowerCase();
+        const selected = app.plugins.filter(plugin => (! $('hide-builtin').checked || !plugin.builtin) && (plugin.name + plugin.description).toLocaleLowerCase().includes(query));
+        const sort = $('plugin-sort').value;
+        selected.sort((a, b) => sort === 'enabled' ? Number(b.enabled) - Number(a.enabled) || a.name.localeCompare(b.name) : (sort === 'za' ? -1 : 1) * a.name.localeCompare(b.name));
+        $('plugin-count').textContent = selected.length + ' / ' + app.plugins.length + ' 个示例 · ' + app.plugins.filter(p => p.enabled).length + ' 个模拟启用';
+        $('plugin-empty').hidden = selected.length > 0;
+        const list = $('plugin-list'); const previousFocus = document.activeElement;
+        const focusId = previousFocus && previousFocus.dataset.pluginId, focusAction = previousFocus && previousFocus.dataset.pluginAction;
+        list.innerHTML = selected.map(plugin => '<article class="app-card plugin-card" data-plugin-id="' + esc(plugin.id) + '"><div class="card-heading"><h3>' + esc(plugin.name) + '</h3><span class="pill">' + (plugin.builtin ? '随包源码示例' : '虚构用户示例') + '</span></div><p class="caption">' + esc(plugin.description) + '</p><p class="caption">v' + esc(plugin.version) + ' · <span data-plugin-state>' + (plugin.pending ? '处理中 · 模拟' : plugin.enabled ? '已启用 · 模拟' : '已禁用 · 模拟') + '</span></p><div class="button-row plugin-actions"><button class="toggle" role="switch" aria-checked="' + plugin.enabled + '" aria-label="模拟启停 ' + esc(plugin.name) + '" data-plugin-action="toggle" data-plugin-id="' + plugin.id + '" ' + (plugin.pending ? 'disabled' : '') + '>' + (plugin.pending ? '处理中…' : plugin.enabled ? '禁用' : '启用') + '</button><button class="button-outline" aria-expanded="' + Boolean(plugin.expanded) + '" data-plugin-action="details" data-plugin-id="' + plugin.id + '">详情</button></div><div class="plugin-details" ' + (plugin.expanded ? '' : 'hidden') + '>来源：' + (plugin.builtin ? '仓库 builtin-plugins；不是本机检测结果。' : '原型自带虚构数据；没有安装文件。') + '\n状态只在当前文档保存；切换页面不会丢失。</div>' + (plugin.expanded && !plugin.builtin ? '<button class="button-danger" data-plugin-action="remove" data-plugin-id="' + plugin.id + '">删除此示例</button>' : '') + '</article>').join('');
+        if (focusId && focusAction) safeFocus(list.querySelector('[data-plugin-id="' + focusId + '"][data-plugin-action="' + focusAction + '"]'));
+      }
+      $('plugin-list').addEventListener('click', event => {
+        const button = event.target.closest('[data-plugin-action]'); if (!button) return;
+        const plugin = app.plugins.find(item => item.id === button.dataset.pluginId); if (!plugin) return;
+        if (button.dataset.pluginAction === 'details') { plugin.expanded = !plugin.expanded; renderPlugins(); }
+        if (button.dataset.pluginAction !== 'details' && !pluginEnvironmentReady()) return;
+        if (button.dataset.pluginAction === 'toggle' && !plugin.pending) {
+          if (plugin.builtin && plugin.enabled) {
+            showAppDialog('禁用随包组件？', caption('这只是源码样例。在生产中禁用官方基础组件可能影响界面或能力，需要保留风险确认。'), () => togglePlugin(plugin), '模拟禁用'); return;
+          }
+          togglePlugin(plugin);
+        }
+        if (button.dataset.pluginAction === 'remove' && !plugin.builtin) showAppDialog('删除虚构插件示例？', caption('只从页面内列表移除 ' + plugin.name + '，不会删除任何文件。'), () => { app.plugins = app.plugins.filter(item => item.id !== plugin.id); renderPlugins(); safeFocus($('plugin-search')); announce('已移除样例，没有删除设备文件。'); }, '删除示例');
+      });
+      function togglePlugin(plugin) {
+        plugin.pending = true; renderPlugins();
+        setTimeout(() => { plugin.enabled = !plugin.enabled; plugin.pending = false; renderPlugins(); announce(plugin.name + ' 已模拟' + (plugin.enabled ? '启用' : '禁用') + '；没有写入插件目录。'); }, 500);
+      }
+      ['plugin-search', 'hide-builtin', 'plugin-sort'].forEach(id => $(id).addEventListener(id === 'plugin-search' ? 'input' : 'change', renderPlugins));
+      $('plugins-refresh').addEventListener('click', () => { renderPlugins(); announce('已重绘当前内存样例；没有读取设备，不重置启停状态。'); });
+      $('plugins-updates').addEventListener('click', () => showAppDialog('更新检查 · 离线边界', caption('真实入口会查询插件来源。这份原型不联网，所以不显示“已是最新版”。') + note('当前状态：未检查。版本号只来自仓库固定示例。')));
+      $('plugin-example').addEventListener('click', () => { $('plugin-url').value = 'https://github.com/example/demo-plugin'; $('plugin-link-status').textContent = '虚构演示地址；不会请求该仓库。'; });
+      function installSample() {
+        if (!app.plugins.some(p => p.id === 'sample')) app.plugins.push({ id: 'sample', name: 'demo-installed-sample', version: '0.0.0-demo', builtin: false, enabled: true, description: '通过模拟安装添加；无真实下载、文件或代码执行' });
+        $('plugin-search').value = ''; $('hide-builtin').checked = false;
+        pluginTab('installed'); safeFocus($('plugins-installed-tab')); announce('固定样例已添加并模拟启用；未安装任何真实插件。');
+      }
+      function pluginEnvironmentReady() {
+        if (app.environment === 'ready') return true;
+        showAppDialog('插件操作受环境门禁限制', caption('当前环境是未准备或维护示例。可以查看静态清单，但不模拟安装、启停或删除；恢复“已准备”后再操作。'));
+        return false;
+      }
+      function previewSampleInstall() { if (!pluginEnvironmentReady()) return; showAppDialog('模拟插件检查与安装', caption('固定演示包：demo-installed-sample / 0.0.0-demo。没有解析远端元数据。') + note('生产会检查包格式、路径、依赖、摘要与事务后提交启用；本页按钮仅添加内存对象，不构成真实安全检查。'), installSample, '添加模拟样例'); }
+      $('plugin-link-form').addEventListener('submit', event => {
+        event.preventDefault();
+        if (!pluginEnvironmentReady()) return;
+        const source = $('plugin-url').value.trim(); let kind = '';
+        if (/^(?:@[a-z0-9._-]+\/)?[a-z0-9][a-z0-9._-]*(?:@[a-z0-9.^~*+-]+)?$/i.test(source)) kind = 'npm 包名';
+        else {
+          try {
+            const url = new URL(source);
+            if (url.protocol === 'https:' && !url.username && !url.password) {
+              if (url.hostname === 'github.com' && /^\/[\w.-]+\/[\w.-]+\/?$/.test(url.pathname)) kind = 'GitHub 仓库';
+              else if (/\.(?:zip|tar\.gz|tgz)$/i.test(url.pathname)) kind = 'HTTPS 压缩包';
+            }
+          } catch (_) { /* 只做离线格式识别。 */ }
+        }
+        if (!kind) { $('plugin-link-status').textContent = '格式不符合演示规则：请输入一个 npm 包名、GitHub 仓库或 HTTPS 压缩包；未发送网络请求。'; return; }
+        $('plugin-link-status').textContent = '识别为 ' + kind + '（本地演示校验，非生产解析器）；不是远端解析成功。'; previewSampleInstall();
+      });
+      $('plugin-import').addEventListener('click', previewSampleInstall);
+      $('plugin-export').addEventListener('click', () => showAppDialog('插件清单 · 导出预览', caption('原生支持插件导出；这里只展示固定清单，不读取文件、不下载。') + '<pre class="app-log">' + esc(app.plugins.filter(p => !p.builtin).map(p => p.name + '@' + p.version).join('\n') || '无用户样例') + '</pre>'));
+      $('plugin-community').addEventListener('click', () => showAppDialog('插件社区入口', caption('保留真实产品中的社区入口，而不是虚构一个已经联网的商店。原型不打开外部网站；安装前核查作者、源码与运行风险。')));
+      $('plugin-source').addEventListener('change', () => announce('仅改变下载源展示偏好，没有连接代理或下载。'));
+      $('eco-toggle').addEventListener('click', () => {
+        app.eco = !app.eco; $('eco-toggle').setAttribute('aria-checked', String(app.eco)); $('eco-toggle').textContent = app.eco ? '开启' : '关闭';
+        $('eco-summary').textContent = app.eco ? '熄屏空闲 1 分钟后减少保活；有任务时继续运行。仅模拟。' : '持续保持运行，适合长时间任务。仅模拟。';
+        announce('省电偏好只改变本页显示，没有调整系统保活或 CPU 锁。');
+      });
+      const languages = ['跟随系统', '简体中文', '繁體中文', 'English', 'Русский', '日本語', '한국어', 'العربية', 'Português', 'Latina', 'Français'];
+      $('language-choice').addEventListener('click', () => showAppDialog('语言 / Language', caption('映射当前源码十种语言与跟随系统选项。本预览只演示选择和摘要，不假装完成全页翻译或 Android 重建。') + '<label class="field"><span>界面语言偏好 · 示例</span><select id="language-select">' + languages.map(language => '<option ' + (language === app.language ? 'selected' : '') + '>' + esc(language) + '</option>').join('') + '</select></label>', () => { app.language = $('language-select').value; $('language-summary').textContent = app.language + ' · 已保存偏好（预览仍为中文）'; announce('语言偏好仅在本页保存；终端会话不重建。'); }, '保存预览偏好'));
+      const check = (id, title, checked = false) => '<label class="check-row"><input type="checkbox" id="' + id + '" ' + (checked ? 'checked' : '') + '><span>' + title + '</span></label>';
+      const actionButton = (action, label, primary = false) => '<button class="' + (primary ? 'button-primary' : 'button-outline') + '" data-app-action="' + action + '">' + label + '</button>';
+      const subpages = {
+        remote: { title: '电脑工作区', intro: '对应首页独立电脑工作区入口；不等于“数据与备份”。无需准备本机 Ubuntu。', html: '<div class="app-card"><h3>本机工作区</h3>' + caption('本机 DSH 状态在启动页管理。这里的电脑配对与其生命周期分开。') + '<h3 style="margin-top:24px">电脑</h3><div id="remote-hosts" class="empty-list">还没有配对的电脑 · 示例空态</div><div class="button-row">' + actionButton('remote-pair', '预览配对流程', true) + actionButton('remote-settings', '连接方式说明') + '</div>' + note('未扫描二维码、不读取相机、不连接 LAN/WAN。官方中继尚未部署，不能展示为可用服务。') + '</div>' },
+        config: { title: '运行配置', intro: '源码中的运行、网络与显示配置。模型和 API Key 在 Web UI 配置，不在此新增表单。', html: '<form id="runtime-form"><div class="app-card"><h3>网络与运行</h3><div class="form-grid"><label class="field"><span>运行引擎</span><select id="cfg-runtime"><option value="proot">proot · 默认</option><option value="proroot">proroot · 可选</option></select></label><label class="field"><span>DNS</span><select id="cfg-dns"><option value="auto">auto · 兼容解析</option><option value="ipv4">ipv4 · IPv4 兼容</option><option value="native">native · 原生解析</option></select></label></div>' + check('cfg-autoPort', '自动选择 Web 端口', true) + '<label class="field"><span>首选端口（关闭自动后可编辑）</span><input class="app-input" id="cfg-port" type="number" min="1" max="65535" value="3080" disabled></label>' + check('cfg-lan', '启用局域网访问 · 仅预览') + note('LAN HTTP 未加密。保存偏好不等于已获得系统权限或真实监听成功；以实际地址与状态为准。') + '<h3>显示与交互</h3>' + check('cfg-desktop', '桌面模式') + '<label class="field"><span>浏览器内核 · Standard 源码示例</span><select id="cfg-browser"><option>系统 WebView</option></select></label>' + check('cfg-pip', '启用画中画 · 立即更新预览偏好') + check('cfg-checkUpdate', '启动时检查更新', true) + check('cfg-stream', '显示悬浮条') + '<h3>运行兼容</h3>' + check('cfg-staticLoader', '使用静态 loader', true) + check('cfg-noSeccomp', '禁用 seccomp · 兼容选项') + caption('这些是配置入口的布局模拟，不会更改运行引擎、安全参数、系统权限或真实网络。') + '</div><div class="save-bar"><p id="config-save-status" role="status">尚未更改 · 只保存到页面内存</p><button type="button" class="button-outline" data-app-action="config-reset">恢复已保存值</button><button type="submit" id="config-save" class="button-primary">保存预览配置</button></div></form>' },
+        install: { title: '安装与环境', intro: '保留组件检查与恢复路径，不用界面跳转或一颗绿点假装环境已就绪。', html: '<article class="app-card"><h3>组件检查 · 演示清单</h3><ul id="component-list" class="checklist">' + ['Linux 环境', '基础工具', 'Node.js', 'pnpm', 'dsh', '运行补丁'].map(name => '<li>' + name + '<span>未检测</span></li>').join('') + '</ul><div class="button-row">' + actionButton('component-check', '模拟组件检查', true) + actionButton('component-repair', '维护边界说明') + '</div><p id="component-status" class="caption" role="status">没有执行安装或文件校验。</p>' + note('真实修复前须核验环境身份、关闭终端与 Web 并取得维护屏障。未知退出不能当成清理成功。本页不提供格式化入口。') + '</article>' },
+        backup: { title: '数据与备份', intro: '对应 WorkspaceFragment：备份与文件管理，不是电脑配对页。', html: '<div class="app-card"><h3>保护你的工作</h3>' + caption('一键备份包含应用数据及当前应用内工作区；外置工作区需另行备份。其它范围在“恢复与更多”中选择。') + '<div class="button-row run-secondary">' + actionButton('backup-preview', '一键备份 · 流程预览', true) + actionButton('restore-preview', '恢复与更多') + '</div><p id="backup-status" class="caption" role="status">未生成备份文件。</p><ul class="checklist"><li>自动备份<span>默认开启 · 运行时延后</span></li><li>保留策略<span>最近 3 份已验证自动副本</span></li><li>新导出<span>v5 tar.gz · 无需密码</span></li><li>本机授权与桥凭据<span>不通过归档生效</span></li></ul><div class="button-row">' + actionButton('files-preview', '作品与文件导出') + actionButton('storage-preview', '存储指南') + actionButton('skills-preview', 'Skills 与存储') + actionButton('reset-preview', '重置配置说明') + '</div></div>' },
+        grants: { title: '设备能力授权', intro: 'DSHA 许可与 Android 系统权限是两层；开关偏好不代表系统已授权。', html: '<div class="app-card">' + note('此页只展示授权边界。没有真实系统权限，也不会调用设置、Root、ADB 或手机工具。') + '<ul class="checklist"><li>Root / Shizuku / ADB<span>未读取系统状态</span></li><li>无障碍 / 截屏 / 虚拟屏<span>未验证</span></li><li>短信读取<span>默认逐次确认 · 独立授权</span></li><li>悬浮窗 / 位置 / 传感器<span>独立、可撤销</span></li></ul><div class="button-row">' + actionButton('grant-preview', '查看授权交互边界', true) + '</div>' + caption('设备命令保护始终开启。系统目录与相册等保护路径不能通过全局确认偏好绕过。') + '</div>' },
+        overlay: { title: '悬浮条与助手', intro: '这是跨应用的 AI 输出/助手入口；终端悬浮球是页面内控件，两者不是同一个开关。', html: '<div class="app-card"><h3>样式预览 · 非系统悬浮窗</h3><label class="field"><span>显示位置 · 演示选项</span><select id="overlay-position"><option>屏幕上方</option><option>屏幕下方</option></select></label><div class="notice" id="overlay-sample">DSHA 助手 · 正在整理方案…（虚构消息）</div>' + actionButton('overlay-preview', '应用样式预览', true) + caption('未申请 SYSTEM_ALERT_WINDOW，不跨应用显示，不读取真实会话。') + '</div>' },
+        updates: { title: '应用更新', intro: '仅呈现入口与离线状态，不伪造“已经最新”或下载进度。', html: '<div class="app-card"><h3>源码参考版本</h3>' + caption('0.2.1-rc.3 / build197；不是安装版本检测。') + '<label class="field"><span>更新通道 · 仅演示</span><select id="update-channel"><option>稳定版</option><option>预览版</option></select></label>' + actionButton('updates-preview', '检查更新 · 离线说明', true) + '<p id="updates-status" class="caption" role="status">尚未连接更新服务。</p></div>' },
+        diagnostics: { title: '自检诊断', intro: '真实环境、页面可用与后端就绪分别核验。下面只展示检查结果的信息层级。', html: '<div class="app-card"><ul class="checklist"><li>当前 HTML 交互<span>可操作，非 Android 验收</span></li><li>Ubuntu / PTY / FGS<span>未检查</span></li><li>设备授权与网络<span>未检查</span></li></ul>' + actionButton('diagnostics-preview', '查看诊断流程', true) + '</div>' },
+        recovery: { title: '启动恢复', intro: '安全启动、配置修复与独立应急分开，失败时不自动重放启动命令。', html: '<div class="app-card"><h3>先理解失败，再决定下一步</h3><ul class="checklist"><li>查看最近诊断<span>本页只有模拟日志</span></li><li>配置快照<span>不覆盖后来修改</span></li><li>独立应急 DSH<span>独立运行根 / 受控修复</span></li></ul>' + actionButton('recovery-preview', '查看恢复边界', true) + note('不将未知清理标为成功，不提供“清空数据再试”。') + '</div>' },
+        about: { title: '关于与设计来源', intro: '这是 DSHA 的离线 HTML 交互提案，不是 Termux 应用，也不是生产 WebView 替换方案。', html: '<div class="app-card"><ul class="checklist"><li>DSHA 源码基线<span>Sunset-zhongdua-G / 02f80ab</span></li><li>Termux UI 参考<span>8629e632 · 2026-09-26</span></li><li>主 Tab<span>启动 / 插件 / 设置</span></li><li>终端<span>沿用极简＋悬浮球方案</span></li></ul>' + caption('Termux 是原生 XML/Java；本页独立编写 HTML/CSS/JS，只借鉴信息层级，不复制 GPL 应用代码。Termux app 为 GPL-3.0-only；terminal-view/emulator 的 Apache-2.0 例外不能扩大到 app 与额外键代码。') + note('完整来源、逐文件哈希、映射与测试证据见同目录报告。原型没有外部资源和后端，刷新丢失所有状态。') + '</div>' }
+      };
+      function syncConfig(force = false) {
+        if (!force && $('runtime-form').dataset.initialized) return;
+        Object.entries(app.config).forEach(([key, value]) => { const input = $('cfg-' + key); if (!input) return; if (typeof value === 'boolean') input.checked = value; else input.value = value; });
+        $('cfg-port').disabled = $('cfg-autoPort').checked;
+        $('runtime-form').dataset.initialized = 'true';
+        $('config-save-status').textContent = '已载入预览配置 · 不改变设备';
+      }
+      $('subpage-body').addEventListener('change', event => {
+        if (event.target.closest('#runtime-form')) {
+          $('cfg-port').disabled = $('cfg-autoPort').checked;
+          if (event.target.id === 'cfg-pip') { app.config.pip = event.target.checked; $('config-save-status').textContent = 'PiP 预览偏好即时更新；未请求系统权限。其它更改请保存。'; }
+          else $('config-save-status').textContent = '有未保存草稿 · 离开子页或进入终端后仍保留';
+        }
+      });
+      $('subpage-body').addEventListener('submit', event => {
+        if (event.target.id !== 'runtime-form') return; event.preventDefault();
+        const port = $('cfg-port').value;
+        if (!$('cfg-autoPort').checked && (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535)) { $('config-save-status').textContent = '首选端口需为 1–65535 的整数。未保存。'; return; }
+        if (!$('cfg-autoPort').checked && ([3081, 3082].includes(Number(port)) || (Number(port) >= 3090 && Number(port) <= 3099))) { $('config-save-status').textContent = '3081、3082 和 3090–3099 为桥接保留端口。未保存。'; return; }
+        Object.keys(app.config).forEach(key => { const input = $('cfg-' + key); if (input) app.config[key] = input.type === 'checkbox' ? input.checked : input.value; });
+        $('config-save-status').textContent = '已保存到本页内存 · 不重启 Web 或终端，不写入应用';
+        $('config-summary').textContent = app.config.runtime + ' · ' + (app.config.autoPort ? '自动端口' : '端口 ' + app.config.port) + ' · DNS ' + app.config.dns + '（预览）';
+        renderWeb(); announce('配置已模拟保存，既有 Web 与终端会话不重启。');
+      });
+      $('subpage-body').addEventListener('click', event => {
+        const button = event.target.closest('[data-app-action]'); if (!button) return;
+        const action = button.dataset.appAction;
+        if (action === 'config-reset') { syncConfig(true); return; }
+        if (action === 'remote-pair') { showAppDialog('电脑配对流程预览', '<ol class="help-steps"><li>电脑侧显示一次性配对信息。</li><li>手机扫码或粘贴，核对目标身份。</li><li>双方确认后建立连接，状态区显示结果。</li></ol>' + note('这里不请求相机、不读取剪贴板、不显示有效配对码。点击只增加虚构电脑条目。'), () => { $('remote-hosts').textContent = '演示电脑 · 未连接 · 虚构配对条目'; announce('已添加虚构电脑条目，未建立连接。'); }, '添加虚构电脑'); return; }
+        if (action === 'component-check') {
+          button.disabled = true; $('component-status').textContent = '正在演示检查…（不读取任何文件）';
+          setTimeout(() => { $('component-list').querySelectorAll('span').forEach(span => { span.textContent = '示例通过 · 未实测'; }); $('component-status').textContent = '演示结束；不修改真实或模拟入口的环境就绪状态。'; button.disabled = false; }, 650); return;
+        }
+        if (action === 'backup-preview') { showAppDialog('一键备份 · 应用数据与应用内工作区', caption('生产的一键备份采用固定范围，安全停止、采集、打包、读回核验，然后导出；外置工作区另备。原型不执行这些动作。') + note('这里不会停止任何进程、创建归档或访问用户文件；不是“备份成功”。'), () => { $('backup-status').textContent = '已走完流程预览 · 没有生成归档，真实备份未执行。'; }, '演示流程完成'); return; }
+        if (action === 'restore-preview') { showAppDialog('恢复与更多备份选项', caption('映射 NativeDataActivity 的范围选择。这里只展示选择，不创建归档或读取文件。') + '<label class="field"><span>更多备份范围 · 选择演示</span><select id="backup-scope"><option>应用数据</option><option>对话与附件</option><option>设置</option><option>插件</option><option>所选项目文件</option></select></label>' + note('恢复须先核验完整性/认证再预检；本机授权不随归档生效，未知和冲突原件不自动删除。')); return; }
+        if (action === 'updates-preview') { $('updates-status').textContent = '未检查：离线原型未连接更新服务，不能判断是否最新。'; return; }
+        if (action === 'overlay-preview') { $('overlay-sample').textContent = 'DSHA 助手 · ' + $('overlay-position').value + '样式（仅页面展示）'; announce('只更新样例文案，不移动系统悬浮窗。'); return; }
+        const explanations = {
+          'remote-settings': ['连接方式', '可使用局域网或用户自托管方案。官方中继尚未部署；此原型不验证端到端加密、可达性或网络身份。'],
+          'component-repair': ['维护边界', '先按原合同关闭终端与 Web 并核验退出，再取得维护屏障。关闭未知时停止推进，不能跳过核验。原型不执行修复。'],
+          'restore-preview': ['恢复与更多', '选择归档后先完整性/认证核验，再预检范围与冲突。授权状态不能通过归档生效；原型不选择或读取文件。'],
+          'files-preview': ['作品与文件导出', '对应原生文件选择、下载、另存为和分享路径。这里不启动选择器，也没有创建导出文件。'],
+          'storage-preview': ['存储指南', '私有数据与外置工作区分开；外置工作区维护只断开引用，不遍历删除内容。本机副本不保证卸载后保留，重要数据应真实导出。'],
+          'skills-preview': ['Skills 与存储', '保留 Skills、存储与共享入口的模块关系。原型不扫描技能目录或用户文件。'],
+          'reset-preview': ['重置配置边界', '原生配置重置不是格式化环境，也不应删除对话和外置工作区。本原型不执行真实重置；刷新仅重置当前演示数据。'],
+          'grant-preview': ['授权不是一个总开关', 'DSHA 能力授权、Android 权限、Root 管理器或 Shizuku/ADB 授权彼此独立。拒绝或未知不能静默换通道重试；不能用“全部允许”覆盖设备命令保护。'],
+          'diagnostics-preview': ['诊断流程', '分别核对版本、运行环境、启动阶段、后端鉴权与页面可用性。所有未检查项仍保持未检查；不把 HTML 断言写成设备验收。'],
+          'recovery-preview': ['恢复边界', '独立应急 DSH 有独立运行根与受控修复工具。写入须有明确确认、候选身份与停止屏障；不能自动重放未知操作。']
+        };
+        if (explanations[action]) showAppDialog(explanations[action][0], caption(explanations[action][1]));
+      });
+      renderPlugins(); renderWeb();
+
+      const first = createSession('pty'); state.activeId = first.id;
+      applyTheme(false);
+      updateResponsiveLayout(); renderAll(); renderDisplay();
+      // 计数依据本页经过的时间，不模拟真实进程或后台服务；切回主界面不清理对象。
+      setInterval(renderCounters, 1000);
+      document.addEventListener('visibilitychange', renderCounters);
+    })();
+  </script>
+</body>
+</html>

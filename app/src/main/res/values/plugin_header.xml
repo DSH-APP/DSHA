@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  插件页头部（2026-11-01 压缩重构，原型 docs/design/plugin-header-20261101/preview.html）的尺寸与样式。
+  胶囊与状态条动作沿用 ShellSecondaryButton 的共享背景，只收紧高度与字号，不新增同类框色。
+-->
+<resources>
+    <dimen name="plugin_header_gap">10dp</dimen>
+    <dimen name="plugin_header_card_pad">12dp</dimen>
+    <dimen name="plugin_header_control">44dp</dimen>
+    <dimen name="plugin_header_chip">40dp</dimen>
+    <dimen name="plugin_strip_min">42dp</dimen>
+    <dimen name="plugin_strip_wave">12dp</dimen>
+
+    <!-- 筛选 / 排序 / 下载源胶囊：40dp 高，13sp，图标 16dp。 -->
+    <style name="PluginHeaderChip" parent="ShellSecondaryButton">
+        <item name="android:minHeight">@dimen/plugin_header_chip</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:drawablePadding">6dp</item>
+        <item name="android:drawableTint">@color/shell_text_secondary</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- 状态条右侧唯一动作：40dp 触控区，视觉更轻。 -->
+    <style name="PluginStripAction" parent="ShellSecondaryButton">
+        <item name="android:minHeight">40dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/shell_accent</item>
+        <item name="android:maxLines">1</item>
+    </style>
+</resources>

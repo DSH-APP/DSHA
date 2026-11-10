@@ -92,14 +92,16 @@ public class UserDataLayoutTest {
   @Test
   public void rc1MigrationAlwaysBindsSignedScriptOverRestoredUserFile() throws Exception {
     File root = temp.newFolder();
-    for (String script : List.of("rc1-migration.py", "rc1-settings-migration.cjs")) {
+    for (String script :
+        List.of("rc1-migration.py", "rc1-settings-migration.cjs", "materialize-cas-links.py")) {
       put(root, UserDataLayout.STABLE + "/" + script, "untrusted restored file");
       put(root, UserDataLayout.LEGACY + "/" + script, "signed asset");
     }
     var layout = new UserDataLayout(fs, root);
     layout.choose(UserDataLayout.Home.STABLE);
     var binds = layout.binds(new File(root, "linux/ubuntu"));
-    for (String script : List.of("rc1-migration.py", "rc1-settings-migration.cjs"))
+    for (String script :
+        List.of("rc1-migration.py", "rc1-settings-migration.cjs", "materialize-cas-links.py"))
       assertTrue(
           binds.stream()
               .anyMatch(

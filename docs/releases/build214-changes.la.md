@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.3-20261030.2130-dsh0.2.1-rc.5 / build214
+
+- Pluteus sessionum terminalis in telephono erecto/fenestra angusta 224dp ad lineamenta visiva redactus est: actiones inferiores brevibus titulis utuntur, dispositione 2×3 retenta, singulis lineis et pari altitudine; summa in «N sessiones» contrahitur (numeri pleni gregatum in nomine accessibilitatis manent), subtitulus capitis in pluteo angusto in «Sessiones independentes» brevietur, et margines interiores plutei ad cratem 12dp adaequantur; dispositio fenestrarum latarum/tabularum immutata manet.
+- Ordo versuum «Typus litterarum / Typus codicis / Typus terminalis» in tabula configurationum mobilium DSH Web UI 0.2.1-rc.5 correctus est: in angustis fenestris campus inputationis totam lineam suam obtinet, ita descriptio non iam singulis litteris in lineis disponitur neque tabulam verticaliter extendit; hoc emendatione locali dsh-web-mobile inclusi efficitur, et desktop/tabulae non afficiuntur.
+- versionCode ad 214 auctus est; recognitio DSHA 0.2.1-rc.3 manet, suffixum DSH inclusi 0.2.1-rc.5; scopus aedificationis et acceptationis hunc run et testimonium Release sequitur.

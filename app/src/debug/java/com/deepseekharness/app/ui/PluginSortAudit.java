@@ -1,8 +1,8 @@
 package com.deepseekharness.app.ui;
 
 import android.app.*;
-import android.os.*;
 import android.content.*;
+import android.os.*;
 import android.view.*;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.*;
@@ -10,12 +10,32 @@ import androidx.lifecycle.MutableLiveData;
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.core.*;
 import com.deepseekharness.app.util.*;
-import org.json.JSONObject;
 import java.util.*;
+import org.json.JSONObject;
 
 /** 使用独立列表验证真实排序菜单，不安装、更新或删除设备上的插件。 */
 public final class PluginSortAudit extends Instrumentation {
+  public static final class Fixture extends androidx.lifecycle.ViewModel {
+    final MutableLiveData<PluginRepository.State> states = new MutableLiveData<>();
+  }
+
+  /** 只订阅隔离内存状态；排序、搜索和隐藏功能使用真实页面控件。 */
   public static final class Page extends PluginFragment {
+    @Override
+    com.deepseekharness.app.plugins.PluginManagementEngine managementEngine() {
+      return null;
+    }
+
+    @Override
+    androidx.lifecycle.LiveData<PluginRepository.State> installedState() {
+      return new androidx.lifecycle.ViewModelProvider(requireActivity()).get(Fixture.class).states;
+    }
+
+    @Override
+    boolean safeModeActive() {
+      return false;
+    }
+
     @Override
     void syncInstalledState() {}
   }
@@ -112,10 +132,10 @@ public final class PluginSortAudit extends Instrumentation {
     waitForIdleSync();
   }
 
-  private Object field(Object object, String name) throws Exception {
-    var f = object.getClass().getDeclaredField(name);
-    f.setAccessible(true);
-    return f.get(object);
+  private <T extends View> T control(int id) {
+    return ((PluginFragment)
+            page.getSupportFragmentManager().findFragmentById(R.id.fragment_container))
+        .find(id);
   }
 
   private String names() throws Exception {
@@ -159,19 +179,6 @@ public final class PluginSortAudit extends Instrumentation {
     String previousSort = prefs.getString("plugin_sort_order", "NAME_ASC"),
         previousLanguage = new ConfigStore(getTargetContext()).getUiLanguagePreference();
     try {
-      try (var fd =
-              getUiAutomation()
-                  .executeShellCommand(
-                      "am start -W -n com.dsh.client/com.deepseekharness.app.ui.MainActivity");
-          var input = new ParcelFileDescriptor.AutoCloseInputStream(fd)) {
-        while (input.read() != -1) {}
-      }
-      long deadline = SystemClock.elapsedRealtime() + 120000;
-      var controller = HarnessController.get(getTargetContext());
-      while ((!controller.isEnvironmentReady()
-              || com.deepseekharness.app.BackupManager.isEnvironmentTaskBusy())
-          && SystemClock.elapsedRealtime() < deadline) Thread.sleep(100);
-      check(controller.isEnvironmentReady(), "环境更新未完成");
       ui(
           () -> {
             new ConfigStore(getTargetContext()).setPluginSort(PluginSort.Mode.NAME_ASC);
@@ -184,12 +191,12 @@ public final class PluginSortAudit extends Instrumentation {
       waitForIdleSync();
       awaitPage();
       mount();
-      PluginRepository repository =
-          new androidx.lifecycle.ViewModelProvider(page).get(PluginRepository.class);
+      Fixture[] fixture = {null};
+      ui(() -> fixture[0] = new androidx.lifecycle.ViewModelProvider(page).get(Fixture.class));
       var constructor = PluginRepository.Item.class.getDeclaredConstructor(JSONObject.class);
       constructor.setAccessible(true);
       List<PluginRepository.Item> items = new ArrayList<>();
-      String[] names = {"Zulu", "alpha", "plugin10", "plugin2"};
+      String[] names = {"Zulu", "dsh-task-notifier", "plugin10", "plugin2"};
       boolean[] enabled = {true, false, true, false}, updates = {false, false, true, true};
       for (int i = 0; i < names.length; i++)
         items.add(
@@ -200,14 +207,10 @@ public final class PluginSortAudit extends Instrumentation {
                     .put("enabled", enabled[i])
                     .put("updateAvailable", updates[i])
                     .put("builtin", i == 1)));
-      var stateConstructor =
-          PluginRepository.State.class.getDeclaredConstructor(
-              List.class, boolean.class, String.class);
-      stateConstructor.setAccessible(true);
-      PluginRepository.State ready = stateConstructor.newInstance(items, false, "");
-      @SuppressWarnings("unchecked")
-      MutableLiveData<PluginRepository.State> states =
-          (MutableLiveData<PluginRepository.State>) field(repository, "state");
+      check(items.get(1).builtin, "签名注册表中的内置夹具未被识别");
+      PluginRepository.State ready =
+          FragmentEntrySelfTest.fixtureState(items, false, "隔离排序夹具", false);
+      MutableLiveData<PluginRepository.State> states = fixture[0].states;
       ui(() -> states.setValue(ready));
       int[] labels = {
         R.string.plugin_sort_az,
@@ -216,47 +219,52 @@ public final class PluginSortAudit extends Instrumentation {
         R.string.plugin_sort_updates
       };
       String[] expected = {
-        "alpha,plugin2,plugin10,Zulu",
-        "Zulu,plugin10,plugin2,alpha",
-        "plugin10,Zulu,alpha,plugin2",
-        "plugin2,plugin10,alpha,Zulu"
+        "dsh-task-notifier,plugin2,plugin10,Zulu",
+        "Zulu,plugin10,plugin2,dsh-task-notifier",
+        "plugin10,Zulu,dsh-task-notifier,plugin2",
+        "plugin2,plugin10,dsh-task-notifier,Zulu"
       };
       for (String lang : new String[] {"zh", "en"}) {
         if (!lang.equals(new ConfigStore(page).getUiLanguagePreference())) language(lang);
-        ui(() -> page.findViewById(R.id.btnInstalled).performClick());
+        ui(
+            () -> {
+              control(R.id.btnInstalled).performClick();
+              ((CheckBox) control(R.id.chkHideBuiltin)).setChecked(false);
+            });
         for (int index = 0; index < labels.length; index++) {
-          ui(() -> page.findViewById(R.id.btnSort).performClick());
+          ui(() -> control(R.id.btnSort).performClick());
           if (index == 0) screenshot(lang + "-sort-menu");
           choose(page.getString(labels[index]));
           check(names().equals(expected[index]), "实际列表排序错误：" + names());
           check(new ConfigStore(page).getPluginSort() == PluginSort.Mode.values()[index], "排序没有记住");
           check(
-              ((TextView) page.findViewById(R.id.btnSort))
+              ((TextView) control(R.id.btnSort))
                   .getText()
                   .toString()
                   .equals(page.getString(labels[index])),
               "按钮没有显示当前排序");
           check(
-              page.findViewById(R.id.btnSort).getHeight()
-                  == page.findViewById(R.id.btnPluginUpdates).getHeight(),
-              "操作框高度不一致");
+              control(R.id.btnSort).getHeight()
+                  == control(R.id.btnPluginDownloadSource).getHeight(),
+              "排序与下载源胶囊高度不一致");
         }
         screenshot(lang + "-management");
-        ui(() -> ((EditText) page.findViewById(R.id.pluginSearch)).setText("plugin"));
+        ui(() -> ((EditText) control(R.id.pluginSearch)).setText("plugin"));
         check(names().equals("plugin2,plugin10"), "搜索与排序未组合");
-        ui(() -> ((EditText) page.findViewById(R.id.pluginSearch)).setText(""));
-        ui(() -> ((CheckBox) page.findViewById(R.id.chkHideBuiltin)).setChecked(true));
-        check(!names().contains("alpha"), "过滤内置插件失效");
+        ui(() -> ((EditText) control(R.id.pluginSearch)).setText(""));
+        ui(() -> ((CheckBox) control(R.id.chkHideBuiltin)).setChecked(true));
+        check(!names().contains("dsh-task-notifier"), "过滤内置插件失效");
         mount();
-        ui(() -> page.findViewById(R.id.btnInstalled).performClick());
-        check(names().equals(expected[3]), "重新打开页面丢失排序");
+        ui(() -> control(R.id.btnInstalled).performClick());
+        check(names().equals("plugin2,plugin10,Zulu"), "重新打开页面丢失排序或隐藏过滤");
+        check(((CheckBox) control(R.id.chkHideBuiltin)).isChecked(), "重新打开页面丢失隐藏选择");
       }
-      PluginRepository.State busy = stateConstructor.newInstance(items, true, "");
+      PluginRepository.State busy =
+          FragmentEntrySelfTest.fixtureState(items, true, "隔离队列忙状态", false);
       ui(() -> states.setValue(busy));
       check(
-          !page.findViewById(R.id.btnPluginUpdates).isEnabled()
-              && page.findViewById(R.id.btnSort).isEnabled(),
-          "忙碌时更新必须禁用，排序仍可用");
+          control(R.id.btnPluginUpdates).isEnabled() && control(R.id.btnSort).isEnabled(),
+          "队列忙碌时仍应允许提交更新和排序");
       result.putString("result", "PASS");
       result.putInt("checks", checks);
     } catch (Throwable error) {

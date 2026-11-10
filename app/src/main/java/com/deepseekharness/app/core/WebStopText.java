@@ -54,6 +54,9 @@ public final class WebStopText {
       case OWNED_WEB_SCAN_UNCONFIRMED -> UiText.format("本应用进程清单尚未确认，原环境保留：%s", facts(diagnostic));
       case FORCE_EVIDENCE_UNCONFIRMED ->
           UiText.format("无法核验本次 Web 停止候选，未终止任何进程：%s", facts(diagnostic));
+      case RECORDED_SESSION_UNCONFIRMED -> UiText.text("已保存的 Web 出生身份与当前进程不符或无法读取，未发送任何信号");
+      case PREVIOUS_LAUNCHER_UNCONFIRMED ->
+          UiText.format("覆盖更新留下的上一版容器启动器退出尚未确认，原环境保留：%s", facts(diagnostic));
       case LEGACY_DETAIL -> facts(diagnostic);
     };
   }

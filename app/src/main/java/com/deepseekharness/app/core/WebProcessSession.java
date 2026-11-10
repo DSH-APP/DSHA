@@ -71,12 +71,16 @@ final class WebProcessSession {
             if (state.webStopProofLoaded) return;
             try {
               var record = records.read();
-              if (record != null) state.retainedWebStopProof = record.proof();
-              else if (manager.hasRecordedSession()) state.unreadableWebStopProof = true;
-            } catch (Exception unknown) {
-              state.unreadableWebStopProof = true;
-            } finally {
+              if (record != null) {
+                // 重读成功：以可核验的原记录代替先前“不可读”的保守结论，屏障仍按其原启动器判定。
+                state.retainedWebStopProof = record.proof();
+                state.unreadableWebStopProof = false;
+              } else if (manager.hasRecordedSession()) state.unreadableWebStopProof = true;
               state.webStopProofLoaded = true;
+            } catch (Exception unknown) {
+              // 读取失败只保留“不可读”屏障，不锁存：覆盖安装后私有目录或密钥可能暂时不可用，
+              // 若整进程只读一次，之后每次停止 / 启动都会卡在 retire-prior-launchers，直到进程被杀。
+              state.unreadableWebStopProof = true;
             }
           }
         };
@@ -91,8 +95,39 @@ final class WebProcessSession {
   }
 
   boolean confirmStopped() throws IOException {
-    return manager.confirmStopped(hasLiveLaunchers());
+    // Start/Stop advances the lifecycle generation before proving the previous runtime exited.
+    // Capture only those prior objects: a later run or a replaced proof cannot inherit this result.
+    java.util.ArrayList<StoppedRun> candidates = new java.util.ArrayList<>();
+    long through;
+    synchronized (state.lifecycle) {
+      through = state.lifecycle.generation() - 1;
+      for (WebRun run : state.runs.values())
+        if (run.generation <= through && run.recovered != null)
+          candidates.add(new StoppedRun(run, run.recovered, run.launcher));
+    }
+    if (!manager.confirmStopped(hasLiveLaunchers())) return false;
+    synchronized (state.lifecycle) {
+      for (StoppedRun candidate : candidates) {
+        WebRun run = candidate.run();
+        if (run.generation > through
+            || state.runs.get(run.generation) != run
+            || run.recovered != candidate.recovered()
+            || run.launcher != null && run.launcher != candidate.launcher()) continue;
+        // Full guest + launcher exit is now proven. Keeping this old PID proof would allow its
+        // future reuse or permission changes to turn an already completed Stop back into UNKNOWN.
+        run.recovered = null;
+        run.recoveredLive = false;
+        run.confirmedWebExit = true;
+        prune(run);
+      }
+    }
+    return true;
   }
+
+  private record StoppedRun(
+      WebRun run,
+      com.deepseekharness.app.runtime.StoredWebSession.Record recovered,
+      Process launcher) {}
 
   boolean hasLiveLaunchers() {
     boolean alive = retainedLauncherPending();

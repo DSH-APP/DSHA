@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "purpose": "Robolectric 4.15.1 android-all-instrumented jars for offline unit tests (robolectric.offline + robolectric.dependency.dir); sha256 pinned, sha1 cross-checked against Maven Central on 2026-11-02.",
+  "repository": "https://repo1.maven.org/maven2",
+  "group": "org.robolectric",
+  "artifact": "android-all-instrumented",
+  "jars": [
+    {"version": "6.0.1_r3-robolectric-r1-i7", "size": 79180251, "sha256": "bc9148d548ce6875f0df9aadb0535ef2e3a5a8cf385f47a5c6c4060a7aab4e75"},
+    {"version": "10-robolectric-5803371-i7", "size": 116486192, "sha256": "700fb3bb88ff346969b955241b86d2f55d395488bf5df1e8eddfbd003980c78a"},
+    {"version": "13-robolectric-9030017-i7", "size": 163233590, "sha256": "1c3fd182c03d47626686ca3b39c4ec5bdb0898b1056f4eb8f96f32c6209a5c04"},
+    {"version": "14-robolectric-10818077-i7", "size": 151142227, "sha256": "3fdac2d463f431c6b8d83b9d0ca739e795de75fffedee648c6761bd4bd864701"},
+    {"version": "15-robolectric-12650502-i7", "size": 199527464, "sha256": "33c2d7cc4186d4605269d5d411fa1818972c5b30a9f70bfbbd3d430b076af52f"}
+  ]
+}

@@ -60,4 +60,19 @@ public class RecoveryStatusTextTest {
         "RECOVERY_PROCESS_EXITED: 原始输出",
         RecoveryStatusText.render("FAILED", "RECOVERY_PROCESS_EXITED: 原始输出"));
   }
+
+  @Test
+  public void exactReadyStatusFollowsAllTenLanguages() {
+    for (String source : UiLanguagePreference.LANGUAGES) {
+      String cached =
+          UiText.choose(source, READY_ZH, READY_EN) + UiText.choose(source, NO_KEY_ZH, NO_KEY_EN);
+      for (String target : UiLanguagePreference.LANGUAGES) {
+        UiText.setLanguage(target);
+        assertEquals(
+            source + " -> " + target,
+            UiText.choose(READY_ZH, READY_EN) + UiText.choose(NO_KEY_ZH, NO_KEY_EN),
+            RecoveryStatusText.render("READY", cached));
+      }
+    }
+  }
 }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 网络健康（一期，只检测）布局文案。正文必须与 tools/i18n/messages-extra.json 的 zh 完全一致，十语资源由 localize-android-ui.py 生成。 -->
+<resources>
+    <string name="nh_title">网络健康</string>
+    <string name="nh_sub">网络异常只记录不修复</string>
+</resources>

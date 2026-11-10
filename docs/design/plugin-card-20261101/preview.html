@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-reduced="false">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>DSHA · 插件卡片重构（交互原型）</title>
+  <style>
+    /* ============================================================
+       UI v5 设计 token 的离线副本：只用于本预览，不参与 Android 资源。
+       浅色 / 夜间与 app/src/main/res/values{,-night}/shell_ui.xml 对齐。
+       ============================================================ */
+    :root {
+      color-scheme: light;
+      --page: #e9eef6;
+      --bg: #f3f6fb;
+      --surface: #fcfdff;
+      --raised: #e7edf6;
+      --line: rgba(29, 58, 96, .075);
+      --line-2: rgba(29, 58, 96, .145);
+      --text: #18273f;
+      --text-2: #50617a;
+      --muted: #5a6b86;
+      --accent: #1e50d0;
+      --accent-soft: rgba(30, 80, 208, .08);
+      --on-accent: #ffffff;
+      --good: #287453;
+      --good-soft: rgba(40, 116, 83, .10);
+      --warn: #8c600d;
+      --warn-soft: rgba(140, 96, 13, .10);
+      --bad: #af404b;
+      --bad-soft: rgba(175, 64, 75, .10);
+      --bezel: #1b2333;
+      --anat: #d0368a;
+      --shadow: 0 18px 50px rgba(17, 32, 62, .14);
+      --shadow-soft: 0 2px 8px rgba(17, 32, 62, .08);
+      --sans: system-ui, -apple-system, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --ease: cubic-bezier(.22, 1, .36, 1);
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --page: #070a10;
+      --bg: #0b0f16;
+      --surface: #131923;
+      --raised: #1b2432;
+      --line: rgba(203, 220, 255, .07);
+      --line-2: rgba(203, 220, 255, .13);
+      --text: #edf1f7;
+      --text-2: #b0bbcc;
+      --muted: #8895aa;
+      --accent: #6aa4ff;
+      --accent-soft: rgba(106, 164, 255, .08);
+      --on-accent: #091729;
+      --good: #93ccaf;
+      --good-soft: rgba(147, 204, 175, .10);
+      --warn: #e4be83;
+      --warn-soft: rgba(228, 190, 131, .10);
+      --bad: #eea3a6;
+      --bad-soft: rgba(238, 163, 166, .10);
+      --bezel: #2a3446;
+      --anat: #ff7ab8;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .5);
+      --shadow-soft: 0 2px 8px rgba(0, 0, 0, .35);
+    }
+    [data-reduced="true"] *, [data-reduced="true"] *::before, [data-reduced="true"] *::after { transition: none !important; animation: none !important; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { background: var(--page); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+    button, input, select { font: inherit; color: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    /* ---------------- 原型外壳（设计台，不属于 App） ---------------- */
+    .top { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 16px; background: var(--page); border-bottom: 1px solid var(--line-2); }
+    .top h1 { margin: 0 6px 0 0; font-size: 15px; font-weight: 650; }
+    .top h1 small { font-weight: 450; color: var(--muted); margin-left: 6px; font-size: 12px; }
+    .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--raised); }
+    .seg button { min-height: 32px; padding: 0 10px; border: 0; border-radius: 8px; background: none; color: var(--text-2); font-size: 12.5px; font-weight: 500; cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-soft); }
+    .chk { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: 12.5px; color: var(--text-2); cursor: pointer; }
+    .chk input { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; }
+
+    .stage { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; max-width: 1560px; margin: 0 auto; padding: 20px; align-items: start; }
+    .device-wrap { display: flex; justify-content: center; overflow-x: auto; padding: 4px 4px 24px; }
+    .device { --dw: 380px; --dh: 800px; position: relative; flex: none; width: var(--dw); height: var(--dh); overflow: hidden; border: 10px solid var(--bezel); border-radius: 36px; background: var(--bg); box-shadow: var(--shadow); }
+    .device[data-device="phone-l"] { --dw: 432px; --dh: 880px; }
+    .device[data-device="tablet"] { --dw: 1100px; --dh: 760px; border-radius: 28px; }
+    .device.is-short { --dh: 620px; }
+    .device[data-device="tablet"].is-short { --dh: 600px; }
+
+    .inspector { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 68px; max-height: calc(100vh - 88px); overflow: auto; padding-bottom: 8px; }
+    .panel { background: var(--surface); border: 1px solid var(--line-2); border-radius: 16px; padding: 14px 16px; }
+    .panel h2 { margin: 0 0 10px; font-size: 13.5px; font-weight: 650; }
+    .panel p, .panel li { font-size: 12.5px; line-height: 1.6; color: var(--text-2); }
+    .panel ul { margin: 0; padding-left: 18px; }
+    .panel p { margin: 0 0 8px; }
+    .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+    .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); grid-column: span 2; }
+    .field.half { grid-column: span 1; }
+    .field select, .field input[type="text"] { min-height: 34px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--bg); color: var(--text); font-size: 12.5px; }
+    .field input[type="range"] { accent-color: var(--accent); }
+    .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .btns button { min-height: 34px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--bg); color: var(--text); font-size: 12.5px; cursor: pointer; }
+    .btns button.primary { background: var(--accent); border-color: transparent; color: var(--on-accent); }
+    table.spec { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table.spec th, table.spec td { text-align: left; vertical-align: top; padding: 6px 6px 6px 0; border-top: 1px solid var(--line); line-height: 1.5; }
+    table.spec th { color: var(--muted); font-weight: 500; }
+    table.spec code, .panel code { font-family: var(--mono); font-size: 11px; color: var(--accent); overflow-wrap: anywhere; }
+
+    /* 平板设备 1100px 宽：实验台改到下方，避免设备被裁切 */
+    body[data-device="tablet"] .stage { grid-template-columns: 1fr; }
+    body[data-device="tablet"] .inspector { position: static; max-height: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); align-items: start; }
+    @media (max-width: 1100px) { .stage { grid-template-columns: 1fr; } .inspector { position: static; max-height: none; } }
+    @media (max-width: 760px) {
+      .stage { padding: 0; gap: 0; }
+      .device-wrap { padding: 0; }
+      .device[data-device^="phone"] { width: 100%; height: min(88vh, var(--dh)); border: 0; border-radius: 0; box-shadow: none; }
+      .inspector { padding: 16px; }
+      .top { position: static; }
+    }
+
+    /* ---------------- App 外壳（模拟插件页） ---------------- */
+    .screen { --fs: 1; position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg); color: var(--text); font-size: calc(14px * var(--fs)); }
+    .sbar { flex: none; height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12px; font-weight: 600; color: var(--text); }
+    .app-head { flex: none; padding: 4px 16px 10px; }
+    .ah-title { margin: 0 0 10px; font-size: calc(22px * var(--fs)); font-weight: 650; letter-spacing: -.01em; }
+    .tabs { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--raised); }
+    .tabs button { flex: 1; min-height: 40px; border: 0; border-radius: 10px; background: none; color: var(--text-2); font-size: calc(14px * var(--fs)); font-weight: 550; cursor: pointer; }
+    .tabs button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-soft); }
+    .tabs .count { margin-left: 4px; font-size: .86em; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 16px 20px; }
+    .search { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 14px; border: 1px solid var(--line-2); background: var(--surface); color: var(--muted); }
+    .search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; color: var(--text); font-size: calc(14px * var(--fs)); }
+    .search:focus-within { border-color: var(--accent); }
+    .list-meta { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 6px; color: var(--muted); font-size: calc(12.5px * var(--fs)); }
+    .empty { padding: 40px 12px; text-align: center; color: var(--muted); font-size: calc(13.5px * var(--fs)); }
+    .nav { flex: none; display: flex; height: 64px; margin: 0 12px 10px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); }
+    .nav span, .rail span { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10px; color: var(--muted); }
+    .nav span.on, .rail span.on { color: var(--accent); font-weight: 600; }
+    .tab-shell { display: flex; flex: 1; min-height: 0; }
+    .rail { flex: none; width: 80px; display: flex; flex-direction: column; gap: 8px; padding: 40px 7px; background: var(--surface); border-right: 1px solid var(--line); }
+    .rail span { flex: none; height: 64px; }
+    .tab-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .split { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(330px, 400px) 1px minmax(0, 1fr); }
+    .split > .divider { background: var(--line-2); }
+    .pane { padding: 4px 28px 28px; }
+    .pane-label { margin: 6px 0 14px; font-size: calc(12px * var(--fs)); color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+
+    /* ============================================================
+       新插件卡片（PluginCard）：一个组件、三种密度
+       list    手机单栏：摘要 + 状态 + 提示条 + 底栏（详情 / 更多）
+       compact 平板左栏：只保留摘要、状态与首条提示，点卡片选中
+       detail  平板右栏：完整说明、属性表、操作行
+       ============================================================ */
+    .pc { --tone: var(--muted); --tone-soft: var(--raised); position: relative; display: flex; flex-direction: column; gap: 10px; padding: 14px 14px 4px 16px; margin-bottom: 10px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); transition: border-color .2s, box-shadow .2s; }
+    .pc[data-tone="good"] { --tone: var(--good); --tone-soft: var(--good-soft); }
+    .pc[data-tone="accent"] { --tone: var(--accent); --tone-soft: var(--accent-soft); }
+    .pc[data-tone="warn"] { --tone: var(--warn); --tone-soft: var(--warn-soft); }
+    .pc[data-tone="bad"] { --tone: var(--bad); --tone-soft: var(--bad-soft); }
+    .pc-head { display: flex; align-items: flex-start; gap: 12px; }
+    .pc-glyph { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--raised); color: var(--accent); }
+    .pc-glyph[data-kind="third"], .pc-glyph[data-kind="located"] { color: var(--text-2); }
+    .pc-title { flex: 1; min-width: 0; padding-top: 1px; }
+    .pc-name { margin: 0; font-size: calc(16px * var(--fs)); font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+    .pc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; }
+    .pc-badge { padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: calc(11.5px * var(--fs)); font-weight: 550; line-height: 1.5; }
+    .pc-badge[data-kind="third"], .pc-badge[data-kind="located"] { background: var(--raised); color: var(--text-2); }
+    .pc-ver { font-family: var(--mono); font-size: calc(11.5px * var(--fs)); color: var(--muted); }
+    .pc-desc { margin: 0; color: var(--text-2); font-size: calc(13.5px * var(--fs)); line-height: 1.5; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+    .pc-desc.is-empty { color: var(--muted); font-style: italic; }
+    .pc.is-open .pc-desc, .pc--detail .pc-desc { display: block; -webkit-line-clamp: unset; }
+
+    /* 开关：48dp 触控区，内部是 M3 风格轨道 */
+    .pc-switch { flex: none; display: grid; place-items: center; width: 56px; height: 48px; margin: -4px -6px 0 0; padding: 0; border: 0; border-radius: 14px; background: none; cursor: pointer; position: relative; z-index: 2; }
+    .pc-switch .track { position: relative; width: 46px; height: 28px; border-radius: 999px; background: var(--raised); box-shadow: inset 0 0 0 2px var(--line-2); transition: background .2s, box-shadow .2s; }
+    .pc-switch .knob { position: absolute; top: 7px; left: 7px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); transition: transform .24s var(--ease), width .2s, height .2s, top .2s, left .2s, background .2s; }
+    .pc-switch[aria-checked="true"] .track { background: var(--accent); box-shadow: none; }
+    .pc-switch[aria-checked="true"] .knob { top: 4px; left: 4px; width: 20px; height: 20px; transform: translateX(18px); background: var(--on-accent); }
+    .pc-switch:disabled { cursor: not-allowed; opacity: .42; }
+    .pc.is-pending .pc-switch:disabled { opacity: .6; }
+
+    .pc-status { display: flex; align-items: center; gap: 8px; min-height: 20px; color: var(--tone); font-size: calc(13px * var(--fs)); font-weight: 550; line-height: 1.4; }
+    .pc-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .pc.is-pending .pc-dot { animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: .3; transform: scale(.7); } }
+    .pc-more-hint { margin-left: auto; color: var(--muted); font-weight: 500; font-size: calc(12px * var(--fs)); }
+
+    .pc-progress { display: flex; flex-direction: column; gap: 6px; }
+    .pc-bar { position: relative; height: 4px; border-radius: 999px; background: var(--raised); overflow: hidden; }
+    .pc-bar i { position: absolute; inset: 0 auto 0 0; width: var(--p, 0%); border-radius: inherit; background: var(--warn); transition: width .35s var(--ease); }
+    .pc-bar.is-indeterminate i { width: 36%; animation: slide 1.1s var(--ease) infinite; }
+    @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(280%); } }
+    .pc-phase { display: flex; justify-content: space-between; color: var(--muted); font-size: calc(12px * var(--fs)); font-variant-numeric: tabular-nums; }
+
+    .pc-notes { display: flex; flex-direction: column; gap: 6px; }
+    .pc-note { --n: var(--muted); --n-soft: var(--raised); display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 4px 4px 10px; border-radius: 12px; background: var(--n-soft); font-size: calc(12.5px * var(--fs)); line-height: 1.45; }
+    .pc-note[data-tone="warn"] { --n: var(--warn); --n-soft: var(--warn-soft); }
+    .pc-note[data-tone="bad"] { --n: var(--bad); --n-soft: var(--bad-soft); }
+    .pc-note[data-tone="accent"] { --n: var(--accent); --n-soft: var(--accent-soft); }
+    .pc-note > svg { width: 16px; height: 16px; color: var(--n); }
+    .pc-note-text { flex: 1; min-width: 0; padding: 6px 0; color: var(--text); overflow-wrap: anywhere; }
+    .pc-note.is-mono .pc-note-text { font-family: var(--mono); font-size: calc(11.5px * var(--fs)); }
+    .pc-note-act { flex: none; min-height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: var(--surface); color: var(--n); font-size: calc(12.5px * var(--fs)); font-weight: 600; cursor: pointer; box-shadow: 0 0 0 1px var(--line-2); }
+    .pc--compact .pc-note { min-height: 0; padding: 6px 10px; }
+    .pc--compact .pc-note-text { padding: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .pc-foot { display: flex; align-items: center; margin: 0 -8px 0 -10px; padding-top: 2px; border-top: 1px solid var(--line); }
+    .pc-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 12px; background: none; color: var(--text-2); font-size: calc(13.5px * var(--fs)); font-weight: 550; cursor: pointer; }
+    .pc-btn:hover { background: var(--accent-soft); color: var(--accent); }
+    .pc-btn svg { width: 18px; height: 18px; transition: transform .24s var(--ease); }
+    .pc-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+    .pc-icon { width: 44px; justify-content: center; padding: 0; }
+    .grow { flex: 1; }
+
+    .pc-details { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .28s var(--ease); }
+    .pc-details[data-open="true"] { grid-template-rows: 1fr; }
+    .pc-details-in { min-height: 0; overflow: hidden; }
+    .pc-dl { display: grid; margin: 0 0 8px; padding: 2px 12px; border-radius: 12px; background: var(--bg); }
+    .pc-dl > div { display: grid; grid-template-columns: minmax(3.5em, auto) 1fr auto; gap: 4px 12px; align-items: center; min-height: 40px; padding: 6px 0; }
+    .pc-dl > div + div { border-top: 1px solid var(--line); }
+    .pc-dl dt { color: var(--muted); font-size: calc(12.5px * var(--fs)); }
+    .pc-dl dd { margin: 0; min-width: 0; color: var(--text); font-size: calc(13px * var(--fs)); overflow-wrap: anywhere; }
+    .pc-dl dd.mono { font-family: var(--mono); font-size: calc(12px * var(--fs)); }
+    .pc-copy { width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; }
+    .pc-copy:hover { background: var(--accent-soft); color: var(--accent); }
+    .pc-copy svg { width: 16px; height: 16px; }
+    .pc-delete { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; margin: 0 0 10px; border: 1px solid var(--bad-soft); border-radius: 12px; background: none; color: var(--bad); font-size: calc(13.5px * var(--fs)); font-weight: 600; cursor: pointer; }
+    .pc-delete svg { width: 18px; height: 18px; }
+    .pc-delete:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* compact：整卡可选（stretched button），开关在其上层 */
+    .pc--compact { gap: 8px; padding: 12px 12px 12px 14px; }
+    .pc--compact .pc-glyph { width: 34px; height: 34px; border-radius: 10px; }
+    .pc--compact .pc-glyph svg { width: 18px; height: 18px; }
+    .pc--compact .pc-desc { -webkit-line-clamp: 1; }
+    .pc-hit { all: unset; cursor: pointer; }
+    .pc-hit::before { content: ""; position: absolute; inset: 0; border-radius: 18px; z-index: 1; }
+    .pc-hit:focus-visible::before { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .pc--compact:hover { border-color: var(--line-2); }
+    .pc--compact.is-selected { border-color: transparent; box-shadow: inset 0 0 0 2px var(--accent); background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--surface); }
+
+    /* detail：右栏无卡框，放大层级 */
+    .pc--detail { padding: 0; border: 0; background: none; gap: 14px; }
+    .pc--detail .pc-glyph { width: 52px; height: 52px; border-radius: 14px; }
+    .pc--detail .pc-glyph svg { width: 26px; height: 26px; }
+    .pc--detail .pc-name { font-size: calc(21px * var(--fs)); }
+    .pc--detail .pc-desc { font-size: calc(14.5px * var(--fs)); max-width: 62ch; }
+    .pc--detail .pc-dl { margin: 0; }
+    .pc-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pc-actions .pc-btn { border: 1px solid var(--line-2); background: var(--surface); }
+    .pc-actions .pc-btn.is-primary { border-color: transparent; background: var(--accent); color: var(--on-accent); }
+    .pc-actions .pc-delete { width: auto; margin: 0 0 0 auto; padding: 0 16px; }
+
+    /* 结构标注 */
+    .show-anatomy [data-slot] { outline: 1px dashed var(--anat); outline-offset: 1px; position: relative; }
+    .show-anatomy [data-slot]::after { content: attr(data-slot); position: absolute; top: -7px; left: 2px; z-index: 4; padding: 1px 4px; border-radius: 4px; background: var(--anat); color: #fff; font: 600 9px/1.2 var(--mono); pointer-events: none; }
+
+    /* ---------------- 当前实现（对照用，按 item_plugin.xml 还原） ---------------- */
+    .lg { margin-bottom: 10px; padding: 16px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); }
+    .lg.is-selected { border: 2px solid var(--accent); padding: 15px; }
+    .lg-row { display: flex; gap: 12px; }
+    .lg-glyph { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--raised); color: var(--accent); }
+    .lg-glyph svg { width: 18px; height: 18px; }
+    .lg-name { font-size: calc(16px * var(--fs)); font-weight: 600; overflow-wrap: anywhere; }
+    .lg-desc { margin-top: 5px; color: var(--text-2); font-size: calc(13.5px * var(--fs)); line-height: 1.45; overflow-wrap: anywhere; }
+    .lg-status { margin-top: 12px; padding: 10px; border-radius: 10px; background: var(--bg); color: var(--tone); font-size: calc(13px * var(--fs)); line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
+    .lg-foot { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+    .lg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--tone); flex: none; }
+    .lg-pill { min-height: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--raised); color: var(--text); font-size: calc(13.5px * var(--fs)); cursor: pointer; }
+    .lg-details { margin-top: 10px; color: var(--text-2); font-size: calc(13px * var(--fs)); line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
+    .lg-delete { width: 100%; min-height: 44px; margin-top: 4px; border: 0; background: none; color: var(--bad); font-size: calc(13.5px * var(--fs)); cursor: pointer; }
+
+    /* ---------------- 底部弹层 / 对话框 / Toast（位于设备屏内） ---------------- */
+    .overlay { position: absolute; inset: 0; z-index: 20; display: none; }
+    .overlay.is-on { display: block; }
+    .scrim { position: absolute; inset: 0; background: rgba(5, 10, 20, .42); animation: fade .2s ease; }
+    @keyframes fade { from { opacity: 0; } }
+    .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 82%; overflow: auto; padding: 8px 12px 14px; border-radius: 24px 24px 0 0; background: var(--surface); box-shadow: var(--shadow); animation: rise .28s var(--ease); font-size: calc(14px * var(--fs)); }
+    @keyframes rise { from { transform: translateY(40%); opacity: 0; } }
+    .device[data-device="tablet"] .sheet, .device[data-device="tablet"] .dlg { left: 50%; right: auto; bottom: auto; top: 50%; width: 420px; border-radius: 24px; transform: translate(-50%, -50%); animation: pop .22s var(--ease); }
+    @keyframes pop { from { opacity: 0; transform: translate(-50%, -46%); } }
+    .sheet-grip { width: 36px; height: 4px; margin: 2px auto 10px; border-radius: 999px; background: var(--line-2); }
+    .device[data-device="tablet"] .sheet-grip { display: none; }
+    .sheet-head { display: flex; align-items: center; gap: 12px; padding: 4px 8px 12px; border-bottom: 1px solid var(--line); }
+    .sheet-head h2 { margin: 0; font-size: calc(16px * var(--fs)); overflow-wrap: anywhere; }
+    .sheet-head p { margin: 2px 0 0; color: var(--muted); font-size: calc(12.5px * var(--fs)); }
+    .sheet ul { list-style: none; margin: 6px 0; padding: 0; }
+    .sheet li.sep { height: 1px; margin: 6px 8px; background: var(--line); }
+    .sheet-item { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 48px; padding: 0 12px; border: 0; border-radius: 12px; background: none; color: var(--text); font-size: calc(14.5px * var(--fs)); text-align: left; cursor: pointer; }
+    .sheet-item:hover { background: var(--accent-soft); }
+    .sheet-item svg { color: var(--text-2); }
+    .sheet-item.is-danger, .sheet-item.is-danger svg { color: var(--bad); }
+    .sheet-item small { margin-left: auto; color: var(--muted); font-family: var(--mono); font-size: .8em; }
+    .sheet-cancel { width: 100%; min-height: 48px; border: 0; border-radius: 14px; background: var(--raised); color: var(--text); font-size: calc(14.5px * var(--fs)); font-weight: 600; cursor: pointer; }
+    .dlg { position: absolute; left: 20px; right: 20px; top: 50%; transform: translateY(-50%); padding: 22px 20px 14px; border-radius: 24px; background: var(--surface); box-shadow: var(--shadow); animation: fade .2s ease; font-size: calc(14px * var(--fs)); }
+    .dlg h2 { margin: 0 0 8px; font-size: calc(18px * var(--fs)); overflow-wrap: anywhere; }
+    .dlg p { margin: 0 0 18px; color: var(--text-2); line-height: 1.55; }
+    .dlg-acts { display: flex; justify-content: flex-end; gap: 8px; }
+    .dlg-acts button { min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; background: none; color: var(--accent); font-size: calc(14px * var(--fs)); font-weight: 600; cursor: pointer; }
+    .dlg-acts button.is-danger { background: var(--bad); color: var(--surface); }
+    .toast { position: absolute; left: 50%; bottom: 92px; z-index: 15; width: max-content; max-width: calc(100% - 40px); padding: 10px 16px; border-radius: 12px; background: var(--text); color: var(--bg); font-size: calc(13px * var(--fs)); transform: translate(-50%, 12px); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s var(--ease); }
+    .toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+    .device[data-device="tablet"] .toast { bottom: 28px; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <h1>插件卡片重构<small>交互原型 · 非 App 资源</small></h1>
+    <div class="seg" role="group" aria-label="方案"><button data-set="design" data-v="new">新卡片</button><button data-set="design" data-v="legacy">当前实现</button></div>
+    <div class="seg" role="group" aria-label="设备"><button data-set="device" data-v="phone">手机 360</button><button data-set="device" data-v="phone-l">手机 412</button><button data-set="device" data-v="tablet">平板双栏</button></div>
+    <div class="seg" role="group" aria-label="主题"><button data-set="theme" data-v="light">浅色</button><button data-set="theme" data-v="dark">夜间</button></div>
+    <div class="seg" role="group" aria-label="语言"><button data-set="lang" data-v="zh">中文</button><button data-set="lang" data-v="en">EN</button></div>
+    <div class="seg" role="group" aria-label="字体倍数"><button data-set="fs" data-v="1">1.0×</button><button data-set="fs" data-v="1.15">1.15×</button><button data-set="fs" data-v="1.3">1.3×</button></div>
+    <label class="chk"><input type="checkbox" data-flag="short">短屏</label>
+    <label class="chk"><input type="checkbox" data-flag="anatomy">结构标注</label>
+    <label class="chk"><input type="checkbox" data-flag="reduced">减弱动效</label>
+  </header>
+
+  <main class="stage">
+    <section class="device-wrap" aria-label="设备预览">
+      <div class="device" id="device" data-device="phone">
+        <div class="screen" id="screen"></div>
+        <div class="overlay" id="overlay"></div>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <aside class="inspector" aria-label="状态实验台与说明">
+      <section class="panel">
+        <h2>状态实验台</h2>
+        <p>选中一张卡片后直接改字段，模拟真实仓库返回的状态组合。卡片上的开关、更新、删除也会跑完整的排队 → 执行 → 提交流程。</p>
+        <div class="fgrid">
+          <label class="field">卡片<select id="ins-target"></select></label>
+          <label class="field half">来源类型<select id="ins-kind">
+            <option value="builtin">builtin · DSHA 内置</option>
+            <option value="official">official · 官方核心</option>
+            <option value="runtime">runtimeProvided · 随 DSH</option>
+            <option value="located">runtimeLocated · 未验证</option>
+            <option value="third">第三方</option>
+            <option value="dynamic">dynamic · 临时</option>
+          </select></label>
+          <label class="field half">运行加载<select id="ins-load">
+            <option value="loaded">loaded</option>
+            <option value="loading">loading</option>
+            <option value="waiting">waiting</option>
+            <option value="failed">failed</option>
+            <option value="unloaded">unloaded</option>
+          </select></label>
+          <label class="chk"><input type="checkbox" data-ins="enabled">enabled</label>
+          <label class="chk"><input type="checkbox" data-ins="available">available</label>
+          <label class="chk"><input type="checkbox" data-ins="detected">detected</label>
+          <label class="chk"><input type="checkbox" data-ins="restart">restartRequired</label>
+          <label class="chk"><input type="checkbox" data-ins="update">updateAvailable</label>
+          <label class="chk"><input type="checkbox" data-ins="deletable">deletable</label>
+          <label class="chk"><input type="checkbox" data-ins="longName">超长名称</label>
+          <label class="chk"><input type="checkbox" data-ins="emptyDesc">无说明</label>
+          <label class="field half">operation.phase<select id="ins-phase">
+            <option value="">无操作</option>
+            <option value="QUEUED">QUEUED</option>
+            <option value="RUNNING">RUNNING</option>
+            <option value="COMMITTING">COMMITTING</option>
+          </select></label>
+          <label class="field half">percent <span id="ins-pct-v"></span><input type="range" id="ins-pct" min="-1" max="100" step="1"></label>
+          <label class="field">加载失败信息<input type="text" id="ins-error"></label>
+        </div>
+        <div class="btns">
+          <button class="primary" id="ins-sim-toggle">模拟开关流程</button>
+          <button id="ins-sim-update">模拟更新</button>
+          <button id="ins-reset">重置全部</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>结构与数据来源</h2>
+        <table class="spec">
+          <thead><tr><th>槽位</th><th>数据</th><th>相对当前的变化</th></tr></thead>
+          <tbody>
+            <tr><td>glyph</td><td><code>builtin / official / runtimeProvided / runtimeLocated / dynamic</code></td><td>按来源换图标，不再全部是拼图</td></tr>
+            <tr><td>name · badge · version</td><td><code>name</code>、来源分类、<code>version</code></td><td>版本从状态文本移到标题下；来源分类成为徽标，说明为空时不再拿分类顶替</td></tr>
+            <tr><td>switch</td><td><code>row.checked()</code> / <code>toggleEnabled()</code></td><td>移到右上角，与标题同一行；语义与无障碍描述不变</td></tr>
+            <tr><td>desc</td><td><code>descriptionText</code></td><td>默认两行截断，展开 / 详情窗格显示全文</td></tr>
+            <tr><td>status</td><td>配置态 + <code>loadState</code></td><td>多行状态块拆成「一行主状态」+ 下方提示条</td></tr>
+            <tr><td>progress</td><td><code>operation.phase / percent</code></td><td>百分比文本变成进度条；未知百分比显示不定进度</td></tr>
+            <tr><td>notes</td><td><code>available / restartRequired / updateAvailable / detected / 失败信息</code></td><td>每条一个语气色 + 可选动作（重新导入、更新、查看详情）</td></tr>
+            <tr><td>foot</td><td>展开态、<code>itemActions</code></td><td>「展开插件详情 / 更多」两个胶囊变成文字按钮 + 图标按钮，带 aria-expanded</td></tr>
+            <tr><td>details</td><td><code>version / location / source</code></td><td>纯文本模板变成属性表，路径可复制；删除收进展开区底部</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>落地思路（待确认）</h2>
+        <ul>
+          <li>抽出 <code>PluginCardView</code> + <code>PluginCardModel</code>：列表、平板左栏、右侧详情窗格共用一份绑定，替换 <code>renderDetail()</code> 里重复的取值。</li>
+          <li>状态推导（主状态、语气、提示条顺序）放进 <code>util/</code> 纯逻辑并配单测，<code>PluginFragment</code> 只负责把动作接到现有 <code>toggle / itemActions / confirmDelete</code>。</li>
+          <li>保留现有 id 与 payload 局部刷新（<code>OPERATION / EXPANSION</code>）；颜色全部走 <code>shell_*</code> token。</li>
+          <li>「更多」从对话框列表改成底部弹层，条目仍是现有 <code>PluginAction</code> 集合；平板居中显示。</li>
+          <li>需跑 <code>LayoutAuditInstrumentation</code>：中英文 × 日夜 × 短屏 × 1.3 倍字体。</li>
+        </ul>
+      </section>
+    </aside>
+  </main>
+
+<script>
+'use strict';
+/* ============================================================
+   原型状态：字段名对齐 PluginRepository.Item / PluginListPresenter.Row，
+   方便评审时直接对照真实数据源。
+   ============================================================ */
+const ICON = {
+  puzzle: '<path d="M10 3.5a2 2 0 0 1 4 0V5h3a1 1 0 0 1 1 1v3h1.5a2 2 0 0 1 0 4H18v4a1 1 0 0 1-1 1h-3.5v-1.5a2 2 0 0 0-4 0V18H6a1 1 0 0 1-1-1v-3.5h1.5a2 2 0 0 0 0-4H5V6a1 1 0 0 1 1-1h4z"/>',
+  box: '<path d="M12 3 4 7v10l8 4 8-4V7z"/><path d="m4 7 8 4 8-4M12 11v10"/>',
+  shield: '<path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/>',
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  bolt: '<path d="M13 3 5 13h6l-1 8 8-10h-6z"/>',
+  chev: '<path d="m6 9 6 6 6-6"/>',
+  dots: '<circle cx="5" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.7" fill="currentColor" stroke="none"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+  alert: '<path d="M12 4 2.5 20h19z"/><path d="M12 10v4M12 17h.01"/>',
+  xcircle: '<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  restart: '<path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/>',
+  up: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+  trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  export: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  history: '<path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4M12 8v4l3 2"/>',
+  refresh: '<path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4h-4"/>',
+  sort: '<path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/>',
+  home: '<path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/>',
+  term: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9 7 7M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>',
+  name: '<path d="M4 7V5h16v2M9 19h6M12 5v14"/>',
+};
+const ic = n => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICON[n]}</svg>`;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (s, r = document) => r.querySelector(s);
+
+const KIND = {
+  builtin: { icon: 'box', zh: 'DSHA 内置', en: 'DSHA built-in' },
+  official: { icon: 'shield', zh: '官方核心', en: 'Official core' },
+  runtime: { icon: 'shield', zh: '随 DSH 提供', en: 'Provided by DSH' },
+  located: { icon: 'folder', zh: '安装目录 · 未验证', en: 'Install dir · unverified' },
+  third: { icon: 'puzzle', zh: '第三方', en: 'Third-party' },
+  dynamic: { icon: 'bolt', zh: '临时', en: 'Temporary' },
+};
+
+function seed() {
+  const base = { version: '', latest: '', desc: ['', ''], enabled: false, available: true, detected: false, loadState: 'unloaded', restart: false, update: false, source: '', location: '', exportable: false, updatable: false, rollback: '', deletable: false, error: '', op: null, longName: false, emptyDesc: false };
+  return [
+    { id: 'mobile', name: 'dsh-web-mobile', kind: 'builtin', version: '3.2.2', enabled: true, loadState: 'loaded', location: '/root/.dsh/plugins/system/dsh-web-mobile', desc: ['移动端 Web 适配：底部导航、返回手势与软键盘避让。', 'Mobile Web layer: bottom navigation, back gesture and keyboard avoidance.'] },
+    { id: 'core', name: 'dsh-core-tools', kind: 'runtime', version: '0.2.1-rc.5', enabled: true, loadState: 'loaded', desc: ['DSH 自带的文件、终端与搜索工具集。', 'Built-in DSH tools for files, terminal and search.'] },
+    { id: 'search', name: 'web-search-plus', kind: 'third', version: '1.4.0', latest: '1.5.2', update: true, restart: true, enabled: true, loadState: 'loaded', source: 'github:example-org/web-search-plus', location: '/root/.dsh/plugins/user/web-search-plus', exportable: true, updatable: true, rollback: '1.3.9', deletable: true, desc: ['为对话加入多引擎网页搜索与结果摘要，可在设置中切换默认搜索源、语言区域和每次返回的结果数量。', 'Adds multi-engine web search with result summaries. Default engine, region and result count are configurable in settings.'] },
+    { id: 'gh', name: 'gh-actions-watch', kind: 'third', version: '0.4.2', enabled: true, loadState: 'failed', error: "SyntaxError: Unexpected token '?' (dist/index.js:42:17)", source: 'github:example-org/gh-actions-watch', location: '/root/.dsh/plugins/user/gh-actions-watch', exportable: true, updatable: true, deletable: true, desc: ['关注 GitHub Actions 运行状态，在对话里提示失败的工作流。', 'Watches GitHub Actions runs and flags failed workflows in chat.'] },
+    { id: 'voice', name: 'voice-dictation', kind: 'located', version: '0.3.0', detected: true, location: '/usr/local/lib/node_modules/@deepseek-ai/dsh/plugins/voice-dictation', desc: ['语音输入转文字，需要麦克风权限。', 'Speech-to-text input. Needs microphone permission.'] },
+    { id: 'md', name: 'md-export', kind: 'third', version: '0.9.1', source: 'local:/sdcard/Download/md-export-0.9.1.tgz', location: '/root/.dsh/plugins/user/md-export', exportable: true, deletable: true, desc: ['把会话导出为 Markdown 文件。', 'Exports conversations as Markdown files.'] },
+    { id: 'theme', name: 'night-owl-theme', kind: 'third', version: '2.0.0', enabled: true, available: false, source: 'github:example-org/night-owl-theme', location: '/root/.dsh/plugins/user/night-owl-theme', deletable: true, desc: ['深色代码高亮主题。', 'Dark syntax highlighting theme.'] },
+    { id: 'scratch', name: 'session-scratch', kind: 'dynamic', enabled: true, loadState: 'loaded', desc: ['本次会话临时加载，停止 Web 后移除。', 'Loaded for this session only. Removed when Web stops.'] },
+  ].map(x => ({ ...base, ...x }));
+}
+
+const S = {
+  design: 'new', device: 'phone', theme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+  lang: 'zh', fs: 1, short: false, anatomy: false, reduced: false,
+  items: seed(), expanded: new Set(), selected: 'search', inspect: 'search', query: '',
+  overlay: null, // { type: 'menu' | 'confirm', id, opener }
+};
+const t = (zh, en) => (S.lang === 'zh' ? zh : en);
+const find = id => S.items.find(x => x.id === id);
+const nameOf = it => (it.longName ? it.name + '-with-an-extremely-long-package-name-for-wrap-tests' : it.name);
+const descOf = it => (it.emptyDesc ? '' : t(it.desc[0], it.desc[1]));
+
+/* ---------------- 状态推导（落地时对应 util/ 纯逻辑） ---------------- */
+const LOAD = {
+  loaded: ['已加载', 'loaded'], failed: ['加载失败', 'load failed'], loading: ['正在加载', 'loading'],
+  waiting: ['等待服务', 'waiting for services'], unloaded: ['未加载', 'not loaded'],
+};
+const loadText = s => t(...(LOAD[s] || LOAD.unloaded));
+const PHASE = { QUEUED: ['排队中', 'Queued'], RUNNING: ['正在执行', 'Running'], COMMITTING: ['正在确认提交', 'Confirming commit'] };
+
+function derive(it) {
+  const pending = !!it.op;
+  let tone, label;
+  if (it.kind === 'dynamic') { tone = 'accent'; label = t('临时插件 · ', 'Temporary · ') + loadText(it.loadState); }
+  else if (!it.available) { tone = 'warn'; label = t('实体缺失', 'Files missing'); }
+  else if (it.enabled) {
+    tone = it.loadState === 'loaded' ? 'good' : it.loadState === 'failed' ? 'bad' : 'accent';
+    label = t('已启用 · ', 'Enabled · ') + loadText(it.loadState);
+  } else if (it.detected) { tone = 'accent'; label = t('已检测 · 未加入 Web', 'Detected · not in Web'); }
+  else { tone = 'muted'; label = it.loadState === 'loaded' ? t('已禁用 · 仍在运行', 'Disabled · still loaded') : t('已禁用', 'Disabled'); }
+  if (pending) {
+    tone = 'warn';
+    label = it.op.desired == null ? t('操作待完成', 'Operation pending') : it.op.desired ? t('等待启用', 'Enable pending') : t('等待禁用', 'Disable pending');
+  }
+  const notes = [];
+  if (!it.available) notes.push({ tone: 'warn', icon: 'alert', text: t('插件文件已不在原位置，重新导入后才能启用。', 'Plugin files are gone. Re-import before enabling.'), act: 'import', actLabel: t('重新导入', 'Re-import') });
+  if (it.available && it.enabled && it.loadState === 'failed') notes.push({ tone: 'bad', icon: 'xcircle', text: it.error || t('加载失败', 'Load failed'), mono: !!it.error, act: 'log', actLabel: t('详情', 'Details') });
+  if (it.available && it.detected && !it.enabled && !pending) notes.push({ tone: 'accent', icon: 'info', text: t('已在 DSH 安装目录检测到，开启后加入 Web。', 'Found in the DSH install. Turn on to add it to Web.') });
+  if (it.restart) notes.push({ tone: 'warn', icon: 'restart', text: t('重启 Web 后生效', 'Restart Web to apply') });
+  if (it.update && !pending) notes.push({ tone: 'accent', icon: 'up', text: t(`可更新到 ${it.latest}`, `Update to ${it.latest} available`), act: 'update', actLabel: t('更新', 'Update') });
+  if (pending && it.op.message) notes.push({ tone: 'muted', icon: 'info', text: it.op.message });
+  const checked = pending && it.op.desired != null ? it.op.desired : it.enabled;
+  // 与 PluginListPresenter.Row.toggleEnabled() 一致：排队中仍可改意图，实体缺失但已启用时仍可关闭
+  const switchEnabled = it.kind !== 'dynamic' && (it.available || it.enabled || pending);
+  return { tone, label, notes, pending, checked, showSwitch: it.kind !== 'dynamic', switchEnabled };
+}
+const locationText = it => (it.kind === 'runtime' ? t('随 DSH 安装提供', 'Provided by DSH') : it.location || t('未提供路径', 'Path not provided'));
+const sourceText = it => it.source || (it.kind === 'builtin' ? t('随包内置', 'Bundled') : it.kind === 'runtime' ? t('已核对当前 APK 受管内容', 'Verified against the current APK') : it.kind === 'official' ? t('DSH 官方组件', 'Official DSH component') : t('来源未记录', 'Source not recorded'));
+
+/* 重绘时保留过渡：模板写旧值，渲染后再切到新值 */
+const memo = new Map();
+let pend = [];
+function tw(key, val) {
+  const prev = memo.has(key) ? memo.get(key) : val;
+  memo.set(key, val);
+  if (prev !== val) pend.push([key, val]);
+  return prev;
+}
+
+/* ============================================================
+   新卡片模板
+   ============================================================ */
+function cardHTML(it, density) {
+  const d = derive(it);
+  const k = density + '-' + it.id;
+  const name = nameOf(it);
+  const desc = descOf(it);
+  const open = density === 'detail' || (density === 'list' && S.expanded.has(it.id));
+  const sel = density === 'compact' && S.selected === it.id;
+  const kind = KIND[it.kind];
+  const sw = d.showSwitch ? `<button class="pc-switch" role="switch" data-slot="switch" data-act="toggle" data-focus="sw-${k}"
+      aria-checked="${tw('sw:' + k, String(d.checked))}" data-tw="sw:${k}"
+      aria-label="${esc(t(d.checked ? '禁用 ' : '启用 ', d.checked ? 'Disable ' : 'Enable ') + name)}"
+      ${d.switchEnabled ? '' : 'disabled'}><span class="track"><span class="knob"></span></span></button>` : '';
+  const pct = d.pending ? it.op.percent : -1;
+  const progress = d.pending ? `<div class="pc-progress" data-slot="progress">
+      <div class="pc-bar${pct < 0 ? ' is-indeterminate' : ''}" role="progressbar" aria-label="${esc(d.label)}" aria-valuemin="0" aria-valuemax="100" ${pct >= 0 ? `aria-valuenow="${pct}"` : ''}>
+        <i style="--p:${pct >= 0 ? tw('pg:' + k, pct + '%') : '0%'}" data-tw="pg:${k}"></i></div>
+      <div class="pc-phase"><span>${esc(t(...PHASE[it.op.phase]))}</span><span>${pct >= 0 ? pct + '%' : ''}</span></div></div>` : '';
+  const notes = (density === 'compact' ? d.notes.slice(0, 1) : d.notes);
+  const notesHTML = notes.length ? `<div class="pc-notes" data-slot="notes">${notes.map((n, i) => `
+      <div class="pc-note${n.mono ? ' is-mono' : ''}" data-tone="${n.tone}">${ic(n.icon)}<span class="pc-note-text">${esc(n.text)}</span>${n.act && density !== 'compact'
+        ? `<button class="pc-note-act" data-act="note-${n.act}" data-focus="note-${n.act}-${k}">${esc(n.actLabel)}</button>` : ''}</div>`).join('')}</div>` : '';
+  const extra = density === 'compact' && d.notes.length > 1 ? `<span class="pc-more-hint">+${d.notes.length - 1}</span>` : '';
+  const details = density === 'compact' ? '' : `
+    <div class="pc-details" id="det-${k}" data-slot="details" data-open="${density === 'detail' ? 'true' : tw('op:' + k, String(open))}" data-tw="op:${k}">
+      <div class="pc-details-in" ${open ? '' : 'inert'}>
+        <dl class="pc-dl">
+          <div><dt>${t('版本', 'Version')}</dt><dd class="mono">${esc(it.version || '—')}${it.update ? ` → ${esc(it.latest)}` : ''}</dd><span></span></div>
+          <div><dt>${t('位置', 'Location')}</dt><dd class="${it.location ? 'mono' : ''}">${esc(locationText(it))}</dd>${it.location
+            ? `<button class="pc-copy" data-act="copy-path" data-focus="cp-${k}" aria-label="${esc(t('复制路径', 'Copy path'))}">${ic('copy')}</button>` : '<span></span>'}</div>
+          <div><dt>${t('来源', 'Source')}</dt><dd class="${it.source ? 'mono' : ''}">${esc(sourceText(it))}</dd>${it.source
+            ? `<button class="pc-copy" data-act="copy-source" data-focus="cs-${k}" aria-label="${esc(t('复制来源', 'Copy source'))}">${ic('copy')}</button>` : '<span></span>'}</div>
+        </dl>
+        ${density === 'list' && it.deletable ? `<button class="pc-delete" data-act="delete" data-focus="del-${k}" ${d.pending ? 'disabled' : ''}>${ic('trash')}${t('删除插件', 'Delete plugin')}</button>` : ''}
+      </div>
+    </div>`;
+  const foot = density === 'list' ? `<div class="pc-foot" data-slot="foot">
+      <button class="pc-btn" data-act="expand" data-focus="ex-${k}" aria-expanded="${open}" aria-controls="det-${k}">${ic('chev')}<span>${open ? t('收起', 'Less') : t('详情', 'Details')}</span></button>
+      <span class="grow"></span>
+      <button class="pc-btn pc-icon" data-act="menu" data-focus="mn-${k}" aria-haspopup="dialog" aria-label="${esc(t('更多操作：', 'More actions: ') + name)}">${ic('dots')}</button></div>` : '';
+  const actions = density === 'detail' ? `<div class="pc-actions">
+      ${it.update && !d.pending ? `<button class="pc-btn is-primary" data-act="note-update" data-focus="up-${k}">${ic('up')}${t('更新到 ', 'Update to ') + esc(it.latest)}</button>` : ''}
+      <button class="pc-btn" data-act="menu" data-focus="mn-${k}" aria-haspopup="dialog">${ic('dots')}${t('更多操作', 'More actions')}</button>
+      ${it.deletable ? `<button class="pc-delete" data-act="delete" data-focus="del-${k}" ${d.pending ? 'disabled' : ''}>${ic('trash')}${t('删除插件', 'Delete plugin')}</button>` : ''}</div>` : '';
+  const nameInner = density === 'compact'
+    ? `<button class="pc-hit" data-act="select" data-focus="sel-${k}" aria-pressed="${sel}">${esc(name)}</button>` : esc(name);
+  return `<article class="pc pc--${density}${sel ? ' is-selected' : ''}${open && density === 'list' ? ' is-open' : ''}${d.pending ? ' is-pending' : ''}" data-id="${it.id}" data-tone="${d.tone}" aria-labelledby="nm-${k}">
+    <div class="pc-head">
+      <span class="pc-glyph" data-kind="${it.kind}" data-slot="glyph">${ic(kind.icon)}</span>
+      <div class="pc-title">
+        <h3 class="pc-name" id="nm-${k}" data-slot="name">${nameInner}</h3>
+        <div class="pc-meta"><span class="pc-badge" data-kind="${it.kind}" data-slot="badge">${esc(t(kind.zh, kind.en))}</span>${it.version ? `<span class="pc-ver" data-slot="version">v${esc(it.version)}</span>` : ''}</div>
+      </div>${sw}
+    </div>
+    <p class="pc-desc${desc ? '' : ' is-empty'}" data-slot="desc">${esc(desc || t('作者未提供说明', 'No description provided'))}</p>
+    <div class="pc-status" data-slot="status"><span class="pc-dot"></span><span>${esc(d.label)}</span>${extra}</div>
+    ${progress}${notesHTML}${details}${foot}${actions}
+  </article>`;
+}
+
+/* ============================================================
+   当前实现（对照）：多行状态块 + 胶囊按钮，文案模板照搬 PluginFragment.statusText
+   ============================================================ */
+function legacyStatus(it) {
+  let s = it.kind === 'dynamic' ? t('临时插件', 'Temporary plugin') : !it.available ? t('实体缺失，请重新导入', 'Files missing, re-import')
+    : it.enabled ? t('配置：已启用', 'Configuration: enabled') : it.detected ? t('已检测，可开启以加入 Web', 'Detected, turn on to add to Web') : t('配置：已禁用', 'Configuration: disabled');
+  s += (it.version ? ' · ' + it.version : '') + '\n' + t('运行：', 'Runtime: ') + loadText(it.loadState);
+  if (it.restart) s += '\n' + t('重启 Web 后生效', 'Restart Web to apply');
+  if (it.update) s += '\n' + t('可更新：', 'Update available: ') + it.latest;
+  if (it.op) {
+    s += '\n' + (it.op.desired == null ? t('操作待完成', 'Operation pending') : it.op.desired ? t('等待启用', 'Enable pending') : t('等待禁用', 'Disable pending'));
+    s += ' · ' + t(...PHASE[it.op.phase]) + (it.op.percent >= 0 ? ' · ' + it.op.percent + '%' : '');
+    if (it.op.message) s += '\n' + it.op.message;
+  }
+  if (it.enabled && it.loadState === 'failed' && it.error) s += '\n' + it.error;
+  return s;
+}
+const legacyTone = it => (!it.available || it.op ? 'var(--warn)' : it.enabled ? 'var(--accent)' : 'var(--muted)');
+const legacyDetails = it => `${descOf(it)}\n\n${t('版本：', 'Version: ')}${it.version}\n${t('位置：', 'Location: ')}${locationText(it)}\n${t('来源：', 'Source: ')}${sourceText(it)}`;
+function legacyHTML(it, twoPane) {
+  const d = derive(it);
+  const k = 'lg-' + it.id;
+  const open = !twoPane && S.expanded.has(it.id);
+  const name = nameOf(it);
+  return `<article class="lg${twoPane && S.selected === it.id ? ' is-selected' : ''}" data-id="${it.id}" style="--tone:${legacyTone(it)}" ${twoPane ? `data-act="select"` : ''}>
+    <div class="lg-row"><span class="lg-glyph">${ic('puzzle')}</span><div style="min-width:0;flex:1"><div class="lg-name">${esc(name)}</div>
+      <div class="lg-desc">${esc(descOf(it) || t(KIND[it.kind].zh, KIND[it.kind].en))}</div></div></div>
+    <div class="lg-status">${esc(legacyStatus(it))}</div>
+    <div class="lg-foot"><span class="lg-dot"></span>
+      <button class="lg-pill" data-act="menu" data-focus="mn-${k}">${t('更多', 'More')}</button>
+      ${twoPane ? '' : `<button class="lg-pill" data-act="expand" data-focus="ex-${k}">${open ? t('收起详情', 'Collapse details') : t('展开插件详情', 'Plugin details')}</button>`}
+      <span class="grow"></span>
+      ${d.showSwitch ? `<button class="pc-switch" role="switch" data-act="toggle" data-focus="sw-${k}" aria-checked="${tw('sw:' + k, String(d.checked))}" data-tw="sw:${k}" aria-label="${esc(name)}" ${d.switchEnabled ? '' : 'disabled'}><span class="track"><span class="knob"></span></span></button>` : ''}
+    </div>
+    ${open ? `<div class="lg-details">${esc(legacyDetails(it))}</div>` : ''}
+    ${open && it.deletable ? `<button class="lg-delete" data-act="delete" data-focus="del-${k}">${t('删除插件', 'Delete plugin')}</button>` : ''}
+  </article>`;
+}
+
+/* ============================================================
+   页面骨架
+   ============================================================ */
+function visible() {
+  const q = S.query.trim().toLowerCase();
+  return S.items.filter(it => !q || nameOf(it).toLowerCase().includes(q) || descOf(it).toLowerCase().includes(q));
+}
+function headHTML(n) {
+  return `<div class="app-head"><h2 class="ah-title">${t('插件', 'Plugins')}</h2>
+    <div class="tabs" role="group" aria-label="${t('插件页', 'Plugin pages')}">
+      <button aria-pressed="true">${t('已安装', 'Installed')}<span class="count">${n}</span></button>
+      <button aria-pressed="false" data-act="market">${t('插件市场', 'Market')}</button></div></div>`;
+}
+function toolsHTML(list) {
+  return `<label class="search">${ic('search')}<span class="sr">${t('搜索插件', 'Search plugins')}</span>
+      <input type="search" id="q" data-focus="q" value="${esc(S.query)}" placeholder="${esc(t('搜索名称或说明', 'Search name or description'))}" autocomplete="off"></label>
+    <div class="list-meta"><span>${S.lang === 'zh' ? `显示 ${list.length} / ${S.items.length} 个插件` : `${list.length} of ${S.items.length} plugins`}</span>
+      <button class="pc-btn" data-act="sort" data-focus="sort">${ic('sort')}${t('默认排序', 'Default order')}</button></div>`;
+}
+const emptyHTML = () => `<div class="empty">${t('没有匹配的插件', 'No matching plugins')}</div>`;
+const navItems = () => [['home', t('启动', 'Launch')], ['term', t('终端', 'Terminal')], ['puzzle', t('插件', 'Plugins'), 1], ['gear', t('设置', 'Settings')]];
+const sbar = () => `<div class="sbar" aria-hidden="true"><span>15:00</span><span>5G · 82%</span></div>`;
+
+function screenHTML() {
+  const list = visible();
+  if (S.device !== 'tablet') {
+    const cards = list.map(it => (S.design === 'new' ? cardHTML(it, 'list') : legacyHTML(it, false))).join('');
+    return `${sbar()}${headHTML(S.items.length)}
+      <div class="scroll" data-scroll="list">${toolsHTML(list)}${cards || emptyHTML()}</div>
+      <div class="nav" aria-hidden="true">${navItems().map(([i, l, on]) => `<span class="${on ? 'on' : ''}">${ic(i)}${l}</span>`).join('')}</div>`;
+  }
+  if (!find(S.selected) && list[0]) S.selected = list[0].id;
+  const sel = find(S.selected);
+  const cards = list.map(it => (S.design === 'new' ? cardHTML(it, 'compact') : legacyHTML(it, true))).join('');
+  let pane = `<div class="empty">${t('选择左侧插件查看详情', 'Select a plugin to see its details')}</div>`;
+  if (sel) pane = `<div class="pane-label">${t('插件详情', 'PLUGIN DETAILS')}</div>` + (S.design === 'new' ? cardHTML(sel, 'detail') : legacyPane(sel));
+  return `<div class="tab-shell"><div class="rail" aria-hidden="true">${navItems().map(([i, l, on]) => `<span class="${on ? 'on' : ''}">${ic(i)}${l}</span>`).join('')}</div>
+    <div class="tab-main">${sbar()}${headHTML(S.items.length)}
+      <div class="split"><div class="scroll" data-scroll="list">${toolsHTML(list)}${cards || emptyHTML()}</div><div class="divider"></div>
+      <div class="scroll pane" data-scroll="pane" data-id="${sel ? sel.id : ''}">${pane}</div></div></div></div>`;
+}
+function legacyPane(it) {
+  const d = derive(it);
+  const k = 'lp-' + it.id;
+  return `<div style="--tone:${legacyTone(it)}"><div class="lg-name" style="font-size:calc(20px*var(--fs))">${esc(nameOf(it))}</div>
+    <div class="lg-desc">${esc(descOf(it) || t(KIND[it.kind].zh, KIND[it.kind].en))}</div>
+    <div class="lg-status">${esc(legacyStatus(it))}</div>
+    <div class="lg-details">${esc(legacyDetails(it).replace(/^[^\n]*\n\n/, ''))}</div>
+    <div class="lg-foot">${d.showSwitch ? `<button class="pc-switch" role="switch" data-act="toggle" data-focus="sw-${k}" aria-checked="${tw('sw:' + k, String(d.checked))}" data-tw="sw:${k}" aria-label="${esc(nameOf(it))}" ${d.switchEnabled ? '' : 'disabled'}><span class="track"><span class="knob"></span></span></button>` : ''}
+      <button class="lg-pill" data-act="menu" data-focus="mn-${k}">${t('更多', 'More')}</button></div>
+    ${it.deletable ? `<button class="lg-delete" data-act="delete" data-focus="del-${k}">${t('删除插件', 'Delete plugin')}</button>` : ''}</div>`;
+}
+
+/* ---------------- 弹层 ---------------- */
+function menuEntries(it) {
+  const a = [['detail', 'info', t('插件详情', 'Plugin details')], ['copy-name', 'name', t('复制名称', 'Copy name')]];
+  if (it.source) a.push(['copy-source', 'copy', t('复制来源', 'Copy source')]);
+  if (it.exportable) a.push(['export', 'export', t('导出插件', 'Export plugin')]);
+  if (it.updatable) a.push(['check', 'refresh', t('检查更新', 'Check for updates')]);
+  if (it.update) a.push(['note-update', 'up', t('更新', 'Update'), it.latest]);
+  if (it.rollback) a.push(['rollback', 'history', t('回退版本', 'Roll back'), it.rollback]);
+  if (it.deletable) a.push(['sep'], ['delete', 'trash', t('删除插件', 'Delete plugin'), '', true]);
+  return a;
+}
+function overlayHTML() {
+  const o = S.overlay;
+  const it = o && find(o.id);
+  if (!it) return '';
+  if (o.type === 'menu') {
+    const kind = KIND[it.kind];
+    const pending = !!it.op;
+    return `<div class="scrim" data-act="close"></div>
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t" data-id="${it.id}">
+        <div class="sheet-grip" aria-hidden="true"></div>
+        <div class="sheet-head"><span class="pc-glyph" data-kind="${it.kind}">${ic(kind.icon)}</span>
+          <div style="min-width:0"><h2 id="sheet-t">${esc(nameOf(it))}</h2><p>${esc(t(kind.zh, kind.en))}${it.version ? ' · v' + esc(it.version) : ''}</p></div></div>
+        <ul>${menuEntries(it).map(([act, icon, label, hint, danger]) => act === 'sep' ? '<li class="sep" role="separator"></li>'
+          : `<li><button class="sheet-item${danger ? ' is-danger' : ''}" data-act="${act}" data-focus="m-${act}" ${pending && ['delete', 'note-update', 'rollback'].includes(act) ? 'disabled' : ''}>${ic(icon)}<span>${esc(label)}</span>${hint ? `<small>${esc(hint)}</small>` : ''}</button></li>`).join('')}</ul>
+        <button class="sheet-cancel" data-act="close" data-focus="m-close">${t('取消', 'Cancel')}</button></div>`;
+  }
+  return `<div class="scrim" data-act="close"></div>
+    <div class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlg-t" aria-describedby="dlg-d" data-id="${it.id}">
+      <h2 id="dlg-t">${esc(t(`删除 ${nameOf(it)}？`, `Delete ${nameOf(it)}?`))}</h2>
+      <p id="dlg-d">${t('插件会从列表移除，文件一并删除。此操作不能撤销；需要保留请先导出。', 'The plugin and its files will be removed. This cannot be undone; export first if you want a copy.')}</p>
+      <div class="dlg-acts"><button data-act="close" data-focus="d-cancel">${t('取消', 'Cancel')}</button>
+        <button class="is-danger" data-act="confirm-delete" data-focus="d-ok">${t('删除', 'Delete')}</button></div></div>`;
+}
+
+/* ============================================================
+   渲染（保留焦点 / 滚动 / 过渡）
+   ============================================================ */
+function render() {
+  const ae = document.activeElement;
+  const fk = ae && ae.dataset ? ae.dataset.focus : null;
+  const caret = ae && ae.id === 'q' ? ae.selectionStart : null;
+  const scrolls = {};
+  document.querySelectorAll('[data-scroll]').forEach(e => (scrolls[e.dataset.scroll] = e.scrollTop));
+  pend = [];
+
+  const root = document.documentElement;
+  root.dataset.theme = S.theme;
+  root.dataset.reduced = String(S.reduced);
+  document.body.dataset.device = S.device;
+  const dev = $('#device');
+  dev.dataset.device = S.device;
+  dev.classList.toggle('is-short', S.short);
+  dev.classList.toggle('show-anatomy', S.anatomy && S.design === 'new');
+  const screen = $('#screen');
+  screen.style.setProperty('--fs', S.fs);
+  screen.lang = S.lang === 'zh' ? 'zh-CN' : 'en';
+  screen.innerHTML = screenHTML();
+  screen.inert = !!S.overlay;
+  const ov = $('#overlay');
+  ov.style.setProperty('--fs', S.fs);
+  ov.lang = screen.lang;
+  ov.innerHTML = overlayHTML();
+  ov.classList.toggle('is-on', !!S.overlay);
+
+  document.querySelectorAll('[data-scroll]').forEach(e => { if (scrolls[e.dataset.scroll]) e.scrollTop = scrolls[e.dataset.scroll]; });
+  if (pend.length) {
+    void dev.offsetWidth; // 先落地旧值，再切换以触发过渡
+    for (const [key, v] of pend) {
+      const el = dev.querySelector(`[data-tw="${key}"]`);
+      if (!el) continue;
+      if (key.startsWith('sw:')) el.setAttribute('aria-checked', v);
+      else if (key.startsWith('op:')) el.dataset.open = v;
+      else if (key.startsWith('pg:')) el.style.setProperty('--p', v);
+    }
+  }
+  if (fk) {
+    const el = document.querySelector(`[data-focus="${CSS.escape(fk)}"]`);
+    if (el) { el.focus({ preventScroll: true }); if (caret != null && el.setSelectionRange) el.setSelectionRange(caret, caret); }
+  }
+  syncChrome();
+  syncInspector();
+}
+
+function syncChrome() {
+  document.querySelectorAll('[data-set]').forEach(b => b.setAttribute('aria-pressed', String(String(S[b.dataset.set]) === b.dataset.v)));
+  document.querySelectorAll('[data-flag]').forEach(c => (c.checked = !!S[c.dataset.flag]));
+}
+
+/* ---------------- 交互 ---------------- */
+let toastTimer;
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('is-on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('is-on'), 2200);
+}
+function openOverlay(type, id, opener) {
+  S.overlay = { type, id, opener: opener && opener.dataset.focus };
+  render();
+  const first = $('#overlay').querySelector(type === 'menu' ? '.sheet-item:not(:disabled)' : '[data-focus="d-cancel"]');
+  if (first) first.focus();
+}
+function closeOverlay() {
+  const back = S.overlay && S.overlay.opener;
+  S.overlay = null;
+  render();
+  const el = back && document.querySelector(`[data-focus="${CSS.escape(back)}"]`);
+  if (el) el.focus();
+}
+
+/* 排队 → 执行 → 提交：对应 PluginOperationQueue 的 phase / percent */
+function runOp(it, desired, finish, message) {
+  const op = { desired, phase: 'QUEUED', percent: -1, message: message || '' };
+  it.op = op;
+  render();
+  const steps = [
+    [650, () => { op.phase = 'RUNNING'; op.percent = 12; }],
+    [380, () => { op.percent = 41; }],
+    [380, () => { op.percent = 73; }],
+    [380, () => { op.percent = 96; }],
+    [320, () => { op.phase = 'COMMITTING'; op.percent = -1; }],
+    [560, () => { it.op = null; finish(); }],
+  ];
+  let i = 0;
+  const next = () => {
+    const [ms, fn] = steps[i++];
+    setTimeout(() => {
+      if (it.op !== op || !S.items.includes(it)) return; // 实验台改写或已删除：停止模拟
+      fn();
+      render();
+      if (i < steps.length) next();
+    }, ms);
+  };
+  next();
+}
+function toggle(it) {
+  const d = derive(it);
+  if (!d.switchEnabled) return;
+  const desired = !d.checked;
+  runOp(it, desired, () => {
+    it.enabled = desired;
+    it.restart = true; // 开关只改配置，运行态等重启 Web
+    toast(desired ? t(`${nameOf(it)} 已启用，重启 Web 后加载`, `${nameOf(it)} enabled. Restart Web to load it.`) : t(`${nameOf(it)} 已禁用`, `${nameOf(it)} disabled`));
+  });
+}
+function update(it) {
+  if (!it.update || it.op) return;
+  runOp(it, null, () => {
+    it.rollback = it.version; it.version = it.latest; it.update = false; it.restart = true;
+    toast(t(`已更新到 ${it.version}`, `Updated to ${it.version}`));
+  }, t(`下载并校验 ${it.latest}`, `Downloading and verifying ${it.latest}`));
+}
+
+function act(name, it, el) {
+  switch (name) {
+    case 'toggle': return it && toggle(it);
+    case 'expand':
+      if (!it) return;
+      if (!S.expanded.delete(it.id)) S.expanded.add(it.id);
+      return render();
+    case 'select':
+      if (!it || S.selected === it.id) return;
+      S.selected = it.id; S.inspect = it.id;
+      return render();
+    case 'menu': return it && openOverlay('menu', it.id, el);
+    case 'close': return closeOverlay();
+    case 'delete':
+      if (!it || it.op) return;
+      if (S.overlay) { S.overlay = null; }
+      return openOverlay('confirm', it.id, el);
+    case 'confirm-delete': {
+      if (!it) return;
+      S.overlay = null;
+      runOp(it, null, () => {
+        S.items = S.items.filter(x => x !== it);
+        S.expanded.delete(it.id);
+        if (S.inspect === it.id) S.inspect = S.items[0] ? S.items[0].id : '';
+        toast(t(`已删除 ${nameOf(it)}`, `${nameOf(it)} deleted`));
+        render();
+      }, t('正在删除', 'Deleting'));
+      return;
+    }
+    case 'note-update': if (S.overlay) S.overlay = null; return it && update(it);
+    case 'note-import':
+      if (!it || it.op) return;
+      return runOp(it, null, () => { it.available = true; it.restart = true; toast(t('已重新导入', 'Re-imported')); }, t('正在导入插件包', 'Importing package'));
+    case 'note-log': return toast(t('原型：打开现有「插件详情」对话框，显示完整错误', 'Prototype: opens the existing details dialog with the full error'));
+    case 'detail':
+      S.overlay = null;
+      if (S.device === 'tablet') S.selected = it.id; else S.expanded.add(it.id);
+      render();
+      { const card = document.querySelector(`#screen .pc[data-id="${it.id}"], #screen .lg[data-id="${it.id}"]`); if (card) card.scrollIntoView({ block: 'nearest', behavior: S.reduced ? 'auto' : 'smooth' }); }
+      return;
+    case 'copy-name': closeOverlay(); return toast(t('已复制名称', 'Name copied'));
+    case 'copy-source': if (S.overlay) closeOverlay(); return toast(t('已复制来源', 'Source copied'));
+    case 'copy-path': return toast(t('已复制路径', 'Path copied'));
+    case 'export': closeOverlay(); return toast(t('原型：走现有导出流程', 'Prototype: uses the existing export flow'));
+    case 'check': closeOverlay(); return toast(it.update ? t(`发现新版本 ${it.latest}`, `${it.latest} available`) : t('已是最新版本', 'Up to date'));
+    case 'rollback':
+      if (!it || it.op) return;
+      S.overlay = null;
+      return runOp(it, null, () => { const v = it.rollback; it.rollback = ''; it.version = v; it.restart = true; toast(t(`已回退到 ${v}`, `Rolled back to ${v}`)); }, t(`回退到 ${it.rollback}`, `Rolling back to ${it.rollback}`));
+    case 'market': return toast(t('原型只覆盖「已安装」列表', 'This prototype covers the Installed list only'));
+    case 'sort': return toast(t('排序沿用现有选项', 'Sorting keeps the existing options'));
+  }
+}
+
+document.addEventListener('click', e => {
+  const set = e.target.closest('[data-set]');
+  if (set) {
+    const k = set.dataset.set;
+    S[k] = k === 'fs' ? Number(set.dataset.v) : set.dataset.v;
+    return render();
+  }
+  const b = e.target.closest('#device [data-act]');
+  if (!b || b.disabled) return;
+  const host = b.closest('[data-id]');
+  const id = (host && host.dataset.id) || (S.overlay && S.overlay.id);
+  act(b.dataset.act, id ? find(id) : null, b);
+});
+document.addEventListener('change', e => {
+  const f = e.target.closest('[data-flag]');
+  if (f) { S[f.dataset.flag] = f.checked; render(); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'q') { S.query = e.target.value; render(); }
+});
+document.addEventListener('keydown', e => {
+  if (!S.overlay) return;
+  if (e.key === 'Escape') { e.preventDefault(); return closeOverlay(); }
+  if (e.key === 'Tab') { // 弹层内焦点循环
+    const f = [...$('#overlay').querySelectorAll('button:not(:disabled)')];
+    if (!f.length) return;
+    const i = f.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+  }
+});
+
+/* ---------------- 状态实验台 ---------------- */
+const ins = {
+  target: $('#ins-target'), kind: $('#ins-kind'), load: $('#ins-load'), phase: $('#ins-phase'),
+  pct: $('#ins-pct'), pctV: $('#ins-pct-v'), error: $('#ins-error'),
+};
+function syncInspector() {
+  const ids = S.items.map(x => x.id).join();
+  if (ins.target.dataset.ids !== ids) {
+    ins.target.innerHTML = S.items.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('');
+    ins.target.dataset.ids = ids;
+  }
+  if (!find(S.inspect) && S.items[0]) S.inspect = S.items[0].id;
+  const it = find(S.inspect);
+  const ctrls = document.querySelectorAll('.inspector select, .inspector input, .inspector button');
+  ctrls.forEach(c => (c.disabled = !it));
+  if (!it) return;
+  ins.target.value = it.id;
+  ins.kind.value = it.kind;
+  ins.load.value = it.loadState;
+  ins.phase.value = it.op ? it.op.phase : '';
+  ins.pct.value = it.op ? it.op.percent : -1;
+  ins.pct.disabled = !it.op;
+  ins.pctV.textContent = it.op ? (it.op.percent < 0 ? '（未知）' : it.op.percent + '%') : '';
+  if (document.activeElement !== ins.error) ins.error.value = it.error;
+  document.querySelectorAll('[data-ins]').forEach(c => (c.checked = !!it[c.dataset.ins]));
+}
+ins.target.addEventListener('change', () => { S.inspect = ins.target.value; S.selected = ins.target.value; render(); });
+ins.kind.addEventListener('change', () => { find(S.inspect).kind = ins.kind.value; render(); });
+ins.load.addEventListener('change', () => { find(S.inspect).loadState = ins.load.value; render(); });
+ins.error.addEventListener('input', () => { find(S.inspect).error = ins.error.value; render(); });
+ins.phase.addEventListener('change', () => {
+  const it = find(S.inspect);
+  it.op = ins.phase.value ? { desired: it.op ? it.op.desired : !it.enabled, phase: ins.phase.value, percent: it.op ? it.op.percent : -1, message: '' } : null;
+  render();
+});
+ins.pct.addEventListener('input', () => {
+  const it = find(S.inspect);
+  if (!it.op) return;
+  it.op = { ...it.op, percent: Number(ins.pct.value) }; // 新对象：中止正在跑的模拟
+  render();
+});
+document.querySelectorAll('[data-ins]').forEach(c => c.addEventListener('change', () => { find(S.inspect)[c.dataset.ins] = c.checked; render(); }));
+$('#ins-sim-toggle').addEventListener('click', () => { const it = find(S.inspect); if (it) { it.op = null; toggle(it); } });
+$('#ins-sim-update').addEventListener('click', () => {
+  const it = find(S.inspect);
+  if (!it) return;
+  it.op = null;
+  if (!it.update) { it.update = true; it.latest = it.latest || bump(it.version || '0.1.0'); }
+  update(it);
+});
+$('#ins-reset').addEventListener('click', () => { S.items = seed(); S.expanded.clear(); S.overlay = null; S.query = ''; S.inspect = S.selected = 'search'; render(); });
+function bump(v) { const p = v.split(/[.-]/).map(Number); return `${p[0] || 0}.${(p[1] || 0) + 1}.0`; }
+
+render();
+</script>
+</body>
+</html>

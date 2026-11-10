@@ -4,23 +4,22 @@
 // below are a pure move - do not reflow or reword them.
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import { installMobileEffect } from '../platform/breakpoints.ts'
-import { getFrame } from '../platform/frame.ts'
+import { getDrawer, getFrame } from '../platform/frame.ts'
+import { drawerOpening, openDrawerAfterKeyboard } from '../platform/drawer-open.ts'
 import { consumeIfGestured, isStrokeLocked } from './gesture-guard.ts'
-import { findSessionIdInFiber, isTapWithinSlop, reactFiberOf } from './session-row-fiber.ts'
-import { currentSessionIdOf, sessionsCanOpen } from '../core/sessions-compat.ts'
+import { isTapWithinSlop } from './session-row-fiber.ts'
 import { closeDrawerAnimated } from './sidebar-swipe.ts'
 
 /** Finger-down to finger-up travel that still counts as a tap on a session row
- *  (#49). Per-axis (`isTapWithinSlop` is max-norm, not Euclidean): the drawer
+ *  (the DSHA click replacement below). Per-axis (`isTapWithinSlop` is max-norm, not Euclidean): the drawer
  *  list scrolls vertically, so a 60px vertical drift must not navigate while a
  *  diagonal wobble still reads as a tap. */
 const TAP_NAV_SLOP_PX = 12
 
 /** Where the current touch started (null for a mouse, and between touches).
- *  The no-click row-tap fallback resolves the row's session id at pointerup and
- *  only when the finger stayed put, so every touch pointerdown records this
- *  BEFORE any early return — a missed record silently disables the whole
- *  fallback. Cleared by the effect's disposer. */
+ *  The DSHA click replacement only fires when the finger stayed put, so every
+ *  touch pointerdown records this BEFORE any early return. Cleared by the
+ *  effect's disposer. */
 let touchDownAt: { x: number; y: number } | null = null
 
 /**
@@ -56,9 +55,25 @@ export const TAP_CLOSE_NAV_SELECTOR =
  * transition — that is the 快捷键弹层「抽搐/闪」 root cause. Routing every
  * closer through here removes the window at the source instead of relying on
  * the band to cover it.
+ *
+ * An OPEN (frame still collapsed) goes through openDrawerAfterKeyboard: a
+ * focused composer is blurred first and the drawer opens once the soft keyboard
+ * has gone, so the host's own focus move into the drawer cannot close the
+ * keyboard mid-slide (2026-11-05 drawer-jank report, R2). Every tap opener —
+ * the header toggle (index.tsx) and the FAB — routes through here. The opening
+ * hook runs right before the flip so the backdrop joins the same commit (R3).
  */
 export function toggleDrawer(ctx: ClientContext): void {
-  if (!closeDrawerAnimated(ctx)) ctx.layout.toggleSidebar()
+  if (closeDrawerAnimated(ctx)) return
+  const frame = getFrame()
+  if (frame !== null && frame.hasAttribute('data-sidebar-collapsed')) {
+    openDrawerAfterKeyboard(() => {
+      drawerOpening() // backdrop lands in the same task as the host commit (R3)
+      ctx.layout.toggleSidebar()
+    })
+    return
+  }
+  ctx.layout.toggleSidebar()
 }
 
 export function installOverlayInteractions(ctx: ClientContext): void {
@@ -82,8 +97,7 @@ export function installOverlayInteractions(ctx: ClientContext): void {
     }
     // Capture phase: run before the shell or a plugin processes the click,
     // so takeover panels never render under the open drawer.
-    const drawerRoot = (): HTMLElement | null =>
-      document.querySelector<HTMLElement>('[data-mobile-nav="frame"] > :first-child')
+    const drawerRoot = (): HTMLElement | null => getDrawer()
 
     // Shared frame: inside the drawer, on a row navigation target, and not on
     // one of its buttons. Deliberately free of the DSHA tap-close exemption —
@@ -96,6 +110,10 @@ export function installOverlayInteractions(ctx: ClientContext): void {
       const drawer = drawerRoot()
       if (drawer === null || !drawer.contains(target)) return false
       if (target.closest('[class*="sessionRow"] button') !== null) return false
+      // 「更多」这类面板行按钮是菜单锚点（aria-haspopup=menu，菜单走 portal）。
+      // 它们命中 panelRow 选择器，但点它只该开菜单：收抽屉会把 portal 菜单留在
+      // 会话上（2026-10-25 真机：侧边栏「更多」的菜单浮在聊天区）。
+      if (target.closest('button[class*="panelRow"][aria-haspopup="menu"]') !== null) return false
       return target.closest(TAP_CLOSE_NAV_SELECTOR) !== null
     }
     // DSHA_SESSION_INTERACTION_V1：宿主把「单击=选中、双击=打开」拆成了两步
@@ -176,72 +194,9 @@ export function installOverlayInteractions(ctx: ClientContext): void {
       navTimer = window.setTimeout(disarmNav, 2000)
     }
 
-    /** Whether the session list really knows an id. The fiber walk has no
-     *  shape heuristic on purpose: hop 32 of a row's chain is a ScopeProvider
-     *  whose `props.scope` is the literal 'session-maybe', and
-     *  `ctx.sessions.open` fails loud on unknown ids — membership is the only
-     *  filter that can never hand the host a guess. */
-    const isKnownSessionId = (id: string): boolean => {
-      const snapshot = ctx.sessions.list.getSnapshot()
-      return snapshot.byId[id] !== undefined
-    }
-
-    /** The session a finished tap on `row` should open, or null to fall back to
-     *  the DOM observer: no finger-down record, a release that travelled (a
-     *  scroll or a swipe, not a tap), a fiber chain offering no known id, or a
-     *  row that is already the current session. */
-    const tappedRowSessionId = (row: Element, event: PointerEvent): string | null => {
-      if (touchDownAt === null) return null
-      if (!isTapWithinSlop(touchDownAt, { x: event.clientX, y: event.clientY }, TAP_NAV_SLOP_PX)) return null
-      const id = findSessionIdInFiber(reactFiberOf(row), isKnownSessionId)
-      if (id === null) return null
-      return currentSessionIdOf(ctx.sessions.list.getSnapshot()) === id ? null : id
-    }
-
-    // Close the drawer once the navigation we started ourselves lands (#49).
-    // `armNav` watched the drawer's *selected row* change, but when WebKit drops
-    // the tap's click the row's own onClick never runs, so that signal never
-    // arrives — the store is the honest source of "navigation happened".
-    let closeOnNavUnsub: (() => void) | null = null
-    let closeOnNavDone = false
-    /** The queued `fire` handle: cleared on disarm so disposal leaves no timer. */
-    let closeOnNavTimer = 0
-
-    /** Disarming means spent: mark the close done before dropping the
-     *  subscription, so a `fire` a subscription tick already queued cannot
-     *  toggle the drawer after the close was handed to the other closer. */
-    const disarmCloseOnNav = (): void => {
-      closeOnNavDone = true
-      closeOnNavUnsub?.()
-      closeOnNavUnsub = null
-      if (closeOnNavTimer !== 0) {
-        window.clearTimeout(closeOnNavTimer)
-        closeOnNavTimer = 0
-      }
-    }
-
-    const closeOnNavigation = (id: string): void => {
-      disarmCloseOnNav()
-      closeOnNavDone = false
-      const fire = (): void => {
-        if (closeOnNavDone) return
-        disarmCloseOnNav()
-        if (drawerOpen()) toggleSidebar()
-      }
-      closeOnNavUnsub = ctx.sessions.list.subscribe(() => {
-        if (currentSessionIdOf(ctx.sessions.list.getSnapshot()) !== id) return
-        if (closeOnNavTimer !== 0) window.clearTimeout(closeOnNavTimer)
-        closeOnNavTimer = window.setTimeout(() => {
-          closeOnNavTimer = 0
-          fire()
-        }, 0)
-      })
-    }
-
-    /** Record where a touch started. The no-click row-tap fallback in
-     *  onDrawerPointerUp resolves the row's session id at the lift and needs the
-     *  down point to tell a tap from a scroll or a swipe, so every touch
-     *  pointerdown records it BEFORE any early return. */
+    /** Record where a touch started. The DSHA click replacement in
+     *  onDrawerClick needs the down point to tell a tap from a scroll or a
+     *  swipe, so every touch pointerdown records it BEFORE any early return. */
     let touchStartedAt = 0
     const onDrawerPointerDown = (event: PointerEvent): void => {
       touchStartedAt = performance.now()
@@ -262,7 +217,7 @@ export function installOverlayInteractions(ctx: ClientContext): void {
       // stops click propagation at the frame for anything outside the drawer
       // (its own dismiss path), so that listener never sees the tap. Decide
       // here instead — before both the shim and the element handler.
-      if (target instanceof Element && target.closest('[data-mobile-nav="backdrop"]') !== null) {
+      if (target instanceof Element && target.closest('[data-mobile-nav="hit"]') !== null) {
         if (drawerOpen()) toggleSidebar()
         return
       }
@@ -279,7 +234,6 @@ export function installOverlayInteractions(ctx: ClientContext): void {
         event.preventDefault()
         event.stopPropagation()
         disarmNav()
-        disarmCloseOnNav()
         lastTouchNavAt = performance.now()
         dshaRow.dispatchEvent(new MouseEvent('click', {
           bubbles: true, cancelable: true, view: window, detail: 0,
@@ -312,37 +266,12 @@ export function installOverlayInteractions(ctx: ClientContext): void {
           // Already-selected row will not navigate; closing immediately is safe.
           toggleSidebar()
         } else {
-          // Unselected row: navigate from the id we resolved at the touch point
-          // when this tap can supply one — on WebKit the row's own click may
-          // never come, and then nothing else would open the session. Fall back
-          // to closing once the DOM shows a navigation landed when it cannot.
-          const tappedId = tappedRowSessionId(row, event)
-          if (tappedId === null) {
-            // Exactly one closer at a time: this tap closes through the DOM
-            // observer, so drop the store subscription an earlier resolved tap
-            // armed — its stale id would toggle the drawer again on landing.
-            disarmCloseOnNav()
-            armNav()
-          } else {
-            // The mirror case: this tap closes through the store, so drop the
-            // observer an earlier fallback tap armed — otherwise both fire on
-            // this one navigation (the observer on the selected-title change,
-            // the subscription on the landing) and race to toggle twice.
-            disarmNav()
-            if (sessionsCanOpen(ctx.sessions)) {
-              closeOnNavigation(tappedId)
-              ctx.sessions.open(tappedId)
-            } else {
-              // a2 removed sessions.open (retain-model navigation) — the
-              // store-subscription closer above watches `current`, which a2
-              // no longer publishes, so arming it would only leak a
-              // subscription that can never fire. Degrade to the DOM
-              // observer: the row's own onClick still navigates where the
-              // browser dispatches it (audit doc §10.1 / F1).
-              disarmCloseOnNav()
-              armNav()
-            }
-          }
+          // Unselected row: the row's own onClick navigates; close once the DOM
+          // shows that navigation landed (selected-row title change). The
+          // former store-driven `sessions.open` fallback (#49) is gone: hosts
+          // >=0.2.2 expose no `sessions.open` and publish no `current`, so that
+          // branch could never run.
+          armNav()
         }
         return
       }
@@ -366,8 +295,6 @@ export function installOverlayInteractions(ctx: ClientContext): void {
     document.addEventListener('pointerup', onDrawerPointerUp, true)
     return () => {
       disarmNav()
-      // Also marks the close spent, so a queued `fire` cannot outlive the effect.
-      disarmCloseOnNav()
       touchDownAt = null
       document.removeEventListener('dsha-session-open', onDshaSessionOpen)
       document.removeEventListener('dblclick', onDrawerDoubleClick, true)

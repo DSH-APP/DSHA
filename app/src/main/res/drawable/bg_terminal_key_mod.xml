@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 终端修饰键（Ctrl/Alt）键帽：功能键底色 + 底部 14×3dp 指示条。
+     selected = 一次性修饰已锁定：强调底、细描边、指示条点亮；不再用文字变绿表达状态。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/terminal_key_ripple">
+    <item
+        android:id="@android:id/mask"
+        android:bottom="2dp"
+        android:left="2dp"
+        android:right="2dp"
+        android:top="2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <item>
+        <selector>
+            <item android:state_selected="true">
+                <layer-list>
+                    <item
+                        android:bottom="2dp"
+                        android:left="2dp"
+                        android:right="2dp"
+                        android:top="2dp">
+                        <shape android:shape="rectangle">
+                            <solid android:color="@color/terminal_key_edge" />
+                            <corners android:radius="8dp" />
+                        </shape>
+                    </item>
+                    <item
+                        android:bottom="3dp"
+                        android:left="2dp"
+                        android:right="2dp"
+                        android:top="2dp">
+                        <shape android:shape="rectangle">
+                            <solid android:color="@color/terminal_key_latched" />
+                            <corners android:radius="8dp" />
+                            <stroke android:width="1dp" android:color="@color/terminal_key_latched_line" />
+                        </shape>
+                    </item>
+                    <item
+                        android:height="1dp"
+                        android:gravity="top|fill_horizontal"
+                        android:left="8dp"
+                        android:right="8dp"
+                        android:top="2dp">
+                        <shape android:shape="rectangle">
+                            <solid android:color="@color/terminal_key_highlight" />
+                        </shape>
+                    </item>
+                    <item
+                        android:width="14dp"
+                        android:height="3dp"
+                        android:bottom="8dp"
+                        android:gravity="bottom|center_horizontal">
+                        <shape android:shape="rectangle">
+                            <solid android:color="@color/terminal_key_led_on" />
+                            <corners android:radius="2dp" />
+                        </shape>
+                    </item>
+                </layer-list>
+            </item>
+            <item>
+                <layer-list>
+                    <item
+                        android:bottom="2dp"
+                        android:left="2dp"
+                        android:right="2dp"
+                        android:top="2dp">
+                        <shape android:shape="rectangle">
+                            <solid android:color="@color/terminal_key_edge" />
+                            <corners android:radius="8dp" />
+                        </shape>
+                    </item>
+                    <item
+                        android:bottom="3dp"
+                        android:left="2dp"
+                        android:right="2dp"
+                        android:top="2dp">
+                        <shape android:shape="rectangle">
+                            <solid android:color="@color/terminal_key_fn" />
+                            <corners android:radius="8dp" />
+                        </shape>
+                    </item>
+                    <item
+                        android:height="1dp"
+                        android:gravity="top|fill_horizontal"
+                        android:left="8dp"
+                        android:right="8dp"
+                        android:top="2dp">
+                        <shape android:shape="rectangle">
+                            <solid android:color="@color/terminal_key_highlight" />
+                        </shape>
+                    </item>
+                    <item
+                        android:width="14dp"
+                        android:height="3dp"
+                        android:bottom="8dp"
+                        android:gravity="bottom|center_horizontal">
+                        <shape android:shape="rectangle">
+                            <solid android:color="@color/terminal_key_led_off" />
+                            <corners android:radius="2dp" />
+                        </shape>
+                    </item>
+                </layer-list>
+            </item>
+        </selector>
+    </item>
+</ripple>

@@ -1,0 +1,4 @@
+# DSHA 0.2.1-rc.3-20261102.0200-dsh0.2.1-rc.5 / build257
+
+- Correctif des verrous de fichiers proroot : le runtime du moteur proroot signalait tout échec de fcntl comme EPERM (permission refusée), même quand un autre processus tenait simplement le verrou, si bien que les outils qui s'appuient sur des verrous inter-processus, comme Gradle, échouaient. La couche de compatibilité renvoie désormais le bon code d'erreur : un verrou occupé indique de réessayer. Le moteur proot par défaut n'est pas concerné.
+- Portée de la vérification : le paquet de test a été vérifié sous proroot sur une tablette Android 16 avec une sonde de verrou et une conversation Web ; le paquet officiel n'a pas été installé sur un appareil. versionCode porté à 257 (basé sur build256). La révision DSHA reste 0.2.1-rc.3 et le DSH intégré reste 0.2.1-rc.5.

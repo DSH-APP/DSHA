@@ -253,7 +253,7 @@ public class WebProcSelTest {
   @Test
   public void currentCanonicalLaunchShellIsRetainedWithoutSignallingTheShell() {
     for (String profile : new String[] {"web", "dsha-recovery-example"}) {
-      String command = WebLaunchCommand.build("ask", true, "zh", profile, 0, 9);
+      String command = WebLaunchCommand.build(true, "zh", profile, 0, 9);
       String shell = "/bin/bash\0-c\0" + command + "\0";
       assertTrue(WebProcSel.looksLikeWeb(shell));
       assertFalse(WebProcSel.maySignalWeb(shell));

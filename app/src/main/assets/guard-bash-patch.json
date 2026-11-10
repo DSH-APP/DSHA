@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-tool-bash/lib/index.js",
   "patches": [
     {
@@ -12,5 +12,5 @@
       "after": "\t\t\t\tawait verifyGlobalConsent(exec);\n\t\t\t\tverifyBashRequest(exec, workdir);\n\t\t\t\tconst dshEnv = preparedEnvironment(exec);"
     }
   ],
-  "sourceSha256": "a1215d7bcaf82c0755be48321ef6bb45075f1cb33296d6263009e9d10fd596f6"
+  "sourceSha256": "ae6be2d8b287b5e410d026acd2fdfc553ebb95565f7b361029c7fb5bcda5fd27"
 }

@@ -1,23 +1,20 @@
 # Browser engines, desktop UA, and loading failures
 
-Verification date: 2026-10-21. Source: the corresponding Chinese maintenance guide and current working-tree implementation, using published F10 `087724c` as a reference baseline. Mechanism documentation does not establish WebView/Gecko phone validation or frame-rate results for the current release.
+Verification date: 2026-10-21; current-state note for build209. Source: the corresponding Chinese maintenance guide and current working-tree implementation. Mechanism documentation does not establish WebView phone validation or frame-rate results for the current release. Since build209 there is a single Standard variant (Android 11 / API 30+); the Low/GeckoView line has been removed.
 
 ## Current selection
 
 | Flavor / setting | Actual selection |
 |---|---|
-| Standard | System WebView; no bundled Gecko fallback implementation |
-| Low: explicit Gecko | Bundled GeckoView |
-| Low: automatic, API<26 | Prefer Gecko |
-| Low: automatic, API≥26 | Try WebView when its provider can be identified; prefer Gecko when the provider is absent or its query fails. |
+| Standard (only variant, Android 11+) | System WebView; no bundled Gecko fallback implementation |
 
-[ConfigFragment](../../app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java) is the settings entry point. **Browser engine** shows only System WebView in Standard; Low offers **Automatic engine / Gecko**. The default Gecko preference is false. Saving affects later selection; it does not replace a live engine inside an already-loaded page. See [Standard PreviewFallback](../../app/src/standard/java/com/deepseekharness/app/ui/PreviewFallback.java) and [Low PreviewFallback](../../app/src/low/java/com/deepseekharness/app/ui/PreviewFallback.java). Low's WebView path tests the page's actual required capabilities rather than declaring failure from a UA version number.
+[ConfigFragment](../../app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java) is the settings entry point. **Browser engine** shows only System WebView. The former Low "Automatic engine / Gecko" choice and the separate island package are gone in build209. Saving affects later selection; it does not replace a live engine inside an already-loaded page. See [Standard PreviewFallback](../../app/src/standard/java/com/deepseekharness/app/ui/PreviewFallback.java). The WebView path tests the page's actual required capabilities rather than declaring failure from a UA version number.
 
-[WebPreviewActivity](../../app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java) implements system WebView. [GeckoPreviewActivity](../../app/src/low/java/com/deepseekharness/app/ui/GeckoPreviewActivity.java) is compiled only into Low. The proot/proroot container engine is selected independently of the browser engine. Changing browser engines does not replace Ubuntu or DSH.
+[WebPreviewActivity](../../app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java) implements system WebView and is the only browser host. The proot/proroot container engine is selected independently of the browser engine. Changing browser settings does not replace Ubuntu or DSH.
 
 ## What desktop-page mode changes
 
-The setting defaults off and is stored as `desktopMode`. When creating a WebView, [WebPreviewPolicy.desktopUserAgent](../../app/src/main/java/com/deepseekharness/app/util/WebPreviewPolicy.java) replaces the Android platform marker and removes the Mobile marker while retaining the real Chrome version. Gecko selects desktop user-agent mode when creating its session. This affects the page's response to its UA. It does not create desktop resolution, disable the mobile plugin, or promise to rewrite the viewport or CSS layout.
+The setting defaults off and is stored as `desktopMode`. When creating a WebView, [WebPreviewPolicy.desktopUserAgent](../../app/src/main/java/com/deepseekharness/app/util/WebPreviewPolicy.java) replaces the Android platform marker and removes the Mobile marker while retaining the real Chrome version. This affects the page's response to its UA. It does not create desktop resolution, disable the mobile plugin, or promise to rewrite the viewport or CSS layout.
 
 The UA is read when a browser instance is created. A retained instance in the same generation keeps its original creation settings. After changing the preference, the instance must be recreated before the new UA can be verified. Resuming a hidden page alone is not proof of switching. Page CSS, viewport, the mobile plugin, and the system window still determine layout together.
 
@@ -41,13 +38,13 @@ Entry points are [DeepSeekOAuthNavigation](../../app/src/main/java/com/deepseekh
 
 | Symptom | Handling boundary |
 |---|---|
-| WebView initialization or required-capability check fails | Low may try Gecko. Standard asks the user to enable or update Android System WebView/Chrome, or open in an external browser. |
-| The current WebView renderer crashes | First destroy the dead page and resources. Low may attempt Gecko once; Standard displays a retry message. |
+| WebView initialization or required-capability check fails | Ask the user to enable or update Android System WebView/Chrome, or open in an external browser. There is no bundled fallback engine. |
+| The current WebView renderer crashes | First destroy the dead page and resources, then display a retry message. There is no bundled fallback engine. |
 | Android reclaims the renderer for memory | Display a reopen message without automatically classifying it as a crash. |
 | HTTP401/403 | Bounded reauthentication against the current run; on continued failure, return to the launch page and enter again rather than looping with an old token. |
 | Ordinary connection error or slow service startup | Inspect the launch page and logs. Not every network failure switches engines. |
 
-Automatic fallback requires the current startup identity, a valid same-service URL, and a live host. [openGeckoAfterWebViewFailure](../../app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java) records one attempt, cancels file and microphone requests, and destroys the old View first. Standard's fallback implementation returns false. Low's mechanism must not be advertised as a bundled Standard backup engine.
+The Standard fallback implementation returns false and never switches to another engine. There is no bundled backup engine in build209. [openGeckoAfterWebViewFailure](../../app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java) remains the named seam but does not provide a Gecko fallback.
 
 Microphone access is requested on demand only for audio-only requests from the current local page. `RECORD_AUDIO` and `MODIFY_AUDIO_SETTINGS` have different roles. Ordinary startup does not pregrant recording. Camera and screen-audio requests are rejected, and an old page's permission callback cannot approve a new page. See [BrowserMicrophone](../../app/src/main/java/com/deepseekharness/app/ui/BrowserMicrophone.java).
 

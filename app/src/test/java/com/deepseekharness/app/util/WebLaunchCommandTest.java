@@ -6,7 +6,7 @@ import org.junit.Test;
 public class WebLaunchCommandTest {
   @Test
   public void capturesGenerationBeforePidSentinelAndExec() {
-    String result = WebLaunchCommand.build("danger-full-access", false, "zh", "web", 0, 42);
+    String result = WebLaunchCommand.build(false, "zh", "web", 0, 42);
     assertTrue(result.contains("export DSHA_WEB_GENERATION=42"));
     assertTrue(result.startsWith("export PATH=\"/root/dsh-bin:/usr/local/sbin:/usr/local/bin:"));
     assertTrue(result.contains("${PATH:+:$PATH}\" && "));
@@ -21,17 +21,14 @@ public class WebLaunchCommandTest {
 
   @Test
   public void profileAndSettingsRemainQuoted() {
-    String result = WebLaunchCommand.build("ask", true, "en", "recovery'; echo injected", 3080, 1);
+    String result = WebLaunchCommand.build(true, "en", "recovery'; echo injected", 3080, 1);
     assertTrue(result.contains("export DSH_CONFIRM=1"));
     assertTrue(result.contains("--profile " + ShellQuote.arg("recovery'; echo injected")));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> WebLaunchCommand.build("ask", true, "en", "web", -1, 1));
+        IllegalArgumentException.class, () -> WebLaunchCommand.build(true, "en", "web", -1, 1));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> WebLaunchCommand.build("ask", true, "en", "web", 65536, 1));
+        IllegalArgumentException.class, () -> WebLaunchCommand.build(true, "en", "web", 65536, 1));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> WebLaunchCommand.build("ask", true, "en", "web", 1, -1));
+        IllegalArgumentException.class, () -> WebLaunchCommand.build(true, "en", "web", 1, -1));
   }
 }

@@ -43,6 +43,55 @@ public class UiStateTextTest {
   }
 
   @Test
+  public void cachedRegisteredStatusTranslatesAcrossEveryLanguageWithoutChangingPayload() {
+    String source = "正在启用 %s", payload = "用户外掛 العربية /root/原件 100%";
+    for (String cachedLanguage : UiLanguagePreference.LANGUAGES) {
+      String cached =
+          String.format(
+              java.util.Locale.ROOT, UiMessages.forLanguage(cachedLanguage).get(source), payload);
+      for (String target : UiLanguagePreference.LANGUAGES) {
+        UiText.setLanguage(target);
+        String expected =
+            String.format(
+                java.util.Locale.ROOT, UiMessages.forLanguage(target).get(source), payload);
+        assertEquals(cachedLanguage + " -> " + target, expected, UiStateText.render(cached));
+      }
+    }
+  }
+
+  @Test
+  public void cachedPluginManagementStatesFollowEveryLanguageAndKeepEvidenceVerbatim() {
+    String[] templates = {
+      "当前 Web：加载状态未确认",
+      "配置：已启用",
+      "配置：已禁用",
+      "正在确认提交",
+      "%s\n上次激活记录：%s",
+      "当前 Web：待核验；上次状态：%s",
+      "当前 Web：%s"
+    };
+    for (String template : templates) {
+      Object[] values = new Object[template.split("%s", -1).length - 1];
+      for (int index = 0; index < values.length; index++)
+        values[index] = "plugin-原文 العربية 100% /root/配置\n证据:" + index;
+      for (String source : UiLanguagePreference.LANGUAGES) {
+        String sourceTemplate = UiMessages.forLanguage(source).get(template);
+        assertNotNull(source + ": " + template, sourceTemplate);
+        String cached = String.format(java.util.Locale.ROOT, sourceTemplate, values);
+        for (String target : UiLanguagePreference.LANGUAGES) {
+          UiText.setLanguage(target);
+          String targetTemplate = UiMessages.forLanguage(target).get(template);
+          assertNotNull(target + ": " + template, targetTemplate);
+          assertEquals(
+              template + ": " + source + " -> " + target,
+              String.format(java.util.Locale.ROOT, targetTemplate, values),
+              UiStateText.render(cached));
+        }
+      }
+    }
+  }
+
+  @Test
   public void dynamicStateKeepsPluginNamesPathsAndErrorsVerbatim() {
     UiText.setLanguage("en");
     assertEquals("Enabling 中文-plugin", UiStateText.render("正在启用 中文-plugin"));

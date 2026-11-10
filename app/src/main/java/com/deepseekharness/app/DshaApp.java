@@ -5,10 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
 
-/**
- * 应用入口：全局初始化。
- * 骨架阶段只建一个任务通知渠道；完整版另有配对/确认渠道（见原 Constants.CHANNEL_*）。
- */
+/** 应用入口：全局初始化。 骨架阶段只建一个任务通知渠道；完整版另有配对/确认渠道（见原 Constants.CHANNEL_*）。 */
 public class DshaApp extends Application
     implements com.deepseekharness.app.runtime.RuntimeHostPorts.Owner,
         com.deepseekharness.app.data.PortableSettings.Owner,
@@ -54,12 +51,7 @@ public class DshaApp extends Application
 
   @Override
   public android.content.Intent runtimePage() {
-    return new android.content.Intent(this, com.deepseekharness.app.ui.MainActivity.class)
-        .addFlags(
-            android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
-                | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        .putExtra("open_launch", true);
+    return com.deepseekharness.app.ui.MainActivity.homeIntent(this);
   }
 
   private final com.deepseekharness.app.util.ApplicationServiceSlot<HarnessService> harnessService =
@@ -94,6 +86,10 @@ public class DshaApp extends Application
           com.deepseekharness.app.core.PluginRepository>
       pluginOwner = new com.deepseekharness.app.util.ApplicationOwner<>();
   private final com.deepseekharness.app.util.ApplicationOwner<
+          com.deepseekharness.app.plugins.PluginManagementEngine>
+      pluginManagementOwner = new com.deepseekharness.app.util.ApplicationOwner<>();
+  private volatile com.deepseekharness.app.plugins.PluginManagementEngine initializedPluginEngine;
+  private final com.deepseekharness.app.util.ApplicationOwner<
           com.deepseekharness.app.vscreen.VirtualScreenManager>
       virtualScreenOwner = new com.deepseekharness.app.util.ApplicationOwner<>();
   private final com.deepseekharness.app.util.ApplicationOwner<
@@ -110,6 +106,16 @@ public class DshaApp extends Application
 
   public com.deepseekharness.app.core.PluginRepository pluginRepository() {
     return pluginOwner.get(() -> new com.deepseekharness.app.core.PluginRepository(this));
+  }
+
+  public com.deepseekharness.app.plugins.PluginManagementEngine pluginManagementEngine() {
+    return pluginManagementOwner.get(
+        () -> {
+          var engine =
+              new com.deepseekharness.app.plugins.PluginManagementEngine(this, pluginRepository());
+          initializedPluginEngine = engine;
+          return engine;
+        });
   }
 
   public com.deepseekharness.app.vscreen.VirtualScreenManager virtualScreenManager() {
@@ -148,6 +154,8 @@ public class DshaApp extends Application
     com.deepseekharness.app.ui.LanguageController.apply(this);
     ShizukuShell.init(this);
     com.deepseekharness.app.ui.ThemeController.apply(this);
+    // 调色板色经主题属性引用：应用上下文也带上应用主题，避免直接用它取色时属性无从解析。
+    setTheme(R.style.Theme_DeepseekHarness);
     com.deepseekharness.app.core.RuntimeTasks.initialize(this);
     final android.content.Context runtimeApp = getApplicationContext();
     runtimeHostPorts.install(
@@ -243,8 +251,14 @@ public class DshaApp extends Application
     com.deepseekharness.app.backup.AutomaticBackups.schedule(this);
     com.deepseekharness.app.backup.PostUpgradeCleanupService.schedule(this);
     com.deepseekharness.app.core.DiagnosticLog.installCrashHandler(this);
+    // 调色板叠加须早于各页 onCreate 解析主题属性。
+    registerActivityLifecycleCallbacks(
+        new com.deepseekharness.app.ui.ThemeController.PaletteHook());
     registerActivityLifecycleCallbacks(new com.deepseekharness.app.ui.ModernAndroidUi());
     registerActivityLifecycleCallbacks(new ForegroundActivity());
+    // 「隐藏后台」截图守卫与实验性严格模式：所有界面都要重放，不能只靠设置页开关。
+    registerActivityLifecycleCallbacks(new com.deepseekharness.app.ui.RecentsPrivacyGuard());
+    registerActivityLifecycleCallbacks(new PluginLifecycle());
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       NotificationManager nm = getSystemService(NotificationManager.class);
       nm.createNotificationChannel(
@@ -252,6 +266,67 @@ public class DshaApp extends Application
               "dsh_task_channel",
               com.deepseekharness.app.util.UiText.text("任务通知"),
               NotificationManager.IMPORTANCE_LOW));
+    }
+  }
+
+  /** 插件初始化排在 resumed 后的主消息队列空闲处；离开可见前台立即退休观察。 */
+  private final class PluginLifecycle implements ActivityLifecycleCallbacks {
+    private final java.util.Set<android.app.Activity> started =
+        java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+    private final java.util.Set<android.app.Activity> resumed =
+        java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+    private android.os.MessageQueue.IdleHandler pendingIdle;
+
+    @Override
+    public void onActivityCreated(android.app.Activity activity, android.os.Bundle state) {}
+
+    @Override
+    public void onActivityStarted(android.app.Activity activity) {
+      started.add(activity);
+    }
+
+    @Override
+    public void onActivityResumed(android.app.Activity activity) {
+      resumed.add(activity);
+      if (pendingIdle != null) return;
+      pendingIdle =
+          () -> {
+            pendingIdle = null;
+            if (!resumed.isEmpty()) pluginManagementEngine().onForeground();
+            return false;
+          };
+      android.os.Looper.myQueue().addIdleHandler(pendingIdle);
+    }
+
+    @Override
+    public void onActivityPaused(android.app.Activity activity) {
+      resumed.remove(activity);
+    }
+
+    @Override
+    public void onActivityStopped(android.app.Activity activity) {
+      resumed.remove(activity);
+      boolean wasStarted = started.remove(activity);
+      if (!started.isEmpty()) return;
+      if (pendingIdle != null) {
+        android.os.Looper.myQueue().removeIdleHandler(pendingIdle);
+        pendingIdle = null;
+      }
+      // 不为关闭观察而创建服务；旋转后仍复用同一个应用级 Engine 和目录快照。
+      var engine = initializedPluginEngine;
+      if (engine != null) {
+        engine.onBackground();
+        if (wasStarted && !activity.isChangingConfigurations()) engine.invalidateInstalledState();
+      }
+    }
+
+    @Override
+    public void onActivitySaveInstanceState(
+        android.app.Activity activity, android.os.Bundle state) {}
+
+    @Override
+    public void onActivityDestroyed(android.app.Activity activity) {
+      onActivityStopped(activity);
     }
   }
 

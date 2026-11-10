@@ -7,6 +7,15 @@ import org.junit.Test;
 
 public class WebForceStopGateTest {
   @Test
+  public void previousBuildRetireOnlyWhenInstalledIdentityDiffersFromRecord() {
+    assertTrue(WebLifecycleController.previousBuildInstance("pkg:1:0.1", "pkg:2:0.1"));
+    assertFalse(WebLifecycleController.previousBuildInstance("pkg:1:0.1", "pkg:1:0.1"));
+    assertFalse(WebLifecycleController.previousBuildInstance(null, "pkg:2:0.1"));
+    assertFalse(WebLifecycleController.previousBuildInstance("pkg:1:0.1", ""));
+    assertFalse(WebLifecycleController.previousBuildInstance("", "pkg:2:0.1"));
+  }
+
+  @Test
   public void escalationNeedsAFailedOrdinaryStopAndTheSameUserStopIntent() {
     WebLifecycle lifecycle = new WebLifecycle();
     long running = lifecycle.beginStart(false, false);

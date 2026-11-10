@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 维护进行中的进度面板：抬升底 + 描边，上叠按 level 裁切的主色浅底（level = 完成比例 × 10000）。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/shell_raised" />
+            <corners android:radius="@dimen/radius_control" />
+            <stroke
+                android:width="@dimen/stroke"
+                android:color="@color/shell_line_strong" />
+        </shape>
+    </item>
+    <item android:id="@+id/extract_busy_fill">
+        <clip
+            android:clipOrientation="horizontal"
+            android:gravity="start">
+            <shape android:shape="rectangle">
+                <solid android:color="@color/shell_accent_soft" />
+                <corners android:radius="@dimen/radius_control" />
+            </shape>
+        </clip>
+    </item>
+</layer-list>

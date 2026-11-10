@@ -48,6 +48,53 @@ final class LanAuth {
     return AUTH_DENY;
   }
 
+  /** Session cookies, never query parameters, authorize ordinary proxy requests. */
+  static boolean sessionOk(String head, String session) {
+    if (head == null || session == null || session.isEmpty()) return false;
+    for (String line : head.split("\\r?\\n")) {
+      int colon = line.indexOf(':');
+      if (colon <= 0 || !line.substring(0, colon).trim().equalsIgnoreCase("Cookie")) continue;
+      for (String part : line.substring(colon + 1).split(";")) {
+        String cookie = part.trim();
+        String prefix = COOKIE_NAME + "=";
+        if (cookie.startsWith(prefix)
+            && constantTimeEquals(session, cookie.substring(prefix.length()).trim())) return true;
+      }
+    }
+    return false;
+  }
+
+  /** Basic is only a bootstrap on a safe navigation, never a write authorization. */
+  static boolean passwordOk(String head, String verifier) {
+    if (head == null || !head.startsWith("GET ")) return false;
+    String authorization = null;
+    for (String line : head.split("\\r?\\n")) {
+      int colon = line.indexOf(':');
+      if (colon <= 0) continue;
+      String name = line.substring(0, colon).trim();
+      String value = line.substring(colon + 1).trim();
+      if (name.equalsIgnoreCase("Sec-Fetch-Site") && value.equalsIgnoreCase("cross-site"))
+        return false;
+      if (name.equalsIgnoreCase("Authorization")) {
+        if (authorization != null) return false;
+        authorization = value;
+      }
+    }
+    if (authorization == null
+        || !authorization.regionMatches(true, 0, "Basic ", 0, 6)
+        || authorization.length() > 1024) return false;
+    try {
+      String decoded =
+          new String(
+              java.util.Base64.getDecoder().decode(authorization.substring(6).trim()),
+              java.nio.charset.StandardCharsets.UTF_8);
+      if (!decoded.startsWith("dsha:")) return false;
+      return com.deepseekharness.app.util.LanPassword.verify(decoded.substring(5), verifier);
+    } catch (IllegalArgumentException invalid) {
+      return false;
+    }
+  }
+
   /** Keep callback paths and state while removing the proxy credential only. */
   static String cleanRedirectTarget(String target) {
     // A Location beginning // or /\\ is interpreted as a different authority by

@@ -41,7 +41,7 @@ public final class AboutFragment extends Fragment {
     ui.kv(
         metadata,
         UiText.choose("当前版本", "Edition"),
-        BuildConfig.LOW_ANDROID
+        false
             ? UiText.choose("兼容版 · Android 6+", "Compatibility · Android 6+")
             : UiText.choose("标准版 · Android 11+", "Standard · Android 11+"));
     ui.kv(metadata, "DSH", com.deepseekharness.app.util.Constants.DSH_VERSION);

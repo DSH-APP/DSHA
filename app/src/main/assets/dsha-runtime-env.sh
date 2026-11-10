@@ -5,6 +5,13 @@ if [ -r /usr/local/share/dsha/dns-compat.cjs ]; then
         *) export NODE_OPTIONS="--require=/usr/local/share/dsha/dns-compat.cjs${NODE_OPTIONS:+ $NODE_OPTIONS}" ;;
     esac
 fi
+# 切网后回收外网连接（T37），排在 DNS 兼容之后。
+if [ -r /usr/local/share/dsha/net-epoch.cjs ]; then
+    case " ${NODE_OPTIONS-} " in
+        *" --require=/usr/local/share/dsha/net-epoch.cjs "*) ;;
+        *) export NODE_OPTIONS="--require=/usr/local/share/dsha/net-epoch.cjs${NODE_OPTIONS:+ $NODE_OPTIONS}" ;;
+    esac
+fi
 case ":$PATH:" in *:/root/dsh-bin:*) ;; *) export PATH="/root/dsh-bin:$PATH" ;; esac
 export SSL_CERT_FILE="${SSL_CERT_FILE:-/usr/local/share/dsha/ca-certificates.crt}"
 export REQUESTS_CA_BUNDLE="${REQUESTS_CA_BUNDLE:-$SSL_CERT_FILE}"

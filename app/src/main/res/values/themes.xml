@@ -4,38 +4,38 @@
         <item name="android:windowLightStatusBar">true</item>
     </style>
 
-    <style name="Theme.DSHA.Base" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorOnPrimary">@color/accent_on</item>
-        <item name="colorPrimaryContainer">@color/raised</item>
-        <item name="colorOnPrimaryContainer">@color/primary</item>
-        <item name="colorSecondary">@color/primary_dark</item>
+    <style name="Theme.DSHA.Base" parent="Theme.DSHA.PaletteDefaults">
+        <item name="colorPrimary">?attr/dsha_pal_primary</item>
+        <item name="colorOnPrimary">?attr/dsha_pal_accent_on</item>
+        <item name="colorPrimaryContainer">?attr/dsha_pal_raised</item>
+        <item name="colorOnPrimaryContainer">?attr/dsha_pal_primary</item>
+        <item name="colorSecondary">?attr/dsha_pal_primary_dark</item>
         <!-- 底栏选中指示 / 芯片选中底色走这两个（不给的话 Material 会自己算一个
              紫色系默认值，跟本 App 的蓝灰配色打架） -->
-        <item name="colorSecondaryContainer">@color/ripple</item>
-        <item name="colorOnSecondaryContainer">@color/primary</item>
+        <item name="colorSecondaryContainer">?attr/dsha_pal_ripple</item>
+        <item name="colorOnSecondaryContainer">?attr/dsha_pal_primary</item>
         <!-- 表面层级：卡片=card，次级容器=raised，描边=line。
              Switch / CheckBox / Slider / AlertDialog 都吃这几个语义色，
              补齐后系统控件才会和自绘的卡片按钮同色系。 -->
-        <item name="colorSurface">@color/card</item>
-        <item name="colorSurfaceContainerLowest">@color/surface</item>
-        <item name="colorSurfaceContainerLow">@color/card</item>
-        <item name="colorSurfaceContainer">@color/card</item>
-        <item name="colorSurfaceContainerHigh">@color/card</item>
-        <item name="colorSurfaceContainerHighest">@color/raised</item>
+        <item name="colorSurface">?attr/dsha_pal_card</item>
+        <item name="colorSurfaceContainerLowest">?attr/dsha_pal_surface</item>
+        <item name="colorSurfaceContainerLow">?attr/dsha_pal_card</item>
+        <item name="colorSurfaceContainer">?attr/dsha_pal_card</item>
+        <item name="colorSurfaceContainerHigh">?attr/dsha_pal_card</item>
+        <item name="colorSurfaceContainerHighest">?attr/dsha_pal_raised</item>
         <item name="colorOnSurface">@color/text</item>
-        <item name="colorSurfaceVariant">@color/raised</item>
+        <item name="colorSurfaceVariant">?attr/dsha_pal_raised</item>
         <item name="colorOnSurfaceVariant">@color/text_secondary</item>
         <item name="colorOutline">@color/line</item>
         <item name="colorOutlineVariant">@color/line</item>
         <item name="colorError">@color/err</item>
         <item name="colorOnError">@color/error_on</item>
-        <item name="colorControlHighlight">@color/ripple</item>
+        <item name="colorControlHighlight">?attr/dsha_pal_ripple</item>
 
-        <item name="android:colorBackground">@color/surface</item>
-        <item name="android:windowBackground">@color/surface</item>
-        <item name="android:statusBarColor">@color/surface</item>
-        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:colorBackground">?attr/dsha_pal_surface</item>
+        <item name="android:windowBackground">?attr/dsha_pal_surface</item>
+        <item name="android:statusBarColor">?attr/dsha_pal_surface</item>
+        <item name="android:navigationBarColor">?attr/dsha_pal_surface</item>
         <item name="android:textColorPrimary">@color/text</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
         <item name="android:textColorHint">@color/text_muted</item>
@@ -50,27 +50,38 @@
         <item name="materialButtonStyle">@style/Widget.DSHA.Button</item>
         <item name="buttonStyle">@style/Widget.DSHA.Button</item>
         <item name="android:buttonStyle">@style/Widget.DSHA.PlatformButton</item>
-        <item name="android:colorAccent">@color/primary</item>
+        <item name="android:colorAccent">?attr/dsha_pal_primary</item>
         <item name="colorControlNormal">@color/text_secondary</item>
-        <item name="colorControlActivated">@color/primary</item>
+        <item name="colorControlActivated">?attr/dsha_pal_primary</item>
         <item name="radioButtonStyle">@style/Widget.DSHA.RadioButton</item>
         <item name="checkboxStyle">@style/Widget.DSHA.CheckBox</item>
         <item name="materialSwitchStyle">@style/Widget.DSHA.Switch</item>
+
+        <!-- 内页 Activity 统一走 v5 页面动效；系统关闭动画时由窗口管理器跳过。 -->
+        <item name="android:windowAnimationStyle">@style/Animation.DSHA.Activity</item>
+    </style>
+
+    <!-- 通知入口中转页：透明、无动画、不画任何内容，只决定去向后立即结束。 -->
+    <style name="Theme.DSHA.EntryRouter" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowNoDisplay">false</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
     </style>
 
     <!-- appcompat / framework AlertDialog：必须是完整 Dialog 主题（不能给 Overlay） -->
     <style name="Dialog.DSHA.Alert" parent="Theme.Material3.DayNight.Dialog.Alert">
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorSurface">@color/card</item>
-        <item name="colorSurfaceContainerLowest">@color/surface</item>
-        <item name="colorSurfaceContainerLow">@color/card</item>
-        <item name="colorSurfaceContainer">@color/card</item>
-        <item name="colorSurfaceContainerHigh">@color/card</item>
-        <item name="colorSurfaceContainerHighest">@color/raised</item>
+        <item name="colorPrimary">?attr/dsha_pal_primary</item>
+        <item name="colorSurface">?attr/dsha_pal_card</item>
+        <item name="colorSurfaceContainerLowest">?attr/dsha_pal_surface</item>
+        <item name="colorSurfaceContainerLow">?attr/dsha_pal_card</item>
+        <item name="colorSurfaceContainer">?attr/dsha_pal_card</item>
+        <item name="colorSurfaceContainerHigh">?attr/dsha_pal_card</item>
+        <item name="colorSurfaceContainerHighest">?attr/dsha_pal_raised</item>
         <item name="colorOnSurface">@color/text</item>
         <item name="android:textColorPrimary">@color/text</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
-        <item name="android:colorAccent">@color/primary</item>
+        <item name="android:colorAccent">?attr/dsha_pal_primary</item>
         <item name="android:textColorHint">@color/text_muted</item>
         <item name="shapeAppearanceOverlay">@style/Shape.DSHA.Dialog</item>
     </style>
@@ -84,15 +95,15 @@
         <item name="buttonBarNeutralButtonStyle">@style/Widget.DSHA.DialogButton</item>
         <item name="materialAlertDialogTitleTextStyle">@style/TextAppearance.DSHA.DialogTitle</item>
         <item name="materialAlertDialogBodyTextStyle">@style/TextAppearance.DSHA.DialogBody</item>
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorSurface">@color/card</item>
-        <item name="colorSurfaceContainerLowest">@color/surface</item>
-        <item name="colorSurfaceContainerLow">@color/card</item>
-        <item name="colorSurfaceContainer">@color/card</item>
-        <item name="colorSurfaceContainerHigh">@color/card</item>
-        <item name="colorSurfaceContainerHighest">@color/raised</item>
+        <item name="colorPrimary">?attr/dsha_pal_primary</item>
+        <item name="colorSurface">?attr/dsha_pal_card</item>
+        <item name="colorSurfaceContainerLowest">?attr/dsha_pal_surface</item>
+        <item name="colorSurfaceContainerLow">?attr/dsha_pal_card</item>
+        <item name="colorSurfaceContainer">?attr/dsha_pal_card</item>
+        <item name="colorSurfaceContainerHigh">?attr/dsha_pal_card</item>
+        <item name="colorSurfaceContainerHighest">?attr/dsha_pal_raised</item>
         <item name="colorOnSurface">@color/text</item>
-        <item name="android:colorAccent">@color/primary</item>
+        <item name="android:colorAccent">?attr/dsha_pal_primary</item>
         <item name="android:textColorHint">@color/text_muted</item>
         <item name="shapeAppearanceOverlay">@style/Shape.DSHA.Dialog</item>
     </style>

@@ -1,16 +1,17 @@
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
-import { getFrame } from '../platform/frame.ts'
+import { foreignModalOpen, getDrawer, getFrame } from '../platform/frame.ts'
 import { installMobileEffect } from '../platform/breakpoints.ts'
+import { drawerOpening, releaseTextFocus } from '../platform/drawer-open.ts'
 import { markGestureConsumed, consumeIfGestured, markStrokeLocked, clearStrokeLocked } from './gesture-guard.ts'
-import { fadeOverlayOut } from './overlay-backdrop-fab.ts'
+import { fadeDimOut } from './drawer-layer.ts'
 
 /**
  * Sidebar drawer swipe gestures (B 档 hybrid follow, per the 2026-08-29
  * controlled upgrade of docs/specs/2026-08-27-sidebar-swipe-gestures.md).
  *
  * Three gestures:
- * - edge swipe-in: the pointer goes down within the start zone (45% of the
- *   left edge) and the drawer is closed → the host state is flipped AT
+ * - edge swipe-in: the pointer goes down anywhere in the frame and drags
+ *   rightward (LTR) while the drawer is closed → the host state is flipped AT
  *   AXIS-LOCK (early commit) while the drawer is pinned in its closed slot,
  *   so the REAL open subtree mounts off-screen and then follows the finger
  *   out of the slot (see startFollow for why the flip has to come first);
@@ -51,41 +52,7 @@ import { fadeOverlayOut } from './overlay-backdrop-fab.ts'
  * a row.
  */
 
-/**
- * Start-zone width as a FRACTION of the viewport width: the pointer counts
- * as "from the left edge" anywhere inside the left (RTL: right) strip this
- * wide. The zone STAYS at 45% (2026-09-11 user decision): a brief seventh
- * pass shrank it to 0.25 for the draggable-widget conflict and was rolled
- * back the same day — the user keeps the "anywhere in the left half" feel
- * and the conflict is handled by yield signals instead (the
- * data-mobile-nav-dragging cooperation mark + the floating-widget positional
- * heuristic, see dragMarkYields/findFloatingWidget).
- * History of the constant: 24px (hotspot era) → 48px (third pass, fixed
- * "识别成对话内容滚动") → 96px (fourth pass — at that point the zone also
- * finally cleared Chrome Android's EDGE_WIDTH_DP=48dp history-navigation
- * trigger strip, whose strokes the browser claims and pointercancels; the
- * browser gesture itself is suppressed by the root overscroll-behavior-x:
- * none rule in layout.css.ts) → 0.45×viewport (fifth pass; brief 0.25
- * experiment rolled back) — this value.
- * Safety at this width: the release classification (0.16×w travel OR
- * 0.45px/ms velocity) still gates the commit, so widening cannot open on a
- * tap; vertical strokes never reach the touchmove preventDefault, so their
- * native scroll is untouched (see onTouchMove — the cancel is only allowed
- * after the horizontal axis lock); strokes beginning inside genuinely
- * horizontally scrollable containers are excluded from the zone entirely —
- * see findHorizontalScroller (at 45% the stats line / message code blocks
- * sit well inside the strip, so that guard is load-bearing).
- */
-const START_ZONE_RATIO = 0.45
 
-/**
- * The zone in pixels for a given viewport width (pure, exported for the
- * decision-table tests). Rounded so the probe boundary assertions stay
- * integral (390px → Math.round(175.5) = 176).
- */
-export function startZonePxFor(viewportWidthPx: number, ratio: number = START_ZONE_RATIO): number {
-  return Math.round(viewportWidthPx * ratio)
-}
 /**
  * Axis-lock threshold: once the stroke's dominant axis has moved this far,
  * the axis is decided. Horizontal-dominant (|dx| > |dy|) locks the stroke
@@ -121,9 +88,9 @@ const CONSUME_WINDOW_MS = 300
 /**
  * Rightward travel (from the stroke start) that arms the OPEN follow, i.e.
  * flips the host state early so the real drawer subtree mounts. Slightly
- * above LOCK_PX so an 8px horizontal twitch inside the wide start zone does
- * not mount-and-unmount 389 nodes; small enough that the dead zone before
- * the drawer's edge appears is imperceptible.
+ * above LOCK_PX so an 8px horizontal twitch during the first move does not
+ * mount-and-unmount 389 nodes; small enough that the dead zone before the
+ * drawer's edge appears is imperceptible.
  */
 /** The open follow arms at the AXIS LOCK itself: tryLock already demanded
  * 8px of horizontal-dominant travel, so no extra twitch margin is needed —
@@ -157,15 +124,13 @@ const COMMIT_ANIM_MS = 280
 const OPEN_FOLLOW_BASE_PCT = 101
 
 /**
- * Files-panel (host right sidebar) gesture constants — the right-edge mirror
- * of the drawer layer (spec 2026-09-13-files-swipe-gesture-design.md).
+ * Files-panel (host right sidebar) gesture constants (spec
+ * 2026-09-13-files-swipe-gesture-design.md).
  *
- * FILES_ZONE_RATIO mirrors the drawer's START_ZONE_RATIO: a narrow strip
- * cannot be used because Chrome Android's history-nav edge strip (~48dp)
- * pointercancels strokes starting inside it — the same reason the drawer
- * zone grew to 45% of the viewport.
+ * The right-edge START ZONE is gone with issue #268: the panel is full-screen
+ * and opens/closes from anywhere, so there is no geometric strip left to
+ * describe.
  */
-const FILES_ZONE_RATIO = 0.45
 /**
  * Distance threshold as a fraction of the viewport width for BOTH files
  * directions (≈62px on a 390px phone). The drawer's separate close ratio
@@ -214,7 +179,7 @@ let openFollowRefused = false
  * right-edge files-panel gesture (no follow painting, host-panel commit).
  * Written by beginStroke only; a fresh beginStroke always routes it.
  */
-let strokeMode: 'drawer' | 'files' = 'drawer'
+let strokeMode: 'drawer' | 'files' | 'pending' = 'drawer'
 /** Files-panel visibility at lock time (the mirror of lockDrawerOpen). */
 let lockFilesOpen = false
 /**
@@ -329,11 +294,11 @@ export function classifyFilesSwipe(
   if (t.drawerOpen) {
     // Same gates as the drawer family's close (classifySwipe), including its
     // CLOSE_DISTANCE_RATIO: this cell IS the drawer-close commit path, so the
-    // two families must judge one physical stroke alike. Without the gate the
-    // files zone's 45% reaches ~66px into the open drawer column at 390px,
-    // where a thumb resting on a row drifts ~8px sideways while scrolling —
-    // that closed the drawer AND consumed the tap. The leftward cell beside the
-    // drawer is already 'none', so this is what makes the families agree.
+    // two families must judge one physical stroke alike. Without the gate a
+    // thumb resting on a row drifts ~8px sideways while scrolling — that
+    // closed the drawer AND consumed the tap, and since issue #268 any start
+    // point can close it. The leftward cell beside the drawer is already
+    // 'none', so this is what makes the families agree.
     const closeRatio = t.drawerCloseDistanceRatio ?? t.distanceRatio
     if (dx / t.viewportWidthPx >= closeRatio) return 'close'
     if (velX <= 0) return 'none'
@@ -369,46 +334,36 @@ export function slidingVelocity(
   return (b.x - a.x) / dt
 }
 
-/**
- * Geometric start-hit test: the pointer went down in the left edge start
- * zone (when the drawer is closed) or inside the drawer content area (when
- * open). Pure and viewport-relative so it is unit-testable; the runtime
- * variant additionally checks the drawer geometry via the DOM.
- */
-export function hitTestStart(
-  clientX: number,
-  viewportWidthPx: number,
-  rtl: boolean,
-  t: { startZonePx: number },
-): boolean {
-  const edge = rtl ? viewportWidthPx - clientX : clientX
-  return edge >= 0 && edge <= t.startZonePx
+
+/** Which gesture family owns a stroke that begins while a panel is OPEN.
+ *
+ * The TOP-most open panel owns it: the drawer's column is painted above the
+ * files panel, so a drawer sitting on top still owns the stroke. The panels
+ * are mutually exclusive (classifyFilesSwipe's leftward cell answers 'none'
+ * while `drawerOpen`), so no second family ever competes for it.
+ *
+ * The drawer's own rect is deliberately NOT consulted — a stale rect
+ * mid-animation would hand the stroke to a family that can open the wrong
+ * panel. Issue #268 (2026-11-07) removed the last geometric gate here; see
+ * docs/specs/2026-08-27-sidebar-swipe-gestures.md 第十四轮. */
+export function openStateStartMode(drawerOpen: boolean, panelOpen: boolean): 'drawer' | 'files' {
+  return !drawerOpen && panelOpen ? 'files' : 'drawer'
 }
 
-/**
- * Geometric start-hit test for the FILES gesture: the pointer went down in
- * the RIGHT edge zone (RTL: LEFT) — the exact mirror of hitTestStart. Pure
- * and viewport-relative.
- */
-export function filesZoneHit(
-  clientX: number,
-  viewportWidthPx: number,
-  rtl: boolean,
-  zonePx: number,
-): boolean {
-  const edge = rtl ? clientX : viewportWidthPx - clientX
-  return edge >= 0 && edge <= zonePx
-}
-
-/** Which gesture family owns a stroke that begins while the drawer is OPEN.
- * Inside the drawer body the drawer family always wins (owner's rule
- * 2026-09-17: the drawer's own surface must answer a leftward drag, whether or
- * not the viewport-ratio files zone overlaps it — at 390px that zone starts at
- * x=214, inside the 280px drawer); outside the body the right zone keeps its
- * files routing and its deliberate leftward 'none' verdict (2026-09-13
- * narrowing). */
-export function openStateStartMode(insideDrawer: boolean, inFilesZone: boolean): 'drawer' | 'files' {
-  return insideDrawer || !inFilesZone ? 'drawer' : 'files'
+/** Which gesture family a stroke belongs to when BOTH panels were shut at
+ * pointerdown — the whole-viewport start rule (issue #268, 2026-11-07).
+ *
+ * Direction is the only gate: each classifier already refuses strokes that
+ * disagree with its own family's direction, so the retired left/right 45%
+ * zones were a redundant second gate (and left a 38px dead strip at 390px).
+ *
+ *   rightward-logical (toward the drawer's edge) → drawer
+ *   leftward-logical  (toward the files edge)    → files
+ *
+ * RTL mirrors the axis exactly like the classifiers: `rightward` arrives
+ * already normalized, so no `rtl` parameter is needed. */
+export function closedStateStrokeMode(rightward: boolean): 'drawer' | 'files' {
+  return rightward ? 'drawer' : 'files'
 }
 
 /**
@@ -493,9 +448,8 @@ export interface SwipeChainNode {
  * scroller: the browser claims the horizontal pan (pointercancel on real
  * devices) and the release classification must neither compete with it nor
  * preventDefault it away — prevention is what would break the strip's native
- * scrolling near the left edge once the start zone grew to 45% of the
- * viewport (the stats
- * line spans the full width; message code blocks are overflow-x:auto too).
+ * scrolling (the stats line spans the full width; message code blocks are
+ * overflow-x:auto too).
  * CDP failure scenario C1 pins this contract. overflow-x:hidden/clip never
  * match: clipped content cannot pan, so a horizontal stroke there stays free
  * for the gesture layer.
@@ -514,12 +468,9 @@ export function findHorizontalScroller(node: SwipeChainNode | null): SwipeChainN
   return null
 }
 
-/** The open drawer element: first child of the plugin frame. */
+/** The open drawer element: the frame's sidebar column (0.2.2 adds a mask before it). */
 function findDrawer(): HTMLElement | null {
-  const frame = getFrame()
-  return frame !== null && frame.firstElementChild instanceof HTMLElement
-    ? frame.firstElementChild
-    : null
+  return getDrawer()
 }
 
 /** True when the drawer is currently open (per the collapsed marker). */
@@ -529,21 +480,24 @@ function drawerOpen(): boolean {
 }
 
 /**
- * True when the host's right sidebar files panel is currently VISIBLE (any
- * form: fullscreen on phones, docked on tablets). Measured on 0.1.5: the
- * panel element is persistent — the closed fullscreen form stays in the DOM
- * at `visibility: hidden` with its rect pushed to x=viewport-width — so
- * presence alone is not the panel-state read. Detect the open state by the
- * three ways the host can hide it (visibility / display / pushed-off rect);
- * a host without this panel keeps returning false and the explorer fallback
- * applies.
+ * True when the host's right sidebar files panel is currently OPEN (any form:
+ * fullscreen on phones, docked on tablets).
+ *
+ * The host owns the authoritative marker: `data-sidebar-right-open` is present
+ * exactly while the panel is expanded (live-verified on 0.2.1-rc.2).
+ * The 0.1.5-era geometry probe (`rect.left < innerWidth` on a mounted, not
+ * visibility:hidden panel) died with the 0.2.0 dockkit refactor: the panel is
+ * now a persistent viewport-wide box whose CLOSED form hides its children
+ * instead of itself, so its own rect always spans the viewport and every
+ * closed panel read as open (measured 2026-10-29 at 390x844: closed rect
+ * [0,0,390,844] without the marker, open the same rect with it). That read
+ * killed the documented right-edge LEFTWARD entry and left an undocumented
+ * rightward one (#249). A host without this panel keeps returning false and
+ * the explorer fallback applies.
  */
-function filesPanelOpen(): boolean {
+export function filesPanelOpen(): boolean {
   const panel = document.querySelector('[data-sidebar-right-panel]')
-  if (panel === null) return false
-  const cs = getComputedStyle(panel)
-  if (cs.visibility === 'hidden' || cs.display === 'none') return false
-  return panel.getBoundingClientRect().left < window.innerWidth
+  return panel !== null && panel.hasAttribute('data-sidebar-right-open')
 }
 
 /**
@@ -567,9 +521,9 @@ function chainFrom(target: Element): SwipeChainNode | null {
   return node
 }
 
-/** Whether a modal dialog owns the screen (gestures must yield to it). */
+/** A modal the drawer does not own (0.2.2 marks the drawer itself aria-modal). */
 function modalOpen(): boolean {
-  return document.querySelector('[aria-modal="true"]') !== null
+  return foreignModalOpen()
 }
 
 /** True when a full-screen takeover (taskboard / ssh) owns the frame, or any
@@ -578,7 +532,7 @@ function modalOpen(): boolean {
  *  `data-conversation-composer-overlay` attribute on their root) is open.
  *  In both cases the drawer edge-swipe gestures yield so horizontal content
  *  scrolling (kanban columns, trajectory tables, CSV/code panes) wins the
- *  left-edge start zone; the FAB still opens the drawer. This reads the
+ *  stroke; the FAB still opens the drawer. This reads the
  *  generic overlay attribute directly — deliberately decoupled from the
  *  file-viewer marker, which keys on `.dsfv-panel` only (design
  *  2026-09-06-conversation-overlay-takeover-design.md §4.2). */
@@ -666,11 +620,10 @@ function dragMarkYields(event: PointerEvent): boolean {
 }
 
 /** Upper bound (px) of the "small floating widget" positional heuristic.
- * The real-world reference is dsh-pet's floating ball (kz2Bea_float,
- * position:fixed, measured 148x160 on the live profile page) — 160 would
- * sit exactly on that widget's edge; 200 leaves headroom for sibling
- * plugin widgets while a full-screen overlay (backdrop, sheets, dialogs)
- * still cannot pass. */
+ * Sized for third-party widgets that ship no nameable root: dsh-pet's 0.3.x
+ * hit box (measured 173x206 on the live profile page) already exceeds it and
+ * is claimed by name below instead, while a full-screen overlay (backdrop,
+ * sheets, dialogs) still cannot pass. */
 const FLOATING_WIDGET_MAX_PX = 200
 
 /**
@@ -679,21 +632,28 @@ const FLOATING_WIDGET_MAX_PX = 200
  * panel shapes) that carry NO standard "draggable" DOM mark, yet the user
  * presses the widget itself — so the stroke's start target sits inside that
  * widget's layer. Draggable widgets almost always live in a SMALL
- * freely-positioned layer (position: fixed | absolute, own box ≤ 160px)
- * hovering above the page, so walk the ancestor chain from the event target:
- * the first small positioned ancestor counts as a floating widget and the
- * stroke yields (no arm, no touchmove preventDefault). Pairs with
- * dragMarkYields (cooperation mark) which needs no shape guessing.
- * Excluded: anything inside our own frame subtree — the FAB / backdrop /
+ * freely-positioned layer (position: fixed | absolute, own box under
+ * FLOATING_WIDGET_MAX_PX) hovering above the page, so walk the ancestor chain
+ * from the event target: the first small positioned ancestor counts as a
+ * floating widget and the stroke yields (no arm, no touchmove preventDefault).
+ * Pairs with dragMarkYields (cooperation mark) which needs no shape guessing.
+ * Named exception (2026-10-29, #249-1): dsh-pet 0.3.x registers its root
+ * (.dsh-pet-root) into the shell overlay slot, i.e. INSIDE our frame subtree,
+ * and its hit box is 173x206 — the frame exclusion and the size cap both miss
+ * it, so a stroke started on the pet dragged it AND armed the drawer. Known
+ * roots are claimed by name before either filter runs.
+ * Excluded: anything else inside our own frame subtree — the FAB / backdrop /
  * drawer content carry their own gesture semantics and must never be
- * misread as floating widgets (the closed-state FAB sits in the start zone).
+ * misread as floating widgets (the closed-state FAB sits near the left edge).
  * ponytail: no DOM-standard draggable signal exists; shape ≈ draggable is an
  * approximation with a known ceiling — a STATIC small positioned element
  * (e.g. a message badge) also yields, costing a stroke start under a
- * ≤160px dot; a REAL widget that misses (bigger layer, static positioning)
- * upgrades via the data-mobile-nav-dragging mark or by raising the cap.
+ * FLOATING_WIDGET_MAX_PX dot; a REAL widget that misses upgrades via the
+ * data-mobile-nav-dragging mark, a named branch like the pet one, or the cap.
  */
-function findFloatingWidget(target: Element): Element | null {
+export function findFloatingWidget(target: Element): Element | null {
+  const pet = target.closest('.dsh-pet-root')
+  if (pet !== null) return pet
   if (target.closest('[data-mobile-nav="frame"]') !== null) return null
   let el: Element | null = target
   while (el !== null) {
@@ -828,6 +788,8 @@ function armOpenFollow(ctx: ClientContext): void {
   drawer.style.setProperty('content-visibility', 'hidden', 'important')
   cvDeferred = true
   openFollowArmed = true
+  releaseTextFocus() // drawer-jank R2: blur before the flip; no wait, the finger is moving
+  drawerOpening() // R3: the backdrop mounts with the flip, not one rAF later
   ctx.layout.toggleSidebar()
   // Two frames (layout flush, then reveal). Kept in module state so a dispose
   // between them cancels the chain instead of revealing a drawer that no
@@ -963,7 +925,7 @@ function commitWithAnimation(ctx: ClientContext, el: HTMLElement, targetTx: stri
   // gesture-close path reaches here without a reduce check (issue #86). Land
   // the exact same guarded commit, just without the animation beat.
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    fadeOverlayOut()
+    fadeDimOut()
     cooldownUntil = performance.now() + COOLDOWN_MS
     pendingCommit = { el, ctx, timer: 0, target: targetTx }
     finishPendingCommit()
@@ -983,7 +945,7 @@ function commitWithAnimation(ctx: ClientContext, el: HTMLElement, targetTx: stri
   // Fade the dimming in step with the slide-out: the marker flips only when
   // the drawer lands, so without this the screen would go drawer-then-dark
   // (backdrop snapping away ~260ms AFTER the drawer already left).
-  fadeOverlayOut()
+  fadeDimOut()
   cooldownUntil = performance.now() + COOLDOWN_MS
   pendingCommit = {
     el,
@@ -1071,11 +1033,7 @@ function abortStroke(ctx: ClientContext | null, immediate = false): void {
 }
 
 /** Start a stroke; returns true when it may be tracked. */
-function beginStroke(
-  event: PointerEvent,
-  rtl: boolean,
-  viewportWidthPx: number,
-): boolean {
+function beginStroke(event: PointerEvent): boolean {
   if (onCooldown()) return false
   if (modalOpen()) return false
   if (takeoverActive()) return false
@@ -1088,7 +1046,7 @@ function beginStroke(
   if (selectionOwnsStroke()) return false
   // A live draggable (data-mobile-nav-dragging, see dragMarkYields) owns the
   // stroke: yield before any geometric test so the drawer cannot arm for a
-  // drag that starts inside the start zone.
+  // drag on the element itself.
   if (dragMarkYields(event)) return false
   // Plugin-shipped draggable floating widgets (pet / floating-ball shapes
   // without any cooperation mark) yield the same way, via the positional
@@ -1097,38 +1055,24 @@ function beginStroke(
   if (!(event.target instanceof Element)) return false
   // A stroke beginning inside a genuinely horizontally scrollable container
   // belongs to that scroller (the stats line, a message code block, any
-  // carousel): yield it so its native horizontal pan survives — and so the
-  // wide 45%-of-viewport start zone cannot turn a strip scroll into a
-  // drawer open (failure scenario C1). Applies to both branches: inside the
-  // drawer the same "scroller owns horizontal" semantics should hold.
+  // carousel): yield it so its native horizontal pan survives instead of
+  // turning into a drawer/panel open (failure scenario C1). Applies to both
+  // branches: inside the drawer the same "scroller owns horizontal"
+  // semantics hold.
   if (findHorizontalScroller(chainFrom(event.target)) !== null) return false
   const open = drawerOpen()
-  const filesZonePx = startZonePxFor(viewportWidthPx, FILES_ZONE_RATIO)
-  if (open) {
-    // Close strokes may start ANYWHERE over the frame (2026-08-29 sixth
-    // round, user report 「希望打开抽屉之后以外的部分可以进行左滑」). The
-    // previous gate required the start point inside the drawer's own
-    // geometry and explicitly rejected the backdrop, so the ~28% of the
-    // screen beside the drawer swallowed every swipe — combined with the
-    // leftward verdict being refused, closing felt impossible. Nothing else
-    // owns a horizontal stroke while the drawer is open (the conversation is
-    // behind the backdrop), so the whole frame is fair game.
-    //
-    // 2026-09-13 narrowing (user decision): the RIGHT zone beside the drawer
-    // now belongs to the files gesture. Its leftward stroke must NOT close
-    // the drawer (the files panel would mount UNDER the drawer — z-1100 —
-    // and be invisible); its rightward stroke keeps the animated close via
-    // classifyFilesSwipe's 'close' verdict. The left zone / drawer content
-    // keeps every pre-existing drawer behavior. Drawer-mode follow painting
-    // only ever maps LEFTWARD (followTranslate's close branch), which is
-    // exactly the direction the narrowing removes from this zone — no close
-    // follow is lost by the routing (probe swipe.close-follow-reaches-slot
-    // was relocated into the drawer family accordingly).
-    //
-    // Tap-to-close on the backdrop is unaffected: a tap never reaches
-    // tryLock, so endStroke returns on !wasTracking without writing a
-    // consume mark, and the document-capture click handler passes backdrop /
-    // FAB clicks through unconditionally anyway.
+  // The files panel is full-screen and mutually exclusive with the drawer, so
+  // it opens the SAME close-stroke surface (issue #268): while either one is
+  // up, the whole frame may start the stroke that closes it.
+  const panelOpen = filesPanelOpen()
+  if (open || panelOpen) {
+    // An open drawer or panel owns every stroke over the frame (2026-08-29
+    // sixth round, user report 「希望打开抽屉之后以外的部分可以进行左滑」;
+    // issue #268 replaced the 2026-09-13 narrowing's "inside the drawer body"
+    // gate with the whole viewport). Nothing else competes for a horizontal
+    // stroke while the backdrop covers the conversation. Tap-to-close on the
+    // backdrop is unaffected: a tap never reaches tryLock, so no consume mark
+    // is written.
     const frame = getFrame()
     if (frame === null) return false
     const rect = frame.getBoundingClientRect()
@@ -1136,30 +1080,14 @@ function beginStroke(
     if (event.clientY < rect.top || event.clientY > rect.bottom) return false
     // A session-row action menu (kebab) owns its own tap.
     if (event.target.closest('[class*="sessionRow"] button') !== null) return false
-    //
-    // 2026-09-17 (owner: the judgment zone must end at the drawer's right
-    // edge): inside the drawer BODY the drawer family always wins. The files
-    // zone is viewport-relative (0.45 from the right edge = x >= 214 at 390px)
-    // and overlaps the 280px drawer by 66px, so that sliver of the drawer's own
-    // surface used to answer 'none' to a leftward drag - touching the drawer and
-    // dragging left did nothing. Routing on the drawer's live rect (not a
-    // hardcoded width) keeps the rule true at every viewport: at >= 509px the
-    // 0.45 zone starts right of the drawer and nothing changes. Outside the
-    // body the files routing, including its leftward no-op, is untouched.
-    const drawer = findDrawer()
-    const drawerRect = drawer === null ? null : drawer.getBoundingClientRect()
-    const insideDrawer =
-      drawerRect !== null && event.clientX >= drawerRect.left && event.clientX <= drawerRect.right
-    strokeMode = openStateStartMode(
-      insideDrawer,
-      filesZoneHit(event.clientX, viewportWidthPx, rtl, filesZonePx),
-    )
-  } else if (hitTestStart(event.clientX, viewportWidthPx, rtl, { startZonePx: startZonePxFor(viewportWidthPx) })) {
-    strokeMode = 'drawer'
-  } else if (filesZoneHit(event.clientX, viewportWidthPx, rtl, filesZonePx)) {
-    strokeMode = 'files'
+    // Who is open owns the stroke — no rect test, no viewport split.
+    strokeMode = openStateStartMode(open, panelOpen)
   } else {
-    return false
+    // Closed state: the whole viewport starts a stroke and the family is
+    // decided at the axis lock, where the direction exists (issue #268).
+    // Vertical strokes still belong to native scrolling — they fail the axis
+    // lock exactly as before, and a tap never reaches tryLock.
+    strokeMode = 'pending'
   }
   trackingPointer = event.pointerId
   tracking = false
@@ -1176,7 +1104,7 @@ function beginStroke(
  * further preventDefault). Once locked the axis never re-decides — matching
  * MUI's UNCERTAINTY_THRESHOLD semantics.
  */
-function tryLock(event: PointerEvent): boolean {
+function tryLock(event: PointerEvent, rtl: boolean): boolean {
   const dx = event.clientX - startX
   const dy = event.clientY - startY
   if (Math.max(Math.abs(dx), Math.abs(dy)) < LOCK_PX) return false
@@ -1195,6 +1123,18 @@ function tryLock(event: PointerEvent): boolean {
   }
   tracking = true
   lockDrawerOpen = drawerOpen()
+  // Closed-state strokes were never routed to a family (issue #268): the
+  // direction that decides it is known only here. RTL mirrors the raw delta
+  // exactly like both classifiers do, so the family and the verdict always
+  // agree about which way the finger went. beginStroke routes the OPEN state
+  // itself (openStateStartMode), so 'pending' can only mean "both panels were
+  // shut at pointerdown" — re-read the panel anyway: the two events are
+  // separate, and a tap that opens the panel in between must not be judged by
+  // the closed-state rule.
+  if (strokeMode === 'pending') {
+    const rightward = rtl ? dx < 0 : dx > 0
+    strokeMode = closedStateStrokeMode(rightward)
+  }
   if (strokeMode === 'files') {
     lockFilesOpen = filesPanelOpen()
     // An OPEN drawer shares this stroke (the right-edge rightward close):
@@ -1346,7 +1286,7 @@ function endStroke(
     // Mark the stroke consumed so the tap's synthetic click cannot
     // double-toggle or navigate a row. The mark walks the ancestor chain up
     // to the DRAWER (not the frame): the synthetic click always lands on the
-    // stroke's own start target (left-edge start zone / drawer content), never
+    // stroke's own start target (the frame or the drawer content), never
     // on the backdrop — but the backdrop is a frame child, so marking up to
     // the frame would make the host treat a genuine backdrop tap within the
     // 300ms window as consumed and swallow the close (the "tap twice to close"
@@ -1395,8 +1335,8 @@ function endStroke(
  * inside it: the backdrop is a frame child, so stopping at the frame would
  * make the host treat a genuine backdrop tap within the window as consumed
  * and swallow the close (the "tap twice to close" bug). A stroke that started
- * OUTSIDE the drawer (the left-edge start zone, or — since closing accepts
- * the whole frame — the backdrop itself) has no drawer in its chain, so the
+ * OUTSIDE the drawer (since #268 anywhere over the frame, the backdrop
+ * included) has no drawer in its chain, so the
  * walk would otherwise run all the way to the document root and briefly
  * shadow every tap on the page; the frame is the tightest correct stop for
  * those, and it is what must be marked anyway, because a backdrop-started
@@ -1453,7 +1393,7 @@ export function installSidebarSwipe(ctx: ClientContext, filesToggle: () => boole
         abortStroke(ctx)
         return
       }
-      beginStroke(event, frameRtl(), viewportWidth())
+      beginStroke(event)
     }
 
     const onPointerMove = (event: PointerEvent): void => {
@@ -1475,7 +1415,7 @@ export function installSidebarSwipe(ctx: ClientContext, filesToggle: () => boole
           reset()
           return
         }
-        if (tryLock(event)) {
+        if (tryLock(event, frameRtl())) {
           pushSample(event)
           applyFollow(ctx, event.clientX - startX)
         }
@@ -1501,27 +1441,20 @@ export function installSidebarSwipe(ctx: ClientContext, filesToggle: () => boole
     // a swipe can never toggle twice or navigate a row. Non-gesture taps
     // (no live mark) pass through untouched.
     //
-    // A click whose target is (or is inside) the backdrop or the FAB is
-    // NEVER a gesture's synthetic click: the stroke start is always the
-    // left-edge start zone or the drawer content, never the backdrop (outside
-    // the drawer, on the right) or the FAB. The mark chain can reach them
-    // in degenerate hit-test cases (e.g. a stroke starting on a point where
-    // the empty drawer does not register as the event target), and
-    // swallowing that click would break the "tap the backdrop to close"
-    // path — the "tap twice to close" bug. Let those clicks through.
+    // A genuine backdrop / FAB tap is never a synthetic click of OURS, and the
+    // mark chain can reach the overlay in degenerate hit-test cases — swallow
+    // it and the user needs two taps to close ("tap twice to close"). So those
+    // clicks pass. The one exception is handled below: an overlay click that
+    // STARTED the just-committed stroke (issue #268 lets a close stroke begin
+    // anywhere, the backdrop included) must not re-toggle the drawer.
     const onClick = (event: MouseEvent): void => {
       if (consumedEl === null) return
       if (!(event.target instanceof Element)) return
-      // A genuine backdrop / FAB tap is always let through: their own click
-      // listeners toggle the drawer, and a consume mark that walked to the
-      // document root would otherwise swallow it ("tap twice to close").
-      // The one exception is a click on the overlay element that STARTED the
-      // just-committed stroke — since close strokes may begin anywhere over
-      // the frame, the backdrop can now be the stroke's own start target,
-      // and letting its synthetic click through would re-toggle the drawer
-      // straight back open.
+      // Let a genuine overlay tap through (see above), but never the click
+      // whose overlay IS the element this stroke started on: re-toggling the
+      // drawer straight back open is exactly what that would do.
       const overlay = event.target.closest(
-        '[data-mobile-nav="backdrop"], [data-mobile-nav="fab"]',
+        '[data-mobile-nav="hit"], [data-mobile-nav="fab"]',
       )
       if (overlay !== null && !overlay.contains(consumedEl)) return
       if (!consumeIfGestured(event)) return
@@ -1541,8 +1474,8 @@ export function installSidebarSwipe(ctx: ClientContext, filesToggle: () => boole
     // must stay out of the way entirely: canceling a touchmove suppresses the
     // touch point's default action for the WHOLE gesture (Touch Events
     // cancelability), and WebKit does not resume scrolling after reset() —
-    // preventing here made both 45% start zones dead for scrolling on iOS
-    // (#222). Multi-touch is never prevented: two fingers mean a pinch, and
+    // preventing here killed native scrolling on iOS for every stroke that
+    // began in the old start areas (#222). Multi-touch is never prevented: two fingers mean a pinch, and
     // the pointerdown guard above plus this check hand it back (#46).
     const onTouchMove = (event: TouchEvent): void => {
       if (trackingPointer === 0) return

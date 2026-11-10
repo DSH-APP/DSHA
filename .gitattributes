@@ -50,3 +50,31 @@ app/src/main/assets/plugin-manager-policy-patch.json -text -eol
 app/src/main/assets/plugin-manager.py -text -eol
 /tools/fixtures/session-interaction-v3/session-interaction-patch.json -text -eol
 /tools/fixtures/session-interaction-v3/web-integration/session-interaction.js -text -eol
+
+/tools/fixtures/rc2-upgrade-source/dsh-client-ui-workspace.js -text -eol
+/tools/fixtures/rc2-upgrade-source/dsh-client-ui-agent-preset.js -text -eol
+
+# Frozen build197 language inputs: exact SHA checked by check-source-hygiene.py.
+/docs/releases/build197-changes.ar.md -text -eol
+/docs/releases/build197-changes.la.md -text -eol
+/docs/releases/build197-changes.pt.md -text -eol
+/tools/i18n/translations-extra/ar.json -text -eol
+/tools/i18n/translations-extra/fr.json -text -eol
+/tools/i18n/translations-extra/ja.json -text -eol
+/tools/i18n/translations-extra/ko.json -text -eol
+/tools/i18n/translations-extra/pt.json -text -eol
+/tools/i18n/translations-extra/ru.json -text -eol
+/tools/i18n/translations/ar.json -text -eol
+/tools/i18n/translations/fr.json -text -eol
+/tools/i18n/translations/ja.json -text -eol
+/tools/i18n/translations/ko.json -text -eol
+/tools/i18n/translations/pt.json -text -eol
+/tools/i18n/translations/ru.json -text -eol
+/tools/i18n/web-translations/ar.json -text -eol
+/tools/i18n/web-translations/fr.json -text -eol
+/tools/i18n/web-translations/ja.json -text -eol
+/tools/i18n/web-translations/ko.json -text -eol
+/tools/i18n/web-translations/la.json -text -eol
+/tools/i18n/web-translations/pt.json -text -eol
+/tools/i18n/web-translations/ru.json -text -eol
+/tools/i18n/web-translations/zh-Hant.json -text -eol

@@ -440,6 +440,10 @@ public final class NativeBackupJobs {
   }
 
   private synchronized void beginFailed(Exception error) {
+    recordFailure(
+        task != null && state.busy && task.getName().equals(state.id) ? task : null,
+        "PREPARING",
+        error);
     if (task != null && state.busy && task.getName().equals(state.id)) {
       try {
         update("FAILED_RETAINED", "", code(error), "", 0, 0, false);
@@ -450,6 +454,29 @@ public final class NativeBackupJobs {
     control = null;
     State terminal = state;
     main.post(() -> changes.setValue(terminal));
+  }
+
+  /** Only fixed stages, exception types/errno and project stack locations; never messages or paths. */
+  private void recordFailure(File owned, String phase, Exception error) {
+    String diagnostic =
+        BackupFailureDiagnostic.describe(phase, error)
+            + " environmentExclusive="
+            + com.deepseekharness.app.util.EnvironmentTaskGate.isBusy()
+            + " environmentShared="
+            + com.deepseekharness.app.util.EnvironmentTaskGate.sharedCount()
+            + " maintenanceExclusive="
+            + MaintenanceCoordinator.isExclusive();
+    android.util.Log.w("DshaBackup", diagnostic);
+    if (owned == null) return;
+    try {
+      fs.atomic(
+          owned,
+          "failure.json",
+          BackupJson.write(Map.of("version", 1L, "diagnostic", diagnostic), 16384));
+    } catch (IOException | RuntimeException unavailable) {
+      android.util.Log.w(
+          "DshaBackup", BackupFailureDiagnostic.describe("DIAGNOSTIC_PERSISTENCE", unavailable));
+    }
   }
 
   private boolean launch(Runnable work, String name, char[] password) {
@@ -619,10 +646,11 @@ public final class NativeBackupJobs {
           File plain = new File(owned, "snapshot.dshdata"),
               encrypted = new File(owned, "portable.dshbak");
           BackupDirectoryTarget selectedTarget = null;
+          String[] failurePhase = {"FOREGROUND_PROTECTION"};
           try {
             if (activeProtection != null) activeProtection.await();
+            failurePhase[0] = "LOCATOR_INITIALIZATION";
             NativeDataLocations locations = new NativeDataLocations(context);
-            NativeDataLocations.Located located = locations.locate(frozen, cancellation);
             Map<String, Object> provenance = new LinkedHashMap<>();
             provenance.put("operation", rescue ? "RESCUE" : "EXPORT");
             provenance.put("createdAt", System.currentTimeMillis());
@@ -635,9 +663,6 @@ public final class NativeBackupJobs {
             provenance.put("dataFormat", "UNINSPECTED");
             provenance.put(
                 "sensitivePolicy", password == null ? "UNENCRYPTED" : "PASSWORD_ENCRYPTED");
-            provenance.put(
-                "plugins",
-                located.plugins == null ? Collections.emptyMap() : located.plugins.description());
             RuntimeDescriptor observed = null;
             try {
               if (frozen.retainedKey == null || frozen.retainedKey.isEmpty())
@@ -645,13 +670,31 @@ public final class NativeBackupJobs {
             } catch (IOException unavailable) {
             }
             provenance.put("dataCompatibility", DataFormatEvidence.unknown(observed));
-            HostSnapshot.FinalCheck check =
-                located.plugins == null ? null : located.plugins::verify;
+            // 位置证明必须在停写之后记录：手动备份会先停终端与 Web，停止过程会删除或原子重写
+            // .dsh 顶层文件；若先定位再停写，同一条链路每次都会以 DATA_LOCATION_CHANGED 失败。
+            NativeDataLocations.Located[] locatedHolder = new NativeDataLocations.Located[1];
+            MaintenanceCoordinator.Operation<Map<String, Object>> capture =
+                () -> {
+                  failurePhase[0] = "LOCATING_SOURCES";
+                  NativeDataLocations.Located found = locations.locate(frozen, cancellation);
+                  locatedHolder[0] = found;
+                  provenance.put(
+                      "plugins",
+                      found.plugins == null ? Collections.emptyMap() : found.plugins.description());
+                  failurePhase[0] = "CAPTURING_SNAPSHOT";
+                  return HostSnapshot.create(
+                      fs,
+                      found.sources,
+                      owned,
+                      plain,
+                      provenance,
+                      rescue,
+                      cancellation,
+                      found.plugins == null ? null : found.plugins::verify);
+                };
             Map<String, Object> summary;
-            if (rescue)
-              summary =
-                  HostSnapshot.create(
-                      fs, located.sources, owned, plain, provenance, true, cancellation, check);
+            failurePhase[0] = automatic ? "AUTOMATIC_BARRIER" : "MAINTENANCE_BARRIER";
+            if (rescue) summary = capture.run();
             else if (automatic)
               summary =
                   MaintenanceCoordinator.snapshot(
@@ -664,31 +707,13 @@ public final class NativeBackupJobs {
                         try (var idle =
                             com.deepseekharness.app.core.RuntimeTasks.tryEnterMaintenance()) {
                           if (idle == null) throw new IOException("AUTOMATIC_BACKUP_DEFERRED");
-                          return HostSnapshot.create(
-                              fs,
-                              located.sources,
-                              owned,
-                              plain,
-                              provenance,
-                              false,
-                              cancellation,
-                              check);
+                          return capture.run();
                         }
                       });
             else
-              summary =
-                  MaintenanceCoordinator.exclusive(
-                      HarnessController.get(context),
-                      () ->
-                          HostSnapshot.create(
-                              fs,
-                              located.sources,
-                              owned,
-                              plain,
-                              provenance,
-                              false,
-                              cancellation,
-                              check));
+              summary = MaintenanceCoordinator.exclusive(HarnessController.get(context), capture);
+            NativeDataLocations.Located located = locatedHolder[0];
+            failurePhase[0] = "VERIFYING_SNAPSHOT";
             try (InputStream input = fs.read(plain, fs.stat(plain))) {
               BackupArchive.read(input, null, cancellation);
             }
@@ -704,6 +729,7 @@ public final class NativeBackupJobs {
                 BackupJson.number(summary, "entries"),
                 BackupJson.number(summary, "bytes"),
                 true);
+            failurePhase[0] = "BUILDING_PORTABLE";
             if (password != null) {
               try (InputStream input = fs.read(plain, fs.stat(plain));
                   OutputStream output = fs.create(encrypted)) {
@@ -741,6 +767,7 @@ public final class NativeBackupJobs {
                   throw new IOException("PRIVATE_ARTIFACT_VERIFICATION");
               }
             }
+            failurePhase[0] = "VERIFYING_PORTABLE";
             String artifactHash;
             try (InputStream input = fs.read(encrypted, fs.stat(encrypted))) {
               artifactHash = BackupArchive.digest(input, cancellation);
@@ -748,6 +775,7 @@ public final class NativeBackupJobs {
             Map<String, Object> verification = new LinkedHashMap<>(summary);
             verification.put("encryptedSha256", artifactHash);
             verification.put("encryptedBytes", fs.stat(encrypted).size);
+            failurePhase[0] = "PERSISTING_VERIFICATION";
             fs.atomic(
                 owned, "verified.json", BackupJson.write(verification, BackupLimits.MANIFEST));
             fs.delete(plain);
@@ -759,11 +787,13 @@ public final class NativeBackupJobs {
                 BackupJson.number(summary, "entries"),
                 fs.stat(encrypted).size,
                 true);
+            failurePhase[0] = "PREPARING_EXPORT_DESTINATION";
             if (directory != null)
               selectedTarget =
                   BackupDirectoryTarget.create(
                       context.getContentResolver(), directory, expectedName, cancellation);
             Uri actualDestination = selectedTarget == null ? destination : selectedTarget.uri;
+            failurePhase[0] = downloads ? "EXPORTING_MEDIASTORE" : "EXPORTING_DOCUMENT";
             DocumentCopy exported =
                 automatic
                     ? null
@@ -771,6 +801,7 @@ public final class NativeBackupJobs {
                         ? copyToDownloads(encrypted, artifactHash, expectedName, cancellation)
                         : copyToDocument(
                             encrypted, artifactHash, actualDestination, expectedName, cancellation);
+            failurePhase[0] = "PUBLISHING_EXPORT_RESULT";
             if (selectedTarget != null) {
               selectedTarget.retain();
               fs.atomic(
@@ -847,6 +878,7 @@ public final class NativeBackupJobs {
                 fs.stat(encrypted).size,
                 false);
           } catch (Exception error) {
+            recordFailure(owned, failurePhase[0], error);
             try {
               update(
                   error instanceof InterruptedIOException
@@ -922,7 +954,7 @@ public final class NativeBackupJobs {
       throw new IOException("EXPORT_DESTINATION");
     File envelope = fs.child(task, "export.tar.gz"),
         verification = fs.child(task, "export-verified.dshbak");
-    try {
+    try (BackupTemporaryFiles cleanup = new BackupTemporaryFiles(fs, envelope, verification)) {
       try (OutputStream output = fs.create(envelope)) {
         PortableBackupEnvelope.writeUnencrypted(fs, source, expected, output, cancellation);
       }
@@ -967,9 +999,6 @@ public final class NativeBackupJobs {
                   outerHash),
               16384));
       return new DocumentCopy(true, outerHash, exported.uri, exported.displayName);
-    } finally {
-      if (fs.stat(envelope).type.equals("FILE")) fs.delete(envelope);
-      if (fs.stat(verification).type.equals("FILE")) fs.delete(verification);
     }
   }
 
@@ -1206,6 +1235,15 @@ public final class NativeBackupJobs {
                 try (InputStream source = fs.read(portable, fs.stat(portable));
                     OutputStream out = fs.create(plain)) {
                   PortableBackupCrypto.decrypt(source, out, password, cancellation);
+                } catch (Throwable failure) {
+                  // 解密是流式写出：口令错误/认证失败时，明文文件里已经落了前面若干块。
+                  // 不删就是「认证失败但明文留在磁盘上」，等于把错误口令变成了一次部分解密。
+                  try {
+                    fs.delete(plain);
+                  } catch (Throwable cleanup) {
+                    failure.addSuppressed(cleanup);
+                  }
+                  throw failure;
                 }
               } else if (BackupArchive.hasMagic(signature)) {
                 // 无密码导出的 v5 dshbak 已经是可直接读取的 BackupArchive。

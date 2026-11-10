@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 胶囊状态圆点（done）。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><solid android:color="@color/shell_good" /><size android:width="8dp" android:height="8dp" /></shape>

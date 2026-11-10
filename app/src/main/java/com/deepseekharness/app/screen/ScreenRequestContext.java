@@ -91,7 +91,9 @@ public final class ScreenRequestContext {
         + '\0'
         + request.authorityEpoch
         + '\0'
-        + request.policyRevision;
+        + request.policyRevision
+        + '\0'
+        + com.deepseekharness.app.control.ScreenAuthorityBindings.identity(request);
   }
 
   public boolean current() {
@@ -99,6 +101,7 @@ public final class ScreenRequestContext {
       return broker != null
           && !cancelled.get()
           && request != null
+          && com.deepseekharness.app.control.ScreenAuthorityBindings.current(request)
           && "screen".equals(request.capability)
           && target != null
           && target.windowId >= 0

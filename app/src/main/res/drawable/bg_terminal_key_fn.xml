@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 终端快捷键功能键键帽（Esc/Tab/Home/End）：比字符键深一档，其余与 bg_terminal_key 相同。触控格保持 48dp，可见键帽在格内四边内缩 2dp，
+     相邻键之间形成 4dp 键缝；底部多露 1dp 暗边、顶部 1dp 高光，按压由涟漪表达。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/terminal_key_ripple">
+    <item
+        android:id="@android:id/mask"
+        android:bottom="2dp"
+        android:left="2dp"
+        android:right="2dp"
+        android:top="2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <item
+        android:bottom="2dp"
+        android:left="2dp"
+        android:right="2dp"
+        android:top="2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/terminal_key_edge" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <item
+        android:bottom="3dp"
+        android:left="2dp"
+        android:right="2dp"
+        android:top="2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/terminal_key_fn" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <item
+        android:height="1dp"
+        android:gravity="top|fill_horizontal"
+        android:left="8dp"
+        android:right="8dp"
+        android:top="2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/terminal_key_highlight" />
+        </shape>
+    </item>
+</ripple>

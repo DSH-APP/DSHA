@@ -1,0 +1,63 @@
+name: "Node: Standard release lint"
+
+# 可复用节点：:app:lintStandardRelease（未签名模式，不需要发布密钥）。
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Exact commit to check out (defaults to the caller's commit)
+        required: false
+        type: string
+        default: ''
+      handoff:
+        description: Input handoff artifact from _node-inputs.yml
+        required: true
+        type: string
+      sunset_test:
+        description: Pass -Pdsha.sunsetTest=true
+        required: false
+        type: boolean
+        default: true
+      artifact:
+        description: Name of the uploaded lint report artifact
+        required: false
+        type: string
+        default: lint-results
+    outputs:
+      artifact:
+        description: Uploaded lint report artifact name
+        value: ${{ inputs.artifact }}
+permissions:
+  contents: read
+jobs:
+  lint:
+    name: Lint Standard release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-toolchain
+      - uses: ./.github/actions/android-sdk
+        with:
+          ndk: 'true'
+      - uses: ./.github/actions/restore-handoff
+        with:
+          artifact: ${{ inputs.handoff }}
+      - name: Lint Standard release
+        env:
+          SUNSET_TEST: ${{ inputs.sunset_test }}
+        run: |
+          args=(:app:lintStandardRelease -Pdsha.unsignedPackage=true --no-daemon --max-workers=2)
+          if [ "$SUNSET_TEST" = true ]; then args+=(-Pdsha.sunsetTest=true); fi
+          chmod +x gradlew
+          ./gradlew "${args[@]}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ${{ inputs.artifact }}
+          path: app/build/reports/lint-results-standardRelease.*
+          if-no-files-found: warn
+          retention-days: 14

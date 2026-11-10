@@ -45,16 +45,17 @@ public final class BatterySettingsNavigationTest {
   }
 
   @Test
-  public void opensGeneralBatterySettingsWithoutRequestingExemption() {
+  public void opensThisApplicationsDetailsWithoutRequestingExemption() {
     DeviceGrantsFragment.openBatterySettings(context, attempts::add, failures::incrementAndGet);
     assertEquals(1, attempts.size());
-    assertEquals(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS, attempts.get(0).getAction());
-    assertNull(attempts.get(0).getData());
+    assertEquals(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, attempts.get(0).getAction());
+    assertEquals("package:" + context.getPackageName(), attempts.get(0).getDataString());
     assertEquals(0, failures.get());
+    assertNoExemptionRequest();
   }
 
   @Test
-  public void missingGeneralSettingsFallsBackToThisApplicationsDetails() {
+  public void missingAppDetailsFallsBackToAdvancedPowerUsage() {
     DeviceGrantsFragment.openBatterySettings(
         context,
         intent -> {
@@ -62,12 +63,15 @@ public final class BatterySettingsNavigationTest {
           if (attempts.size() == 1) throw new ActivityNotFoundException("fixture");
         },
         failures::incrementAndGet);
-    assertDetailsFallback(context.getPackageName());
+    assertEquals(2, attempts.size());
+    assertEquals("android.settings.VIEW_ADVANCED_POWER_USAGE_DETAIL", attempts.get(1).getAction());
+    assertEquals("package:" + context.getPackageName(), attempts.get(1).getDataString());
     assertEquals(0, failures.get());
+    assertNoExemptionRequest();
   }
 
   @Test
-  public void restrictedGeneralSettingsAlsoFallsBack() {
+  public void restrictedAppDetailsAlsoFallsBack() {
     DeviceGrantsFragment.openBatterySettings(
         context,
         intent -> {
@@ -75,22 +79,26 @@ public final class BatterySettingsNavigationTest {
           if (attempts.size() == 1) throw new SecurityException("fixture");
         },
         failures::incrementAndGet);
-    assertDetailsFallback(context.getPackageName());
+    assertEquals(2, attempts.size());
+    assertEquals("android.settings.VIEW_ADVANCED_POWER_USAGE_DETAIL", attempts.get(1).getAction());
     assertEquals(0, failures.get());
   }
 
   @Test
-  public void reportsFailureOnlyAfterBothSystemEntriesRejectNavigation() {
+  public void reportsFailureOnlyAfterAllSystemEntriesRejectNavigation() {
     DeviceGrantsFragment.openBatterySettings(
         context,
         intent -> {
           attempts.add(intent);
-          if (attempts.size() == 1) throw new ActivityNotFoundException("fixture");
-          throw new SecurityException("fixture");
+          throw new ActivityNotFoundException("fixture");
         },
         failures::incrementAndGet);
-    assertDetailsFallback(context.getPackageName());
+    assertEquals(3, attempts.size());
+    assertEquals(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, attempts.get(0).getAction());
+    assertEquals("android.settings.VIEW_ADVANCED_POWER_USAGE_DETAIL", attempts.get(1).getAction());
+    assertEquals(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS, attempts.get(2).getAction());
     assertEquals(1, failures.get());
+    assertNoExemptionRequest();
   }
 
   @Test
@@ -99,25 +107,15 @@ public final class BatterySettingsNavigationTest {
         new ContextWrapper(context) {
           @Override
           public String getPackageName() {
-            return "dsh.android.client.fixture";
+            return "io.github.sunsetrne.dsha.fixture";
           }
         };
-    DeviceGrantsFragment.openBatterySettings(
-        renamed,
-        intent -> {
-          attempts.add(intent);
-          if (attempts.size() == 1) throw new ActivityNotFoundException("fixture");
-        },
-        failures::incrementAndGet);
-    assertDetailsFallback("dsh.android.client.fixture");
+    DeviceGrantsFragment.openBatterySettings(renamed, attempts::add, failures::incrementAndGet);
+    assertEquals("package:io.github.sunsetrne.dsha.fixture", attempts.get(0).getDataString());
     assertEquals(0, failures.get());
   }
 
-  private void assertDetailsFallback(String packageName) {
-    assertEquals(2, attempts.size());
-    assertEquals(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS, attempts.get(0).getAction());
-    assertEquals(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, attempts.get(1).getAction());
-    assertEquals("package:" + packageName, attempts.get(1).getDataString());
+  private void assertNoExemptionRequest() {
     for (Intent intent : attempts)
       assertNotEquals(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, intent.getAction());
   }

@@ -1,15 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 无障碍服务配置。
-     不限定 packageNames：agent 的屏幕操作要能作用于任意应用（限定了就只能操作
-     系统设置，等于没有这项能力）。隐私靠「按需拉取」保证 —— 服务自身不做任何
-     持续记录：onAccessibilityEvent 里除了用户主动开启的配对码窗口，其余一律直接
-     返回；读屏只在 agent 调用 /app/ui/dump 的那一刻发生，结果直接回给会话，
-     普通截图按请求保存到应用私有截图目录；MCP 截图内存返回，不独立自动上传。
+<!-- 无障碍服务配置（DSH-A-Su / Sunset Mod）。
+     多变体约定：本声明放在 src/main，正式包、dsha.sunsetTest 测试包与 debug 包共用同一份
+     声明；不写死包名、不限定 packageNames，服务组件始终由运行时 ComponentName 生成
+     （DshaAccessibilityService.enabled 用 ctx.getPackageName() 核对），因此多个变体包
+     同时安装时各自的开关互不影响，也不会顶掉其它无障碍服务。
+     不限定 packageNames 也是能力要求：agent 的屏幕操作要能作用于任意应用（限定了就只能
+     操作系统设置，等于没有这项能力）。
+     隐私边界（屏幕活动历史 M1 起）：服务只在「当前对话的手机任务」活动期间，把主屏活动压成
+     摘要保留在应用内存里（约 120 秒 / 64 条：目标切换、用户点按/滚动、内容变化、助手动作）；
+     任务结束、暂停或服务断开立即清空，不落盘、不进备份/诊断日志、不上传。敏感应用只记目标
+     切换，密码框只记「已输入」，输入法窗口与自身浮层的事件直接丢弃；没有手机任务时这里不
+     记录任何事件。配对码窗口仍只在用户主动开启的 120 秒内扫描设置页。读屏只在 agent 调用
+     /app/ui/dump 的那一刻发生；普通截图按请求保存到应用私有截图目录，MCP 截图内存返回。
+     typeViewClicked / typeViewScrolled 只服务于上面这份有界内存记录（仍按需、不持续落盘），
+     不增加后台观察或自动上传。
      canPerformGestures 是点按与滑动的前提，没有它就得依赖 ADB 或 Shizuku。
      canTakeScreenshot 是 /app/ui/screenshot 截屏的前提：不声明会被系统直接拒绝
-     （errorCode=ERROR_TAKE_SCREENSHOT_*），声明后 Android 11+ 才能 takeScreenshot。 -->
+     （errorCode=ERROR_TAKE_SCREENSHOT_*）；minSdk 已统一为 30（Android 11），
+     因此截图能力在所有受支持系统上均可用。 -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeViewClicked|typeViewScrolled"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagRetrieveInteractiveWindows|flagReportViewIds"
     android:canPerformGestures="true"

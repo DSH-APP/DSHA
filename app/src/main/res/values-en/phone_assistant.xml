@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="phone_assistant">Floating assistant</string>
+  <string name="phone_assistant_detail">Choose a real DSH session on this phone for floating chat and pause controls.</string>
+</resources>

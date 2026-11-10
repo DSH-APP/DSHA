@@ -186,6 +186,8 @@ public final class RecoveryRepairBroker implements AutoCloseable {
         instanceId,
         "generation",
         generation,
+        "uiLanguage",
+        com.deepseekharness.app.util.UiText.language(),
         "pendingMaintenance",
         com.deepseekharness.app.core.MaintenanceCoordinator.pending(files),
         "currentEnvironmentReady",
@@ -304,7 +306,10 @@ public final class RecoveryRepairBroker implements AutoCloseable {
             "label",
             "中断维护 / Interrupted maintenance",
             "actions",
-            new JSONArray(List.of("recover-maintenance"))));
+            new JSONArray(
+                com.deepseekharness.app.core.PluginJournalIsolation.offerOrNull(files) == null
+                    ? List.of("recover-maintenance")
+                    : List.of("recover-maintenance", "isolate-plugin-journals"))));
     rows.put(
         json(
             "id",
@@ -381,7 +386,12 @@ public final class RecoveryRepairBroker implements AutoCloseable {
   }
 
   private byte[] source(String id) throws IOException {
-    if (id.equals("maintenance")) return dataGeneration().getBytes(StandardCharsets.UTF_8);
+    if (id.equals("maintenance")) {
+      // 插件日志隔离计划也纳入摘要：确认后计划变化即 REPAIR_SOURCE_CHANGED，不会移走未经展示的记录。
+      var offer = com.deepseekharness.app.core.PluginJournalIsolation.offerOrNull(files);
+      return (dataGeneration() + "\n" + (offer == null ? "" : offer.digest))
+          .getBytes(StandardCharsets.UTF_8);
+    }
     if (id.equals("startup-log")) return startup().toString().getBytes(StandardCharsets.UTF_8);
     if (id.equals("maintenance-log")) {
       var state = BackupTask.get(context).snapshot();
@@ -543,15 +553,18 @@ public final class RecoveryRepairBroker implements AutoCloseable {
         target = request.optString("targetId"),
         content = request.optString("content", "");
     boolean recover = action.equals("recover-maintenance") && target.equals("maintenance"),
+        isolate = action.equals("isolate-plugin-journals") && target.equals("maintenance"),
         runtime = action.equals("repair-runtime") && target.equals("runtime"),
         cliDependencies = action.equals("repair-cli-dependencies") && target.equals("runtime");
     boolean settings = action.equals("profile-settings") && profiles().containsKey(target);
     boolean newWeb = action.equals("new-web-profile") && target.equals("configuration-web"),
         newGlobal = action.equals("new-global-patch") && target.equals("global-patch");
-    if (!recover && !runtime && !cliDependencies && !settings && !newWeb && !newGlobal)
+    if (!recover && !isolate && !runtime && !cliDependencies && !settings && !newWeb && !newGlobal)
       throw new IOException("REPAIR_ACTION_TARGET");
-    if (!recover && com.deepseekharness.app.core.MaintenanceCoordinator.pending(files))
+    if (!recover && !isolate && com.deepseekharness.app.core.MaintenanceCoordinator.pending(files))
       throw new IOException("REPAIR_RECOVER_PENDING_FIRST");
+    if (isolate && com.deepseekharness.app.core.PluginJournalIsolation.offerOrNull(files) == null)
+      throw new IOException("PLUGIN_QUARANTINE_NOTHING");
     if (!settings && !content.isEmpty()) throw new IOException("REPAIR_ACTION_CONTENT");
     if (settings
         && (content.contains("***") || !content.equals(RecoveryBrokerProtocol.redact(content))))
@@ -609,49 +622,57 @@ public final class RecoveryRepairBroker implements AutoCloseable {
             closed);
     if (full && !closed)
       try {
+        boolean isolateAction = p.action.equals("isolate-plugin-journals");
         boolean maintenanceAction = p.action.equals("recover-maintenance"),
             runtimeAction = p.action.equals("repair-runtime"),
             cliDependencyAction = p.action.equals("repair-cli-dependencies");
         String before =
-            maintenanceAction
-                ? maintenancePreview().toString(2)
-                : (runtimeAction || cliDependencyAction)
-                    ? runtimePreview().toString(2)
-                    : RecoveryBrokerProtocol.redact(
-                        new String(source(p.target), StandardCharsets.UTF_8));
+            isolateAction
+                ? isolationPreview()
+                : maintenanceAction
+                    ? maintenancePreview().toString(2)
+                    : (runtimeAction || cliDependencyAction)
+                        ? runtimePreview().toString(2)
+                        : RecoveryBrokerProtocol.redact(
+                            new String(source(p.target), StandardCharsets.UTF_8));
         result.put("before", before);
         result.put(
             "after",
-            maintenanceAction
+            isolateAction
                 ? com.deepseekharness.app.util.UiText.text(
-                    "1. 停止正式 Web 与终端并核验进程身份；无法确认退出即停止。\n2. 重新读取中断维护记录，按唯一已识别事务执行原有恢复/回切接口；多份冲突或损坏记录保持原样。\n3. 当前没有待恢复事务时只核验状态，不猜测要覆盖哪份数据。\n4. 原件、失败候选与维护记录继续保留；已提交事务不得覆盖后来的对话或配置。\n5. 完成后仍须重试正式 Web 并验证实际可用；本次确认不代表网页已恢复。")
-                : runtimeAction
+                    "1. 停止正式 Web 与终端并核验进程身份。\n2. 在屏障内重新计算无法读取的插件事务日志；与确认时不一致即停止。\n3. 只把这些记录原样移入 plugin-install-quarantine/<批次>/，写入清单，不删除、不改写、不重放。\n4. 会话、配置与其他事务不受影响；相关插件之后可能需要重新安装。\n5. 完成后仍须再次恢复中断维护或重试正式 Web。")
+                : maintenanceAction
                     ? com.deepseekharness.app.util.UiText.text(
-                        "1. 停止正式 Web 与终端，取得原有数据维护屏障。\n2. 从当前签名 APK 准备运行时；同一基础环境执行受管更新，基础环境确需重建时先由宿主保护个人数据。\n3. 先校验候选，再执行隔离启动、存储和网页连接试验；未通过即按原事务保留现场或回切。\n4. 对话、配置、插件原件按现有事务保护；不会从应急模型下载程序或执行其代码。\n5. 当前原件及回切记录保存在应用私有 host-runtime-operations / host-environment-operations；成功后仍须核验正式 Web。")
-                    : cliDependencyAction
+                        "1. 停止正式 Web 与终端并核验进程身份；无法确认退出即停止。\n2. 重新读取中断维护记录，按唯一已识别事务执行原有恢复/回切接口；多份冲突或损坏记录保持原样。\n3. 当前没有待恢复事务时只核验状态，不猜测要覆盖哪份数据。\n4. 原件、失败候选与维护记录继续保留；已提交事务不得覆盖后来的对话或配置。\n5. 完成后仍须重试正式 Web 并验证实际可用；本次确认不代表网页已恢复。")
+                    : runtimeAction
                         ? com.deepseekharness.app.util.UiText.text(
-                            "1. 停止正式 Web 与终端，取得原有数据维护屏障。\n2. 仅从当前签名 APK 的受管 DSH/Node 依赖树恢复缺失或损坏的 CLI 依赖；不接受包名、版本、路径或命令参数。\n3. 按现有运行时事务校验摘要、隔离启动、存储、网页连接和插件加载；任何检查失败均保留原件并回切。\n4. 不执行 npm 生命周期脚本，不从应急模型下载代码，不直接修改用户 node_modules。\n5. 完成后仍须重试正式 Web，并以诊断结果确认 CLI 已就绪。")
-                        : p.action.equals("new-web-profile")
+                            "1. 停止正式 Web 与终端，取得原有数据维护屏障。\n2. 从当前签名 APK 准备运行时；同一基础环境执行受管更新，基础环境确需重建时先由宿主保护个人数据。\n3. 先校验候选，再执行隔离启动、存储和网页连接试验；未通过即按原事务保留现场或回切。\n4. 对话、配置、插件原件按现有事务保护；不会从应急模型下载程序或执行其代码。\n5. 当前原件及回切记录保存在应用私有 host-runtime-operations / host-environment-operations；成功后仍须核验正式 Web。")
+                        : cliDependencyAction
                             ? com.deepseekharness.app.util.UiText.text(
-                                "profiles/web/package.json → 官方基础 bundles：dsh-base + dsh-web-app\nprofiles/web/cordis.patch.yml → []\n旧插件构成与设置保存在配置快照；既有会话与凭据保持原位。")
-                            : p.action.equals("new-global-patch")
+                                "1. 停止正式 Web 与终端，取得原有数据维护屏障。\n2. 仅从当前签名 APK 的受管 DSH/Node 依赖树恢复缺失或损坏的 CLI 依赖；不接受包名、版本、路径或命令参数。\n3. 按现有运行时事务校验摘要、隔离启动、存储、网页连接和插件加载；任何检查失败均保留原件并回切。\n4. 不执行 npm 生命周期脚本，不从应急模型下载代码，不直接修改用户 node_modules。\n5. 完成后仍须重试正式 Web，并以诊断结果确认 CLI 已就绪。")
+                            : p.action.equals("new-web-profile")
                                 ? com.deepseekharness.app.util.UiText.text(
-                                    "cordis.patch.yml → []\n对全部 Profile 的全局覆盖生效；原文保存在配置快照。")
-                                : SensitiveData.redact(p.content));
+                                    "profiles/web/package.json → 官方基础 bundles：dsh-base + dsh-web-app\nprofiles/web/cordis.patch.yml → []\n旧插件构成与设置保存在配置快照；既有会话与凭据保持原位。")
+                                : p.action.equals("new-global-patch")
+                                    ? com.deepseekharness.app.util.UiText.text(
+                                        "cordis.patch.yml → []\n对全部 Profile 的全局覆盖生效；原文保存在配置快照。")
+                                    : SensitiveData.redact(p.content));
         result.put(
             "description",
-            p.action.equals("recover-maintenance")
-                ? com.deepseekharness.app.util.UiText.text("按原事务恢复中断维护，保留原件。")
-                : p.action.equals("repair-runtime")
-                    ? com.deepseekharness.app.util.UiText.text("从当前签名 APK 重建受管运行时，完成隔离试运行。")
-                    : p.action.equals("repair-cli-dependencies")
-                        ? com.deepseekharness.app.util.UiText.text(
-                            "从当前签名 APK 恢复受管 CLI/Node 依赖并完成隔离试运行；不执行任意 shell。")
-                        : p.action.startsWith("new-")
+            isolateAction
+                ? com.deepseekharness.app.util.UiText.text("把无法读取的插件事务日志原样移入隔离区，保留原件。")
+                : p.action.equals("recover-maintenance")
+                    ? com.deepseekharness.app.util.UiText.text("按原事务恢复中断维护，保留原件。")
+                    : p.action.equals("repair-runtime")
+                        ? com.deepseekharness.app.util.UiText.text("从当前签名 APK 重建受管运行时，完成隔离试运行。")
+                        : p.action.equals("repair-cli-dependencies")
                             ? com.deepseekharness.app.util.UiText.text(
-                                "宿主直接保留原件并创建基础配置，无需先启动损坏 DSH。已存在的插件源码保留，恢复使用须审阅。")
-                            : com.deepseekharness.app.util.UiText.text(
-                                "只应用经当前 DSH schema 验证的普通设置；插件构成与凭据不由此入口修改。"));
+                                "从当前签名 APK 恢复受管 CLI/Node 依赖并完成隔离试运行；不执行任意 shell。")
+                            : p.action.startsWith("new-")
+                                ? com.deepseekharness.app.util.UiText.text(
+                                    "宿主直接保留原件并创建基础配置，无需先启动损坏 DSH。已存在的插件源码保留，恢复使用须审阅。")
+                                : com.deepseekharness.app.util.UiText.text(
+                                    "只应用经当前 DSH schema 验证的普通设置；插件构成与凭据不由此入口修改。"));
       } catch (org.json.JSONException error) {
         throw new IOException("REPAIR_JSON", error);
       }
@@ -684,6 +705,20 @@ public final class RecoveryRepairBroker implements AutoCloseable {
         checks,
         "原件状态",
         "尚未修改；摘要和数据代次将在确认及停止屏障内重新核对。");
+  }
+
+  private String isolationPreview() throws IOException {
+    var offer = com.deepseekharness.app.core.PluginJournalIsolation.offer(files);
+    StringBuilder text = new StringBuilder();
+    int shown = 0;
+    for (var problem : offer.problems) {
+      if (shown++ == 32) {
+        text.append("…\n");
+        break;
+      }
+      text.append(problem.path).append("  ").append(problem.reason).append('\n');
+    }
+    return text.append("digest ").append(offer.digest).toString();
   }
 
   private JSONObject maintenancePreview() throws IOException {
@@ -823,11 +858,17 @@ public final class RecoveryRepairBroker implements AutoCloseable {
                       || !p.dataGeneration.equals(dataGeneration()))
                     throw new IOException("REPAIR_SOURCE_CHANGED");
                   if (!p.action.equals("recover-maintenance")
+                      && !p.action.equals("isolate-plugin-journals")
                       && com.deepseekharness.app.core.MaintenanceCoordinator.pending(files))
                     throw new IOException("REPAIR_RECOVER_PENDING_FIRST");
                   HarnessController controller = HarnessController.get(context);
                   if (p.action.equals("recover-maintenance"))
                     return EnvironmentMaintenance.recover(controller);
+                  if (p.action.equals("isolate-plugin-journals")) {
+                    var offer = com.deepseekharness.app.core.PluginJournalIsolation.offer(files);
+                    return com.deepseekharness.app.core.PluginJournalIsolation.isolate(
+                        controller, offer.digest);
+                  }
                   if (p.action.equals("repair-runtime")
                       || p.action.equals("repair-cli-dependencies"))
                     return EnvironmentMaintenance.update(controller, ignored -> {});

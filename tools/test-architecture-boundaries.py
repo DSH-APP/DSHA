@@ -13,7 +13,7 @@ for file in (JAVA/'runtime').glob('*.java'):
     source=file.read_text(encoding='utf8')
     if re.search(r'com\.deepseekharness\.app\.(?:BackupManager|core\.(?:RuntimeTasks|MaintenanceCoordinator|ConfigStore|ColdInstallDiagnostics))\b',source):
         errors.append(str(file)+': runtime depends on Android maintenance authority')
-for tree in ('main','standard','low'):
+for tree in ('main','standard'):
     for file in (ROOT/f'app/src/{tree}/java').rglob('*.java'):
         source=file.read_text(encoding='utf8')
         constructors=re.findall(r'new\s+(?:com\.deepseekharness\.app\.core\.)?HarnessController\s*\(',source)

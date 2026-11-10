@@ -226,7 +226,7 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     if (recoveryBanner || typeof document === 'undefined' || !document.body?.appendChild) return;
     const banner = document.createElement('aside'), text = document.createElement('span'), button = document.createElement('button');
     banner.setAttribute('data-dsha-draft-recovery',''); banner.setAttribute('role','status');
-    banner.style.cssText = 'position:fixed;z-index:10000;top:env(safe-area-inset-top,0px);left:12px;right:12px;display:flex;align-items:center;gap:12px;max-width:640px;margin:8px auto;padding:10px 12px;border:1px solid var(--dsw-alias-border-l2,GrayText);border-radius:10px;background:var(--dsw-alias-bg-module-platform,Canvas);color:var(--dsw-alias-label-primary,CanvasText);font:inherit;box-shadow:0 2px 8px #0002;';
+    banner.style.cssText = 'position:fixed;z-index:10000;top:var(--dsha-safe-area-inset-top,env(safe-area-inset-top,0px));left:12px;right:12px;display:flex;align-items:center;gap:12px;max-width:640px;margin:8px auto;padding:10px 12px;border:1px solid var(--dsw-alias-border-l2,GrayText);border-radius:10px;background:var(--dsw-alias-bg-module-platform,Canvas);color:var(--dsw-alias-label-primary,CanvasText);font:inherit;box-shadow:0 2px 8px #0002;';
     text.textContent = draftText('图片草稿暂存需要恢复。','Image draft saving needs recovery.'); text.style.flex = '1';
     button.type = 'button'; button.textContent = draftText('恢复草稿暂存','Recover draft saving');
     button.style.cssText = 'flex:none;max-width:50%;padding:7px 10px;border:1px solid currentColor;border-radius:7px;background:transparent;color:inherit;font:inherit;cursor:pointer;';
@@ -414,11 +414,12 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
   }
   function installReadingPosition(ctx, index = createSessionIndex(ctx)) {
     const currentId = () => index.current();
-    let restoring = true, touched = false, lastSession = currentId(),
+    // DSHA_READING_IDLE_CHECKPOINT_V1: persistence does not need a visual frame clock.
+    let restoring = true, touched = false, lastSession = currentId(), lastUrl = location.pathname,
       positions = [], deadline = Date.now()+10000, lastSaved = '', leaving = false,
-      dirty = false, scrollFrame = 0, storeTimer = 0;
+      dirty = false, storeTimer = 0, storeEpoch = 0, lastScrollAt = 0, disposed = false;
     const storageKey = 'dsha.reading-position';
-    const pendingScrolls = new Set();
+    const pendingScrolls = new Map();
     let previous, previousRaw = null;
     try {
       previousRaw = localStorage.getItem(storageKey);
@@ -435,12 +436,25 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     let requestedRestore = false;
     const scheduleStore = () => {
       dirty = true;
-      if (storeTimer) clearTimeout(storeTimer);
-      storeTimer = setTimeout(() => { storeTimer = 0; store(); },180);
+      if (!storeTimer && !leaving && !disposed && !document.hidden)
+        armStore(180);
     };
+    function armStore(delay) {
+      const epoch = ++storeEpoch;
+      storeTimer = setTimeout(() => { if (epoch === storeEpoch) settleStore(); },delay);
+    }
+    function settleStore() {
+      storeTimer = 0;
+      if (disposed || leaving || document.hidden) return;
+      syncSession();
+      const remaining = 180 - (Date.now() - lastScrollAt);
+      if (pendingScrolls.size && remaining > 0) { armStore(remaining); return; }
+      flushScrolls(); store();
+    }
     const interact = () => {
       touched = true;
       if (restoring) { restoring = false; scheduleStore(); }
+      else checkpoint(); // capture phase runs before a navigation handler can unmount its scroller.
     };
     document.addEventListener('pointerdown',interact,true); document.addEventListener('keydown',interact,true);
     const pathFor = element => {
@@ -462,50 +476,75 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
       return node;
     };
     const syncSession = () => {
-      const id = currentId();
-      if (lastSession !== id) { lastSession = id; positions = []; dirty = true; }
+      const id = currentId(), url = location.pathname;
+      if (lastSession !== id || lastUrl !== url) {
+        // A reused DOM node may already show the new session; never sample it into the old identity.
+        flushScrolls(true); store(true);
+        lastSession = id; lastUrl = url; positions = []; dirty = true;
+      }
       return id;
     };
     function store(force = false) {
       if (restoring || leaving || (!force && document.hidden)) return;
-      const id = syncSession();
       if (!dirty) return;
       try {
-        const value = JSON.stringify({id,url:location.pathname,positions});
+        const value = JSON.stringify({id:lastSession,url:lastUrl,positions});
         if (value !== lastSaved) { localStorage.setItem(storageKey,value); lastSaved = value; }
       } catch {}
       dirty = false;
     }
-    const flushScrolls = force => {
-      if (restoring || leaving || (!force && document.hidden)) { pendingScrolls.clear(); return; }
-      syncSession();
-      let changed = false;
-      for (const node of pendingScrolls) {
-        const path = pathFor(node); if (!path) continue;
-        const key = JSON.stringify(path);
-        positions = positions.filter(p => JSON.stringify(p.path) !== key);
-        positions.push({path,top:node.scrollTop,left:node.scrollLeft});
-        positions = positions.slice(-8); changed = true;
+    function flushScrolls(snapshotOnly = false) {
+      if (restoring || leaving || disposed) { pendingScrolls.clear(); return; }
+      if (!pendingScrolls.size) return;
+      const next = new Map(positions.map(item => [JSON.stringify(item.path),item]));
+      for (const [node, saved] of pendingScrolls) {
+        // Detached elements report zero offsets. Keep their last delivered scroll snapshot.
+        const live = !snapshotOnly && node.isConnected !== false;
+        const path = live ? pathFor(node) ?? saved.path : saved.path;
+        if (!path) continue;
+        const key = JSON.stringify(path), top = live ? node.scrollTop : saved.top, left = live ? node.scrollLeft : saved.left;
+        next.delete(key); next.set(key,{path,top,left});
       }
       pendingScrolls.clear();
-      if (changed) { dirty = true; if (!force) scheduleStore(); }
-    };
+      positions = Array.from(next.values()).slice(-8); dirty = true;
+    }
+    function checkpoint() {
+      if (disposed || leaving) return;
+      storeEpoch++;
+      if (storeTimer) { clearTimeout(storeTimer); storeTimer = 0; }
+      syncSession(); flushScrolls(); store(true);
+    }
     const scrolled = event => {
-      if (restoring || leaving || document.hidden) return;
+      if (restoring || leaving || disposed || document.hidden) return;
+      syncSession();
       const node = event.target === document ? document.scrollingElement : event.target;
-      // 同一帧内同一个滚动容器只处理一次，避免触摸滚动每个事件都走 DOM 路径并同步写存储。
-      if (node && (pendingScrolls.size < 16 || pendingScrolls.has(node))) pendingScrolls.add(node);
-      if (!scrollFrame) scrollFrame = requestAnimationFrame(() => { scrollFrame = 0; flushScrolls(false); });
+      if (!node) return;
+      let saved = pendingScrolls.get(node);
+      if (!saved) {
+        if (pendingScrolls.size >= 16) flushScrolls();
+        const path = pathFor(node); if (!path) return;
+        saved = {path,top:0,left:0};
+      }
+      saved.top = node.scrollTop; saved.left = node.scrollLeft;
+      // Map order preserves the most recently scrolled eight containers, including nested ones.
+      pendingScrolls.delete(node); pendingScrolls.set(node,saved);
+      lastScrollAt = Date.now(); scheduleStore();
     };
     document.addEventListener('scroll',scrolled,{capture:true,passive:true});
+    document.addEventListener('scrollend',checkpoint,{capture:true,passive:true});
     const pageHide = () => {
-      if (scrollFrame) { cancelAnimationFrame(scrollFrame); scrollFrame = 0; }
-      if (storeTimer) { clearTimeout(storeTimer); storeTimer = 0; }
-      flushScrolls(true); store(true); leaving = true;
+      checkpoint(); leaving = true;
     };
+    const pageShow = () => { if (!disposed) { leaving = false; syncSession(); if (dirty) scheduleStore(); } };
+    const visibility = () => { if (document.hidden) checkpoint(); else if (!leaving && !disposed) { syncSession(); if (dirty) scheduleStore(); } };
+    const routeChanged = () => { if (!disposed && !leaving) { checkpoint(); if (dirty) scheduleStore(); } };
     window.addEventListener('pagehide',pageHide);
+    window.addEventListener('pageshow',pageShow);
+    window.addEventListener('popstate',routeChanged);
+    window.addEventListener('hashchange',routeChanged);
+    document.addEventListener('visibilitychange',visibility);
     const timer = setInterval(() => {
-      if (document.hidden || leaving) return;
+      if (document.hidden || leaving || disposed) return;
       if (!restoring) { clearInterval(timer); return; }
       const snapshot = ctx.sessions.list.getSnapshot();
       if (restoring && !touched && !requestedRestore && snapshot.phase === 'ready'
@@ -528,38 +567,184 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     },750);
     const offSessions = ctx.sessions.list.subscribe?.(() => {
       index.invalidate();
-      if (!document.hidden && !leaving) { syncSession(); scheduleStore(); }
+      if (!leaving && !disposed) { syncSession(); scheduleStore(); }
     });
-    return () => { pageHide(); clearInterval(timer); document.removeEventListener('scroll',scrolled,true);
+    return () => { pageHide(); disposed = true; pendingScrolls.clear(); clearInterval(timer); document.removeEventListener('scroll',scrolled,true);
+      document.removeEventListener('scrollend',checkpoint,true);
+      document.removeEventListener('visibilitychange',visibility);
       offSessions?.();
       window.removeEventListener('pagehide',pageHide);
+      window.removeEventListener('pageshow',pageShow);
+      window.removeEventListener('popstate',routeChanged);
+      window.removeEventListener('hashchange',routeChanged);
       document.removeEventListener('pointerdown',interact,true); document.removeEventListener('keydown',interact,true); };
   }
-  function installStreamResume(ctx) {
+  function installStreamResume(ctx, probeMs = 2000) {
     // Android can resume a document whose carrier still claims OPEN after its
     // background transport died. Use the official Connection reset so Remote
     // journal/snapshot consumers obtain a fresh baseline, never replay a prompt.
-    let alive = true, needsResume = document.hidden, timer = 0, lastReset = 0;
+    // A same-document in-app round trip (Web -> native page -> Web) keeps the
+    // physical carrier alive; resetting unconditionally there rebuilds every
+    // Remote stream and makes a long streaming session refetch and rerender its
+    // whole journal. Probe the current carrier on one read-only Session control
+    // stream first. A failed probe alone no longer resets a Connection that still
+    // reports connected: a slow long page can delay the probe reply, and a real
+    // dead-but-OPEN carrier is ended by the server heartbeat (2s x2) or socket
+    // close, which drives the official recovery. Only an already non-connected
+    // Connection keeps the previous immediate reset.
+    let alive = true, needsResume = document.hidden, timer = 0, lastReset = 0, probing;
+    let probeCancelled = false, hiddenAt = document.hidden ? Date.now() : 0;
+    let resumeTrigger = 'unknown', resumeSeq = 0, nativeForeground = false;
+    const connectionState = () => {
+      try {
+        const value = ctx.connection.state?.getSnapshot?.();
+        return typeof value === 'string' ? value : 'unknown';
+      } catch { return 'unknown'; }
+    };
+    const connectionGeneration = () => {
+      try {
+        const value = ctx.connection.generation?.getSnapshot?.()?.id;
+        return Number.isSafeInteger(value) ? value : -1;
+      } catch { return -1; }
+    };
+    const recordDiagnostic = (phase, extra = {}) => {
+      const state = typeof extra.stateBefore === 'string' ? extra.stateBefore : connectionState();
+      const generation = Number.isSafeInteger(extra.generationBefore) ? extra.generationBefore : connectionGeneration();
+      const elapsed = Number.isFinite(extra.elapsedMs)
+        ? Math.min(600000, Math.max(-1, Math.round(extra.elapsedMs))) : -1;
+      window.__DSHA_RESUME_DIAG__ = {
+        seq: ++resumeSeq,
+        impl: 'k5fix2',
+        phase,
+        trigger: resumeTrigger,
+        foreground: nativeForeground,
+        visibility: document.hidden ? 'hidden' : 'visible',
+        online: window.navigator?.onLine !== false,
+        state,
+        probe: extra.probe || 'pending',
+        elapsedMs: elapsed,
+        reset: extra.reset === true,
+        stateAfter: extra.stateAfter || 'unknown',
+        generation,
+        generationAfter: Number.isSafeInteger(extra.generationAfter) ? extra.generationAfter : -1,
+        hiddenMs: hiddenAt ? Math.min(86400000, Date.now() - hiddenAt) : -1
+      };
+    };
+    const probeSocket = async signal => {
+      const remote = typeof ctx.get === 'function' ? ctx.get('remote') : undefined;
+      const control = remote?.session?.control;
+      const open = typeof control === 'function'
+        ? (s) => control.call(remote.session, s)
+        : typeof remote?.openRemoteStream === 'function'
+          ? (s) => remote.openRemoteStream('session.control', { args: {} }, s)
+          : null;
+      if (open === null) return 'unavailable';
+      let source;
+      try { source = open(signal); } catch { return 'failed'; }
+      const iterator = source?.[Symbol.asyncIterator]?.();
+      if (!iterator) return 'failed';
+      try {
+        const first = await iterator.next();
+        return first !== undefined && first.done !== true ? 'alive' : 'failed';
+      } catch {
+        return signal.aborted ? 'timeout' : 'failed';
+      }
+      finally { try { await iterator.return?.(); } catch {} }
+    };
     const schedule = (native = false) => {
-      if (!alive || document.hidden || timer || (!native && !needsResume)) return;
+      if (!alive || document.hidden || timer || probing || (!native && !needsResume)) return;
       if (!needsResume && lastReset && Date.now() - lastReset < 250) return;
+      resumeTrigger = native ? 'native' : 'visibility';
+      const stateBefore = connectionState();
+      const generationBefore = connectionGeneration();
+      recordDiagnostic('pending', { stateBefore, generationBefore });
       timer = setTimeout(() => {
         timer = 0;
         if (!alive || document.hidden) return;
-        needsResume = false; lastReset = Date.now();
-        ctx.connection.reconnect();
+        // 已断开的 Connection 自己的重试可能被 Android 错过的 online 事件卡住；
+        // 保持原来的立即重置，避免页面永久等待。
+        const currentState = connectionState();
+        if (currentState === 'connecting' || currentState === 'disconnected') {
+          needsResume = false; lastReset = Date.now();
+          recordDiagnostic('done', {
+            stateBefore, probe: 'state-reset', reset: true, stateAfter: currentState,
+            generationBefore, generationAfter: connectionGeneration()
+          });
+          ctx.connection.reconnect();
+          return;
+        }
+        const controller = new AbortController();
+        probeCancelled = false;
+        probing = controller;
+        const startedAt = Date.now();
+        const timeout = setTimeout(() => controller.abort(), probeMs);
+        const done = (probe = 'failed') => {
+          if (probing !== controller) return;
+          probing = undefined;
+          clearTimeout(timeout);
+          const elapsedMs = Date.now() - startedAt;
+          if (probeCancelled) {
+            probeCancelled = false;
+            if (document.hidden) {
+              needsResume = true;
+              recordDiagnostic('done', { stateBefore, probe: 'cancelled', elapsedMs, generationBefore });
+              return;
+            }
+            // 探测期间页面又隐藏过一次：重新探测，不把被取消的探测当成死连接。
+            recordDiagnostic('done', { stateBefore, probe: 'cancelled', elapsedMs, generationBefore });
+            schedule(true);
+            return;
+          }
+          if (!alive) return;
+          if (document.hidden) {
+            needsResume = true;
+            recordDiagnostic('done', { stateBefore, probe, elapsedMs, generationBefore });
+            return;
+          }
+          needsResume = false;
+          const stateAfter = connectionState();
+          if (probe === 'alive') {
+            recordDiagnostic('done', {
+              stateBefore, probe, elapsedMs, stateAfter,
+              generationBefore, generationAfter: connectionGeneration()
+            });
+            return;
+          }
+          if (stateAfter === 'connected') {
+            recordDiagnostic('done', {
+              stateBefore, probe: probe + '-kept', elapsedMs, stateAfter,
+              generationBefore, generationAfter: connectionGeneration()
+            });
+            return;
+          }
+          lastReset = Date.now();
+          recordDiagnostic('done', {
+            stateBefore, probe: probe + '-reset', elapsedMs, stateAfter, reset: true,
+            generationBefore, generationAfter: connectionGeneration()
+          });
+          ctx.connection.reconnect();
+        };
+        probeSocket(controller.signal).then(done, () => done('failed'));
       }, 50);
     };
     const changed = () => {
       if (document.hidden) {
+        hiddenAt = Date.now();
+        nativeForeground = false;
         needsResume = true;
         if (timer) { clearTimeout(timer); timer = 0; }
+        if (probing) { probeCancelled = true; probing.abort(); }
       } else schedule();
     };
-    const resumed = () => {
+    const resumed = event => {
       if (!alive) return;
       // Activity may resume before Chromium publishes visibility. Retain the
       // native request even when the preceding hidden callback was lost.
+      if (event?.detail?.foreground === true) {
+        nativeForeground = true;
+        const current = window.__DSHA_RESUME_DIAG__;
+        if (current !== undefined) current.foreground = true;
+      }
       if (document.hidden) { needsResume = true; return; }
       schedule(true);
     };
@@ -569,6 +754,7 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
     return () => {
       alive = false;
       if (timer) clearTimeout(timer);
+      if (probing) { probeCancelled = false; probing.abort(); }
       document.removeEventListener('visibilitychange', changed);
       window.removeEventListener('dsha-browser-resume', resumed);
       window.removeEventListener('pageshow', resumed);
@@ -625,8 +811,30 @@ window.__ModuleLoader__.load({id:'dsh-app-integration', factory: () => {
       document.removeEventListener('dsha-native-route-cancel',cancel);
       document.removeEventListener('dsha-native-open-session',open); };
   }
+  /* 原生亮暗同步：只在原生偏好变化时写一次 Web 外观；之后用户在 Web 里改的保留到下次原生切换。
+     window.__DSHA_THEME__ 由原生注入：{preference:'light'|'dark'|'system', sync:boolean}。 */
+  function installThemeSync(theme) {
+    const KEY = 'dsha-native-theme-applied';
+    const valid = value => value === 'light' || value === 'dark' || value === 'system';
+    const apply = () => {
+      const state = window.__DSHA_THEME__;
+      if (!state || state.sync !== true || !valid(state.preference)) return;
+      let last = null;
+      try { last = localStorage.getItem(KEY); } catch {}
+      if (last === state.preference) return;
+      try {
+        theme.setTheme(state.preference);
+        try { localStorage.setItem(KEY, state.preference); } catch {}
+      } catch {}
+    };
+    window.addEventListener('dsha-theme', apply);
+    apply();
+    return () => window.removeEventListener('dsha-theme', apply);
+  }
   function apply(ctx) {
     ctx.effect(() => installNativeRoute(ctx), 'dsha-native-session-route');
+    // 主题服务缺失（旧组合或被禁用）时不安装，其余集成照常。
+    ctx.inject(['theme'], scoped => scoped.effect(() => installThemeSync(scoped.theme), 'dsha-native-theme-sync'));
     ctx.inject(['connection'], scoped => scoped.effect(() => installStreamResume(scoped), 'dsha-browser-stream-resume'));
     ctx.effect(() => {
       // Gecko 132+ 默认只缩小 visual viewport；dsh 的整屏布局需要随键盘一起重新排版。

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 版本更新页（压缩版）布局文案。正文必须与 tools/i18n/messages(-extra).json 的 zh 完全一致，十语资源由 localize-android-ui.py 生成。 -->
+<resources>
+    <!-- 复用目录既有 zh（m0715），不新增译文。 -->
+    <string name="upd_recheck">重新检查</string>
+    <string name="upd_tab_candidate">候选版本</string>
+    <string name="upd_tab_current">本版本</string>
+    <string name="upd_full_notes">查看完整记录</string>
+    <string name="upd_copy_version">复制版本信息</string>
+    <string name="upd_browser_sub">查看所有版本与安装包</string>
+    <string name="upd_pane_empty">检查到候选版本后，更新记录、大小与安装方式会显示在这里。</string>
+</resources>

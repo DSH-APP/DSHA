@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Chromium 枚举/选择录音设备同时要求此普通权限；录音本身仍须按需获得用户授权。 -->
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
@@ -19,6 +20,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 上岛（Promoted notifications / Live Updates）权限由原独立上岛包并入正式包。
+         Android 16（API 36）起为普通权限；低版本系统忽略，不影响安装。 -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" tools:targetApi="36" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -37,10 +41,17 @@
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
 
     <queries>
+        <intent><action android:name="android.speech.RecognitionService" /></intent>
         <package android:name="moe.shizuku.privileged.api" />
+        <!-- Stellar 是兼容 Shizuku 协议的管理器（不声明 API_V23）；包可见性缺失会让安装检查查不到。 -->
+        <package android:name="roro.stellar.manager" />
         <intent><action android:name="rikka.shizuku.intent.action.REQUEST_BINDER" /></intent>
         <intent><action android:name="android.intent.action.OPEN_DOCUMENT" /><data android:mimeType="*/*" /></intent>
         <intent><action android:name="android.intent.action.GET_CONTENT" /><data android:mimeType="*/*" /></intent>
+        <!-- SAF 目录选择要显式指向系统 DocumentsUI；包可见性缺失会让查询看不到它。 -->
+        <package android:name="com.android.documentsui" />
+        <package android:name="com.google.android.documentsui" />
+        <intent><action android:name="android.intent.action.OPEN_DOCUMENT_TREE" /></intent>
     </queries>
 
     <application
@@ -57,20 +68,50 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.DeepseekHarness">
 
+        <activity android:name=".assistant.AssistantActivity" android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".assistant.AssistantVoiceActivity" android:exported="false" />
+        <service android:name=".assistant.AssistantService" android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="User-started visible AI phone-control assistant with local pause and stop actions." />
+        </service>
+
         <activity android:name=".ui.BrowserOriginRestoreActivity" android:exported="false" />
         <activity android:name=".ui.CommunityActivity" android:exported="false" />
-        <activity android:name=".ui.OnboardingPrepareActivity" android:exported="false" />
 
         <activity android:name=".ui.AccessibilitySetupActivity" android:exported="false" />
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
+            android:documentLaunchMode="never"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 常驻通知的应用入口中转：独立 affinity，不把 Main 任务带到前台；透明且立即结束。 -->
+        <activity
+            android:name=".ui.AppEntryRouterActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:documentLaunchMode="never"
+            android:taskAffinity="${applicationId}.entry"
+            android:theme="@style/Theme.DSHA.EntryRouter" />
+
+        <!-- 同 task 终端视图；离开页面只解绑，运行会话由独立服务保护。 -->
+        <activity android:name=".ui.TerminalActivity" android:exported="false"
+            android:launchMode="singleTop" android:documentLaunchMode="never"
+            android:windowSoftInputMode="adjustResize" />
+        <service android:name=".TerminalRuntimeService" android:exported="false"
+            android:stopWithTask="false" android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="User-started interactive terminal sessions and pending verified process cleanup" />
+        </service>
 
         <activity android:name=".ui.UpdateActivity" android:exported="false" />
         <activity android:name=".ui.DiagnosticActivity" android:exported="false" />
@@ -84,11 +125,14 @@
         <activity android:name=".ui.BackgroundTasksActivity" android:exported="false" />
         <activity android:name=".ui.AgentTasksActivity" android:exported="false" />
         <receiver android:name=".AgentTaskStopReceiver" android:exported="false" />
+        <receiver android:name=".AgentTaskAnswerReceiver" android:exported="false" />
         <activity android:name=".ui.NativeDataActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".ui.WorkspaceFilesActivity" android:exported="false" />
+        <activity android:name=".ui.FileTransfersActivity" android:exported="false" />
+        <service android:name=".transfer.DownloadService" android:exported="false" android:foregroundServiceType="dataSync" />
           <activity android:name=".ui.StorageHelpActivity" android:exported="false" />
           <activity android:name=".ui.ColdSetupSpeedActivity" android:exported="false" />
-        <activity android:name=".ui.SkillsActivity" android:exported="false" />
+        <activity android:name=".ui.ThemeActivity" android:exported="false" />
         <activity android:name=".ui.RetainedDataActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <service android:name=".backup.PostUpgradeCleanupService" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false" />
         <service android:name=".backup.AutomaticBackupService" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false" />
@@ -136,16 +180,22 @@
             </intent-filter>
         </provider>
 
+        <!-- 首次引导（欢迎 → 用途 → 授权 → 完成）；旋转与分屏走正常重建，步骤与用途在实例状态中保留。 -->
         <activity
-            android:name=".ui.WelcomeActivity"
+            android:name=".ui.OnboardingActivity"
             android:exported="false"
             android:theme="@style/Theme.DeepseekHarness" />
 
+        <!-- 与 Main 同一默认 affinity：一个应用只有一个任务（自由窗口 / 桌面模式下只有一个窗口）。
+             不用 singleTask：它在同一任务里会清掉压在上面的 Main。唯一宿主由
+             BrowserTasks.forwardToLiveBrowser 保证；excludeFromRecents 只对画中画等以网页为根的任务生效，
+             Main 所在任务由 BrowserTasks.reconcileRecents 显式显示。 -->
         <activity
             android:name=".ui.WebPreviewActivity"
             android:exported="false"
-            android:launchMode="singleTask"
-            android:taskAffinity="${applicationId}.browser.webview"
+            android:launchMode="singleTop"
+            android:documentLaunchMode="never"
+            android:excludeFromRecents="true"
             android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:windowSoftInputMode="adjustResize"
@@ -159,7 +209,7 @@
         <activity
             android:name=".ui.AdbPairActivity"
             android:exported="false"
-            android:label="ADB 无线配对"
+            android:label="@string/adb_pairing_service_label"
             android:theme="@style/Theme.DeepseekHarness" />
 
         <service
@@ -185,10 +235,13 @@
             android:permission="moe.shizuku.manager.permission.API_V23"
             tools:ignore="Instantiatable" />
 
+        <!-- 无障碍声明放在 main manifest：正式包、测试包与 debug 包共享同一 service 声明，
+             不使用 flavor 专属 manifest 覆盖，因此多个变体包可以各自独立启用、互不顶掉。
+             标签/描述按语言资源提供，随实际应用显示名（DSH-A-Su）区分。 -->
         <service
             android:name=".DshaAccessibilityService"
             android:exported="false"
-            android:label="DSHA 配对助手"
+            android:label="@string/accessibility_service_label"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />

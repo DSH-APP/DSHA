@@ -18,8 +18,8 @@ const recipe = JSON.parse(await readFile(path.join(root, asset), 'utf8'));
 const canonical = await readFile(path.join(runtime, 'node_modules', recipe.module), 'utf8');
 const version = JSON.parse(await readFile(
   require.resolve('@deepseek-ai/dsh-api-workspace-controller/package.json'), 'utf8')).version;
-assert.equal(version, '0.2.1-rc.2');
-assert.equal(recipe.dshVersion, version);
+assert.equal(version, recipe.dshVersion);
+assert.equal(version, JSON.parse(await readFile(path.join(root, 'app/src/main/assets/runtime-patches.json'), 'utf8')).dshVersion);
 const fixture = await mkdtemp(path.join(root, 'app/build/workspace-policy-'));
 await symlink(path.join(runtime, 'node_modules'), path.join(fixture, 'node_modules'),
   process.platform === 'win32' ? 'junction' : 'dir');
@@ -39,13 +39,13 @@ const patchScript = [
   'request=json.load(sys.stdin)',
   'source=request["source"].encode("utf-8")',
   'patched=builder.patched_content(pathlib.PurePosixPath(request["module"]),source)',
-  'chains,_=builder.load_chains(pathlib.Path(request["stableAssets"]),"0.2.1-rc.2")',
+  'chains,_=builder.load_chains(pathlib.Path(request["stableAssets"]),request["version"])',
   'patched=builder.apply_stable_patches(patched,chains.get(request["module"],[]))',
   'print(json.dumps({"source":patched.decode("utf-8"),"inputs":builder.recipe_inputs()}))'
 ].join(';');
 function build(source, module = recipe.module) {
   return JSON.parse(execFileSync(python, ['-B', '-c', patchScript, buildScript], {
-    input: JSON.stringify({ source, module, stableAssets }), encoding: 'utf8', windowsHide: true,
+    input: JSON.stringify({ source, module, stableAssets, version: recipe.dshVersion }), encoding: 'utf8', windowsHide: true,
     timeout: 30000, maxBuffer: 8 * 1024 * 1024, stdio: ['pipe', 'pipe', 'pipe']
   }));
 }

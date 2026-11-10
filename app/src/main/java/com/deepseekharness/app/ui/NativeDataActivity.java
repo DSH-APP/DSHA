@@ -25,6 +25,14 @@ public final class NativeDataActivity extends AppCompatActivity {
     int scopeIndex;
     boolean includeKey;
     String reexportId;
+    // 恢复向导：步骤与本向导拥有的作业号随 ViewModel 跨旋转保留；密码不保留。
+    int restoreStep;
+    String restoreJob = "", restoreUri, restoreCopy, restoreName = "";
+    boolean restoreNeedsOriginal, restoreAutomatic;
+
+    /** 预检（PREVIEW）时记下的总量：恢复进度用真实已复制字节 / 条目算百分比。 */
+    long restoreTotalEntries, restoreTotalBytes;
+
     final List<BackupSource> projects = new ArrayList<>();
     final androidx.lifecycle.MutableLiveData<BackupPreview.Report> preview =
         new androidx.lifecycle.MutableLiveData<>();
@@ -49,13 +57,40 @@ public final class NativeDataActivity extends AppCompatActivity {
 
   private Pending pending;
   private NativeBackupJobs jobs;
-  private LinearLayout page, body;
+  private CardPage page;
+  private LinearLayout statusCard, stepper, wizardCard, wizard;
+
+  /** 4 个步骤容器（选择/选项/进度/确认/结果，STEP_* 索引）只建一次；输入步骤保留已填内容。 */
+  private final LinearLayout[] stepViews = new LinearLayout[5];
+
+  private final boolean[] stepBuilt = new boolean[5];
+
+  /** 当前正在构建的步骤容器；步骤方法写它，不再整块清空 wizard。 */
+  private LinearLayout stepTarget;
+
+  /** 恢复进度复用同一个组件：每次状态刷新只改数值，不重启动画、不丢取消按钮状态。 */
+  private DeterminateProgress restoreProgress, restoreOutcome;
+
   private TextView status, project;
-  private Spinner scope;
+
+  /** 结果卡三段（审计 E-02）：结论、计数/字节、错误（错误收起为一句，展开看原因与下一步）。 */
+  private TextView resultConclusion, resultMeta, resultError;
+
+  private final DisclosureCard.Memory disclosure = new DisclosureCard.Memory();
+  private final DisclosureCard.Model failureDisclosure = new DisclosureCard.Model();
   private Button cancelOperation;
-  private CheckBox key;
   private List<BackupSource> projects;
-  private androidx.appcompat.app.AlertDialog previewDialog;
+  private EditText password;
+  private CheckBox includeRestoreKey;
+  private RadioGroup projectDestination;
+  private boolean alwaysWizard;
+  private int renderedStep = -1;
+
+  /**
+   * data_mode=rescue：维护页与「数据与备份」的「导出可读副本」直达入口。页面同默认救援工具页，
+   * 首次创建时直接弹出现有「救援导出」确认框；旋转重建不重复弹出。
+   */
+  static final String MODE_RESCUE = "rescue";
 
   private static String t(String zh, String en) {
     return UiText.choose(zh, en);
@@ -88,7 +123,7 @@ public final class NativeDataActivity extends AppCompatActivity {
               pending.clear();
               status.setText(
                   t(
-                      "应用在选择保存位置期间重新启动，请重新发起导出。",
+                      "应用已重启，请重新发起导出",
                       "The app restarted while choosing a destination. Start the export again."));
               return;
             }
@@ -102,7 +137,7 @@ public final class NativeDataActivity extends AppCompatActivity {
           });
   private final ActivityResultLauncher<Uri> projectPicker =
       registerForActivityResult(
-          new ActivityResultContracts.OpenDocumentTree(),
+          new SystemDocumentPicker.TreeContract(),
           uri -> {
             if (uri == null) return;
             try {
@@ -116,8 +151,9 @@ public final class NativeDataActivity extends AppCompatActivity {
                       "project-" + NativeDataLocations.hash(uri.toString()),
                       "projects",
                       ""));
-              project.setText(
-                  com.deepseekharness.app.util.UiText.format("已选择项目目录：%s", projects.size()));
+              if (project != null)
+                project.setText(
+                    com.deepseekharness.app.util.UiText.format("已选择项目目录：%s", projects.size()));
             } catch (Exception error) {
               status.setText(t("无法读取所选目录，请重新授权。", "Cannot read the folder. Grant access again."));
             }
@@ -135,173 +171,91 @@ public final class NativeDataActivity extends AppCompatActivity {
     pending = new ViewModelProvider(this).get(Pending.class);
     projects = pending.projects;
     jobs = NativeBackupJobs.get(this);
-    ScrollView scroll = new ScrollView(this);
-    scroll.setFillViewport(true);
-    scroll.setBackgroundColor(getColor(R.color.surface));
-    page = new LinearLayout(this);
-    page.setOrientation(LinearLayout.VERTICAL);
-    int pad = dp(20);
-    page.setPadding(pad, dp(12), pad, pad);
-    body = page;
-    scroll.addView(page);
-    setContentView(scroll);
     String mode = getIntent().getStringExtra("data_mode");
     boolean exportOnly = "export".equals(mode),
         restoreOnly = "restore".equals(mode),
         backupMode = "backup".equals(mode);
-    LinearLayout navigation = new LinearLayout(this);
-    navigation.setGravity(android.view.Gravity.CENTER_VERTICAL);
-    var back = UiNavigation.back(this, this::finish);
-    navigation.addView(back, new LinearLayout.LayoutParams(dp(44), dp(48)));
-    TextView brand = new TextView(this);
-    brand.setText(R.string.app_name);
-    brand.setTextSize(18);
-    brand.setTextColor(getColor(R.color.text));
-    navigation.addView(brand);
-    page.addView(navigation);
-    TextView title =
-        text(
-            backupMode
-                ? t("备份与恢复", "Backup and restore")
-                : exportOnly
-                    ? t("数据导出", "Data export")
-                    : restoreOnly
-                        ? t("从备份恢复", "Restore a backup")
-                        : t("应用数据与救援", "Application data and recovery"),
-            24);
-    title.setTypeface(null, android.graphics.Typeface.BOLD);
-    text(
+    String title =
         backupMode
-            ? t("导出、导入和自动备份集中在这里。", "Export, import and automatic backups in one place.")
+            ? t("备份与恢复", "Backup and restore")
             : exportOnly
-                ? t(
-                    "选择范围和项目后，导出无需密码的 tar.gz 备份。",
-                    "Choose data and projects, then export a tar.gz backup without a password.")
+                ? t("自定义导出", "Custom export")
                 : restoreOnly
+                    ? t("从备份恢复", "Restore a backup")
+                    : t("应用数据与救援", "Application data and recovery");
+    page =
+        new CardPage(
+            this,
+            title,
+            backupMode
+                ? t("导出、导入和自动备份集中在这里。", "Export, import and automatic backups in one place.")
+                : exportOnly
                     ? t(
-                        "先验证备份内容，再确认恢复范围。",
-                        "Verify backup contents before confirming what to restore.")
-                    : t(
-                        "运行环境不可用时，也能检查并保护可读取的数据。",
-                        "Inspect and protect readable data even when the runtime is unavailable."),
-        13);
-    status = text("", 14);
-    status.setTextIsSelectable(true);
-    status.setBackgroundResource(R.drawable.bg_card);
-    status.setPadding(dp(16), dp(12), dp(16), dp(12));
-    section(t("选择数据范围", "Choose data scope"));
-    if (restoreOnly) body.setVisibility(View.GONE);
-    scope =
-        choice(
-            new String[] {
-              t("应用数据", "Application data"),
-              t("对话与附件", "Conversations and attachments"),
-              t("设置", "Settings"),
-              t("插件", "Plugins"),
-              t("所选项目文件", "Selected project files")
-            });
-    body.addView(scope, new LinearLayout.LayoutParams(-1, -2));
-    scope.setPrompt(t("数据范围", "Data scope"));
-    scope.setSelection(pending.scopeIndex);
-    scope.setOnItemSelectedListener(
-        new AdapterView.OnItemSelectedListener() {
-          public void onNothingSelected(AdapterView<?> parent) {}
+                        "选择范围和项目后，导出无需密码的 tar.gz 备份。",
+                        "Choose data and projects, then export a tar.gz backup without a password.")
+                    : restoreOnly
+                        ? t(
+                            "先验证备份内容，再确认恢复范围。",
+                            "Verify backup contents before confirming what to restore.")
+                        : t(
+                            "运行环境不可用时，也能检查并保护可读取的数据。",
+                            "Inspect and protect readable data even when the runtime is unavailable."));
+    UiNavigation.addHeader(this, page.root, title, this::finish);
 
-          public void onItemSelected(AdapterView<?> parent, View view, int index, long id) {
-            pending.scopeIndex = index;
+    // 恢复向导：恢复页常驻；其他页在选中备份后出现，与原弹窗流程共用同一组作业。
+    stepper = new LinearLayout(this);
+    stepper.setOrientation(LinearLayout.HORIZONTAL);
+    LinearLayout.LayoutParams stepperParams = new LinearLayout.LayoutParams(-1, -2);
+    stepperParams.bottomMargin = dp(14);
+    wizardCard = page.card();
+    wizardCard.setVisibility(View.GONE);
+    wizard = page.column();
+    wizardCard.addView(wizard);
+    page.content.addView(stepper, page.content.indexOfChild(wizardCard), stepperParams);
+    stepper.setVisibility(View.GONE);
+    alwaysWizard = restoreOnly;
+
+    statusCard = page.card();
+    status = page.text("", 13, R.color.shell_text_secondary);
+    status.setTextIsSelectable(true);
+    status.setLineSpacing(dp(3), 1);
+    statusCard.addView(status);
+    // 结果卡拆成三段：结论 / 计数与字节 / 错误（错误默认 1 行 + ⓘ，⑬）。其余提示仍走 status。
+    resultConclusion = page.text("", 13, R.color.shell_text);
+    resultConclusion.setTypeface(null, android.graphics.Typeface.BOLD);
+    resultConclusion.setLineSpacing(dp(3), 1);
+    statusCard.addView(resultConclusion);
+    resultMeta = page.text("", 12, R.color.shell_text_muted);
+    statusCard.addView(resultMeta);
+    resultError = page.text("", 12, R.color.shell_bad);
+    resultError.setLineSpacing(dp(2), 1);
+    statusCard.addView(resultError);
+    android.text.TextWatcher statusVisibility =
+        new android.text.TextWatcher() {
+          public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+
+          public void onTextChanged(CharSequence s, int a, int b, int c) {}
+
+          public void afterTextChanged(android.text.Editable s) {
+            refreshStatusCardVisibility();
           }
-        });
-    key = new CheckBox(this);
-    key.setText(t("包含原生 API Key（默认不包含）", "Include native API key (excluded by default)"));
-    key.setIncludeFontPadding(false);
-    key.setGravity(android.view.Gravity.CENTER_VERTICAL);
-    key.setMinimumHeight(dp(48));
-    key.setChecked(false);
-    body.addView(key);
-    key.setChecked(pending.includeKey);
-    key.setOnCheckedChangeListener((button, checked) -> pending.includeKey = checked);
-    project =
-        text(
-            t(
-                "项目文件需单独选择目录；不会扫描整部手机。",
-                "Choose project folders explicitly; the app does not scan the whole device."),
-            14);
-    button(t("选择项目目录", "Choose project folder"), () -> projectPicker.launch(null));
-    button(t("查看数据范围与位置", "Review data scope and locations"), this::locations);
-    section(
-        exportOnly
-            ? t("导出选项", "Export options")
-            : restoreOnly ? t("选择并验证", "Select and verify") : t("导出与恢复", "Export and restore"));
-    if (!restoreOnly) {
-      Button export =
-          button(t("导出应用数据", "Export application data"), () -> chooseExport(false, null));
-      export.setBackgroundResource(R.drawable.bg_btn_primary);
-      export.setTextColor(
-          androidx.core.content.ContextCompat.getColorStateList(this, R.color.button_primary_text));
+        };
+    for (TextView field : new TextView[] {status, resultConclusion, resultMeta, resultError}) {
+      field.addTextChangedListener(statusVisibility);
+      field.setVisibility(View.GONE);
     }
-    if (!exportOnly && !restoreOnly && !backupMode)
-      button(t("只读救援导出", "Read-only rescue export"), () -> chooseExport(true, null));
-    if (!exportOnly) {
-      Button restore =
-          button(
-              t("导入备份", "Import backup"),
-              () ->
-                  restorePicker.launch(
-                      new String[] {
-                        com.deepseekharness.app.util.BackupFileNames.MIME_TYPE,
-                        "application/octet-stream",
-                        "application/gzip",
-                        "*/*"
-                      }));
-      if (restoreOnly) {
-        restore.setBackgroundResource(R.drawable.bg_btn_primary);
-        restore.setTextColor(getColorStateList(R.color.button_primary_text));
-      }
-    }
-    if (!exportOnly && !restoreOnly && !backupMode)
-      button(t("重新导出已验证副本", "Export a verified copy again"), this::verifiedCopies);
-    if (backupMode)
-      button(
-          t("自动备份与记录", "Automatic backups and history"),
-          () -> startActivity(new android.content.Intent(this, AutomaticBackupActivity.class)));
-    cancelOperation = button(t("取消当前作业", "Cancel current operation"), () -> jobs.cancel());
+    statusCard.setVisibility(View.GONE);
+
+    if (exportOnly) exportPage();
+    else if (!restoreOnly) actionsPage(backupMode);
+    cancelOperation =
+        page.button(
+            page.footer, t("取消当前作业", "Cancel current operation"), false, () -> jobs.cancel());
     cancelOperation.setVisibility(View.GONE);
-    if (!exportOnly && !restoreOnly) {
-      section(t("保留数据", "Retained data"));
-      text(
-          t(
-              "查看保留副本、旧环境和插件原件；检查与恢复分别处理。",
-              "Browse retained copies, old environments, and original plugins. Inspection and restoration are separate actions."),
-          13);
-      button(
-          t("保留副本与旧树", "Retained copies and old trees"),
-          () -> startActivity(new android.content.Intent(this, RetainedDataActivity.class)));
-    }
-    section(t("恢复与维护", "Recovery and maintenance"));
-    if (exportOnly || restoreOnly || backupMode) body.setVisibility(View.GONE);
-    button(t("选择已有数据目录", "Choose existing data directory"), this::chooseDataHome);
-    button(
-        t("恢复中断的数据提交", "Recover interrupted data commit"),
-        () -> {
-          new DshaDialogBuilder(this, true)
-              .setTitle(t("恢复中断的数据提交", "Recover interrupted data commit"))
-              .setMessage(
-                  t(
-                      "将先停止写任务，再根据宿主日志恢复一致状态。无需旧 Python 或备份密码，原件将保留。",
-                      "Stop writers first, then restore consistency from the host journal. The old Python and backup password are not required. Originals are retained."))
-              .setPositiveButton(
-                  t("继续", "Continue"),
-                  (d, w) -> {
-                    if (!jobs.recoverPending())
-                      status.setText(
-                          t(
-                              "没有可自动处理的提交，或需要先检查损坏/冲突的日志。",
-                              "No automatically recoverable commit, or damaged/conflicting records need review."));
-                  })
-              .setNegativeButton(t("取消", "Cancel"), null)
-              .show();
-        });
-    button(t("回退兼容运行时", "Roll back compatible runtime"), () -> RuntimeRecoveryUi.show(this));
+    setContentView(page.root);
+    PressFeedback.attachButtons(findViewById(android.R.id.content));
+    renderWizard();
+
     jobs.changes().observe(this, this::render);
     pending.preview.observe(
         this,
@@ -315,14 +269,702 @@ public final class NativeDataActivity extends AppCompatActivity {
         });
     if (saved == null
         && (getIntent().hasExtra("auto_restore_id") || getIntent().hasExtra("auto_export_id")))
-      page.post(this::automaticCopy);
-    if (saved == null && getIntent().hasExtra("retained_key")) page.post(this::retainedAction);
+      page.root.post(this::automaticCopy);
+    if (saved == null && getIntent().hasExtra("retained_key")) page.root.post(this::retainedAction);
+    if (saved == null && MODE_RESCUE.equals(mode))
+      page.root.post(
+          () -> {
+            if (!isFinishing() && !isDestroyed()) chooseExport(true, null);
+          });
     if (saved == null && getIntent().hasExtra("restore_uri")) {
       Uri input = Uri.parse(getIntent().getStringExtra("restore_uri"));
       if ("content".equals(input.getScheme()))
         new android.os.Handler(android.os.Looper.getMainLooper())
             .post(() -> restorePassword(input));
     }
+  }
+
+  // ===================== 页面骨架 =====================
+
+  /** 自定义导出：范围（单选）→ 项目目录 → 敏感信息 → 选择位置。 */
+  private void exportPage() {
+    page.label(t("选择数据范围", "Choose data scope"));
+    scopeCard();
+    page.label(t("导出选项", "Export options"));
+    optionsCard();
+    page.button(
+        page.footer,
+        t("选择位置并导出", "Choose a location and export"),
+        true,
+        () -> {
+          if (exportReady()) chooseExport(false, null);
+        });
+    page.button(
+        page.footer, t("查看数据范围与位置", "Review data scope and locations"), false, this::locations);
+  }
+
+  /** 救援与维护工具（默认）及「备份与恢复」：分组入口，操作仍走原确认弹窗。 */
+  private void actionsPage(boolean backupMode) {
+    LinearLayout actions = page.card();
+    page.entry(
+        actions,
+        t("导出应用数据", "Export application data"),
+        t(
+            "会先停止任务并建立快照",
+            "Web, terminals and write tasks stop before the snapshot. The tar.gz backup needs no password."),
+        R.drawable.ic_ui_export,
+        () -> {
+          if (exportReady()) chooseExport(false, null);
+        });
+    if (!backupMode)
+      page.entry(
+          actions,
+          t("只读救援导出", "Read-only rescue export"),
+          t(
+              "救援不停止写入，结果可能不完整；不能据此删除原件",
+              "Rescue does not stop current writers. The result is best-effort or partial and cannot justify deleting originals. The tar.gz export needs no password."),
+          R.drawable.ic_recovery_shield,
+          () -> {
+            if (exportReady()) chooseExport(true, null);
+          });
+    page.entry(
+        actions,
+        t("导入备份", "Import backup"),
+        t("先验证备份内容，再确认恢复范围。", "Verify backup contents before confirming what to restore."),
+        R.drawable.ic_ui_import,
+        this::pickRestore);
+    if (!backupMode)
+      page.entry(
+          actions,
+          t("重新导出已验证副本", "Export a verified copy again"),
+          "",
+          R.drawable.ic_recovery_document,
+          this::verifiedCopies);
+    else
+      page.entry(
+          actions,
+          t("自动备份与记录", "Automatic backups and history"),
+          "",
+          R.drawable.ic_recovery_clock,
+          () -> startActivity(new android.content.Intent(this, AutomaticBackupActivity.class)));
+
+    page.label(t("导出选项", "Export options"));
+    scopeCard();
+    optionsCard();
+    if (backupMode) return;
+
+    page.label(t("保留数据", "Retained data"));
+    LinearLayout retained = page.card();
+    page.entry(
+        retained,
+        t("保留副本与旧树", "Retained copies and old trees"),
+        t(
+            "查看保留副本与旧环境",
+            "Browse retained copies, old environments, and original plugins. Inspection and restoration are separate actions."),
+        R.drawable.ic_recovery_database,
+        () -> startActivity(new android.content.Intent(this, RetainedDataActivity.class)));
+
+    page.label(t("恢复与维护", "Recovery and maintenance"));
+    LinearLayout maintenance = page.card();
+    page.entry(
+        maintenance,
+        t("恢复中断的数据提交", "Recover interrupted data commit"),
+        t(
+            "先停止写任务，再从原数据恢复一致状态。",
+            "Stop writers first, then restore consistency from the host journal. The old Python and backup password are not required. Originals are retained."),
+        R.drawable.ic_recovery_refresh,
+        this::recoverPending);
+    page.entry(
+        maintenance,
+        t("选择已有数据目录", "Choose existing data directory"),
+        "",
+        R.drawable.ic_recovery_database,
+        this::chooseDataHome);
+    page.entry(
+        maintenance,
+        t("回退兼容运行时", "Roll back compatible runtime"),
+        "",
+        R.drawable.ic_recovery_wrench,
+        () -> RuntimeRecoveryUi.show(this));
+  }
+
+  private void recoverPending() {
+    new DshaDialogBuilder(this, true)
+        .setTitle(t("恢复中断的数据提交", "Recover interrupted data commit"))
+        .setMessage(
+            t(
+                "先停止写任务，再从原数据恢复一致状态。",
+                "Stop writers first, then restore consistency from the host journal. The old Python and backup password are not required. Originals are retained."))
+        .setPositiveButton(
+            t("继续", "Continue"),
+            (d, w) -> {
+              if (!jobs.recoverPending())
+                status.setText(
+                    t(
+                        "没有可自动处理的提交，或需要先检查损坏/冲突的日志。",
+                        "No automatically recoverable commit, or damaged/conflicting records need review."));
+            })
+        .setNegativeButton(t("取消", "Cancel"), null)
+        .show();
+  }
+
+  private void pickRestore() {
+    RecentsPrivacyGuard.launch(
+        restorePicker,
+        new String[] {
+          com.deepseekharness.app.util.BackupFileNames.MIME_TYPE,
+          "application/octet-stream",
+          "application/gzip",
+          "*/*"
+        });
+  }
+
+  /** 「所选项目文件」范围必须先选目录，否则导出为空。 */
+  private boolean exportReady() {
+    if (pending.scopeIndex == 4 && projects.isEmpty()) {
+      status.setText(t("请先选择项目目录", "Choose a project folder first"));
+      return false;
+    }
+    return true;
+  }
+
+  private static final String[][] SCOPES = {
+    {
+      "应用数据",
+      "Application data",
+      "对话、附件、配置和用户插件，不含 Ubuntu",
+      "Conversations, attachments, settings and user plugins, without Ubuntu"
+    },
+    {
+      "对话与附件",
+      "Conversations and attachments",
+      "只导出会话记录和附件",
+      "Only conversation records and attachments"
+    },
+    {"设置", "Settings", "profile 设置与工作目录配置", "Profile settings and workspace configuration"},
+    {
+      "插件",
+      "Plugins",
+      "用户插件；系统插件按当前 APK 重建",
+      "User plugins; system plugins are rebuilt from this APK"
+    },
+    {"所选项目文件", "Selected project files", "只导出下方选择的项目目录", "Only the project folders chosen below"}
+  };
+
+  private void scopeCard() {
+    LinearLayout card = page.card();
+    scopeGroup(card);
+  }
+
+  private LinearLayout scopeGroup(LinearLayout parent) {
+    LinearLayout list = new LinearLayout(this);
+    list.setOrientation(LinearLayout.VERTICAL);
+    java.util.List<View> cards = new java.util.ArrayList<>();
+    for (int i = 0; i < SCOPES.length; i++) {
+      SelectableCard.Model model = new SelectableCard.Model();
+      model.title = t(SCOPES[i][0], SCOPES[i][1]);
+      model.subtitle = t(SCOPES[i][2], SCOPES[i][3]);
+      model.selected = i == pending.scopeIndex;
+      final int index = i;
+      View card =
+          SelectableCard.single(
+              this,
+              model,
+              () -> {
+                pending.scopeIndex = index;
+                for (int k = 0; k < cards.size(); k++)
+                  SelectableCard.setSelected(cards.get(k), k == index);
+              });
+      cards.add(card);
+      LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
+      if (i > 0) params.topMargin = dp(6);
+      list.addView(card, params);
+    }
+    parent.addView(list);
+    return list;
+  }
+
+  private CharSequence twoLine(String title, String subtitle) {
+    android.text.SpannableStringBuilder text = new android.text.SpannableStringBuilder(title);
+    int start = text.length();
+    text.append('\n').append(subtitle);
+    text.setSpan(
+        new android.text.style.RelativeSizeSpan(0.86f),
+        start,
+        text.length(),
+        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    text.setSpan(
+        new android.text.style.ForegroundColorSpan(getColor(R.color.shell_text_muted)),
+        start,
+        text.length(),
+        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    return text;
+  }
+
+  /** 项目目录与原生 API Key：导出页和工具页共用。 */
+  private void optionsCard() {
+    LinearLayout card = page.card();
+    project =
+        page.text(
+            projects.isEmpty()
+                ? t(
+                    "项目文件需单独选目录",
+                    "Choose project folders explicitly; the app does not scan the whole device.")
+                : com.deepseekharness.app.util.UiText.format("已选择项目目录：%s", projects.size()),
+            13,
+            R.color.shell_text_secondary);
+    project.setLineSpacing(dp(3), 1);
+    project.setPadding(0, dp(6), 0, 0);
+    card.addView(project);
+    page.button(
+        card,
+        t("选择项目目录", "Choose project folder"),
+        false,
+        () -> RecentsPrivacyGuard.launch(projectPicker, null));
+    CheckBox key = new CheckBox(this);
+    key.setText(t("包含原生 API Key（默认不包含）", "Include native API key (excluded by default)"));
+    key.setTextColor(getColor(R.color.shell_text));
+    key.setMinimumHeight(dp(48));
+    key.setChecked(pending.includeKey);
+    LinearLayout.LayoutParams keyParams = new LinearLayout.LayoutParams(-1, -2);
+    keyParams.topMargin = dp(8);
+    card.addView(key, keyParams);
+    TextView warning =
+        page.text(
+            t(
+                "导出文件不加密，拿到文件者可读取 API Key",
+                "The export is not encrypted; anyone with the file can read the API key."),
+            12,
+            R.color.shell_warn);
+    warning.setPadding(0, dp(4), 0, dp(6));
+    warning.setVisibility(pending.includeKey ? View.VISIBLE : View.GONE);
+    card.addView(warning);
+    key.setOnCheckedChangeListener(
+        (button, checked) -> {
+          pending.includeKey = checked;
+          warning.setVisibility(checked ? View.VISIBLE : View.GONE);
+        });
+  }
+
+  // ===================== 恢复向导 =====================
+
+  private static final int STEP_PICK = 0, STEP_OPTIONS = 1, STEP_CHECK = 2, STEP_CONFIRM = 3;
+  private static final int STEP_DONE = 4;
+
+  private void renderStepper() {
+    stepper.removeAllViews();
+    String[] names = {
+      t("选择文件", "Choose file"),
+      t("范围与选项", "Scope and options"),
+      t("预检核验", "Inspection"),
+      t("确认恢复", "Confirm restore")
+    };
+    int current = Math.min(pending.restoreStep, STEP_CONFIRM);
+    boolean finished = pending.restoreStep == STEP_DONE;
+    for (int i = 0; i < names.length; i++) {
+      LinearLayout cell = page.column();
+      View bar = new View(this);
+      bar.setBackgroundResource(R.drawable.bg_data_status_tile);
+      bar.setBackgroundTintList(
+          android.content.res.ColorStateList.valueOf(
+              getColor(i <= current || finished ? R.color.shell_accent : R.color.shell_raised)));
+      cell.addView(bar, new LinearLayout.LayoutParams(-1, dp(4)));
+      TextView label =
+          page.text(
+              names[i],
+              12,
+              i == current && !finished ? R.color.shell_accent : R.color.shell_text_muted);
+      if (i == current && !finished) label.setTypeface(null, android.graphics.Typeface.BOLD);
+      label.setPadding(0, dp(6), 0, 0);
+      label.setMaxLines(2);
+      cell.addView(label);
+      LinearLayout.LayoutParams cellParams = new LinearLayout.LayoutParams(0, -2, 1);
+      if (i > 0) cellParams.leftMargin = dp(6);
+      stepper.addView(cell, cellParams);
+    }
+    stepper.setContentDescription(
+        com.deepseekharness.app.util.UiText.format(
+            "第 %s 步，共 %s 步：%s",
+            String.valueOf(current + 1), String.valueOf(names.length), names[current]));
+  }
+
+  private void renderWizard() {
+    boolean visible = alwaysWizard || pending.restoreStep > STEP_PICK;
+    wizardCard.setVisibility(visible ? View.VISIBLE : View.GONE);
+    stepper.setVisibility(visible ? View.VISIBLE : View.GONE);
+    if (!visible) {
+      renderedStep = -1;
+      return;
+    }
+    renderStepper();
+    int step = Math.max(0, Math.min(pending.restoreStep, STEP_DONE));
+    ensureStepViews();
+    // 回到「选择文件」说明上一次流程已结束：清掉后续步骤缓存，避免带回旧选项与密码。
+    if (step == STEP_PICK) invalidateStepsAfterPick();
+    // 选择/选项步骤只建一次（返回上一步保留已填内容）；进度/结果只更新各自容器，
+    // 不再整块 removeAllViews，滚动与焦点也不再被重置（审计 E-01）。
+    boolean rebuild = step >= STEP_CHECK || !stepBuilt[step];
+    if (!rebuild) {
+      showStep(step);
+      return;
+    }
+    renderedStep = step;
+    LinearLayout target = stepViews[step];
+    target.removeAllViews();
+    stepTarget = target;
+    switch (step) {
+      case STEP_OPTIONS -> optionsStep();
+      case STEP_CHECK -> progressStep(t("正在核验备份", "Inspecting the backup"));
+      case STEP_CONFIRM -> confirmStep();
+      case STEP_DONE -> resultStep();
+      default -> pickStep();
+    }
+    stepTarget = null;
+    stepBuilt[step] = true;
+    showStep(step);
+  }
+
+  /** 5 个步骤容器一次加入 wizard，之后只切可见性。 */
+  private void ensureStepViews() {
+    if (stepViews[0] != null) return;
+    for (int i = 0; i < stepViews.length; i++) {
+      LinearLayout container = page.column();
+      container.setVisibility(View.GONE);
+      wizard.addView(container);
+      stepViews[i] = container;
+    }
+  }
+
+  private void showStep(int step) {
+    for (int i = 0; i < stepViews.length; i++)
+      stepViews[i].setVisibility(i == step ? View.VISIBLE : View.GONE);
+  }
+
+  /** 回到选择文件后，选项/进度/结果下次重新构建；已填内容不跨流程保留。 */
+  private void invalidateStepsAfterPick() {
+    restoreProgress = null;
+    restoreOutcome = null;
+    for (int i = STEP_OPTIONS; i < stepBuilt.length; i++) {
+      if (!stepBuilt[i]) continue;
+      stepBuilt[i] = false;
+      if (stepViews[i] != null) stepViews[i].removeAllViews();
+    }
+  }
+
+  private void pickStep() {
+    TextView hint =
+        page.text(
+            t(
+                "无需密码；验证后才覆盖数据",
+                "No password entry is required. Contents and actual scope are verified privately before you confirm any change."),
+            13,
+            R.color.shell_text_secondary);
+    hint.setLineSpacing(dp(3), 1);
+    hint.setPadding(0, dp(6), 0, 0);
+    stepTarget.addView(hint);
+    page.button(stepTarget, t("选择备份文件", "Choose a backup file"), true, this::pickRestore);
+    page.button(
+        stepTarget,
+        t("查看本机自动备份", "View local automatic backups"),
+        false,
+        () -> startActivity(new android.content.Intent(this, AutomaticBackupActivity.class)));
+  }
+
+  private void optionsStep() {
+    page.kv(stepTarget, t("备份来源", "Backup source"), pending.restoreName);
+    TextView description =
+        page.text(
+            pending.restoreNeedsOriginal
+                ? t(
+                    "旧备份需要原密码；确认前不会覆盖数据",
+                    "This older backup was encrypted and needs its original password to be read. Verification uses private staging and does not overwrite current data before confirmation.")
+                : t(
+                    "无需密码；验证后才覆盖数据",
+                    "No password entry is required. Contents and actual scope are verified privately before you confirm any change."),
+            13,
+            R.color.shell_text_secondary);
+    description.setLineSpacing(dp(3), 1);
+    description.setPadding(0, dp(4), 0, dp(8));
+    stepTarget.addView(description);
+    password = null;
+    if (pending.restoreNeedsOriginal) {
+      password = new EditText(this);
+      password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+      password.setSaveEnabled(false);
+      password.setHint(t("旧备份原密码", "Original password of the old backup"));
+      password.setBackgroundResource(R.drawable.bg_shell_input);
+      password.setTextColor(getColor(R.color.shell_text));
+      password.setMinHeight(dp(48));
+      password.setPadding(dp(14), dp(10), dp(14), dp(10));
+      LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
+      p.bottomMargin = dp(10);
+      stepTarget.addView(password, p);
+    }
+    TextView scopeLabel = page.text(t("恢复范围", "Restore scope"), 12, R.color.shell_text_secondary);
+    scopeLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+    scopeLabel.setPadding(0, dp(6), 0, dp(2));
+    stepTarget.addView(scopeLabel);
+    scopeGroup(stepTarget);
+    includeRestoreKey = new CheckBox(this);
+    includeRestoreKey.setText(
+        t("恢复原生 API Key", "Restore native API key (keep local credentials by default)"));
+    includeRestoreKey.setTextColor(getColor(R.color.shell_text));
+    includeRestoreKey.setMinimumHeight(dp(48));
+    stepTarget.addView(includeRestoreKey);
+    TextView destinationLabel =
+        page.text(
+            t("项目恢复位置（创建新的独立目录）", "Project destination (creates a new separate directory)"),
+            12,
+            R.color.shell_text_secondary);
+    destinationLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+    destinationLabel.setPadding(0, dp(8), 0, dp(2));
+    stepTarget.addView(destinationLabel);
+    projectDestination = new RadioGroup(this);
+    String[] places = {
+      t("应用私有项目区", "App-private projects"), t("容器主目录 /root", "Container home /root")
+    };
+    for (int i = 0; i < places.length; i++) {
+      RadioButton option = new RadioButton(this);
+      option.setId(View.generateViewId());
+      option.setText(places[i]);
+      option.setTextColor(getColor(R.color.shell_text));
+      option.setMinHeight(dp(44));
+      projectDestination.addView(option);
+      if (i == 0) option.setChecked(true);
+    }
+    stepTarget.addView(projectDestination);
+    page.button(stepTarget, t("开始预检", "Inspect"), true, this::startInspection);
+    page.button(
+        stepTarget,
+        t("重新选择", "Choose again"),
+        false,
+        () -> {
+          clearRestore();
+          if (alwaysWizard) renderWizard();
+          else {
+            renderWizard();
+            pickRestore();
+          }
+        });
+  }
+
+  private void startInspection() {
+    if (jobs.state().busy) {
+      status.setText(t("已有任务，完成后再试。", "Another task is in progress."));
+      return;
+    }
+    if (password != null && password.length() == 0) {
+      password.setError(t("请输入旧副本原来的密码", "Enter the original password of the old copy"));
+      return;
+    }
+    String location =
+        projectDestination.indexOfChild(
+                    projectDestination.findViewById(projectDestination.getCheckedRadioButtonId()))
+                == 1
+            ? "GUEST_HOME"
+            : "PRIVATE";
+    Set<String> selected = Set.of(selection().scope);
+    boolean includeKey = includeRestoreKey.isChecked();
+    String copy = pending.restoreCopy;
+    if (pending.restoreAutomatic) {
+      new Thread(
+              () -> {
+                char[] secret = null;
+                try {
+                  secret = AutomaticBackups.password(this);
+                  boolean started =
+                      jobs.prepareRestoreCopy(copy, secret, selected, includeKey, location);
+                  String id = jobs.state().id;
+                  runOnUiThread(
+                      () -> {
+                        if (started) restoreStarted(id);
+                        else status.setText(t("已有任务，完成后再试。", "Another task is in progress."));
+                      });
+                } catch (Exception error) {
+                  runOnUiThread(() -> status.setText(errorText(BackupErrorCode.from(error))));
+                } finally {
+                  if (secret != null) Arrays.fill(secret, '\0');
+                }
+              },
+              "automatic-copy-restore")
+          .start();
+      return;
+    }
+    char[] chars = password == null ? null : password.getText().toString().toCharArray();
+    if (password != null) password.getText().clear();
+    try {
+      Uri uri = pending.restoreUri == null ? null : Uri.parse(pending.restoreUri);
+      boolean started =
+          copy == null
+              ? jobs.prepareRestore(uri, chars, selected, includeKey, location)
+              : jobs.prepareRestoreCopy(copy, chars, selected, includeKey, location);
+      if (started) restoreStarted(jobs.state().id);
+      else status.setText(t("已有任务，完成后再试。", "Another task is in progress."));
+    } finally {
+      if (chars != null) Arrays.fill(chars, '\0');
+    }
+  }
+
+  /** 作业已切到 busy：记下本向导拥有的作业号，之后只按它推进步骤。 */
+  private void restoreStarted(String id) {
+    pending.restoreJob = id;
+    restoreProgress = null;
+    restoreOutcome = null;
+    NativeBackupJobs.State now = jobs.state();
+    // 作业可能在回到主线程前就已结束（例如立即失败）；此时直接显示结果，不停在进度步骤。
+    pending.restoreStep =
+        now.id.equals(id) && !now.busy && !now.stage.equals("PREVIEW")
+            ? STEP_DONE
+            : now.stage.equals("PREVIEW") ? STEP_CONFIRM : STEP_CHECK;
+    renderWizard();
+    reveal();
+  }
+
+  /**
+   * E1：恢复 / 备份向导的进度。总量来自预检（PREVIEW 时的真实条目与字节），之后按后端累计的
+   * 已复制量算百分比；预检之前或导出（无总量）保持不确定态，不拿时间猜进度。取消与完成态由
+   * {@link DeterminateProgress} 统一收口，结束时立即停。
+   */
+  private void progressStep(String heading) {
+    NativeBackupJobs.State value = jobs.state();
+    if (restoreProgress == null) {
+      restoreProgress = new DeterminateProgress(this);
+      restoreProgress.setCancelAction(t("取消当前作业", "Cancel current operation"), () -> jobs.cancel());
+    }
+    DeterminateProgress progress = restoreProgress;
+    if (progress.getParent() instanceof LinearLayout parent) parent.removeView(progress);
+    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
+    params.topMargin = dp(6);
+    stepTarget.addView(progress, params);
+    progress.setLabel(heading);
+    progress.setDetail(
+        com.deepseekharness.app.util.UiText.format(
+            "%s · %s 项", stage(value.stage), String.valueOf(value.entries)));
+    int percent =
+        com.deepseekharness.app.util.ProgressFraction.restorePercent(
+            value.entries, value.bytes, pending.restoreTotalEntries, pending.restoreTotalBytes);
+    if (percent >= 0) progress.setPercent(percent);
+    else progress.setIndeterminate();
+  }
+
+  private void confirmStep() {
+    NativeBackupJobs.State value = jobs.state();
+    if (!value.stage.equals("PREVIEW")) {
+      progressStep(t("正在恢复数据", "Restoring data"));
+      return;
+    }
+    String info = previewText(value.id);
+    TextView title = page.text(t("确认恢复范围", "Confirm restore scope"), 16, R.color.shell_text);
+    title.setTypeface(null, android.graphics.Typeface.BOLD);
+    title.setPadding(0, dp(6), 0, dp(8));
+    stepTarget.addView(title);
+    TextView body =
+        page.text(
+            info == null
+                ? t(
+                    "预检记录不可读取，请重新选择备份。",
+                    "The inspection record is unavailable. Select the backup again.")
+                : info,
+            13,
+            R.color.shell_text_secondary);
+    body.setLineSpacing(dp(4), 1);
+    body.setTextIsSelectable(true);
+    stepTarget.addView(body);
+    Button confirm = page.button(stepTarget, t("确认并恢复", "Confirm and restore"), true, () -> {});
+    Button cancel = page.button(stepTarget, t("取消", "Cancel"), false, () -> {});
+    confirm.setEnabled(info != null);
+    confirm.setOnClickListener(
+        v -> {
+          confirm.setEnabled(false);
+          cancel.setEnabled(false);
+          jobs.decide(value.id, true);
+        });
+    cancel.setOnClickListener(
+        v -> {
+          confirm.setEnabled(false);
+          cancel.setEnabled(false);
+          jobs.decide(value.id, false);
+        });
+  }
+
+  private void resultStep() {
+    NativeBackupJobs.State value = jobs.state();
+    boolean mine = value.id.equals(pending.restoreJob);
+    boolean cancelled = mine && value.stage.equals("CANCELLED");
+    boolean ok = mine && value.error.isEmpty() && !cancelled;
+    if (mine) {
+      // E1 完成态：真实百分比停在结果上，成功 / 失败 / 取消都收起取消按钮并停止动画。
+      if (restoreOutcome == null) {
+        restoreOutcome = new DeterminateProgress(this);
+        int percent =
+            com.deepseekharness.app.util.ProgressFraction.restorePercent(
+                value.entries, value.bytes, pending.restoreTotalEntries, pending.restoreTotalBytes);
+        if (percent >= 0) restoreOutcome.setPercent(percent);
+        if (cancelled) restoreOutcome.cancelled(t("恢复已取消", "Restore cancelled"));
+        else if (ok) restoreOutcome.complete(t("恢复完成", "Restore finished"));
+        else restoreOutcome.fail(t("恢复未完成", "Restore did not finish"));
+      }
+      DeterminateProgress outcome = restoreOutcome;
+      if (outcome.getParent() instanceof LinearLayout parent) parent.removeView(outcome);
+      LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
+      params.topMargin = dp(6);
+      params.bottomMargin = dp(8);
+      stepTarget.addView(outcome, params);
+    } else {
+      TextView title =
+          page.text(
+              ok ? t("恢复完成", "Restore finished") : t("恢复未完成", "Restore did not finish"),
+              16,
+              R.color.shell_text);
+      title.setTypeface(null, android.graphics.Typeface.BOLD);
+      title.setPadding(0, dp(6), 0, dp(8));
+      stepTarget.addView(title);
+    }
+    if (mine) {
+      TextView body =
+          page.text(
+              resultText(value) + (value.error.isEmpty() ? "" : "\n" + errorText(value.error)),
+              13,
+              R.color.shell_text_secondary);
+      body.setLineSpacing(dp(4), 1);
+      body.setTextIsSelectable(true);
+      stepTarget.addView(body);
+      if (value.result.contains("QUARANTINED") || value.result.contains("SETTINGS_REVIEW"))
+        page.button(
+            wizard,
+            t("保留副本与旧树", "Retained copies and old trees"),
+            false,
+            () -> startActivity(new android.content.Intent(this, RetainedDataActivity.class)));
+    }
+    page.button(
+        stepTarget,
+        t("完成", "Done"),
+        true,
+        () -> {
+          clearRestore();
+          renderWizard();
+        });
+  }
+
+  private void clearRestore() {
+    pending.restoreStep = STEP_PICK;
+    pending.restoreJob = "";
+    pending.restoreUri = null;
+    pending.restoreCopy = null;
+    pending.restoreName = "";
+    pending.restoreNeedsOriginal = false;
+    pending.restoreAutomatic = false;
+    renderedStep = -1;
+    invalidateStepsAfterPick();
+    if (password != null) password.getText().clear();
+    password = null;
+  }
+
+  private void reveal() {
+    if (wizardCard.getVisibility() != View.VISIBLE) return;
+    View host = (View) page.content.getParent();
+    if (host instanceof ScrollView)
+      host.post(() -> ((ScrollView) host).smoothScrollTo(0, Math.max(0, stepper.getTop() - dp(8))));
   }
 
   private void automaticCopy() {
@@ -344,6 +986,11 @@ public final class NativeDataActivity extends AppCompatActivity {
                   secret = AutomaticBackups.password(this);
                   if (!jobs.prepareRestoreCopy(id, secret, Set.of("application"), false, "PRIVATE"))
                     throw new java.io.IOException("RESTORE_BUSY");
+                  String job = jobs.state().id;
+                  runOnUiThread(
+                      () -> {
+                        if (!isFinishing() && !isDestroyed()) restoreStarted(job);
+                      });
                 } else
                   runOnUiThread(
                       () -> {
@@ -466,7 +1113,7 @@ public final class NativeDataActivity extends AppCompatActivity {
       int index =
           List.of("application", "sessions", "settings", "plugins", "projects")
               .indexOf(entry.scope);
-      if (index >= 0) scope.setSelection(index);
+      if (index >= 0) pending.scopeIndex = index;
       if ("reexport".equals(action) && entry.part.equals("encrypted"))
         chooseReexport(
             VerifiedBackupCopy.inspect(
@@ -488,7 +1135,9 @@ public final class NativeDataActivity extends AppCompatActivity {
             .setPositiveButton(
                 t("开始预检", "Inspect"),
                 (dialog, which) -> {
-                  if (!jobs.prepareRestoreTree(entry.key(), Set.of(entry.scope), "PRIVATE"))
+                  if (jobs.prepareRestoreTree(entry.key(), Set.of(entry.scope), "PRIVATE"))
+                    restoreStarted(jobs.state().id);
+                  else
                     status.setText(
                         t(
                             "无法开始预检，请检查记录或当前任务。",
@@ -506,8 +1155,8 @@ public final class NativeDataActivity extends AppCompatActivity {
     NativeDataLocations.Selection selected = new NativeDataLocations.Selection();
     selected.scope =
         new String[] {"application", "sessions", "settings", "plugins", "projects"}
-            [scope.getSelectedItemPosition()];
-    selected.includeApiKey = key.isChecked();
+            [Math.max(0, Math.min(4, pending.scopeIndex))];
+    selected.includeApiKey = pending.includeKey;
     selected.documentProjects.addAll(projects);
     return selected;
   }
@@ -600,10 +1249,10 @@ public final class NativeDataActivity extends AppCompatActivity {
     String message =
         rescue
             ? t(
-                "救援不会停止当前写入，结果将标明尽力救援或部分数据。不能据此删除原件。导出为无需密码的 tar.gz。",
+                "救援不停止写入，结果可能不完整；不能据此删除原件",
                 "Rescue does not stop current writers. The result is best-effort or partial and cannot justify deleting originals. The tar.gz export needs no password.")
             : t(
-                "将停止 Web、终端和写入任务后建立快照，导出无需密码的 tar.gz 备份。",
+                "会先停止任务并建立快照",
                 "Web, terminals and write tasks stop before the snapshot. The tar.gz backup needs no password.");
     new DshaDialogBuilder(this, true)
         .setTitle(rescue ? t("救援导出", "Rescue export") : t("数据导出", "Data export"))
@@ -616,7 +1265,7 @@ public final class NativeDataActivity extends AppCompatActivity {
               pending.rescue = rescue;
               pending.filename = com.deepseekharness.app.util.BackupFileNames.portableName();
               pending.exportPrepared = true;
-              destination.launch(pending.filename);
+              RecentsPrivacyGuard.launch(destination, pending.filename);
             })
         .setNegativeButton(t("取消", "Cancel"), null)
         .show();
@@ -637,7 +1286,7 @@ public final class NativeDataActivity extends AppCompatActivity {
       pending.clear();
       pending.reexportId = copy.id;
       pending.filename = com.deepseekharness.app.util.BackupFileNames.portableName();
-      destination.launch(pending.filename);
+      RecentsPrivacyGuard.launch(destination, pending.filename);
       return;
     }
     LinearLayout content = new LinearLayout(this);
@@ -681,7 +1330,7 @@ public final class NativeDataActivity extends AppCompatActivity {
                       pending.filename =
                           com.deepseekharness.app.util.BackupFileNames.portableName();
                       dialog.dismiss();
-                      destination.launch(pending.filename);
+                      RecentsPrivacyGuard.launch(destination, pending.filename);
                     }));
     dialog.setOnDismissListener(ignored -> original.getText().clear());
     dialog.show();
@@ -721,7 +1370,7 @@ public final class NativeDataActivity extends AppCompatActivity {
                 runOnUiThread(
                     () -> {
                       if (!isFinishing() && !isDestroyed())
-                        restoreOptions(uri, copy, needsOriginal, localAutomatic);
+                        enterRestoreOptions(uri, copy, needsOriginal, localAutomatic);
                     });
               } catch (Exception error) {
                 runOnUiThread(
@@ -738,101 +1387,46 @@ public final class NativeDataActivity extends AppCompatActivity {
         .start();
   }
 
-  private void restoreOptions(Uri uri, String copy, boolean needsOriginal, boolean automatic) {
+  private void enterRestoreOptions(Uri uri, String copy, boolean needsOriginal, boolean automatic) {
     if (jobs.state().busy) return;
-    LinearLayout content = new LinearLayout(this);
-    content.setOrientation(LinearLayout.VERTICAL);
-    content.setPadding(dp(20), 0, dp(20), 0);
-    TextView description = new TextView(this);
-    description.setText(
-        needsOriginal
-            ? t(
-                "这是以前用密码加密的备份，需要原密码才能读取。先在私有目录验证，确认前不会覆盖当前数据。",
-                "This older backup was encrypted and needs its original password to be read. Verification uses private staging and does not overwrite current data before confirmation.")
-            : t(
-                "此备份无需输入密码。先在私有目录验证内容和实际范围，确认前不会覆盖当前数据。",
-                "No password entry is required. Contents and actual scope are verified privately before you confirm any change."));
-    content.addView(description);
-    EditText password = needsOriginal ? new EditText(this) : null;
-    if (password != null) {
-      password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-      password.setSaveEnabled(false);
-      password.setHint(t("旧备份原密码", "Original password of the old backup"));
-      content.addView(password);
-    }
-    CheckBox include = new CheckBox(this);
-    include.setText(
-        t("恢复原生 API Key（默认保留本机凭据）", "Restore native API key (keep local credentials by default)"));
-    content.addView(include);
-    TextView destinationLabel = new TextView(this);
-    destinationLabel.setText(
-        t("项目恢复位置（创建新的独立目录）", "Project destination (creates a new separate directory)"));
-    content.addView(destinationLabel);
-    Spinner projectDestination =
-        choice(
-            new String[] {
-              t("应用私有项目区", "App-private projects"), t("容器主目录 /root", "Container home /root")
-            });
-    content.addView(projectDestination);
-    ScrollView scroll = new ScrollView(this);
-    scroll.addView(content);
-    new DshaDialogBuilder(this)
-        .setTitle(t("备份预检", "Inspect backup"))
-        .setView(scroll)
-        .setPositiveButton(
-            t("开始预检", "Inspect"),
-            (d, w) -> {
-              String location =
-                  projectDestination.getSelectedItemPosition() == 0 ? "PRIVATE" : "GUEST_HOME";
-              Set<String> selected = Set.of(selection().scope);
-              boolean includeKey = include.isChecked();
-              if (automatic) {
-                new Thread(
-                        () -> {
-                          char[] secret = null;
-                          try {
-                            secret = AutomaticBackups.password(this);
-                            if (!jobs.prepareRestoreCopy(
-                                copy, secret, selected, includeKey, location))
-                              runOnUiThread(
-                                  () ->
-                                      status.setText(
-                                          t("已有任务，完成后再试。", "Another task is in progress.")));
-                          } catch (Exception error) {
-                            runOnUiThread(
-                                () -> status.setText(errorText(BackupErrorCode.from(error))));
-                          } finally {
-                            if (secret != null) Arrays.fill(secret, '\0');
-                          }
-                        },
-                        "automatic-copy-restore")
-                    .start();
-                return;
-              }
-              char[] chars = password == null ? null : password.getText().toString().toCharArray();
-              if (password != null) password.getText().clear();
-              try {
-                boolean started =
-                    copy == null
-                        ? jobs.prepareRestore(uri, chars, selected, includeKey, location)
-                        : jobs.prepareRestoreCopy(copy, chars, selected, includeKey, location);
-                if (!started) status.setText(t("已有任务，完成后再试。", "Another task is in progress."));
-              } finally {
-                if (chars != null) Arrays.fill(chars, '\0');
-              }
-            })
-        .setNegativeButton(t("取消", "Cancel"), null)
-        .setOnDismissListener(
-            dialog -> {
-              if (password != null) password.getText().clear();
-            })
-        .show();
+    pending.restoreUri = uri == null ? null : uri.toString();
+    pending.restoreCopy = copy;
+    pending.restoreNeedsOriginal = needsOriginal;
+    pending.restoreAutomatic = automatic;
+    pending.restoreName =
+        copy != null
+            ? com.deepseekharness.app.util.UiText.format(
+                "本机副本 %s", copy.substring(0, Math.min(8, copy.length())))
+            : displayName(uri);
+    pending.restoreStep = STEP_OPTIONS;
+    renderedStep = -1;
+    status.setText("");
+    renderWizard();
+    reveal();
   }
 
-  private void restorePreview(NativeBackupJobs.State value) {
-    if (previewDialog != null) return;
+  private String displayName(Uri uri) {
+    if (uri == null) return "";
+    try (android.database.Cursor cursor =
+        getContentResolver()
+            .query(
+                uri,
+                new String[] {android.provider.OpenableColumns.DISPLAY_NAME},
+                null,
+                null,
+                null)) {
+      if (cursor != null && cursor.moveToFirst() && !cursor.isNull(0)) return cursor.getString(0);
+    } catch (Exception ignored) {
+      // 名称只用于显示；读不到时退回 URI 末段。
+    }
+    String last = uri.getLastPathSegment();
+    return last == null ? t("所选文件", "Selected file") : last;
+  }
+
+  /** 预检完成后的说明；读不到记录时返回 null，由调用方提示重新选择。 */
+  private String previewText(String id) {
     try {
-      Map<String, Object> preview = jobs.preview(value.id);
+      Map<String, Object> preview = jobs.preview(id);
       String info =
           t("归档已通过完整预检。\n文件/目录：", "Archive inspection passed.\nFiles/directories: ")
               + preview.get("entries")
@@ -851,6 +1445,12 @@ public final class NativeDataActivity extends AppCompatActivity {
             t(
                 "\n这是未加密的 v5 备份；摘要能校验文件完整性，但不能提供保密或来源认证。",
                 "\nThis is an unencrypted v5 backup; the digest verifies file integrity but provides no confidentiality or sender authentication.");
+      if (preview.get("warnings") instanceof List
+          && ((List<?>) preview.get("warnings")).contains("LINK_METADATA_RETAINED"))
+        info +=
+            t(
+                "\n部分链接无法安全还原，不会创建；确认恢复后，链接信息会保存在应用私有恢复记录中。",
+                "\nSome links cannot be restored safely and will not be created. If you confirm, their metadata will be retained in the app's private restore record.");
       if (preview.get("warnings") instanceof List && !((List<?>) preview.get("warnings")).isEmpty())
         info +=
             t(
@@ -861,94 +1461,143 @@ public final class NativeDataActivity extends AppCompatActivity {
               + ("GUEST_HOME".equals(preview.get("projectDestination"))
                   ? t("容器主目录的新目录", "A new directory in container home")
                   : t("应用私有项目区的新目录", "A new directory in app-private projects"));
-      previewDialog =
-          new DshaDialogBuilder(this)
-              .setTitle(t("确认恢复范围", "Confirm restore scope"))
-              .setMessage(info)
-              .setPositiveButton(
-                  t("确认并恢复", "Confirm and restore"), (d, w) -> jobs.decide(value.id, true))
-              .setNegativeButton(t("取消", "Cancel"), (d, w) -> jobs.decide(value.id, false))
-              .setOnCancelListener(d -> jobs.decide(value.id, false))
-              .create();
-      previewDialog.setOnDismissListener(d -> previewDialog = null);
-      previewDialog.show();
+      return info;
     } catch (Exception error) {
-      status.setText(
-          t("预检记录不可读取，请重新选择备份。", "The inspection record is unavailable. Select the backup again."));
+      return null;
     }
   }
 
   private void render(NativeBackupJobs.State value) {
     if (value == null) return;
-    if (cancelOperation != null)
-      cancelOperation.setVisibility(value.busy ? View.VISIBLE : View.GONE);
+    boolean mine = !value.id.isEmpty() && value.id.equals(pending.restoreJob);
+    // 预检停在 PREVIEW 时由向导承接确认；进程重建后也认领现有预检，与原确认弹窗一致。
     if (value.stage.equals("PREVIEW")) {
-      restorePreview(value);
+      if (!mine) pending.restoreJob = value.id;
+      if (value.id.equals(pending.restoreJob)) {
+        pending.restoreTotalEntries = value.entries;
+        pending.restoreTotalBytes = value.bytes;
+      }
+      pending.restoreStep = STEP_CONFIRM;
+      cancelOperation.setVisibility(View.GONE);
+      clearStatus();
+      renderWizard();
+      reveal();
       return;
     }
-    if (previewDialog != null) {
-      previewDialog.dismiss();
-      previewDialog = null;
+    if (mine && pending.restoreStep >= STEP_CHECK) {
+      pending.restoreStep = value.busy ? pending.restoreStep : STEP_DONE;
+      renderWizard();
+      // 向导已显示进度与结果，状态卡不再重复同一段文字。
+      cancelOperation.setVisibility(View.GONE);
+      clearStatus();
+      return;
     }
-    String result =
-        value.result.equals("COMPLETE")
-            ? t("导出完成，私有产物与目标均已校验。", "Export complete; private artifact and destination verified.")
-            : value.result.equals("WRITTEN_UNVERIFIED")
-                ? t(
-                    "已写入，未完成目标读回校验；私有验证副本保留。",
-                    "Written, but destination readback was not verified. The private verified copy is retained.")
-                : value.result.equals("PARTIAL_RESCUE")
-                    ? t(
-                        "部分救援：缺失或变化的内容已记录，不能视为完整备份。",
-                        "Partial rescue: missing or changed content was recorded; this is not a complete backup.")
-                    : value.result.equals("BEST_EFFORT_RESCUE")
-                        ? t(
-                            "尽力救援完成，未承诺应用级一致性。",
-                            "Best-effort rescue completed without an application-consistency guarantee.")
-                        : value.result.startsWith("DATA_RESTORED_SETTINGS_REVIEW")
-                            ? t(
-                                    "所选数据已保存。Profile 设置尚未应用：请进入「保留副本与旧树」逐个 profile 检查差异、选择字段并读回；插件和代码仍待审阅。",
-                                    "Selected data saved. Profile settings are pending: open Retained copies and old trees to inspect each profile, select fields and verify readback. Plugins and code still require review.")
-                                + (value.result.contains("API_KEY")
-                                    ? t(
-                                        "\n原生 API Key 未恢复，请在 Web UI 中确认模型凭据。",
-                                        "\nThe native API key was not restored; verify model credentials in Web UI.")
-                                    : "")
-                            : value.result.equals("DATA_RESTORED_API_KEY_MISSING")
-                                ? t(
-                                    "数据已恢复，但备份中的 API Key 无法读取；请在 Web UI 中重新配置模型凭据。",
-                                    "Data restored, but the selected API key could not be read. Configure model credentials again in Web UI.")
-                                : value.result.equals("DATA_RESTORED_API_KEY_OMITTED")
-                                    ? t(
-                                        "数据已恢复；本次备份未包含 API Key，请在 Web UI 中配置模型凭据。",
-                                        "Data restored; this backup did not include an API key. Configure model credentials in Web UI.")
-                                    : value.result.equals("DATA_RESTORED_PLUGINS_QUARANTINED")
-                                        ? t(
-                                            "数据已恢复，插件、可执行配置与待确认的自定义数据已隔离保存，尚未启用。",
-                                            "Data restored; plugins, executable configuration and unclassified custom data are quarantined and not enabled.")
-                                        : value.result.startsWith("DATA_RESTORED")
-                                            ? t(
-                                                "数据已恢复；运行兼容性仍需检查。",
-                                                "Data restored; runtime compatibility still needs verification.")
-                                            : value.result.equals("DATA_SAVED_PLUGIN_WARNINGS")
-                                                ? t(
-                                                    "数据已保存，插件依赖有缺失或未确认项。",
-                                                    "Data saved with missing or unverified plugin dependencies.")
-                                                : value.result.equals(
-                                                        "RECOVERED_INTERRUPTED_COMMIT")
-                                                    ? t(
-                                                        "中断的提交已恢复一致状态，原件保留。",
-                                                        "The interrupted commit is consistent again; originals were retained.")
-                                                    : stage(value.stage);
+    cancelOperation.setVisibility(value.busy && !mine ? View.VISIBLE : View.GONE);
     String projection = com.deepseekharness.app.data.PortableSettings.errorCode(this);
-    status.setText(
-        com.deepseekharness.app.util.UiText.format(
-            "%s\n%s 项 · %s%s%s",
-            result,
-            value.entries,
-            com.deepseekharness.app.util.Fmt.bytes(value.bytes),
-            value.error.isEmpty() ? "" : "\n" + errorText(value.error),
-            projection.isEmpty() ? "" : "\n" + errorText(projection)));
+    // 尚无作业时不显示「0 项 · 0 B」空状态卡；有投影错误仍照常提示。
+    if (value.id.isEmpty() && !value.busy && value.error.isEmpty() && projection.isEmpty()) {
+      clearStatus();
+      return;
+    }
+    // 结论 / 计数 / 错误三段各自刷新（审计 E-02）：数字直接落值，文案变化才淡入；
+    // 错误默认只显示 1 行短结论，全文（原因、下一步、错误码）点开 ⓘ 再看（UI 基准 ⑬）。
+    clearStatus();
+    String conclusion = resultText(value);
+    String meta =
+        com.deepseekharness.app.util.NativeResultParts.meta(
+            value.entries, com.deepseekharness.app.util.Fmt.bytes(value.bytes));
+    String problems =
+        com.deepseekharness.app.util.NativeResultParts.problems(
+            value.error.isEmpty() ? "" : errorText(value.error),
+            projection.isEmpty() ? "" : errorText(projection));
+    boolean wasHidden = statusCard.getVisibility() != View.VISIBLE;
+    UiMotion.crossFadeText(resultConclusion, conclusion);
+    UiMotion.crossFadeTimerText(resultMeta, meta);
+    boolean hasProblems = !problems.isEmpty();
+    resultError.setText(hasProblems ? UiText.text("失败") : "");
+    failureDisclosure.key = "result-error";
+    failureDisclosure.detail = problems;
+    DisclosureCard.bind(resultError, failureDisclosure, disclosure, null);
+    if (wasHidden) UiMotion.reveal(statusCard);
+  }
+
+  /** 清空结果卡四个字段；其余提示写入 status 前也先清结果，避免上一轮结果残留。 */
+  private void clearStatus() {
+    status.setText("");
+    resultConclusion.setText("");
+    resultMeta.setText("");
+    failureDisclosure.detail = "";
+    DisclosureCard.bind(resultError, failureDisclosure, disclosure, null);
+  }
+
+  /** 结果卡可见性：任一字段非空即显示；各字段只在自身非空时占位。 */
+  private void refreshStatusCardVisibility() {
+    if (statusCard == null || resultConclusion == null) return;
+    status.setVisibility(shown(status));
+    resultConclusion.setVisibility(shown(resultConclusion));
+    resultMeta.setVisibility(shown(resultMeta));
+    resultError.setVisibility(shown(resultError));
+    boolean visible =
+        status.getText().length() > 0
+            || resultConclusion.getText().length() > 0
+            || resultMeta.getText().length() > 0
+            || resultError.getText().length() > 0;
+    statusCard.setVisibility(visible ? View.VISIBLE : View.GONE);
+  }
+
+  private static int shown(TextView view) {
+    return view.getText().length() == 0 ? View.GONE : View.VISIBLE;
+  }
+
+  private String resultText(NativeBackupJobs.State value) {
+    return value.result.equals("COMPLETE")
+        ? t("导出完成，私有产物与目标均已校验。", "Export complete; private artifact and destination verified.")
+        : value.result.equals("WRITTEN_UNVERIFIED")
+            ? t(
+                "已写入，未完成目标读回校验；私有验证副本保留。",
+                "Written, but destination readback was not verified. The private verified copy is retained.")
+            : value.result.equals("PARTIAL_RESCUE")
+                ? t(
+                    "部分救援：缺失或变化的内容已记录，不能视为完整备份。",
+                    "Partial rescue: missing or changed content was recorded; this is not a complete backup.")
+                : value.result.equals("BEST_EFFORT_RESCUE")
+                    ? t(
+                        "尽力救援完成，未承诺应用级一致性。",
+                        "Best-effort rescue completed without an application-consistency guarantee.")
+                    : value.result.startsWith("DATA_RESTORED_SETTINGS_REVIEW")
+                        ? t(
+                                "所选数据已保存。Profile 设置尚未应用：请进入「保留副本与旧树」逐个 profile 检查差异、选择字段并读回；插件和代码仍待审阅。",
+                                "Selected data saved. Profile settings are pending: open Retained copies and old trees to inspect each profile, select fields and verify readback. Plugins and code still require review.")
+                            + (value.result.contains("API_KEY")
+                                ? t(
+                                    "\n原生 API Key 未恢复，请在 Web UI 中确认模型凭据。",
+                                    "\nThe native API key was not restored; verify model credentials in Web UI.")
+                                : "")
+                        : value.result.equals("DATA_RESTORED_API_KEY_MISSING")
+                            ? t(
+                                "数据已恢复，但备份中的 API Key 无法读取；请在 Web UI 中重新配置模型凭据。",
+                                "Data restored, but the selected API key could not be read. Configure model credentials again in Web UI.")
+                            : value.result.equals("DATA_RESTORED_API_KEY_OMITTED")
+                                ? t(
+                                    "数据已恢复；本次备份未包含 API Key，请在 Web UI 中配置模型凭据。",
+                                    "Data restored; this backup did not include an API key. Configure model credentials in Web UI.")
+                                : value.result.equals("DATA_RESTORED_PLUGINS_QUARANTINED")
+                                    ? t(
+                                        "数据已恢复，插件、可执行配置与待确认的自定义数据已隔离保存，尚未启用。",
+                                        "Data restored; plugins, executable configuration and unclassified custom data are quarantined and not enabled.")
+                                    : value.result.startsWith("DATA_RESTORED")
+                                        ? t(
+                                            "数据已恢复；运行兼容性仍需检查。",
+                                            "Data restored; runtime compatibility still needs verification.")
+                                        : value.result.equals("DATA_SAVED_PLUGIN_WARNINGS")
+                                            ? t(
+                                                "数据已保存，插件依赖有缺失或未确认项。",
+                                                "Data saved with missing or unverified plugin dependencies.")
+                                            : value.result.equals("RECOVERED_INTERRUPTED_COMMIT")
+                                                ? t(
+                                                    "中断的提交已恢复一致状态，原件保留。",
+                                                    "The interrupted commit is consistent again; originals were retained.")
+                                                : stage(value.stage);
   }
 
   private String errorText(String code) {
@@ -1012,8 +1661,13 @@ public final class NativeDataActivity extends AppCompatActivity {
                 "此备份格式尚不支持，当前数据未覆盖。",
                 "This backup format is unsupported. Current data was not overwritten.");
         break;
-      case "SOURCE_CHANGED":
       case "TARGET_CHANGED":
+        message =
+            t(
+                "目标在核验期间发生变化，操作已停止并保留原件。如果正在恢复，请先停止 Web、终端及其他写入任务，再重新选择备份并核对恢复预览。",
+                "The target changed during verification. The operation stopped and originals were retained. If restoring, stop Web, terminals and other writers, then select the backup again and review the new restore preview.");
+        break;
+      case "SOURCE_CHANGED":
       case "INPUT_CHANGED":
         message =
             t(
@@ -1092,52 +1746,5 @@ public final class NativeDataActivity extends AppCompatActivity {
 
   private int dp(int n) {
     return Math.round(n * getResources().getDisplayMetrics().density);
-  }
-
-  private TextView text(String value, int size) {
-    TextView text = new TextView(this);
-    text.setText(value);
-    text.setTextSize(size);
-    text.setTextColor(getColor(R.color.text));
-    text.setPadding(0, dp(10), 0, dp(10));
-    body.addView(text);
-    return text;
-  }
-
-  private Button button(String label, Runnable click) {
-    Button button = new androidx.appcompat.widget.AppCompatButton(this);
-    button.setTextSize(13);
-    button.setBackgroundResource(R.drawable.bg_action_plain);
-    button.setTextColor(getColor(R.color.primary));
-    button.setText(label);
-    button.setAllCaps(false);
-    button.setIncludeFontPadding(false);
-    button.setGravity(android.view.Gravity.CENTER);
-    button.setMinHeight(dp(48));
-    button.setOnClickListener(v -> click.run());
-    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
-    params.topMargin = dp(8);
-    body.addView(button, params);
-    return button;
-  }
-
-  private void section(String title) {
-    body = new LinearLayout(this);
-    body.setOrientation(LinearLayout.VERTICAL);
-    body.setPadding(dp(14), dp(10), dp(14), dp(14));
-    body.setBackgroundResource(R.drawable.bg_card);
-    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
-    params.topMargin = dp(16);
-    page.addView(body, params);
-    text(title, 16).setTypeface(null, android.graphics.Typeface.BOLD);
-  }
-
-  private Spinner choice(String[] items) {
-    Spinner choice = new DshaSelectView(this);
-    choice.setMinimumHeight(dp(48));
-    choice.setBackgroundResource(R.drawable.bg_btn);
-    choice.setPadding(dp(8), 0, dp(8), 0);
-    choice.setAdapter(new ArrayAdapter<>(this, R.layout.item_data_choice, items));
-    return choice;
   }
 }

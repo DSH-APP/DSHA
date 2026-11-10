@@ -7,6 +7,9 @@ public final class ResolverConfig {
   private static final String OWNED = "# DSHA managed IPv4 DNS compatibility\noptions no-aaaa\n";
   private static final String DNS_BEGIN = "# DSHA managed device DNS\n";
   private static final String DNS_END = "# DSHA end device DNS\n";
+  // Exact bytes of the resolv.conf shipped in the legacy rootfs. Any user edit,
+  // including a comment, opts out of this migration.
+  private static final String LEGACY_DEFAULT = "nameserver 8.8.8.8\nnameserver 223.5.5.5\n";
   private static final java.util.regex.Pattern MANAGED_DNS =
       java.util.regex.Pattern.compile(
           "(?m)^# DSHA managed device DNS\\r?\\n(?:nameserver [0-9A-Fa-f:.]+\\r?\\n)*# DSHA end device DNS\\r?\\n");
@@ -36,6 +39,12 @@ public final class ResolverConfig {
     java.util.LinkedHashSet<String> unique = new java.util.LinkedHashSet<>();
     if (deviceServers != null)
       for (String server : deviceServers) if (validServer(server)) unique.add(server);
+    // A pristine bundled file is not a user override. Never remove it while
+    // device DNS is unavailable; keep modified and custom configurations intact.
+    if (!unique.isEmpty() && unmanaged.equals(LEGACY_DEFAULT)) {
+      unmanaged = "";
+      nameserver = false;
+    }
     if (nameserver) {
       text = unmanaged;
     } else if (!unique.isEmpty()) {
@@ -47,6 +56,53 @@ public final class ResolverConfig {
     }
     if ("ipv4".equals(mode(mode)) && !noAaaa) text = terminated(text) + OWNED;
     return text;
+  }
+
+  /**
+   * 诊断：容器 resolv.conf 的实际来源与是否跟上当前设备 DNS。
+   *
+   * <p>source=managed（DSHA 托管段）/ user（用户 nameserver）/ legacy（随包旧默认）/ none；
+   * state=current / stale（托管段与当前设备 DNS 不一致）/ user / empty。只读，不改文件。
+   */
+  public static String describe(String text, java.util.List<String> deviceServers) {
+    String value = text == null ? "" : text;
+    java.util.regex.Matcher managed = MANAGED_DNS.matcher(value);
+    java.util.List<String> managedServers = new java.util.ArrayList<>();
+    if (managed.find())
+      for (String line : managed.group().split("\\R"))
+        if (line.startsWith("nameserver ")) managedServers.add(line.substring(11).trim());
+    String unmanaged = managed.replaceAll("").replace(OWNED, "");
+    java.util.List<String> userServers = new java.util.ArrayList<>();
+    for (String line : unmanaged.split("\\R")) {
+      String clean = line.split("[#;]", 2)[0].trim();
+      if (clean.matches("nameserver\\s+\\S+.*")) userServers.add(clean.split("\\s+")[1]);
+    }
+    java.util.List<String> device = new java.util.ArrayList<>();
+    if (deviceServers != null)
+      for (String server : deviceServers) if (validServer(server)) device.add(server);
+    String source, state;
+    java.util.List<String> effective;
+    if (!userServers.isEmpty()) {
+      boolean legacy = unmanaged.equals(LEGACY_DEFAULT);
+      source = legacy ? "legacy" : "user";
+      state = legacy && !device.isEmpty() ? "stale" : "user";
+      effective = userServers;
+    } else if (!managedServers.isEmpty()) {
+      source = "managed";
+      state = device.isEmpty() || device.equals(managedServers) ? "current" : "stale";
+      effective = managedServers;
+    } else {
+      source = "none";
+      state = "empty";
+      effective = java.util.List.of();
+    }
+    return "resolv_source="
+        + source
+        + "\nresolv_dns="
+        + (effective.isEmpty() ? "-" : String.join(",", effective))
+        + "\nresolv_state="
+        + state
+        + "\n";
   }
 
   private static String terminated(String value) {

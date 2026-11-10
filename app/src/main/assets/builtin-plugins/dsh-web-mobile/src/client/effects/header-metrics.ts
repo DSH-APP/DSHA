@@ -1,7 +1,7 @@
 // Reconciler task: phone conversation header height → CSS variable.
 //
 // 2026-10-12 P1 拆分第二片：由 effects/phone-chrome.ts 逐字搬出（纯搬运，不改行为）。
-// 拆出的形状沿用本仓既有的 task 工厂模式（preview-fullscreen / overlay-backdrop-fab /
+// 拆出的形状沿用本仓既有的 task 工厂模式（preview-fullscreen / drawer-layer /
 // panel-exit 同型）：模块导出 create<X>Task()，组装处只 addReconcilerTask(工厂())。
 import { getFrame } from '../platform/frame.ts'
 import type { ReconcilerTask } from '../core/reconciler-core.ts'

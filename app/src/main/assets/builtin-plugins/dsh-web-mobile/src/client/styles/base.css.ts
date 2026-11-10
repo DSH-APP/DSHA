@@ -18,13 +18,31 @@ export const BASE_CSS = `
   background: transparent;
   color: var(--dsw-alias-label-secondary, inherit);
   cursor: pointer;
+  /* 44px 触控热区（2026-10-25 owner 指定）：盒子保持 28×28（观感与顶栏行高不变），
+     命中区由下面的透明 ::after 外扩 8px 拿到 44×44。锚点必须是按钮自己，所以这里
+     补 position:relative。 */
+  position: relative;
   -webkit-tap-highlight-color: transparent;
 }
-[data-mobile-nav="toggle"]:hover,
-[data-mobile-nav="files"]:hover,
+/* 悬停反馈只给真有指针的设备：手机上没有 hover，Chromium 会把点击后的 :hover
+   粘住，图标一直是一块灰底 —— 这就是「粘滞 hover」。按下反馈由 :active 单独承担，
+   触屏观感不变。 */
+@media (hover: hover) {
+  [data-mobile-nav="toggle"]:hover,
+  [data-mobile-nav="files"]:hover {
+    background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));
+  }
+}
 [data-mobile-nav="toggle"]:active,
 [data-mobile-nav="files"]:active {
   background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));
+}
+/* 顶栏两端各一颗，中间隔着标题，不与任何控件相邻，可以对称外扩。 */
+[data-mobile-nav="toggle"]::after,
+[data-mobile-nav="files"]::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
 }
 [data-mobile-nav="toggle"]:focus-visible,
 [data-mobile-nav="files"]:focus-visible {
@@ -57,16 +75,142 @@ export const BASE_CSS = `
   background: transparent;
   color: var(--dsw-alias-label-secondary, inherit);
   cursor: pointer;
+  /* ::after 的锚点；28 + 8*2 纵向、+6*2 横向 = 44 高 / 40 宽命中盒（品牌按钮在左）。 */
+  position: relative;
   -webkit-tap-highlight-color: transparent;
 }
-[data-mobile-nav="session-log"]:hover:not(:disabled),
+/* 44px 热区：品牌行右端，左侧是宿主品牌按钮（flex:1，占满整行），所以横向只外扩
+   6px（40 宽），纵向外扩 8px（44 高）；再宽就会从品牌按钮的右端抢走可点区域。 */
+[data-mobile-nav="session-log"]::after {
+  content: '';
+  position: absolute;
+  inset: -8px -6px;
+}
+@media (hover: hover) {
+  [data-mobile-nav="session-log"]:hover:not(:disabled) {
+    background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));
+  }
+}
 [data-mobile-nav="session-log"]:active:not(:disabled) {
   background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));
 }
-[data-mobile-nav="session-log"]:disabled {
-  color: var(--dsw-alias-label-dimmed, rgba(0, 0, 0, .35));
-  cursor: default;
+/* 菜单开着时触发器保持按下底（owner 2026-10-25：「点它弹面板时没有灰，反而是关闭
+   那一下闪一层灰，顺序像反了」）。根因是 portal 菜单一挂载就把指针从按钮上接走，
+   :active 立刻结束 ⇒ 开面板那一下的按下底几乎看不见；关闭那次点击时菜单已经不在了，
+   :active 反而完整走完。用 aria-expanded 把「开着」表达成持久的按下态：开面板即
+   有反馈、关掉即撤掉，与宿主菜单触发器的既有形态一致（选中态而不是悬停态）。 */
+[data-mobile-nav="session-log"][aria-expanded="true"]:not(:disabled) {
+  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));
+}
+
+/* Drawer quick-settings icon (2026-10-20): the host merged the settings entry
+   into the account launcher (the settings.launcher slot), so opening settings on
+   a phone costs two taps — the footer account row, then the menu's first item.
+   effects/drawer-quick-settings.ts injects this gear at the right end of that
+   same row and replays that path in one tap. The wrapper mirrors the brand-row
+   icon so no row heuristic adopts the node as the host's own control. */
+[data-mobile-nav="quick-settings-wrap"] {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  /* 2026-10-21 用户「UI应该再向左调整一下」：行宽是 calc(100% + 4px)、左右各外扩 2px，
+     账户 launcher 内边距 6px —— 让齿轮右缘对齐那颗按钮的内容右缘（column − 4px）。 */
+  margin-right: 6px;
+}
+[data-mobile-nav="quick-settings"] {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 2026-10-21 用户「UI太小了!」：28 → 36（图标 16 → 20），仍在 44px 行内居中。
+     2026-10-22 用户「还是太大了」：36 → 30（图标 20 → 17，同比例）。 */
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--dsw-radius-md, 8px);
   background: transparent;
+  color: var(--dsw-alias-label-secondary, inherit);
+  cursor: pointer;
+  /* 30 + 7*2 = 44 命中盒；账户 launcher 在左，只吃 7px。 */
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+/* 44px 热区：30×30 的盒子外扩 7px；左侧是账户 launcher（整行大按钮），只吃 7px。 */
+[data-mobile-nav="quick-settings"]::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}
+@media (hover: hover) {
+  [data-mobile-nav="quick-settings"]:hover {
+    background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, .06));
+  }
+}
+/* 2026-11-05 真机：齿轮点下去没有任何反馈。它是一颗 30px 的透明图标按钮，
+   通用按压位（:active 的 inset 高亮 + scale .96）在它身上太淡；这里给足：
+   用 active 级底色 + 缩到 .94，并把整颗抬到行内最上层，免得被账户 launcher
+   的层盖住。 */
+[data-mobile-nav="quick-settings-wrap"] {
+  position: relative;
+  z-index: 1;
+}
+/* 按下态用显式属性（effects/drawer-quick-settings.ts 在 pointerdown 挂、松开后
+   再留 140ms）。:active 保留作键盘 / 桌面兜底：真机上这颗 30px 透明按钮的
+   :active 一点都画不出来（2026-11-05）。 */
+/* 账户行的按下态：同样用显式属性（effects/drawer-quick-settings.ts 在 pointerdown
+   挂、松开后再留 140ms）。宿主那颗 launcher 的 :active 在「菜单同拍挂载」时会被
+   浏览器收掉，淡入一帧都没画出来（2026-11-05 真机：点开没反馈、关掉才有灰）。
+   形状镜像通用按压位：inset 高亮填满整颗按钮。 */
+[class*="sidebarCol"] [class*="triggerRow"][data-mobile-nav-row-pressed] > button,
+[class*="sidebarCol"] [class*="triggerRow"][data-mobile-nav-row-pressed] > * > button:not([data-mobile-nav="quick-settings"]) {
+  box-shadow: inset 0 0 0 100vmax var(--dsw-alias-interactive-bg-active, color-mix(in srgb, currentColor 8%, transparent));
+}
+
+[data-mobile-nav="quick-settings"]:active,
+[data-mobile-nav="quick-settings"][data-mobile-nav-quick-pressed] {
+  background: var(--dsw-alias-interactive-bg-active, rgba(0, 0, 0, .1));
+  transform: scale(.94);
+}
+[data-mobile-nav="quick-settings"]:focus-visible {
+  outline: 2px solid var(--dsw-alias-state-business-primary, #4f6ef7);
+  outline-offset: 1px;
+}
+
+/* @patch
+   id: drawer-quick-settings-chip-guard
+   for: dsh-client-ui-primitives 的 ConnectionIndicator（connecting/disconnected 渲染 button[data-phase]，recovered 渲染 div[role="status"]）与账户 launcher 同处 settingsArea 的 triggerRow
+   why: 该行只有 260px；连接条 flex:none（中文约 136px、英文约 190px），齿轮常驻会在英文下把账户按钮挤到约 26px、头像被裁
+   until: 宿主给该行提供独立的次要动作位，或连接条不再占用行宽——届时删本块
+   test: tests/drawer-quick-settings.test.ts
+*/
+[data-mobile-nav="frame"] [class*="sidebarCol"] [class*="triggerRow"]:has(> button[data-phase], > [role="status"]) [data-mobile-nav="quick-settings-wrap"] {
+  display: none !important;
+}
+
+/* @patch
+   id: drawer-quick-settings-menu-entry
+   for: dsh-client-ui-settings-account 的 AccountMenu items 数组（settings / contact / signout|signin）与 dsh-client-ui-primitives 的 Menu 列表结构（role=menu > div[role=presentation] > div > button[role=menuitem]）
+   why: 2026-10-21 用户要求「把原来的打开方式进行删除，只保留这个」——齿轮已是设置入口，账户菜单里同一项成了重复路径；宿主源码不可改，只能由 effects/drawer-quick-settings.ts 在菜单节点上打标记、这里收起第一项
+   until: 宿主给 settings.launcher 提供独立动作位，或账户菜单自己把设置项拆出去——届时删本块
+   test: tests/drawer-quick-settings.test.ts
+*/
+/* 2026-11-05 真机：自己点账户行打开菜单时，卡片先按「3 项」画出来，等 reconciler
+   下一拍打上标记再收起第一项 —— 高度变化让整张卡蹦一下。改成在**点下那一刻**就把
+   html 标记挂上（drawer-quick-settings.ts 的 pointerdown 捕获），菜单从出生就没有
+   那一项：没有任何一帧画过它，也就没有跳动。标记在菜单被打上正式标记后摘掉，
+   另有超时兜底。 */
+html[data-mobile-nav-quick-pending] [role="menu"] > [role="presentation"] > :first-child > [role="menuitem"],
+[data-mobile-nav-quick-menu] > [role="presentation"] > :first-child > [role="menuitem"] {
+  display: none !important;
+}
+
+/* Same click chain, flash guard: the gear opens the host account menu and picks
+   its first item in the following frame. While the marker sits on <html> that
+   intermediate menu stays unpainted (a JS click does not need visibility); the
+   task removes the marker once the chain settles. */
+[data-mobile-nav-quick] [role="menu"] {
+  visibility: hidden !important;
 }
 
 [data-mobile-nav="delete-confirm-title"] {
@@ -151,9 +295,8 @@ export const BASE_CSS = `
   box-shadow: rgba(0, 0, 0, .04) 0 0 0 .5px, rgba(0, 0, 0, .04) 0 3px 8px 0, rgba(0, 0, 0, .05) 0 0 20px 0;
 }
 @media (prefers-reduced-motion: reduce) {
+  /* （2026-11-06 审计 C7）delete-dialog 自身没有动画，animation:none 是空操作，已移除。 */
   [data-mobile-nav="delete-dialog-backdrop"],
-  [data-mobile-nav="delete-dialog"],
-  [data-mobile-nav="file-picker-backdrop"],
   [data-mobile-nav="file-picker"] {
     animation: none !important;
   }
@@ -261,26 +404,28 @@ export const BASE_CSS = `
      Measured 2026-09-19: with the drawer open (column z 1300) the workspace
      Rename dialog sat entirely under it and needed the drawer closed first.
      Raise the portal root, not the dialog.
-     GATE (2026-09-25, real device): the gate is OUR BACKDROP'S PRESENCE, not
-     the drawer-open marker. Marker and paint disagree for the whole close
-     transition — the backdrop fades over .2s and is removed 260ms after the
-     marker flips (overlay-backdrop-fab.ts), the column transitions .28s
-     (layout.css.ts) and React swaps the pane subtree ~200ms late — so a
-     marker-gated raise went dark inside that window and the drawer band
-     covered any open modal. Measured on the reporter's phone (Android 16
-     WebView) with the shortcut modal open: forcing data-sidebar-collapsed
-     dropped this root 1400 -> 1000 and made elementsFromPoint(0.85w, .30h)
-     return [data-mobile-nav="backdrop"] — rgba(0,0,0,.45) over the modal's
-     white = luminance 141, matching the reporter's recording (140 behind a
-     280px drawer edge). That is the "快捷键弹层抽搐/闪" report: a ~200-280ms
-     dark frame with the drawer over the shortcut modal, not a compositing
-     tear. The backdrop's presence IS the drawing condition, so gating on it
-     has no such window; with no backdrop the host's own ordering stands (a
-     menu opened inside a modal still sorts above it). Our own delete backdrop
-     matches this rule too since the 2026-09-24 centered rework (its direct
-     child card carries role=dialog) — harmlessly: it sets the same 1400 the
-     dedicated rule below sets. */
-  body:has([data-mobile-nav="backdrop"])
+     GATE (2026-09-25, real device; re-anchored 2026-11-08): the gate follows
+     the dim, NOT the drawer-open marker. Marker and paint disagree for the
+     whole close transition — the dim fades over .28s with the column, the
+     column transitions .28s (layout.css.ts) and React swaps the pane subtree
+     ~200ms late — so a marker-gated raise went dark inside that window and
+     the drawer band covered any open modal. Measured on the reporter's phone
+     (Android 16 WebView) with the shortcut modal open: forcing
+     data-sidebar-collapsed dropped this root 1400 -> 1000 and made
+     elementsFromPoint(0.85w, .30h) return the dim — rgba(0,0,0,.45) over the
+     modal's white = luminance 141, matching the recording (140 behind a 280px
+     drawer edge). That is the "快捷键弹层抽搐/闪" report: a ~200-280ms dark
+     frame with the drawer over the shortcut modal, not a compositing tear.
+     The dim is painted by the frame's ::after now, so the trigger is
+     [data-active] on our hit target: set exactly while the dim paints and
+     released BAND_RELEASE_MS (one fade + the old 60ms slack, see
+     drawer-layer.ts) after the marker flips — that slack keeps the
+     raise past the ~200-280ms subtree swap above. With no active backdrop the
+     host's own ordering stands (a menu opened inside a modal still sorts above
+     it). Our own delete backdrop matches this rule too since the 2026-09-24
+     centered rework (its direct child card carries role=dialog) — harmlessly:
+     it sets the same 1400 the dedicated rule below sets. */
+  body:has([data-mobile-nav="hit"][data-active])
     > div:has(> [role="dialog"][aria-modal="true"]) {
     z-index: 1400 !important;
   }
@@ -334,7 +479,7 @@ export const BASE_CSS = `
      390px with the terminal panel open: elementFromPoint at the FAB's centre
      returned a panel child, and a real tap on it left the drawer closed — the
      phone lost its only way back to navigation (the FAB is the screen's only
-     control once a panel owns the main area, see overlay-backdrop-fab.ts).
+     control once a panel owns the main area, see drawer-layer.ts).
      Raise OUR two surfaces for that state, the same "raise the root, not the
      children" shape as above; the FAB stays in the below-the-drawer band (55)
      so an open drawer keeps covering it. Gate on the open attribute: the
@@ -373,11 +518,16 @@ export const BASE_CSS = `
       transition: box-shadow .12s var(--ds-ease-in-out, ease-in-out), transform .12s var(--ds-ease-in-out, ease-in-out);
     }
     :where(button, [role="button"], [role="menuitem"], [role="menuitemradio"], [role="option"], [role="tab"], [role="treeitem"], a[href]):where(:active):where(:not(:disabled, [aria-disabled="true"], [aria-selected="true"], [aria-pressed="true"], [aria-checked="true"])) {
+      /* 按下当帧就到位（2026-11-05 真机：点账户行开菜单时「开启没有反馈、再点关掉
+         才有灰色」——0.12s 的淡入还没画出来，菜单就把指针状态打断了；下面那条基态
+         transition 只负责松开后的淡出）。 */
+      transition: none;
       box-shadow: inset 0 0 0 100vmax var(--dsw-alias-interactive-bg-active, color-mix(in srgb, currentColor 8%, transparent));
     }
     /* Icon-only buttons (a lone svg child, or a button that carries only an
        aria-label) also shrink a touch. */
     :where(button:has(> svg:only-child), button[aria-label]:not(:has(> span, > div))):where(:active):where(:not(:disabled, [aria-disabled="true"])) {
+      transition: none;
       transform: scale(.96);
     }
     /* 例外（2026-10-20，店主）：头部那两颗芯片不要按压反馈。
@@ -428,42 +578,66 @@ export const BASE_CSS = `
   box-shadow: 0 2px 12px rgba(0, 0, 0, .18);
   -webkit-tap-highlight-color: transparent;
 }
-[data-mobile-nav="fab"]:hover {
-  background: var(--dsw-alias-button-floating-hover, rgba(0, 0, 0, .08));
+/* 44px 热区：38×38 的悬浮球外扩 3px。 */
+[data-mobile-nav="fab"]::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+}
+@media (hover: hover) {
+  [data-mobile-nav="fab"]:hover {
+    background: var(--dsw-alias-button-floating-hover, rgba(0, 0, 0, .08));
+  }
 }
 [data-mobile-nav="fab"]:focus-visible {
   outline: 2px solid var(--dsw-alias-state-business-primary, #4f6ef7);
   outline-offset: 2px;
 }
 
-/* Dimmed backdrop under the open drawer; above every column, below the drawer.
+/* Drawer dim, painted by the frame's own pseudo-element.
    z 1250: 0.1.5 pins its native sidebarCol at z-index:1100 and paints mid
-   layers up to that band; the backdrop must sit above the host stack
-   (below the drawer's 1300) so the dim covers the content area on every
-   host generation. Keep in sync with the drawer z in layout.css.ts. */
-[data-mobile-nav="backdrop"] {
+   layers up to that band; the dim must sit above the host stack (below the
+   drawer's 1300) so it covers the content area on every host generation.
+   Keep in sync with the drawer z in layout.css.ts.
+   Device-only report (2026-11-08): tapping the blank area to close flashed the
+   right side bright, from the second open/close cycle on. Bisect: no overlay
+   task → no flash; any full-screen element that paints (or even just
+   hit-tests with an interactive role) → flash. A ::after on the frame lives in
+   the frame's existing paint tree, so there is no extra composited full-screen
+   layer to be re-rastered when the drawer animates. The dim only animates
+   opacity with fixed geometry, which the device compositor cannot flash. */
+html [data-mobile-nav="frame"]::after {
+  content: "";
   position: absolute;
   inset: 0;
   z-index: 1250;
   background: rgba(0, 0, 0, .45);
+  opacity: 0;
+  transition: opacity .28s var(--ds-ease-in-out, ease-in-out);
+  pointer-events: none;
+}
+html [data-mobile-nav="frame"][data-mobile-nav-dim="1"]::after {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  html [data-mobile-nav="frame"]::after {
+    transition: none;
+  }
+}
+/* Hit target only: paints nothing, no interactive role/aria, no animation.
+   The dim comes from the frame's ::after. */
+[data-mobile-nav="hit"] {
+  position: absolute;
+  inset: 0;
+  z-index: 1250;
+  background: transparent;
   cursor: pointer;
-  animation: dsh-web-mobile-fade .2s var(--ds-ease-in-out, ease-in-out);
-  /* Fade-out twin of the mount animation: the task eases the dimming away
-     (inline opacity 0 + pointer-events none) and removes the element after
-     the fade. Also used by the gesture layer so the backdrop fades in step
-     with a close-follow commit's slide-out. */
-  transition: opacity .2s var(--ds-ease-in-out, ease-in-out);
+  transition: none;
   -webkit-tap-highlight-color: transparent;
 }
 @keyframes dsh-web-mobile-fade {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  [data-mobile-nav="backdrop"] {
-    animation: none !important;
-    transition: none !important;
-  }
 }
 /* Settings sheet entrance: the official dialog mounts with no animation at
    all, so it snaps in. A slight rise/scale reads as a proper sheet.

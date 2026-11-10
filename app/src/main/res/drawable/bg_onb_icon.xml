@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 功能 / 授权图标底：强调色软底圆角方块。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="@color/shell_accent_soft" /><corners android:radius="12dp" /></shape>

@@ -15,8 +15,8 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "tools/host-tests.manifest.json"
 STAGES = ("fast", "runtime", "package", "windows", "linux")
-REQUIRES = {"node24", "python39", "powershell", "raw", "managed", "browser", "browser_react", "jdk17", "pnpm", "current_archive", "tar", "guide_fixture", "native_host", "generated_recovery", "mobile_upstream", "git_bash", "toolchains", "debug_classes", "linux_node", "linux_publish_packages", "semver_reference"}
-TOKENS = {"apks", "fixture", "posixFixture", "modules", "managedModules", "managedStorageModule", "raw", "managed", "rawSemver", "rawConversationModule", "reactReference", "pnpmCli", "runtimeArchive", "recoveryAssets", "mobileUpstream", "guideFixture", "toolchainRoot", "sdk", "gradleCache", "gradleHome", "jdk", "flavor", "linuxPublisher", "linuxHost", "linuxNativeInputs", "wslDistro", "linuxTempdir"}
+REQUIRES = {"node24", "python39", "powershell", "raw", "managed", "browser", "browser_react", "jdk17", "pnpm", "current_archive", "tar", "guide_fixture", "native_host", "generated_recovery", "mobile_upstream", "git_bash", "toolchains", "debug_classes", "linux_node", "linux_publish_packages", "semver_reference", "previous_runtime_apk"}
+TOKENS = {"apks", "fixture", "posixFixture", "modules", "managedModules", "managedStorageModule", "raw", "managed", "rawSemver", "rawConversationModule", "reactReference", "pnpmCli", "runtimeArchive", "recoveryAssets", "mobileUpstream", "guideFixture", "toolchainRoot", "sdk", "gradleCache", "gradleHome", "jdk", "flavor", "linuxPublisher", "linuxHost", "linuxNativeInputs", "wslDistro", "linuxTempdir", "previousRuntimeApk"}
 
 
 def load_manifest():
@@ -25,6 +25,8 @@ def load_manifest():
         raise ValueError("TEST_MANIFEST_SCHEMA")
     paths = [row["path"] for row in data["tests"]]
     present = {p.relative_to(ROOT).as_posix() for p in (ROOT / "tools").glob("test-*") if p.suffix in (".py", ".mjs", ".cjs", ".ps1")}
+    present.update(p.relative_to(ROOT).as_posix() for p in (ROOT / "tools/file-transfer").glob("test-*") if p.suffix in (".py", ".mjs", ".cjs", ".ps1"))
+    present.update(p.relative_to(ROOT).as_posix() for p in (ROOT / "tools/phone-control").rglob("test-*") if p.suffix in (".py", ".mjs", ".cjs", ".ps1"))
     present.add("tools/overlay-bridge-test.mjs")
     if len(set(paths)) != len(paths) or set(paths) != present:
         raise ValueError("TEST_MANIFEST_COVERAGE: " + str(sorted(set(paths) ^ present)))
@@ -151,6 +153,17 @@ class Inputs:
             spec=importlib.util.spec_from_file_location("semver_reference",ROOT/"tools/prepare-semver-reference.py")
             module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
             values["rawSemver"]=str(module.prepare(check=True))
+        if "previous_runtime_apk" in req:
+            if not self.args.previous_runtime_apk:
+                raise ValueError("HOST_PREVIOUS_RUNTIME_APK_REQUIRED: pass --previous-runtime-apk")
+            previous = required_file(self.args.previous_runtime_apk, "HOST_PREVIOUS_RUNTIME_APK_MISSING")
+            digest = hashlib.sha256()
+            with previous.open("rb") as stream:
+                for block in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(block)
+            if digest.hexdigest() != "f1b332bc087e999bf9bd8954a70c9c7ad869d0a04193933d446854f0e31fbf3c":
+                raise ValueError("HOST_PREVIOUS_PUBLISHED192_APK_IDENTITY")
+            values["previousRuntimeApk"] = str(previous)
         if "pnpm" in req:
             entry = Path(self.args.pnpm_cli).resolve() if self.args.pnpm_cli else None
             if entry is None:
@@ -306,9 +319,10 @@ def main():
     parser.add_argument("--check-manifest",action="store_true");parser.add_argument("--list",action="store_true");parser.add_argument("--only",action="append",default=[])
     parser.add_argument("--node",default=shutil.which("node") or "node");parser.add_argument("--powershell",default=shutil.which("pwsh") or "pwsh")
     parser.add_argument("--raw");parser.add_argument("--managed");parser.add_argument("--pnpm-cli");parser.add_argument("--toolchain-root",default=os.environ.get("DSHA_TOOLCHAINS"));parser.add_argument("--jdk")
-    parser.add_argument("--playwright");parser.add_argument("--browsers-path");parser.add_argument("--browser");parser.add_argument("--mobile-upstream",default=str(ROOT/"app/build/mobile-upstream-a094/lib"))
-    parser.add_argument("--linux-host");parser.add_argument("--wsl-distro",default="docker-desktop");parser.add_argument("--linux-tempdir",help="Explicit writable Linux fixture directory; no WSL repair or remount");parser.add_argument("--flavor",choices=("standard","low"),default="standard")
+    parser.add_argument("--playwright");parser.add_argument("--browsers-path");parser.add_argument("--browser");parser.add_argument("--mobile-upstream",default=str(ROOT/"tools/mobile-plugin-upstream/lib"))
+    parser.add_argument("--linux-host");parser.add_argument("--wsl-distro",default="docker-desktop");parser.add_argument("--linux-tempdir",help="Explicit writable Linux fixture directory; no WSL repair or remount");parser.add_argument("--flavor",choices=("standard",),default="standard")
     parser.add_argument("--linux-native-inputs",default=str(ROOT/"app/build/audit-build156/linux-native"),help="Prepared NDK/Ubuntu sysroot receipt for the explicit WSL native handshake fixture")
+    parser.add_argument("--previous-runtime-apk",help="Exact published build192 Standard APK; required only by historical-upgrade fixtures")
     parser.add_argument("--apks",nargs=2);parser.add_argument("--output",type=Path,default=ROOT/"app/build/host-tests")
     args=parser.parse_args()
     if sys.flags.optimize:parser.error("禁止 -O/PYTHONOPTIMIZE，测试断言必须执行")

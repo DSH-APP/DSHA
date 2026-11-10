@@ -76,8 +76,58 @@ def sms_provider_descendant(path, rules):
                for root in sms_roots(rules))
 
 
+def grep_read_paths(argv):
+    """与原生 GrepReadPaths 保持同一合同；文件参数不能藏在组合短选项里。"""
+    if (not isinstance(argv, list) or not argv or argv[0] != 'grep'
+            or any(not isinstance(arg, str) or '\0' in arg for arg in argv)):
+        raise Blocked('GREP_READ_ARGUMENTS_UNVERIFIED')
+    flags = 'ZzEFHIabhinorRsvwcLlqx'
+    long_flags = {'line-buffered', 'byte-offset', 'no-filename', 'only-matching', 'count',
+                  'files-without-match', 'files-with-matches', 'quiet', 'silent', 'help', 'version'}
+    paths, positional, options, explicit_pattern, recursive, i = [], [], True, False, False, 1
+    while i < len(argv):
+        arg = argv[i]
+        if options and arg == '--':
+            options = False
+        elif options and arg.startswith('--'):
+            name, equals, value = arg[2:].partition('=')
+            if name == 'color' or name in long_flags and not equals:
+                i += 1
+                continue
+            if name not in {'include', 'exclude', 'exclude-dir'}:
+                raise Blocked('GREP_READ_ARGUMENTS_UNVERIFIED')
+            if not equals:
+                i += 1
+                if i >= len(argv): raise Blocked('GREP_READ_ARGUMENTS_UNVERIFIED')
+        elif options and arg.startswith('-') and arg != '-':
+            for j, flag in enumerate(arg[1:], 1):
+                if flag in 'rR': recursive = True
+                if flag in flags: continue
+                if flag not in 'efMSABCm': raise Blocked('GREP_READ_ARGUMENTS_UNVERIFIED')
+                if j + 1 < len(arg): value = arg[j + 1:]
+                else:
+                    i += 1
+                    if i >= len(argv): raise Blocked('GREP_READ_ARGUMENTS_UNVERIFIED')
+                    value = argv[i]
+                if flag in 'ABCm' and not re.fullmatch(r'[0-9]+', value):
+                    raise Blocked('GREP_READ_ARGUMENTS_UNVERIFIED')
+                if flag in 'ef': explicit_pattern = True
+                # Toybox -f 的 '-' 是字面文件名，不是数据输入位置的 stdin。
+                if flag == 'f': paths.append(value)
+                break
+        else:
+            positional.append(arg)
+        i += 1
+    first_file = 0 if explicit_pattern else 1
+    paths.extend(value for value in positional[first_file:] if value != '-')
+    if recursive and len(positional) <= first_file: paths.append('.')
+    return paths
+
+
 def root_read_paths(plan):
     argv, kind = plan.get('argv', []), plan.get('kind')
+    if kind == 'READ' and argv and argv[0] == 'grep':
+        return grep_read_paths(argv)
     if kind == 'FILE' and argv and argv[0] == 'cp':
         return list(plan.get('operands', []))[:-1]
     if kind != 'READ' or not argv or argv[0] not in {
@@ -283,7 +333,7 @@ def valid_vscreen_identity(value):
 
 
 def execute(plan, shell, result_class):
-    if not isinstance(plan, dict) or plan.get('version') != 1 or plan.get('kind') not in ('READ', 'FILE', 'STOP', 'VIRTUAL_SCREEN'):
+    if not isinstance(plan, dict) or plan.get('version') != 1 or plan.get('kind') not in ('READ', 'FILE', 'STOP', 'VIRTUAL_SCREEN', 'SHELL'):
         raise Blocked('原生设备策略没有授权此操作')
     if plan['kind'] == 'VIRTUAL_SCREEN':
         argv = plan.get('argv')
@@ -306,6 +356,22 @@ def execute(plan, shell, result_class):
                 or plan.get('su', False)):
             raise Blocked('虚拟屏启动参数无法核验')
         return shell(argv_command(argv))
+    if plan['kind'] == 'SHELL':
+        # 用户显式选择放宽/完全放宽后的 root 原始命令。guest 只核对协议形态与 root 身份，
+        # 档位与不可逆操作判定由 App 进程负责；SMS 原生闸门在 guest 侧再守一道。
+        command = plan.get('command')
+        if (not isinstance(command, str) or not command
+                or len(command.encode('utf-8')) > 16384 or '\0' in command
+                or plan.get('mode') not in ('relaxed', 'full')
+                or plan.get('rootOnly') is not True
+                or plan.get('su') is not True):
+            raise Blocked('ROOT_SHELL_PLAN_UNVERIFIED')
+        lowered = command.lower()
+        if ('content://sms' in lowered or 'content://mms' in lowered
+                or 'com.android.providers.telephony' in lowered
+                or ('content query' in lowered and 'sms' in lowered)):
+            raise Blocked('短信读取只允许单条 content query')
+        return shell(command)
     # ADB may itself be privileged; SMS file paths never bypass native query authorization.
     validate_root_reads(plan, shell)
     if plan['kind'] == 'STOP':

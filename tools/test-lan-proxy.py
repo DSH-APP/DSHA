@@ -23,11 +23,21 @@ def main():
         'android/content/Context.java': '''package android.content;
 public class Context {
  public static final int MODE_PRIVATE = 0;
+ private final java.util.Map<String,String> values = new java.util.concurrent.ConcurrentHashMap<>();
+ public Context() {}
+ public Context(String verifier) { values.put("lan_password_verifier_v1", verifier); }
  public Context getApplicationContext() { return this; }
- public SharedPreferences getSharedPreferences(String name, int mode) { return null; }
+ public SharedPreferences getSharedPreferences(String name, int mode) { return new SharedPreferences() {
+  public String getString(String key, String fallback) { return values.getOrDefault(key, fallback); }
+  public Editor edit() { return new Editor() {
+   public Editor putString(String key, String value) { values.put(key, value); return this; }
+   public void apply() {}
+  }; }
+ }; }
 }''',
         'android/content/SharedPreferences.java': '''package android.content;
 public interface SharedPreferences {
+ String getString(String key, String fallback);
  Editor edit();
  interface Editor { Editor putString(String key, String value); void apply(); }
 }''',
@@ -38,7 +48,11 @@ public final class LocalNetworkAccess {
  public static boolean granted(android.content.Context context) { return true; }
 }''',
         'com/deepseekharness/app/util/UiMessages.java': '''package com.deepseekharness.app.util;
-public final class UiMessages { public static final java.util.Map<String,String> EN = java.util.Map.of(); }''',
+public final class UiMessages {
+ public static final java.util.Map<String,String> EN = java.util.Map.of();
+ public static java.util.Map<String,String> forLanguage(String language) { return EN; }
+ public static String[] formatsForLanguage(String language) { return new String[0]; }
+}''',
     }
     for name, value in sources.items():
         target = stubs / name
@@ -61,7 +75,8 @@ public final class UiMessages { public static final java.util.Map<String,String>
         target.write_bytes(Path(args.baseline_proxy).read_bytes())
     suffix = '.exe' if os.name == 'nt' else ''
     jdk = Path(args.jdk) / 'bin'
-    tests = ['LanAuthTest', 'util.SocketDispatchTest', 'util.HttpProtocolTest', 'util.LanNetworkStateTest', 'util.LanAddressPolicyTest']
+    tests = ['LanAuthTest', 'util.SocketDispatchTest', 'util.HttpProtocolTest', 'util.LanNetworkStateTest', 'util.LanAddressPolicyTest', 'util.LanAccessPresentationTest',
+             'util.BridgePortPolicyTest', 'util.LanPortPolicyTest', 'util.WebPortPolicyTest', 'util.WebPortSettingsTest', 'util.ConfigInputTest']
     test_sources = [ROOT / 'app/src/test/java/com/deepseekharness/app' / (name.replace('.', '/') + '.java') for name in tests]
     command = [str(jdk / ('javac' + suffix)), '-encoding', 'UTF-8', '--release', '17', '-cp', cp,
                '-d', str(classes), '-sourcepath', os.pathsep.join(map(str, [stubs, overrides, ROOT / 'app/src/main/java', ROOT / 'app/src/test/java'])),

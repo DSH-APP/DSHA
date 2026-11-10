@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 主卡内嵌块（展开的完整版本信息）：页面底色、圆角与输入框同档。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_bg" />
+    <corners android:radius="@dimen/radius_control" />
+</shape>

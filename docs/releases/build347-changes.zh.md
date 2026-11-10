@@ -1,0 +1,9 @@
+# DSHA 0.2.1-rc.5-20261109.0900-dsh0.2.2-rc.1 / build347
+
+- SAF 目录选择指向系统文件选择器（`479302313`）：新增 `ui/SystemDocumentPicker`，树选择意图显式指向 `com.android.documentsui` / `com.google.android.documentsui`，未导出、禁用或本机缺失时退回默认解析；默认处理程序被 OEM 改写时先说明可能看不到 SD 卡 / U 盘等存储挂载点，再给「系统文件选择器 / 接管者应用信息清默认 / 继续用默认」三个入口；授权页、工作区备份目录与原生数据项目备份源三处 tree 选择统一，清单补 `<queries>` 与 `OPEN_DOCUMENT_TREE`；`SystemDocumentPickerTest` 7 项覆盖强制系统入口、OEM 接管识别与回退。
+- 设备通道状态胶囊不再挤出按钮与开关（`cfad29009`）：Root / Shizuku / ADB / 外接设备四行改为「左列标题 + 状态胶囊」按权重让位，行内验证 / 配对按钮与开关先按自身宽度测量，长状态只在左列内换行；新增 `ShellChannelStatusPill`（最多 6 行、不省略、行距 2dp），外接设备状态并入左列；`DeviceGrantsLayoutTest` 补长状态 / 中英 / 1.3 倍字体下动作保持宽度且留在页内的回归。
+- 隐藏后台补内容守卫与严格模式（`76b3a44a6`）：Android 13+ 最近任务会保留「最近可见任务」——从应用内直接滑到最近任务时当前卡片仍由系统保留，公开 API 无法只移除这一张。新增 `ui/RecentsPrivacyGuard`（Application 级生命周期）：开关开启时对全部界面关闭最近任务截图内容（API 33+）；实验性严格模式（默认关）在应用整体退到后台 700ms 后结束 UI 任务，SAF 等结果型选择器在途、画中画、多窗口、旋转不触发，失败写诊断日志且不崩溃、不重放；`BrowserTasks` 刷完回读任务与 root Intent 标志，不再把空任务或标志不符当成功（`RECENTS_HIDE_APPLY` / `RECENTS_HIDE_VERIFY`）；设置页新增严格模式子行（父开关关闭时隐藏）与十语文案 `m9500`–`m9502`。
+- 受管运行时更新：`DshaApp` / `ConfigStore` 变化重算 `runtimeId` 为 `28dc573a`；fixed-inputs 冻结沿用锁定的 20261105e；内置 `dsh-web-mobile` 保持上游 3.3.1 与默认启用不变。
+- 版本与范围：版本码提升为 347（基于已发布的 build346 / `86f91ba0a`）；DSHA 修订号保持 `0.2.1-rc.5`，内置 DSH 为 `0.2.2-rc.1`。本批不改设备 shell 白名单、不放宽执行期护栏。
+- **未验证 / 未验收**：一加 C16 上从应用内滑到最近任务看当前卡片内容是否空白、按 Home 后是否消失、严格模式是否让卡片消失且 dsh Web / 终端 / ADB 保活仍在；OEM 接管场景的系统文件选择器入口与实际 tree 授权；设备通道四行在日夜 / 短屏 / 1.3 倍字体 / RTL 下的视觉验收；`BrowserTasks` 回读在新 ROM 上的结果。**build347 尚未真机验收**，验收项是 346→347 首次覆盖安装成功、数据完好、READY、受管运行时更新与上述三项功能；build344–build347 正式包真机覆盖安装验收仍待用户。
+- 验证范围：发布身份与前置检查、宿主 contracts 整组、descriptor `28dc573a` / 受管运行时源、第三方声明、内置插件、凭据路径、semver、host manifest、源卫生、UI i18n、`generate-changelog --check`、文档链接、全树 Java 格式、`git diff --check`、`test-vscreen-help`、`test-diagnostic-feedback`；全量 `:app:testStandardDebugUnitTest`（10 例 aarch64 Robolectric 环境基线失败如实记录）与 `:app:lintStandardRelease`；正式签名 assemble 不在本机执行（无发布 keystore）。

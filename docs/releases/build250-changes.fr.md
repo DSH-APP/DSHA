@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.3-20261101.2030-dsh0.2.1-rc.5 / build250
+
+- Les instantanés de configuration peuvent de nouveau être supprimés. Une écriture interrompue ne laisse plus de dossier incomplet, et les anciens instantanés sont supprimés en deux étapes. Un instantané endommagé ou supprimé à la main ne fait plus échouer l'instantané d'avant réparation, la création de configuration ni la suppression de plugins ; les restes invérifiables passent en quarantaine et ne remplissent plus la limite.
+- Page de récupération au démarrage : les instantanés endommagés affichent la raison et peuvent être supprimés ; un instantané normal propose Restaurer ou Supprimer ; la quarantaine se vide en une fois. La suppression retire seulement la copie ; la configuration actuelle ne change pas.
+- Portée de la vérification : tests unitaires locaux et contrôles statiques uniquement ; aucune installation sur appareil, tests d'interface et Lint confiés à la CI. versionCode porté à 250 (basé sur build249). La révision DSHA reste 0.2.1-rc.3 et le DSH intégré reste 0.2.1-rc.5.

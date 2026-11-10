@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UI v5 方案 A：窗口宽度 ≥ 600dp 时启动主页标题与页边距放大，对齐原型宽屏层级。 -->
+<resources>
+    <dimen name="shell_launch_title">34sp</dimen>
+    <dimen name="shell_launch_page_pad">36dp</dimen>
+    <dimen name="shell_launch_page_top">26dp</dimen>
+</resources>

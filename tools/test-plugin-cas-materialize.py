@@ -54,10 +54,13 @@ class CasMaterializeTest(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True); path.symlink_to(target)
         return path, target
 
-    def cli(self, action='materialize-cas-links'):
-        result = subprocess.run([sys.executable, str(ASSETS / 'plugin-manager.py'), action], env=os.environ, capture_output=True, text=True, timeout=30)
+    def cli(self, action='materialize-cas-links', *, legacy=False):
+        command = [str(ASSETS / 'materialize-cas-links.py')] if action == 'materialize-cas-links' and not legacy \
+            else [str(ASSETS / 'plugin-manager.py'), action]
+        result = subprocess.run([sys.executable, *command], env=os.environ, capture_output=True, text=True, timeout=30)
         lines = [line[len('PLUGIN_RESULT: '):] for line in result.stdout.splitlines() if line.startswith('PLUGIN_RESULT: ')]
         self.assertEqual(len(lines), 1, result.stdout + result.stderr)
+        self.assertTrue(result.stdout.splitlines()[-1].startswith('PLUGIN_RESULT: '), result.stdout)
         return result, json.loads(lines[0])
 
     def test_cli_exact_bytes_metadata_other_profile_and_store_preserved_noop(self):
@@ -88,6 +91,110 @@ class CasMaterializeTest(unittest.TestCase):
         self.assertEqual((outside / 'keep').read_text(), 'external original')
         for name in ['external-directory', 'external-file', 'cycle']:
             self.assertTrue((self.package / name).is_symlink())
+
+    def test_legacy_entry_retains_same_receipt_and_transaction_contract(self):
+        result, value = self.cli(legacy=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((value['status'], value['migratedFiles'], value['algorithm']),
+                         ('ok', 1, 'DSHA_PNPM_CAS_COPY_V1'))
+        again, noop = self.cli()
+        self.assertEqual(again.returncode, 0, again.stdout + again.stderr)
+        self.assertFalse(noop['changed'])
+        timing = [json.loads(line.removeprefix('CAS_TIMING: ')) for line in again.stdout.splitlines()
+                  if line.startswith('CAS_TIMING: ')]
+        self.assertEqual({row['phase'] for row in timing},
+                         {'entry-imports', 'data-lock-wait', 'profile-lock-wait', 'transaction-check', 'scan', 'entry-total'})
+        scan = next(row for row in timing if row['phase'] == 'scan')
+        self.assertEqual((scan['entries'], scan['directories'], scan['candidates']), (3, 2, 0))
+
+    def test_light_entry_does_not_import_download_archive_or_ssl_modules(self):
+        # Exercise the ordinary no-op startup, independent of the safe
+        # publisher's ctypes/renameat2 imports when a copy is actually needed.
+        self.link.unlink()
+        command = """import runpy,sys
+sys.argv=[sys.argv[1]]
+runpy.run_path(sys.argv[0], run_name='cas_import_probe')['main']()
+print('FORBIDDEN_IMPORTS: ' + ','.join(sorted(set(sys.modules) & {'urllib.request','ssl','tarfile','zipfile','subprocess'})))
+"""
+        result = subprocess.run([sys.executable, '-c', command, str(ASSETS / 'materialize-cas-links.py')],
+                                env=os.environ, capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('FORBIDDEN_IMPORTS: \n', result.stdout)
+        self.assertFalse(self.link.exists())
+
+    def test_deep_mutation_is_scanned_even_when_root_timestamp_is_unchanged(self):
+        nested = self.package / 'a/b/c'; nested.mkdir(parents=True)
+        first = self.transaction.cas_links()
+        stamp = self.modules.stat().st_mtime_ns
+        link, unused = self.make_link(nested / 'late.js', b'late CAS content')
+        self.assertEqual(self.modules.stat().st_mtime_ns, stamp)
+        second = self.transaction.cas_links()
+        self.assertEqual([row['path'] for row in first], ['test-plugin/index.js'])
+        self.assertEqual({row['path'] for row in second}, {'test-plugin/index.js', 'test-plugin/a/b/c/late.js'})
+        self.assertTrue(link.is_symlink())
+
+    def test_fd_scan_metadata_checks_depend_on_directories_not_regular_files(self):
+        directory = self.package
+        for level in range(12):
+            directory = directory / ('level-' + str(level)); directory.mkdir()
+            for index in range(24):
+                (directory / ('file-' + str(index))).write_bytes(b'ordinary bytes')
+        reader = self.transaction.cas_links.__globals__['DeleteObjects']
+        original = reader.stat
+        calls = []
+        def counted(instance, parent, name):
+            calls.append(name)
+            return original(instance, parent, name)
+        with patch.object(reader, 'stat', counted):
+            found = self.transaction.cas_links()
+        self.assertEqual(len(found), 1)
+        # Includes private ancestors and the real CAS-link snapshot. Ordinary
+        # files use fresh dirent types; they must not trigger metadata reads.
+        self.assertFalse(any(name.startswith('file-') for name in calls))
+        self.assertLess(len(calls), 12 * 8 + 100)
+
+    def test_detached_ancestor_and_swap_restore_are_rejected_without_following(self):
+        nested = self.package / 'a/b'; nested.mkdir(parents=True)
+        sentinel = nested / 'sentinel'; sentinel.write_bytes(b'owned')
+        outside = self.root / 'outside-scan'; outside.mkdir()
+        (outside / 'special').write_bytes(b'outside unchanged')
+        original = os.scandir
+        for restore in (False, True):
+            moved = self.modules / 'retained-package'
+            swapped = []
+            def inspect(scan):
+                for entry in scan:
+                    if entry.name == 'sentinel' and not swapped:
+                        self.package.rename(moved)
+                        self.package.symlink_to(outside, target_is_directory=True)
+                        swapped.append(True)
+                        if restore:
+                            self.package.unlink(); moved.rename(self.package)
+                    yield entry
+            @contextlib.contextmanager
+            def swapped_scan(directory):
+                with original(directory) as scan:
+                    yield inspect(scan)
+            with patch.object(os, 'scandir', swapped_scan):
+                with self.assertRaisesRegex((ValueError, OSError), '变化|directory|Directory'):
+                    self.transaction.cas_links()
+            self.assertTrue(swapped)
+            self.assertEqual((outside / 'special').read_bytes(), b'outside unchanged')
+            if not restore:
+                self.package.unlink(); moved.rename(self.package)
+            self.assertTrue(self.link.is_symlink())
+
+    def test_light_entry_invalid_registry_refuses_before_cas_transaction(self):
+        scripts = self.root / 'invalid-registry'; scripts.mkdir()
+        for name in ['materialize-cas-links.py', 'register-builtin-plugins.py', 'plugin-transactions.py']:
+            shutil.copyfile(ASSETS / name, scripts / name)
+        (scripts / 'builtin-plugins.json').write_text('{"schema": 99}')
+        result = subprocess.run([sys.executable, str(scripts / 'materialize-cas-links.py')], env=os.environ,
+                                capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn('BUILTIN_REGISTRY_FORMAT', result.stdout)
+        self.assertTrue(self.link.is_symlink())
+        self.assertFalse((self.home / 'plugin-install-operations').exists())
 
     def test_large_profile_uses_bounded_native_readable_plans(self):
         for index in range(512):
@@ -150,7 +257,7 @@ class CasMaterializeTest(unittest.TestCase):
         env = dict(os.environ, DSHA_PLUGIN_TEST_BOUNDARY=boundary)
         log = self.root / ('child-' + boundary + '.log')
         with log.open('wb') as stream:
-            child = subprocess.Popen([sys.executable, str(ASSETS / 'plugin-manager.py'), 'materialize-cas-links'], env=env, stdout=stream, stderr=subprocess.STDOUT)
+            child = subprocess.Popen([sys.executable, str(ASSETS / 'materialize-cas-links.py')], env=env, stdout=stream, stderr=subprocess.STDOUT)
             try:
                 deadline = time.monotonic() + 20
                 while not marker.exists() and child.poll() is None and time.monotonic() < deadline:
@@ -219,9 +326,9 @@ class CasMaterializeTest(unittest.TestCase):
 
     def test_link_swap_inside_rename_is_retained_and_cannot_reuse_held_inode(self):
         real_library = ctypes.CDLL(None, use_errno=True)
-        real_rename = real_library.renameat2
-        real_rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
-        real_rename.restype = ctypes.c_int
+        real_rename = real_library.syscall
+        real_rename.argtypes = [ctypes.c_long, ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+        real_rename.restype = ctypes.c_long
         old_inode = self.link.lstat().st_ino
         replacement = []
         class Library:
@@ -231,7 +338,7 @@ class CasMaterializeTest(unittest.TestCase):
                 self.link.unlink(); self.link.symlink_to(self.target)
                 replacement.append(self.link.lstat().st_ino)
             return real_rename(*args)
-        library = Library(); library.renameat2 = rename
+        library = Library(); library.syscall = rename
         with patch.object(ctypes, 'CDLL', return_value=library):
             with self.assertRaisesRegex(ValueError, '移动期间变化'):
                 self.transaction.materialize_cas_links()

@@ -96,9 +96,9 @@ Windows/Node受控夹具原ABBA路径约**2126.7ms后配置超时**，候选约*
 
 ### 3. 闪屏：证明的是遮罩按压绘制
 
-[移动补丁管线](../tools/apply-mobile-client-patches.mjs)在固定上游产物上加 `[data-mobile-nav="backdrop"]:active { box-shadow:none; }`，生成[生产client](../app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/client.js)。不是只改未参与打包的TS，也没有关闭动画或遮住有效内容。
+[移动补丁管线](../tools/apply-mobile-client-patches.mjs)曾在一版固定上游产物上加 `[data-mobile-nav="backdrop"]:active { box-shadow:none; }`（build336 已按「完全追随上游」摘除，见[build336 记录](releases/v0.2.1-rc.5-build336-web-mobile-3.3.1-20261106.md)），生成[生产client](../app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/client.js)。不是只改未参与打包的TS，也没有关闭动画或遮住有效内容。
 
-[可信触摸回归](../tools/test-mobile-backdrop-press.mjs)提取真实rc2主题CSS、移动样式和遮罩模块。基线真实`:active`时半透明白色inset阴影使同一背景像素RGBA **[11,11,12,255]→[45,45,46,255]**；候选阴影为none、像素保持[11,11,12,255]，普通按钮仍保留按压反馈。可信CDP touch与实际`:active`相符，不靠强制伪类或合成PointerEvent。
+可信触摸回归（测试已随补丁在 build336 退役）提取真实rc2主题CSS、移动样式和遮罩模块。基线真实`:active`时半透明白色inset阴影使同一背景像素RGBA **[11,11,12,255]→[45,45,46,255]**；候选阴影为none、像素保持[11,11,12,255]，普通按钮仍保留按压反馈。可信CDP touch与实际`:active`相符，不靠强制伪类或合成PointerEvent。
 
 快速关开、touchCancel、滑动关闭、销毁清理和固定上游重建一致性有宿主证据；[Modal](../tools/test-mobile-modal-behavior.mjs)、[手势](../tools/test-mobile-gesture-guard.mjs)及[补丁闭环](../tools/test-mobile-client-patches.mjs)通过。宿主marker部分由夹具驱动，不证明Android/真实React提交时序；其他RightbarSeat/有效surface重建、几何闪动和所有手机仍待测，未擅改原生主题桥或late-commit。
 

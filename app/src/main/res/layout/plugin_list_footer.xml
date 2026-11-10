@@ -1,26 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 插件页尾部（UI v5）：空状态卡片 + 本地插件导入/导出（安全模式恢复已移到页头警示条）；保留 PluginFragment 使用的 id。 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-    <TextView android:id="@+id/pluginEmpty" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="@dimen/card_pad" android:gravity="center" android:visibility="gone" android:textColor="@color/text_muted" />
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_local_plugins" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" android:id="@+id/pluginLocalTitle" />
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:id="@+id/pluginLocalCard">
-      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/btnImport" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
-        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui_import" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
-          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_import" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_import_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+
+    <TextView android:id="@+id/pluginEmpty" style="@style/ShellStatusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:background="@drawable/bg_plugin_empty" android:gravity="center" android:lineSpacingExtra="3dp" android:minHeight="120dp" android:padding="32dp" android:visibility="gone" />
+
+    <TextView android:id="@+id/pluginLocalTitle" style="@style/ShellSectionLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:layout_marginBottom="10dp" android:text="@string/ui2_local_plugins" />
+
+    <LinearLayout android:id="@+id/pluginLocalCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:baselineAligned="false" android:orientation="horizontal">
+
+        <LinearLayout android:id="@+id/btnImport" style="@style/ShellCard" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginEnd="6dp" android:layout_weight="1" android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground" android:gravity="center" android:minHeight="@dimen/shell_row_min_height" android:orientation="horizontal" android:paddingStart="@dimen/shell_row_pad_h" android:paddingTop="@dimen/shell_row_pad_v" android:paddingEnd="@dimen/shell_row_pad_h" android:paddingBottom="@dimen/shell_row_pad_v">
+            <ImageView style="@style/ShellRowIcon" android:layout_width="@dimen/shell_row_icon" android:layout_height="@dimen/shell_row_icon" android:contentDescription="@null" android:src="@drawable/ic_ui_import" />
+            <TextView style="@style/ShellRowTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="@string/ui2_import" />
         </LinearLayout>
-        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
-      </LinearLayout>
-      <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
-      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/btnExport" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
-        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui_export" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
-        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
-          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_export" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-          <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_export_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
+
+        <LinearLayout android:id="@+id/btnExport" style="@style/ShellCard" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:layout_weight="1" android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground" android:gravity="center" android:minHeight="@dimen/shell_row_min_height" android:orientation="horizontal" android:paddingStart="@dimen/shell_row_pad_h" android:paddingTop="@dimen/shell_row_pad_v" android:paddingEnd="@dimen/shell_row_pad_h" android:paddingBottom="@dimen/shell_row_pad_v">
+            <ImageView style="@style/ShellRowIcon" android:layout_width="@dimen/shell_row_icon" android:layout_height="@dimen/shell_row_icon" android:contentDescription="@null" android:src="@drawable/ic_ui_export" />
+            <TextView style="@style/ShellRowTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="@string/ui2_export" />
         </LinearLayout>
-        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
-      </LinearLayout>
     </LinearLayout>
-    <Button android:id="@+id/btnPluginRestore" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/gap_control" android:visibility="gone" android:text="@string/ui_m0104" />
 
 </LinearLayout>

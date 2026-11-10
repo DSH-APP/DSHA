@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 授权页概览头部：与页面同底色（shell_bg），底部 1dp shell_line 与滚动内容分隔；
+     不再用浮起卡片的圆角、强描边与阴影，与其余平铺分组一致（参考 bg_config_save_bar.xml）。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item><shape android:shape="rectangle"><solid android:color="@color/shell_line" /></shape></item>
+    <item android:bottom="1dp"><shape android:shape="rectangle"><solid android:color="@color/shell_bg" /></shape></item>
+</layer-list>

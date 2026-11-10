@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 新建弹窗里 DSH CLI 选项的图标：四角星 + 小加号，表示“在 PTY 里直接启动 DSH 命令行”。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M12,3.5L14.1,8.9L19.5,11L14.1,13.1L12,18.5L9.9,13.1L4.5,11L9.9,8.9Z"
+        android:strokeWidth="1.8"
+        android:strokeColor="#FF000000"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M18.5,16L18.5,20M16.5,18L20.5,18"
+        android:strokeWidth="1.7"
+        android:strokeColor="#FF000000"
+        android:strokeLineCap="round" />
+</vector>

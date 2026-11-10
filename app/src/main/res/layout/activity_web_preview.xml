@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -11,59 +12,283 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <ScrollView
+        <!--
+          对话页错误面板（实验性，docs/design/web-crash-20261102）：顶栏返回 + 结论 + 当前状态 + 更多操作。
+          文案、状态行、宽窄三档由 WebCrashPanel 设置；既有 ID 保留供 WebPreviewActivity 与单测使用。
+        -->
+        <LinearLayout
             android:id="@+id/web_error_panel"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="?android:attr/colorBackground"
-            android:fillViewport="true"
+            android:background="@color/shell_bg"
+            android:orientation="vertical"
             android:visibility="gone">
+
             <LinearLayout
+                android:id="@+id/web_error_top"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:orientation="vertical"
-                android:padding="24dp">
-                <TextView
-                    android:id="@+id/web_error_title"
-                    style="@style/DshaText.Body"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-                <TextView
-                    android:id="@+id/web_error_detail"
-                    style="@style/DshaText.Body"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:textIsSelectable="true" />
-                <Button
-                    android:id="@+id/web_retry"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:text="@string/ui_m0212" />
-                <Button
-                    android:id="@+id/web_error_recovery"
-                    style="@style/Widget.DSHA.TextButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/ui_m0202" />
-                <Button
-                    android:id="@+id/web_error_logs"
-                    style="@style/Widget.DSHA.TextButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/ui_m0047" />
-                <Button
-                    android:id="@+id/web_error_browser"
-                    style="?attr/borderlessButtonStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/ui_m0095" />
+                android:orientation="horizontal"
+                android:paddingStart="8dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="4dp">
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/web_error_back"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/ui_m0201"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_ui_back"
+                    app:tint="@color/shell_text" />
             </LinearLayout>
-        </ScrollView>
+
+            <ScrollView
+                android:id="@+id/web_error_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:fillViewport="true">
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <LinearLayout
+                        android:id="@+id/web_error_columns"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical"
+                        android:paddingStart="16dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="24dp">
+
+                        <!-- 左栏（窄屏为上部）：结论、主次按钮、当前状态 -->
+                        <LinearLayout
+                            android:id="@+id/web_error_main"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+                            <LinearLayout
+                                android:id="@+id/web_error_hero"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:accessibilityLiveRegion="polite"
+                                android:gravity="center_horizontal"
+                                android:orientation="vertical"
+                                android:paddingTop="8dp">
+                                <FrameLayout
+                                    android:id="@+id/web_error_badge"
+                                    android:layout_width="64dp"
+                                    android:layout_height="64dp"
+                                    android:background="@drawable/bg_web_crash_badge"
+                                    android:importantForAccessibility="no">
+                                    <ImageView
+                                        android:id="@+id/web_error_icon"
+                                        android:layout_width="30dp"
+                                        android:layout_height="30dp"
+                                        android:layout_gravity="center"
+                                        android:importantForAccessibility="no" />
+                                </FrameLayout>
+                                <TextView
+                                    android:id="@+id/web_error_title"
+                                    style="@style/DshaText.Body"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="14dp"
+                                    android:accessibilityHeading="true"
+                                    android:gravity="center_horizontal"
+                                    android:textColor="@color/shell_text"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold" />
+                                <TextView
+                                    android:id="@+id/web_error_detail"
+                                    style="@style/DshaText.Body"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:gravity="center_horizontal"
+                                    android:lineSpacingExtra="3dp"
+                                    android:textColor="@color/shell_text_secondary"
+                                    android:textIsSelectable="true"
+                                    android:textSize="14sp" />
+                                <LinearLayout
+                                    android:id="@+id/web_error_actions"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="20dp"
+                                    android:orientation="vertical">
+                                    <Button
+                                        android:id="@+id/web_retry"
+                                        style="@style/ShellPrimaryButton"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/ui_m0212" />
+                                    <Button
+                                        android:id="@+id/web_error_secondary"
+                                        style="@style/ShellSecondaryButton"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:textColor="@color/shell_accent" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/web_error_state_label"
+                                style="@style/DshaText.Caption"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="22dp"
+                                android:accessibilityHeading="true"
+                                android:paddingStart="4dp"
+                                android:paddingEnd="4dp"
+                                android:paddingBottom="8dp"
+                                android:textColor="@color/shell_text_secondary"
+                                android:textStyle="bold" />
+                            <LinearLayout
+                                android:id="@+id/web_error_state"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_web_crash_card"
+                                android:orientation="vertical" />
+                        </LinearLayout>
+
+                        <!-- 右栏（窄屏为下部）：技术详情与其它操作 -->
+                        <LinearLayout
+                            android:id="@+id/web_error_side"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+                            <TextView
+                                android:id="@+id/web_error_more_label"
+                                style="@style/DshaText.Caption"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="22dp"
+                                android:accessibilityHeading="true"
+                                android:paddingStart="4dp"
+                                android:paddingEnd="4dp"
+                                android:paddingBottom="8dp"
+                                android:textColor="@color/shell_text_secondary"
+                                android:textStyle="bold" />
+                            <LinearLayout
+                                android:id="@+id/web_error_more"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_web_crash_card"
+                                android:orientation="vertical">
+                                <LinearLayout
+                                    android:id="@+id/web_error_details_row"
+                                    style="@style/WebCrashRow">
+                                    <FrameLayout style="@style/WebCrashRowIconBox">
+                                        <ImageView
+                                            style="@style/WebCrashRowIcon"
+                                            android:src="@drawable/ic_transfer_code" />
+                                    </FrameLayout>
+                                    <LinearLayout style="@style/WebCrashRowText">
+                                        <TextView
+                                            android:id="@+id/web_error_details_title"
+                                            style="@style/WebCrashRowTitle" />
+                                        <TextView
+                                            android:id="@+id/web_error_details_sub"
+                                            style="@style/WebCrashRowSub" />
+                                    </LinearLayout>
+                                    <ImageView
+                                        android:id="@+id/web_error_details_chevron"
+                                        style="@style/WebCrashRowChevron" />
+                                </LinearLayout>
+                                <LinearLayout
+                                    android:id="@+id/web_error_details_box"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    android:paddingStart="12dp"
+                                    android:paddingEnd="12dp"
+                                    android:paddingBottom="8dp"
+                                    android:visibility="gone">
+                                    <TextView
+                                        android:id="@+id/web_error_details_text"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:background="@drawable/bg_web_crash_tech"
+                                        android:fontFamily="monospace"
+                                        android:lineSpacingExtra="2dp"
+                                        android:padding="10dp"
+                                        android:textColor="@color/shell_text_secondary"
+                                        android:textIsSelectable="true"
+                                        android:textSize="12sp" />
+                                    <Button
+                                        android:id="@+id/web_error_copy"
+                                        style="@style/Widget.DSHA.TextButton"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:minHeight="44dp"
+                                        android:textColor="@color/shell_accent" />
+                                </LinearLayout>
+                                <View style="@style/WebCrashRowDivider" />
+                                <LinearLayout
+                                    android:id="@+id/web_error_logs"
+                                    style="@style/WebCrashRow">
+                                    <FrameLayout style="@style/WebCrashRowIconBox">
+                                        <ImageView
+                                            style="@style/WebCrashRowIcon"
+                                            android:src="@drawable/ic_transfer_download" />
+                                    </FrameLayout>
+                                    <LinearLayout style="@style/WebCrashRowText">
+                                        <TextView
+                                            style="@style/WebCrashRowTitle"
+                                            android:text="@string/ui_m0047" />
+                                    </LinearLayout>
+                                </LinearLayout>
+                                <View
+                                    android:id="@+id/web_error_browser_divider"
+                                    style="@style/WebCrashRowDivider" />
+                                <LinearLayout
+                                    android:id="@+id/web_error_browser"
+                                    style="@style/WebCrashRow">
+                                    <FrameLayout style="@style/WebCrashRowIconBox">
+                                        <ImageView
+                                            style="@style/WebCrashRowIcon"
+                                            android:src="@drawable/ic_web_crash_globe" />
+                                    </FrameLayout>
+                                    <LinearLayout style="@style/WebCrashRowText">
+                                        <TextView
+                                            style="@style/WebCrashRowTitle"
+                                            android:text="@string/ui_m0095" />
+                                        <TextView
+                                            android:id="@+id/web_error_browser_sub"
+                                            style="@style/WebCrashRowSub" />
+                                    </LinearLayout>
+                                </LinearLayout>
+                                <View
+                                    android:id="@+id/web_error_recovery_divider"
+                                    style="@style/WebCrashRowDivider" />
+                                <LinearLayout
+                                    android:id="@+id/web_error_recovery"
+                                    style="@style/WebCrashRow">
+                                    <FrameLayout style="@style/WebCrashRowIconBox">
+                                        <ImageView
+                                            style="@style/WebCrashRowIcon"
+                                            android:src="@drawable/ic_recovery_shield" />
+                                    </FrameLayout>
+                                    <LinearLayout style="@style/WebCrashRowText">
+                                        <TextView
+                                            style="@style/WebCrashRowTitle"
+                                            android:text="@string/ui_m0202" />
+                                    </LinearLayout>
+                                    <ImageView style="@style/WebCrashRowChevron" />
+                                </LinearLayout>
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                </FrameLayout>
+            </ScrollView>
+        </LinearLayout>
     </FrameLayout>
     <!-- 加载提示覆盖在网页上，不占高度、不让页面在加载完成时跳动。 -->
     <ProgressBar

@@ -1,7 +1,19 @@
 <resources>
     <style name="Animation.DSHA.Dialog" parent="">
         <item name="android:windowEnterAnimation">@anim/dialog_enter</item>
-        <item name="android:windowExitAnimation">@anim/page_exit</item>
+        <item name="android:windowExitAnimation">@anim/dialog_exit</item>
+    </style>
+    <!-- 底部弹层：贴底滑入，与居中弹窗分开；CardSheet 在 create() 里挂载。 -->
+    <style name="Animation.DSHA.Sheet" parent="">
+        <item name="android:windowEnterAnimation">@anim/sheet_enter</item>
+        <item name="android:windowExitAnimation">@anim/sheet_exit</item>
+    </style>
+    <!-- 二级 Activity 的进入/退出：与 Fragment 页面同一套淡入上移，返回只淡出。 -->
+    <style name="Animation.DSHA.Activity" parent="">
+        <item name="android:activityOpenEnterAnimation">@anim/page_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/page_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/page_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/page_exit</item>
     </style>
     <style name="Widget.DSHA.DialogButton" parent="Widget.Material3.Button.TextButton.Dialog">
         <item name="android:background">@drawable/bg_dialog_button</item>

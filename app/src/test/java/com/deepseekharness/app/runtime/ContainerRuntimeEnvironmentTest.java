@@ -20,20 +20,19 @@ public class ContainerRuntimeEnvironmentTest {
         base = temporary.newFolder(),
         lib = temporary.newFolder(),
         tmp = temporary.newFolder();
-    for (String name :
-        new String[] {"libproot_legacy.so", "libprootloader_legacy.so", "libprootloader32.so"})
+    for (String name : new String[] {"libproot.so", "libprootloader.so", "libprootloader32.so"})
       put(nativeDir, name);
     for (String name : new String[] {"libtalloc.so.2", "libandroid-shmem.so"}) put(lib, name);
     var runtime =
         new ContainerRuntime.Proot(
             null,
-            new File(nativeDir, "libproot_legacy.so"),
+            new File(nativeDir, "libproot.so"),
             new RuntimeHostPorts.Settings("auto", false, true, true));
     var builder = new ProcessBuilder("fixture");
     runtime.applyEnv(builder, base, lib, tmp);
     assertEquals("1", builder.environment().get("PROOT_NO_SECCOMP"));
     assertEquals(
-        new File(nativeDir, "libprootloader_legacy.so").getAbsolutePath(),
+        new File(nativeDir, "libprootloader.so").getAbsolutePath(),
         builder.environment().get("PROOT_LOADER"));
     assertEquals(
         lib.getAbsolutePath() + ":" + nativeDir.getAbsolutePath(),
@@ -86,7 +85,10 @@ public class ContainerRuntimeEnvironmentTest {
 
   @Test
   public void bindsCannotBeMutatedByAnotherCaller() {
-    assertThrows(UnsupportedOperationException.class, () -> ContainerRuntime.binds().clear());
-    assertEquals("/dev", ContainerRuntime.binds().get(0).host());
+    assertThrows(UnsupportedOperationException.class, () -> ContainerRuntime.binds(true).clear());
+    assertEquals("/dev", ContainerRuntime.binds(true).get(0).host());
+    // 公共存储映射只在调用方显式确认已授权时加入；未授权时容器看不到 /sdcard。
+    assertTrue(ContainerRuntime.binds(true).stream().anyMatch(b -> "/sdcard".equals(b.guest())));
+    assertFalse(ContainerRuntime.binds(false).stream().anyMatch(b -> "/sdcard".equals(b.guest())));
   }
 }

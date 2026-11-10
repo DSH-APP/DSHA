@@ -1,0 +1,290 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="about_close_button" formatted="false">"關閉"</string>
+    <string name="about_community" formatted="false">"QQ 交流群"</string>
+    <string name="about_tagline" formatted="false">"DSHA 安卓啟動器"</string>
+    <string name="adb_pairing_service_label" formatted="false">"ADB 無線配對"</string>
+    <string name="alpha_no_seccomp" formatted="false">"關閉 seccomp 加速"</string>
+    <string name="alpha_static_loader" formatted="false">"靜態載入器（proroot）"</string>
+    <string name="build190_auto_port" formatted="false">"自動分配連接埠"</string>
+    <string name="build190_restore_port_drafts" formatted="false">"恢復舊連接埠草稿"</string>
+    <string name="computer_use_title" formatted="false">"螢幕操作"</string>
+    <string name="copy_text" formatted="false">"複製"</string>
+    <string name="device_checking" formatted="false">"正在讀取授權狀態…"</string>
+    <string name="device_open_access" formatted="false">"管理檔案存取權限"</string>
+    <string name="diag248_copy" formatted="false">"複製診斷報告"</string>
+    <string name="diag248_copy_sub" formatted="false">"脫敏文字，可貼到回饋"</string>
+    <string name="diag248_empty" formatted="false">"尚無結果；檢查只讀取本機狀態"</string>
+    <string name="diag248_export" formatted="false">"匯出故障包"</string>
+    <string name="diag248_export_sub" formatted="false">"結構化記錄包"</string>
+    <string name="diag248_feedback" formatted="false">"回饋"</string>
+    <string name="diag248_idle_sub" formatted="false">"檢查元件與環境"</string>
+    <string name="diag248_idle_title" formatted="false">"未檢查"</string>
+    <string name="diag248_plugins" formatted="false">"外掛管理"</string>
+    <string name="diag248_plugins_sub" formatted="false">"排查外掛導致的啟動問題"</string>
+    <string name="diag248_repair_sub" formatted="false">"重裝憑證與執行元件"</string>
+    <string name="diag248_start" formatted="false">"開始檢查"</string>
+    <string name="diag248_status" formatted="false">"狀態"</string>
+    <string name="diag248_tools" formatted="false">"工具"</string>
+    <string name="dns_auto" formatted="false">"自動相容（推薦）"</string>
+    <string name="dns_ipv4" formatted="false">"IPv4 DNS 相容"</string>
+    <string name="dns_native" formatted="false">"原生雙棧解析"</string>
+    <string name="nh_sub" formatted="false">"網路異常只記錄不修復"</string>
+    <string name="nh_title" formatted="false">"網路健康"</string>
+    <string name="paste_text" formatted="false">"貼上"</string>
+    <string name="phone_assistant" formatted="false">"浮動助手"</string>
+    <string name="phone_assistant_detail" formatted="false">"選擇這部手機上的真實 DSH 工作階段，浮動聊天與暫停控制。"</string>
+    <string name="picture_in_picture_allowed" formatted="false">"系統已允許；切到桌面或其他應用程式時保留對話小窗。"</string>
+    <string name="picture_in_picture_disabled" formatted="false">"系統已關閉；切到背景時不顯示小窗。點此更改。"</string>
+    <string name="picture_in_picture_enable" formatted="false">"開啟對話畫中畫"</string>
+    <string name="picture_in_picture_landscape" formatted="false">"切換橫版"</string>
+    <string name="picture_in_picture_opted_out" formatted="false">"已關閉，預設不顯示小窗；開啟上方開關後才會在返回桌面時進入畫中畫。"</string>
+    <string name="picture_in_picture_portrait" formatted="false">"切換豎版"</string>
+    <string name="picture_in_picture_settings_unavailable" formatted="false">"無法開啟系統畫中畫設定。"</string>
+    <string name="picture_in_picture_title" formatted="false">"系統畫中畫設定"</string>
+    <string name="picture_in_picture_unsupported" formatted="false">"目前裝置不支援系統畫中畫，需要 Android 8.0+ 及裝置支援。"</string>
+    <string name="plugin_sort_az" formatted="false">"名稱 A–Z"</string>
+    <string name="plugin_sort_enabled" formatted="false">"已啟用優先"</string>
+    <string name="plugin_sort_title" formatted="false">"外掛排序"</string>
+    <string name="plugin_sort_updates" formatted="false">"可更新優先"</string>
+    <string name="plugin_sort_za" formatted="false">"名稱 Z–A"</string>
+    <string name="text_selection_more" formatted="false">"更多…"</string>
+    <string name="ui134_adb_hint" formatted="false">"Android 11+：在同一 Wi-Fi 下配對無線除錯。無需 Root；網路變化後可驗證或重新配對。"</string>
+    <string name="ui134_candidate" formatted="false">"檢視候選版本"</string>
+    <string name="ui134_candidate_sub" formatted="false">"更新記錄、大小與安裝方式"</string>
+    <string name="ui134_changelog" formatted="false">"本版本更新記錄"</string>
+    <string name="ui134_check_ready" formatted="false">"準備檢查"</string>
+    <string name="ui134_code" formatted="false">"版本碼"</string>
+    <string name="ui134_current" formatted="false">"目前應用程式"</string>
+    <string name="ui134_disconnect" formatted="false">"斷開 ADB 連線"</string>
+    <string name="ui134_edition" formatted="false">"目前版本型別"</string>
+    <string name="ui134_recent_startups" formatted="false">"最近五次啟動"</string>
+    <string name="ui134_recent_startups_sub" formatted="false">"階段、實際錯誤與退出碼"</string>
+    <string name="ui134_results" formatted="false">"檢查結果"</string>
+    <string name="ui134_root_hint" formatted="false">"手機已 root 時可直接使用 su，無需 ADB 配對。首次執行請在 root 管理器中授權 DSHA；指令攔截等級可在下方選擇，簡訊等原生閘門在三個等級都生效。"</string>
+    <string name="ui134_screen_setup" formatted="false">"設定螢幕操作 · 兩步完成"</string>
+    <string name="ui134_shizuku_hint" formatted="false">"先在 Shizuku 管理器啟動服務，再返回授權。手機重新啟動後通常需要重新啟動服務。"</string>
+    <string name="ui134_start_records" formatted="false">"啟動記錄"</string>
+    <string name="ui134_startup_recovery" formatted="false">"啟動恢復"</string>
+    <string name="ui134_startup_recovery_sub" formatted="false">"檢視問題與恢復方式"</string>
+    <string name="ui2_about" formatted="false">"關於 DSHA"</string>
+    <string name="ui2_about_sub" formatted="false">"版本、開源許可與回報"</string>
+    <string name="ui2_adb" formatted="false">"ADB 無線配對"</string>
+    <string name="ui2_adb_intro" formatted="false">"從系統無線偵錯取得配對碼"</string>
+    <string name="ui2_address" formatted="false">"存取位址"</string>
+    <string name="ui2_address_sub" formatted="false">"檢視本機與區域網路位址"</string>
+    <string name="ui2_app_version" formatted="false">"應用程式版本"</string>
+    <string name="ui2_backup_restore" formatted="false">"備份與還原"</string>
+    <string name="ui2_backup_restore_sub" formatted="false">"匯出、匯入和自動備份"</string>
+    <string name="ui2_base" formatted="false">"Ubuntu 基礎環境"</string>
+    <string name="ui2_check_all" formatted="false">"檢查全部元件"</string>
+    <string name="ui2_community" formatted="false">"社群外掛生態"</string>
+    <string name="ui2_community_sub" formatted="false">"發現社群外掛，檢視介紹與安裝來源"</string>
+    <string name="ui2_component1" formatted="false">"Ubuntu 環境"</string>
+    <string name="ui2_component2" formatted="false">"離線基礎工具"</string>
+    <string name="ui2_component3" formatted="false">"Node.js 24"</string>
+    <string name="ui2_component4" formatted="false">"pnpm"</string>
+    <string name="ui2_component5" formatted="false">"DeepSeek Harness"</string>
+    <string name="ui2_component6" formatted="false">"啟動與環境檢查"</string>
+    <string name="ui2_component_hint" formatted="false">"檢視檢查結果與修復選項"</string>
+    <string name="ui2_config_sub" formatted="false">"連接埠與執行方式下次啟動生效"</string>
+    <string name="ui2_connection" formatted="false">"連線狀態"</string>
+    <string name="ui2_data_ops" formatted="false">"備份與還原"</string>
+    <string name="ui2_data_sub" formatted="false">"匯出、恢復與檔案共用。"</string>
+    <string name="ui2_data_title" formatted="false">"資料與備份"</string>
+    <string name="ui2_device_channels" formatted="false">"裝置執行通道"</string>
+    <string name="ui2_device_grants" formatted="false">"裝置能力授權"</string>
+    <string name="ui2_diagnostics" formatted="false">"自我檢查與診斷"</string>
+    <string name="ui2_diagnostics_intro" formatted="false">"檢查元件、儲存與服務，生成脫敏報告。"</string>
+    <string name="ui2_diagnostics_sub" formatted="false">"執行狀態、錯誤記錄與記錄匯出"</string>
+    <string name="ui2_display" formatted="false">"顯示與啟動"</string>
+    <string name="ui2_dns" formatted="false">"DNS 解析策略"</string>
+    <string name="ui2_environment" formatted="false">"執行環境"</string>
+    <string name="ui2_environment_page" formatted="false">"安裝與環境"</string>
+    <string name="ui2_environment_recovery" formatted="false">"環境修復與恢復"</string>
+    <string name="ui2_environment_recovery_sub" formatted="false">"檢視啟動相依項目與中斷維護"</string>
+    <string name="ui2_environment_state" formatted="false">"環境狀態"</string>
+    <string name="ui2_environment_sub" formatted="false">"按元件檢查狀態，修復需要處理的部分。"</string>
+    <string name="ui2_error_logs" formatted="false">"錯誤記錄"</string>
+    <string name="ui2_experience" formatted="false">"使用體驗"</string>
+    <string name="ui2_export" formatted="false">"匯出外掛"</string>
+    <string name="ui2_export_sub" formatted="false">"儲存已安裝外掛的副本"</string>
+    <string name="ui2_floating" formatted="false">"浮動條"</string>
+    <string name="ui2_floating_settings" formatted="false">"浮動條外觀與行為"</string>
+    <string name="ui2_floating_settings_sub" formatted="false">"單獨編輯樣式、內容與預覽"</string>
+    <string name="ui2_from_link" formatted="false">"從連結安裝"</string>
+    <string name="ui2_grants_sub" formatted="false">"按需開啟。普通對話和終端機不相依項目裝置控制授權。"</string>
+    <string name="ui2_import" formatted="false">"匯入外掛套件"</string>
+    <string name="ui2_import_sub" formatted="false">"從裝置選擇 ZIP 外掛套件"</string>
+    <string name="ui2_install_environment" formatted="false">"安裝與環境"</string>
+    <string name="ui2_installation_log" formatted="false">"檢查與安裝記錄"</string>
+    <string name="ui2_installed" formatted="false">"已安裝外掛"</string>
+    <string name="ui2_launch_hint" formatted="false">"隨時開始你的下一項任務。"</string>
+    <string name="ui2_local_plugins" formatted="false">"本機外掛"</string>
+    <string name="ui2_logs" formatted="false">"啟動記錄"</string>
+    <string name="ui2_maintenance" formatted="false">"維護與恢復"</string>
+    <string name="ui2_managed" formatted="false">"受管執行階段"</string>
+    <string name="ui2_managed_sub" formatted="false">"只更新隨包元件，保留個人資料"</string>
+    <string name="ui2_managed_update" formatted="false">"更新受管執行階段"</string>
+    <string name="ui2_management" formatted="false">"管理"</string>
+    <string name="ui2_meet" formatted="false">"認識 DSHA"</string>
+    <string name="ui2_network_runtime" formatted="false">"執行與網路"</string>
+    <string name="ui2_offline_badge" formatted="false">"離線部署  ·  無需 ROOT  ·  %1$s"</string>
+    <string name="ui2_online_notice" formatted="false">"使用線上模型時，訊息及你選擇的附件會傳送到所設定的模型服務。"</string>
+    <string name="ui2_overlay" formatted="false">"浮動條"</string>
+    <string name="ui2_overlay_sub" formatted="false">"顯示內容、透明度與停留時間"</string>
+    <string name="ui2_plugin_link" formatted="false">"儲存庫或下載連結"</string>
+    <string name="ui2_port" formatted="false">"實際 Web 連接埠"</string>
+    <string name="ui2_port_hint" formatted="false">"連接埠被佔用時自動改用可用連接埠"</string>
+    <string name="ui2_port_preferred" formatted="false">"首選 Web 連接埠"</string>
+    <string name="ui2_recovery_tools" formatted="false">"環境修復與資料救援"</string>
+    <string name="ui2_repair_parts" formatted="false">"按需修復元件"</string>
+    <string name="ui2_repair_parts_sub" formatted="false">"檢查缺失部分，保留可用元件"</string>
+    <string name="ui2_reproduction" formatted="false">"補充重現步驟"</string>
+    <string name="ui2_resolve" formatted="false">"解析安裝"</string>
+    <string name="ui2_restart" formatted="false">"重新啟動"</string>
+    <string name="ui2_rollback" formatted="false">"相容執行階段退回"</string>
+    <string name="ui2_rollback_sub" formatted="false">"通過隔離試執行後再切換"</string>
+    <string name="ui2_runtime_compat" formatted="false">"執行階段相容選項"</string>
+    <string name="ui2_runtime_config" formatted="false">"執行設定"</string>
+    <string name="ui2_sensitive" formatted="false">"獨立敏感能力"</string>
+    <string name="ui2_settings" formatted="false">"設定"</string>
+    <string name="ui2_settings_hint" formatted="false">"讓工作台按你的習慣執行。"</string>
+    <string name="ui2_shortcuts" formatted="false">"快捷入口"</string>
+    <string name="ui2_six_steps" formatted="false">"六個安裝步驟"</string>
+    <string name="ui2_skip" formatted="false">"跳過介紹"</string>
+    <string name="ui2_start" formatted="false">"啟動 DSHA"</string>
+    <string name="ui2_stop" formatted="false">"停止"</string>
+    <string name="ui2_stopped" formatted="false">"DSH 未執行"</string>
+    <string name="ui2_storage_files" formatted="false">"儲存與檔案"</string>
+    <string name="ui2_storage_files_sub" formatted="false">"空間佔用、快取清理和檔案共用"</string>
+    <string name="ui2_support" formatted="false">"支援"</string>
+    <string name="ui2_system_permissions" formatted="false">"系統權限"</string>
+    <string name="ui2_troubleshooting" formatted="false">"排查與修復"</string>
+    <string name="ui2_update_channel" formatted="false">"更新通道"</string>
+    <string name="ui2_updates" formatted="false">"版本更新"</string>
+    <string name="ui2_updates_intro" formatted="false">"檢視應用程式與執行元件的版本資訊。"</string>
+    <string name="ui2_updates_sub" formatted="false">"穩定版與預覽版更新"</string>
+    <string name="ui2_w1_0" formatted="false">"對話與任務"</string>
+    <string name="ui2_w1_1" formatted="false">"完整的終端機"</string>
+    <string name="ui2_w1_2" formatted="false">"外掛與裝置能力"</string>
+    <string name="ui2_w2_0" formatted="false">"對話與檔案"</string>
+    <string name="ui2_w2_1" formatted="false">"模型與認證資訊"</string>
+    <string name="ui2_w2_2" formatted="false">"裝置操作"</string>
+    <string name="ui2_welcome_lead0" formatted="false">"寫程式碼、處理檔案、使用工具。\n把完整的工作環境，隨身帶走。"</string>
+    <string name="ui2_welcome_lead1" formatted="false">"對話、檔案與工具，在同一個工作空間。"</string>
+    <string name="ui2_welcome_lead2" formatted="false">"開始使用不需要授予裝置控制權限。"</string>
+    <string name="ui2_welcome_title0" formatted="false">"你的 AI 工作台，\n就在手機裡。"</string>
+    <string name="ui2_welcome_title1" formatted="false">"從一個想法，\n到實際完成。"</string>
+    <string name="ui2_welcome_title2" formatted="false">"權限由你決定，\n資料有處可尋。"</string>
+    <string name="ui2_workspace" formatted="false">"工作台"</string>
+    <string name="ui2_ws1_0" formatted="false">"讓模型理解問題，協作完成工作。"</string>
+    <string name="ui2_ws1_1" formatted="false">"保留熟悉的 Ubuntu 命令與多工作階段。"</string>
+    <string name="ui2_ws1_2" formatted="false">"按需安裝外掛，連線手機能力。"</string>
+    <string name="ui2_ws2_0" formatted="false">"儲存在本機，可手動匯出。"</string>
+    <string name="ui2_ws2_1" formatted="false">"模型與 API Key 在 Web UI 中設定；原有本機認證資訊保留。"</string>
+    <string name="ui2_ws2_2" formatted="false">"Root、Shizuku、ADB 與簡訊單獨授權。"</string>
+    <string name="ui_adb_code_label" formatted="false">"配對碼（6 位數字）"</string>
+    <string name="ui_adb_host_label" formatted="false">"裝置位址（留空自動發現）"</string>
+    <string name="ui_adb_port_label" formatted="false">"配對連接埠（留空自動發現）"</string>
+    <string name="ui_lan_unencrypted" formatted="false">"區域網路流量未加密，僅限可信網路與可信裝置"</string>
+    <string name="ui_language_title" formatted="false">"語言 / Language"</string>
+    <string name="ui_m0001" formatted="false">"下載更新"</string>
+    <string name="ui_m0002" formatted="false">"儲存設定"</string>
+    <string name="ui_m0003" formatted="false">"取消檢查"</string>
+    <string name="ui_m0005" formatted="false">"啟動"</string>
+    <string name="ui_m0006" formatted="false">"備份並重建環境"</string>
+    <string name="ui_m0007" formatted="false">"安全啟動"</string>
+    <string name="ui_m0010" formatted="false">"開始配對"</string>
+    <string name="ui_m0011" formatted="false">"還原選項"</string>
+    <string name="ui_m0012" formatted="false">"手動位址與連接埠"</string>
+    <string name="ui_m0013" formatted="false">"開啟外掛管理"</string>
+    <string name="ui_m0015" formatted="false">"授權 Shizuku"</string>
+    <string name="ui_m0016" formatted="false">"外掛"</string>
+    <string name="ui_m0017" formatted="false">"未檢查"</string>
+    <string name="ui_m0018" formatted="false">"檢查更新"</string>
+    <string name="ui_m0020" formatted="false">"白天"</string>
+    <string name="ui_m0021" formatted="false">"終端機"</string>
+    <string name="ui_m0023" formatted="false">"設定"</string>
+    <string name="ui_m0024" formatted="false">"輸入命令，按換行鍵執行"</string>
+    <string name="ui_m0025" formatted="false">"還沒有記錄。"</string>
+    <string name="ui_m0026" formatted="false">"配對與連接埠說明"</string>
+    <string name="ui_m0030" formatted="false">"不用無線偵錯時保持關閉"</string>
+    <string name="ui_m0031" formatted="false">"ADB 無線配對"</string>
+    <string name="ui_m0039" formatted="false">"Shizuku 未授權"</string>
+    <string name="ui_m0046" formatted="false">"下載記錄"</string>
+    <string name="ui_m0047" formatted="false">"下載錯誤記錄"</string>
+    <string name="ui_m0050" formatted="false">"中止"</string>
+    <string name="ui_m0053" formatted="false">"感測器與手電筒"</string>
+    <string name="ui_m0054" formatted="false">"使用 proroot 執行階段"</string>
+    <string name="ui_m0055" formatted="false">"使用相容瀏覽核心"</string>
+    <string name="ui_m0057" formatted="false">"使用電腦版網頁版面配置"</string>
+    <string name="ui_m0060" formatted="false">"修復工具"</string>
+    <string name="ui_m0062" formatted="false">"允許 Root Shell"</string>
+    <string name="ui_m0063" formatted="false">"允許區域網路存取"</string>
+    <string name="ui_m0066" formatted="false">"允許讀取位置"</string>
+    <string name="ui_m0067" formatted="false">"關於"</string>
+    <string name="ui_m0078" formatted="false">"取消目前任務"</string>
+    <string name="ui_m0079" formatted="false">"取消目前操作"</string>
+    <string name="ui_m0080" formatted="false">"另存新檔"</string>
+    <string name="ui_m0081" formatted="false">"只看自己裝的"</string>
+    <string name="ui_m0084" formatted="false">"背景斷線時持續檢查；恢復前先開啟無線偵錯"</string>
+    <string name="ui_m0089" formatted="false">"啟動時檢查更新"</string>
+    <string name="ui_m0090" formatted="false">"啟用 ADB 裝置通道（預設關閉）"</string>
+    <string name="ui_m0094" formatted="false">"在瀏覽器檢視釋出頁"</string>
+    <string name="ui_m0095" formatted="false">"在系統瀏覽器中開啟"</string>
+    <string name="ui_m0102" formatted="false">"複製"</string>
+    <string name="ui_m0103" formatted="false">"複製回報內容"</string>
+    <string name="ui_m0104" formatted="false">"安全模式：恢復第三方外掛"</string>
+    <string name="ui_m0106" formatted="false">"安裝外掛"</string>
+    <string name="ui_m0107" formatted="false">"安裝更新"</string>
+    <string name="ui_m0109" formatted="false">"匯出報告"</string>
+    <string name="ui_m0118" formatted="false">"內建網頁核心，相容性問題時可嘗試"</string>
+    <string name="ui_m0121" formatted="false">"浮動顯示 AI 輸出"</string>
+    <string name="ui_m0125" formatted="false">"開啟 Shizuku 管理器"</string>
+    <string name="ui_m0126" formatted="false">"開啟資料與備份"</string>
+    <string name="ui_m0128" formatted="false">"開啟無線除錯設定"</string>
+    <string name="ui_m0133" formatted="false">"外掛市場"</string>
+    <string name="ui_m0134" formatted="false">"外掛操作狀態，點按檢視完整資訊"</string>
+    <string name="ui_m0135" formatted="false">"外掛管理"</string>
+    <string name="ui_m0137" formatted="false">"外掛連結或 npm 套件名稱"</string>
+    <string name="ui_m0138" formatted="false">"搜尋外掛名稱或描述"</string>
+    <string name="ui_m0142" formatted="false">"新建終端機"</string>
+    <string name="ui_m0145" formatted="false">"尚無終端機\n點「新增」開啟"</string>
+    <string name="ui_m0146" formatted="false">"更多"</string>
+    <string name="ui_m0158" formatted="false">"檢測已安裝外掛"</string>
+    <string name="ui_m0159" formatted="false">"檢測外掛"</string>
+    <string name="ui_m0164" formatted="false">"清理"</string>
+    <string name="ui_m0170" formatted="false">"申請授權並驗證 root"</string>
+    <string name="ui_m0171" formatted="false">"簡訊讀取"</string>
+    <string name="ui_m0173" formatted="false">"穩定版"</string>
+    <string name="ui_m0177" formatted="false">"簡易"</string>
+    <string name="ui_m0178" formatted="false">"簡易終端機"</string>
+    <string name="ui_m0179" formatted="false">"貼上連結"</string>
+    <string name="ui_m0181" formatted="false">"自動讀取本次配對碼"</string>
+    <string name="ui_m0182" formatted="false">"補充復現步驟，不要填寫金鑰或私人對話"</string>
+    <string name="ui_m0185" formatted="false">"解析連結"</string>
+    <string name="ui_m0191" formatted="false">"設定電池最佳化"</string>
+    <string name="ui_m0201" formatted="false">"返回上一頁"</string>
+    <string name="ui_m0202" formatted="false">"返回啟動頁處理外掛 / 安全啟動"</string>
+    <string name="ui_m0209" formatted="false">"重新診斷"</string>
+    <string name="ui_m0211" formatted="false">"重置設定，保留對話"</string>
+    <string name="ui_m0212" formatted="false">"重試"</string>
+    <string name="ui_m0215" formatted="false">"預覽版"</string>
+    <string name="ui_m0217" formatted="false">"驗證已有連線"</string>
+    <string name="ui_m0218" formatted="false">"＋ 新建"</string>
+    <string name="ui_m9024" formatted="false">"變更"</string>
+    <string name="upd_browser_sub" formatted="false">"查看所有版本與安裝包"</string>
+    <string name="upd_copy_version" formatted="false">"複製版本資訊"</string>
+    <string name="upd_full_notes" formatted="false">"查看完整記錄"</string>
+    <string name="upd_pane_empty" formatted="false">"檢查到候選版本後，更新記錄、大小與安裝方式會顯示在這裡。"</string>
+    <string name="upd_recheck" formatted="false">"重新檢查"</string>
+    <string name="upd_tab_candidate" formatted="false">"候選版本"</string>
+    <string name="upd_tab_current" formatted="false">"本版本"</string>
+    <string name="welcome_eyebrow0" formatted="false">"DeepSeek Harness · 安卓"</string>
+    <string name="welcome_eyebrow1" formatted="false">"01 / 適合你的工作方式"</string>
+    <string name="welcome_eyebrow2" formatted="false">"02 / 資料與選擇由你掌握"</string>
+    <plurals name="plugin_count">
+        <item quantity="other">"共 %d 個外掛"</item>
+    </plurals>
+</resources>

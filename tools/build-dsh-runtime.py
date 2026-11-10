@@ -177,14 +177,18 @@ def patched_content(relative, data):
         imports = 'import { mkdir, open, readFile, readdir, rename, rm } from "node:fs/promises";'
         if text.count(imports) != 1:
             raise ValueError('上游 JSON 存储导入结构变化，必须重新检查')
-        text = text.replace(imports, '/* DSHA_PROROOT_DIRENT_FALLBACK_V2 */\n'
-                            '/* DSHA_PROROOT_DIRECT_RECORD_HINTS_V1 */\n' + imports)
+        text = text.replace(imports, '/* DSHA_PROROOT_DIRENT_FALLBACK_V3 */\n'
+                            '/* DSHA_PROROOT_DIRECT_RECORD_HINTS_V2 */\n' + imports)
         # proroot 在部分 bind/内核组合上不仅会把 getdents 的 d_type 报成
         # DT_UNKNOWN，刚刚 mkdir/rename 的项还可能暂时不出现在上级目录枚举中。
+        # 0.2.2-rc.1 上游仍用 withFileTypes 枚举，两类问题均未修复。
         # descriptor 已经给出全部表名，因此不枚举 unit 根，而是直达每个
         # 已声明表目录。表内保留字符串文件名枚举，并将本进程已成功
         # 发布的键作为直接路径提示：重开仍会重新 readFile+解析磁盘正文，
         # 不会拿写入时的内存值冒充持久化验证。
+        # V3 采用 0.2.2 上游语义：已声明表目录只要存在（即使为空）或
+        # global.json 存在，就抑制 legacy bootstrap；批量删除的提示按每个
+        # 键的实际结果（删除、跳过、回滚成功、回滚失败）更新。
         scan = '''\tlet entries;
 \ttry {
 \t\tentries = await readdir(dir, { withFileTypes: true });
@@ -194,7 +198,10 @@ def patched_content(relative, data):
 \tif (!(entries === void 0 ? false : (await Promise.all(entries.map(async (entry) => {
 \t\tif (entry.isDirectory()) {
 \t\t\tconst records = state.tables.get(entry.name);
-\t\t\tif (records !== void 0) return loadTableRecords(records, versions, join(dir, entry.name));
+\t\t\tif (records !== void 0) {
+\t\t\t\tawait loadTableRecords(records, versions, join(dir, entry.name));
+\t\t\t\treturn true;
+\t\t\t}
 \t\t}
 \t\tif (entry.name === "global.json" && descriptor.hasGlobal) {
 \t\t\tconst global = await readRecord(join(dir, entry.name), versions);
@@ -218,8 +225,12 @@ def patched_content(relative, data):
         if text.count(scan) != 1:
             raise ValueError('上游 JSON 存储目录加载结构变化，必须重新检查')
         text = text.replace(scan, replacement)
-        table_scan = '''\tconst files = await readdir(dir, { withFileTypes: true });
-\tconst hasDocuments = files.some((file) => file.name.endsWith(".json"));
+        # 上游 loadTableRecords 不再返回 hasDocuments（目录存在即算文档）。
+        # 补丁版本返回“表目录存在”：字符串 readdir 成功（含空目录），或者
+        # 枚举缺失/陈旧但本进程提示的键能按固定路径读到。ENOENT/ENOTDIR
+        # 视为表不存在；其它枚举错误照常抛出，不折叠成空表。
+        table_scan = '''async function loadTableRecords(records, versions, dir) {
+\tconst files = await readdir(dir, { withFileTypes: true });
 \tconst loaded = await Promise.all(files.map(async (file) => {
 \t\tif (!file.name.endsWith(".json")) return;
 \t\tconst key = file.name.slice(0, -5);
@@ -227,19 +238,21 @@ def patched_content(relative, data):
 \t\tconst record = await readRecord(join(dir, file.name), versions);
 \t\tif (record !== void 0) return [key, record];
 \t}));'''
-        table_replacement = '''\tlet files;
+        table_replacement = '''async function loadTableRecords(records, versions, dir, dshaRecordHints) {
+\tlet files;
+\tlet tableExists = true;
 \ttry {
 \t\tfiles = await readdir(dir);
 \t} catch (error) {
 \t\tif (error.code !== "ENOENT" && error.code !== "ENOTDIR") throw error;
 \t\tfiles = [];
+\t\ttableExists = false;
 \t}
 \tconst listed = new Set(files);
 \tconst recent = dshaRecordHints.get(dir);
 \tif (recent !== void 0) for (const key of recent) files.push(`${key}.json`);
 \tconst candidates = [...new Set(files)];
 \tlet hintedDocument = false;
-\tconst hasDocuments = candidates.some((file) => listed.has(file) && file.endsWith(".json"));
 \tconst loaded = await Promise.all(candidates.map(async (file) => {
 \t\tif (!file.endsWith(".json")) return;
 \t\tconst key = file.slice(0, -5);
@@ -255,7 +268,6 @@ def patched_content(relative, data):
             raise ValueError('上游 JSON 存储记录加载结构变化，必须重新检查')
         text = text.replace(table_scan, table_replacement)
         table_return = '''\tfor (const record of loaded) if (record !== void 0) records.set(...record);
-\treturn hasDocuments;
 }
 /** Read one record document; a foreign (unreadable or stale) one reads as absent. */
 async function readRecord(path, versions) {
@@ -266,7 +278,7 @@ async function readRecord(path, versions) {
 \t}
 }'''
         table_return_replacement = '''\tfor (const record of loaded) if (record !== void 0) records.set(...record);
-\treturn hasDocuments || hintedDocument;
+\treturn tableExists || hintedDocument;
 }
 /**
 * Read and classify one record document. Malformed JSON and foreign versions
@@ -340,6 +352,23 @@ var DshaRecordHints = class {
 \t\trecord.committed = false;
 \t\tif (record.pending === 0) this.remove(dir, key);
 \t}
+\t/* 批量删除回滚把文档 rename 回原路径：这是新的目录项，同样可能暂不出现在枚举中。 */
+\tasync remember(dir, key) {
+\t\tlet record = this.records.get(dir)?.get(key);
+\t\tif (record === void 0 && this.size >= DSHA_RECORD_HINT_LIMIT) await this.reconcile().catch(() => {});
+\t\trecord = this.records.get(dir)?.get(key);
+\t\tif (record !== void 0) {
+\t\t\trecord.committed = true;
+\t\t\treturn true;
+\t\t}
+\t\t/* 尽力而为：容量已满时不淘汰其它已承诺的键，失败批次仍按上游语义拒绝。 */
+\t\tif (this.size >= DSHA_RECORD_HINT_LIMIT) return false;
+\t\tlet records = this.records.get(dir);
+\t\tif (records === void 0) this.records.set(dir, records = /* @__PURE__ */ new Map());
+\t\trecords.set(key, { committed: true, pending: 0 });
+\t\tthis.size++;
+\t\treturn true;
+\t}
 \tremove(dir, key) {
 \t\tconst records = this.records.get(dir);
 \t\tif (records === void 0 || !records.delete(key)) return;
@@ -381,10 +410,47 @@ var DshaRecordHints = class {
 \t\t\t\tthrow error;
 \t\t\t}
 \t\t})());'''),
-            ('''\t\tawait this.tracked(rm(join(this.tableDir(table), `${key}.json`), { force: true }));''',
-             '''\t\tconst dir = this.tableDir(table);
-\t\tawait this.tracked(rm(join(dir, `${key}.json`), { force: true }));
-\t\tthis.dshaRecordHints.forget(dir, key);'''),
+            # 0.2.2 deleteRecord 委托 deleteRecords → removeDocuments（先 rename
+            # 成 .json.deleting、fsync 目录、再 rm；失败回滚，回滚失败置 unusable）。
+            # 提示按每个键的实际结果更新：原路径已不存在（跳过/暂存/回滚失败）
+            # 即 forget；回滚成功则重新登记为本进程发布的直达路径。
+            ('''\t\t\t\ttry {
+\t\t\t\t\tawait rename(from, to);
+\t\t\t\t} catch (error) {
+\t\t\t\t\tif (error.code === "ENOENT") continue;
+\t\t\t\t\tthrow error;
+\t\t\t\t}
+\t\t\t\tstaged.push({
+\t\t\t\t\tfrom,
+\t\t\t\t\tto
+\t\t\t\t});''',
+             '''\t\t\t\ttry {
+\t\t\t\t\tawait rename(from, to);
+\t\t\t\t} catch (error) {
+\t\t\t\t\tif (error.code === "ENOENT") {
+\t\t\t\t\t\tthis.dshaRecordHints.forget(dir, key);
+\t\t\t\t\t\tcontinue;
+\t\t\t\t\t}
+\t\t\t\t\tthrow error;
+\t\t\t\t}
+\t\t\t\tthis.dshaRecordHints.forget(dir, key);
+\t\t\t\tstaged.push({
+\t\t\t\t\tkey,
+\t\t\t\t\tfrom,
+\t\t\t\t\tto
+\t\t\t\t});'''),
+            ('''\t\t\tfor (const { from, to } of staged) try {
+\t\t\t\tawait rename(to, from);
+\t\t\t} catch (restoreError) {
+\t\t\t\trestoreFailures.push(restoreError);
+\t\t\t}''',
+             '''\t\t\tfor (const { key, from, to } of staged) try {
+\t\t\t\tawait rename(to, from);
+\t\t\t\tawait this.dshaRecordHints.remember(dir, key);
+\t\t\t} catch (restoreError) {
+\t\t\t\tthis.dshaRecordHints.forget(dir, key);
+\t\t\t\trestoreFailures.push(restoreError);
+\t\t\t}'''),
             ('''\t\tawait this.tracked(rename(path, moved));
 \t\treturn moved;''',
              '''\t\tawait this.tracked(rename(path, moved));
@@ -396,8 +462,6 @@ var DshaRecordHints = class {
                 raise ValueError('上游 JSON 存储记录变更结构变化，必须重新检查')
             text = text.replace(before, after)
         lifecycle_mutations = [
-            ('async function loadTableRecords(records, versions, dir) {',
-             'async function loadTableRecords(records, versions, dir, dshaRecordHints) {'),
             ('''async function openPerRecordUnit(descriptor, root, onClose) {
 \treturn new PerRecordJsonUnit(descriptor, join(root, descriptor.name), onClose);
 }''',
@@ -615,7 +679,15 @@ def omitted(relative, foreign=()):
     return ''
 
 
+def archive_path_key(path, source):
+    # 沿用已发布归档的 Windows 路径组件排序；不依赖构建机的 Path 比较规则。
+    # 逐组件比较与整条字符串不同；原始组件作为仅大小写相同时的确定性次序。
+    parts = path.relative_to(source).parts
+    return tuple(part.lower() for part in parts), parts
+
+
 def build(source, output, version):
+    initial_inputs = recipe_inputs()
     stable_chains, _ = load_chains(HOOKS.parent, version)
     seen_stable = set()
     source = source.resolve(strict=True)
@@ -644,7 +716,7 @@ def build(source, output, version):
     try:
         with temporary.open('wb') as raw, gzip.GzipFile(fileobj=raw, mode='wb', filename='', mtime=0, compresslevel=9) as compressed:
             with tarfile.open(fileobj=compressed, mode='w|', format=tarfile.PAX_FORMAT) as archive:
-                for path in sorted(source.rglob('*')):
+                for path in sorted(source.rglob('*'), key=lambda item: archive_path_key(item, source)):
                     relative = path.relative_to(source)
                     reason = omitted(relative, foreign)
                     if reason:
@@ -748,6 +820,10 @@ def build(source, output, version):
                 item = tarfile.TarInfo('usr/local/share/dsha/dsh-runtime.version')
                 item.size, item.mode = len(identity), 0o644
                 archive.addfile(item, io.BytesIO(identity))
+        # Recipes/helpers can be edited while a large gzip is being written.
+        # Never publish those earlier module bytes with a later recipe receipt.
+        if recipe_inputs() != initial_inputs:
+            raise ValueError('DSH_BUILD_INPUTS_CHANGED_DURING_BUILD')
         temporary.replace(output)
     finally:
         temporary.unlink(missing_ok=True)
@@ -755,7 +831,7 @@ def build(source, output, version):
     with output.open('rb') as stream:
         for block in iter(lambda: stream.read(1048576), b''): archive_hash.update(block)
     archive_sha = archive_hash.hexdigest()
-    inputs = {'version': version, 'inputs': recipe_inputs(), 'archive_sha256': archive_sha}
+    inputs = {'version': version, 'inputs': initial_inputs, 'archive_sha256': archive_sha}
     write_source_text(output.with_suffix('.inputs.json'),json.dumps(inputs, indent=2) + '\n',encoding='utf-8')
     return {'version': version, 'files': count, 'unpacked_bytes': size,
             'archive_bytes': output.stat().st_size, 'sha256': archive_sha,

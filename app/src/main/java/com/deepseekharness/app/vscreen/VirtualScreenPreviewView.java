@@ -42,7 +42,7 @@ final class VirtualScreenPreviewView extends AppCompatImageView {
   VirtualScreenPreviewView(Context c) {
     super(c);
     setScaleType(ScaleType.MATRIX);
-    setBackgroundColor(0xff101218);
+    // 底色由外层舞台卡片（主题 shell_surface）提供，黑边与卡片一致，不再硬编码深色。
     scale =
         new ScaleGestureDetector(
             c,
@@ -90,6 +90,11 @@ final class VirtualScreenPreviewView extends AppCompatImageView {
     fit();
     if (old != null && old != next) old.recycle();
     return true;
+  }
+
+  /** 当前是否持有可显示的画面（与输入身份无关）。 */
+  boolean hasFrame() {
+    return bitmap != null;
   }
 
   /** A capture gap invalidates input immediately without flashing a live display black. */

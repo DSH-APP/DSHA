@@ -15,6 +15,8 @@ import importlib.util
 from generated_asset_directory import prune as prune_generated
 from asset_deployment import load_manifest, selected_assets, verify_reader_contracts, MANIFEST as DEPLOYMENT_MANIFEST
 
+GH_CLI_LOCK = Path(__file__).with_name('gh-cli') / 'packages.lock.json'
+
 GLOBAL_PACKAGE_ALIASES = {
     '@deepseek-ai/dsh-workflow-worker-thread': '@deepseek-ai/dsh-workflow-ptc',
 }
@@ -101,7 +103,8 @@ def main():
     verify_reader_contracts(source, deployment)
     selected = selected_assets(source, deployment)
     expected = {relative.as_posix() for _, relative in selected}
-    expected.update({"web-integration/gecko-compat.js", "glibc-python.bin", "adb-wheels.bin"})
+    expected.update({"web-integration/gecko-compat.js", "glibc-python.bin", "adb-wheels.bin",
+                     "gh-cli.bin"})
     if rootfs.is_file():
         expected.update({"offline-rootfs.bin", "offline-rootfs.bytes", "offline-rootfs.sha256",
                          "offline-rootfs.layout", "dsh-runtime.bin", "dsh-runtime.sha256"})
@@ -127,8 +130,9 @@ def main():
     # 清理旧构建生成的两个兼容版资产，不触碰输入目录。
     for name in ("python3.14", "python-runtime.tgz"):
         (output / "runtime-python" / name).unlink(missing_ok=True)
-    # 用 bin 扩展名避免 aapt 展开 gzip；读取端按 magic 判断格式。
-    for name in ("glibc-python", "adb-wheels"):
+    # 源固定输入保持 .tar.gz 原名；APK 内改用 bin 扩展名，避免 AGP 资产合并把 .gz
+    # 自动 gunzip 并去掉扩展名（AGP 9.1.1 sdk-common，aapt2 不这么做）。读取端按 magic 判断格式。
+    for name in ("glibc-python", "adb-wheels", "gh-cli"):
         shutil.copyfile(source / (name + ".tar.gz"), output / (name + ".bin"))
     if not rootfs.is_file():
         (output / "offline-rootfs.bin").unlink(missing_ok=True)
@@ -158,6 +162,19 @@ def main():
     tools_metadata = json.loads((source / 'ubuntu-tools.inputs.json').read_text())
     if tools_metadata.get('inputs') != tools_builder.inputs() or tools_metadata.get('archive_sha256') != sha256(tools_archive):
         raise ValueError('Ubuntu 离线基础工具与依赖锁不一致，请运行 tools/prepare-ubuntu-tools.py')
+    # gh 的固定输入、受管安装项与自举 pin 共用同一份摘要：任一漂移都必须在打包前失败。
+    gh_lock = json.loads(GH_CLI_LOCK.read_text(encoding='utf-8'))
+    gh_asset = source / 'gh-cli.tar.gz'
+    if not gh_asset.is_file() or sha256(gh_asset) != gh_lock.get('sha256') \
+            or gh_asset.stat().st_size != gh_lock.get('bytes'):
+        raise ValueError('gh 固定输入与 tools/gh-cli/packages.lock.json 不一致，请运行 tools/prepare-gh-cli.py')
+    managed_rows = json.loads((source / 'managed-runtime-inputs.json').read_text(encoding='utf-8'))['installs']
+    gh_rows = [row for row in managed_rows if row.get('asset') == 'gh-cli.tar.gz']
+    if len(gh_rows) != 1 \
+            or gh_rows[0].get('target') != 'opt/gh/bin/gh' \
+            or gh_rows[0].get('extract', {}).get('member') != gh_lock.get('member') \
+            or gh_rows[0].get('extract', {}).get('sha256') != gh_lock.get('binarySha256'):
+        raise ValueError('受管 gh 安装项与 tools/gh-cli/packages.lock.json 不一致')
     with tarfile.open(rootfs, 'r:gz') as original:
         status = next(item for item in original if item.name.removeprefix('./') == 'var/lib/dpkg/status')
         if hashlib.sha256(original.extractfile(status).read()).hexdigest() != tools_metadata.get('base_status_sha256'):

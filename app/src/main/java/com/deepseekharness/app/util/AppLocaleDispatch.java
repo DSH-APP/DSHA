@@ -11,7 +11,7 @@ public final class AppLocaleDispatch {
   }
 
   public static void apply(int sdk, String language, Writer writer) {
-    if (!"zh".equals(language) && !"en".equals(language))
+    if (!UiLanguagePreference.isSupportedLanguage(language))
       throw new IllegalArgumentException("UI_LANGUAGE");
     if (sdk >= 33) writer.platform(language);
     else writer.compat(language);

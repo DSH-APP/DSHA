@@ -33,6 +33,9 @@ public class NativeEnvironmentRebuildTest {
         "linux/ubuntu/usr/local/lib/node_modules/user-plugin/node_modules/dep/value",
         "dependency");
     put(files, "linux/ubuntu/data/personal/value", "real data under data");
+    put(files, "linux/ubuntu/opt/user-tool/bin/tool", "user installed tool");
+    put(files, "linux/ubuntu/opt/gh/bin/gh", "old managed gh");
+    put(files, "linux/ubuntu/usr/local/bin/user-entry", "user file in system tree");
     put(files, "native-state", "same encrypted credentials and device grants");
   }
 
@@ -89,6 +92,28 @@ public class NativeEnvironmentRebuildTest {
   }
 
   @Test
+  public void localRebuildKeepsAdbPairingKeysButNotOtherMachineState() throws Exception {
+    File files = temp.newFolder();
+    fixture(files);
+    put(files, "linux/ubuntu/root/.dsh/adbkeys/adbkey", "local pairing key");
+    put(files, "linux/ubuntu/root/.dsh/adbkeys/adbkey.pub", "local pairing pub");
+    put(files, "linux/ubuntu/root/.dsh/.bridge_token", "old bridge token");
+    var transaction = prepared(files);
+    transaction.begin();
+    put(files, "linux/ubuntu/usr/bin/system-tool", "new system");
+    new MaintenanceDataSnapshot(FS, files, transaction.directory(), new File(files, "public"))
+        .restore(new File(files, "linux/ubuntu"), new BackupControl(null));
+    // adbkeys 已不进用户备份，但本机重建只在私有目录间迁移，原配对保留。
+    assertEquals(
+        "local pairing key",
+        Files.readString(new File(files, "linux/ubuntu/root/.dsh/adbkeys/adbkey").toPath()));
+    assertEquals(
+        "local pairing pub",
+        Files.readString(new File(files, "linux/ubuntu/root/.dsh/adbkeys/adbkey.pub").toPath()));
+    assertFalse(new File(files, "linux/ubuntu/root/.dsh/.bridge_token").exists());
+  }
+
+  @Test
   public void failureAndRepeatedRollbackKeepOriginalAndFailedTrees() throws Exception {
     File files = temp.newFolder();
     fixture(files);
@@ -104,6 +129,75 @@ public class NativeEnvironmentRebuildTest {
         "new candidate",
         Files.readString(new File(task.directory(), "failed-linux/ubuntu/partial").toPath()));
     assertNull(EnvironmentRebuildTransaction.pending(FS, files));
+  }
+
+  @Test
+  public void captureParentLinkIsIdentifiedWithoutChangingOriginalData() throws Exception {
+    File files = temp.newFolder();
+    fixture(files);
+    var task = EnvironmentRebuildTransaction.create(FS, files, null);
+    File home = new File(files, "linux/ubuntu/root");
+    BackupFileSystem guarded =
+        new JvmBackupFileSystem() {
+          @Override
+          public List<String> list(File path) throws IOException {
+            if (path.equals(home)) throw new IOException("PARENT_LINK");
+            return super.list(path);
+          }
+        };
+    IOException error =
+        assertThrows(
+            IOException.class,
+            () ->
+                new MaintenanceDataSnapshot(
+                        guarded, files, task.directory(), new File(files, "public"))
+                    .capture("/root/project", "test", new BackupControl(null)));
+    assertEquals("REBUILD_CAPTURE_PARENT_LINK", error.getMessage());
+    assertEquals("PARENT_LINK", error.getCause().getMessage());
+    assertEquals("conversation", Files.readString(new File(home, ".dsh/sessions/a").toPath()));
+    assertFalse(new File(task.directory(), "previous-linux").exists());
+  }
+
+  @Test
+  public void restoreRejectsLinkedParentAndRollbackRetainsOriginal() throws Exception {
+    File files = temp.newFolder();
+    fixture(files);
+    var task = prepared(files);
+    task.begin();
+    File newRoot = new File(files, "linux/ubuntu"),
+        linked = new File(newRoot, "root/.dsh/sessions");
+    Files.createDirectories(newRoot.toPath());
+    BackupFileSystem guarded =
+        new JvmBackupFileSystem() {
+          boolean replaced;
+
+          @Override
+          public void parents(File root, String relative) throws IOException {
+            // 模拟逐段 NOFOLLOW 在恢复一个文件前发现父级被替换。
+            if (relative.equals("root/.dsh/sessions/a")) replaced = true;
+            super.parents(root, relative);
+          }
+
+          @Override
+          public Node stat(File path) throws IOException {
+            if (replaced && path.equals(linked))
+              return new Node("LINK", "replacement", 0, 0, 0, 0777);
+            return super.stat(path);
+          }
+        };
+    IOException error =
+        assertThrows(
+            IOException.class,
+            () ->
+                new MaintenanceDataSnapshot(
+                        guarded, files, task.directory(), new File(files, "public"))
+                    .restore(newRoot, new BackupControl(null)));
+    assertEquals("REBUILD_RESTORE_PARENT_LINK", error.getMessage());
+    assertEquals("PARENT_LINK", error.getCause().getMessage());
+    assertFalse(new File(linked, "a").exists());
+    task.rollback();
+    assertEquals(
+        "conversation", Files.readString(new File(newRoot, "root/.dsh/sessions/a").toPath()));
   }
 
   @Test
@@ -141,6 +235,38 @@ public class NativeEnvironmentRebuildTest {
     assertEquals(
         "conversation",
         Files.readString(new File(files, "linux/ubuntu/root/.dsh/sessions/a").toPath()));
+  }
+
+  @Test
+  public void rebuildPreservesUserToolRootAndReinjectsManagedPaths() throws Exception {
+    File files = temp.newFolder();
+    fixture(files);
+    var transaction = prepared(files);
+    transaction.begin();
+    // 新 rootfs 只带受管注入内容；用户工具目录应来自数据快照，/opt/gh 由受管资产负责。
+    put(files, "linux/ubuntu/opt/gh/bin/gh", "new managed gh");
+    new MaintenanceDataSnapshot(FS, files, transaction.directory(), new File(files, "public"))
+        .restore(new File(files, "linux/ubuntu"), new BackupControl(null));
+    assertEquals(
+        "user installed tool",
+        Files.readString(new File(files, "linux/ubuntu/opt/user-tool/bin/tool").toPath()));
+    assertEquals(
+        "new managed gh", Files.readString(new File(files, "linux/ubuntu/opt/gh/bin/gh").toPath()));
+    assertFalse(new File(files, "linux/ubuntu/usr/local/bin/user-entry").exists());
+  }
+
+  @Test
+  public void toolRootPreflightIsBoundedAndReportsTheOverflow() throws Exception {
+    File files = temp.newFolder();
+    fixture(files);
+    File rootfs = new File(files, "linux/ubuntu");
+    var usage = MaintenanceDataSnapshot.inspectToolRoots(FS, rootfs, 1000);
+    assertFalse(usage.overflowed);
+    assertTrue("expected /opt entries, got " + usage.entries, usage.entries >= 7);
+    assertTrue(usage.bytes > 0);
+    var limited = MaintenanceDataSnapshot.inspectToolRoots(FS, rootfs, 3);
+    assertTrue(limited.overflowed);
+    assertTrue(limited.entries > 3);
   }
 
   private void kill(File files, String id, String phase, boolean rollback) throws Exception {

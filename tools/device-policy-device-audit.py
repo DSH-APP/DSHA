@@ -108,7 +108,7 @@ try:
     require(not dispatched, '全部危险样例在任何设备传输前被拦截')
     require(request('/confirm', cmd='id') == 'YES', '允许的查询无需弹确认')
     require('Name:' in request('/app/readfile', path='/proc/self/status'), 'App 接口实际读取零长度 /proc 文件')
-    require('NO_PERMISSION' in request('/app/readfile', path='/proc/version') or 'Permission denied' in request('/app/readfile', path='/proc/version'), 'Android 未授予读取权限时明确返回原因')
+    require(request('/app/readfile', path='/data/user_de/0/com.dsh.client/files/test').startswith('FORBIDDEN:'), 'App 接口拒绝宿主设备加密私有数据')
     require('Linux version' in execute('cat /proc/version'), '设备 shell 读取系统文件')
     for path in ('/', '/system', '/data', '/storage/emulated/0/DCIM', '/storage/emulated/0/Pictures', '/storage/emulated/0/Android/data'):
         require(plan('ls ' + path)['kind'] == 'READ', '读取目录在策略层放行：' + path)

@@ -33,6 +33,16 @@ final class WebRecordedStop {
 
     String savedIdentity(int pid) throws IOException;
 
+    /**
+     * 强制结束模式必须复核保存的出生身份：缺记录或对不上时不发 SIGKILL。
+     *
+     * <p>普通停止只按记录 + 命令行核验；强杀是不可逆动作，多一层出生身份绑定。默认关闭，
+     * 只有隔离试运行收尾的强制路径打开。
+     */
+    default boolean requireSavedBirth() {
+      return false;
+    }
+
     WebProcessManager.ProcessState inspect(int pid) throws IOException;
 
     void retire(String record) throws IOException;
@@ -65,6 +75,10 @@ final class WebRecordedStop {
           io.retire(record);
           return null;
         }
+        // 强杀路径要求出生身份也可核对：PID 记录被换掉时宁可保留现场也不发 SIGKILL。
+        if (io.requireSavedBirth()
+            && (saved == null || state.identity == null || !state.identity.matches(saved)))
+          return WebStopDiagnostic.of(Code.TRIAL_IDENTITY_CHANGED, "birth-evidence");
         if (!io.trial()
             && WebStopEvidence.mayRetireUnsignalableRecord(
                 kind(state), state.signalProbeForbidden, pid, saved)) {

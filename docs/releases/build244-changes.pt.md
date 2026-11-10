@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.3-20261101.0910-dsh0.2.1-rc.5 / build244
+
+- Corrige a falha permanente de «Recuperar manutenção interrompida»: versões antigas gravavam o registro de conclusão dos plug-ins de forma atômica dentro da pasta de transações de plug-ins, e uma gravação interrompida deixava arquivos como `.previous` ou `.tmp-*`. Depois disso toda verificação relatava `PLUGIN_JOURNAL_ID`, a recuperação parava em «Parando o Web», outros reparos eram recusados com `REPAIR_RECOVER_PENDING_FIRST` e o Web não iniciava.
+- O registro de conclusão agora fica fora da pasta de transações. Restos antigos e outras entradas não reconhecidas nessa pasta são mantidos como estão; não bloqueiam mais a manutenção e nunca são reexecutados como operações de plug-in. Aparelhos já travados devem passar na verificação após instalar por cima.
+- Esta versão atualiza o script de transações de plug-ins, então a instalação por cima substitui os arquivos gerenciados pelo fluxo normal de atualização do ambiente gerenciado; os dados pessoais permanecem no lugar.
+- Escopo da verificação: testes unitários locais (1689 casos nos pacotes backup e util) e as regressões Python de transações de plug-ins passaram; ainda não verificado em um aparelho que teve o problema. versionCode sobe para 244. A revisão DSHA continua 0.2.1-rc.3 e o DSH incluído continua 0.2.1-rc.5.

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-ui-settings-account/lib/client.js",
+  "sourceSha256": "0482b179466e1aaae6d7ff5738f679a8a62b39a0f1c496bda64bef342eb7b7e0",
+  "packageIntegrity": "sha512-lqUd3fEaEYB9q9qCM7dXxS0VWn2Hmya0YHEdvvKc/8bcWO0HRqYncvE9MS4k734oEPMrq/K3L+BjjxCPO2aMWQ==",
+  "purpose": "Coalesce only equivalent in-flight profile reads; preserve credential and wire behavior; log bounded non-secret HTTP diagnostics as one string.",
+  "patches": [
+    {
+      "before": "if (value?.status === \"failed\") console.error(\"[deepseek-account] account read failed\", { field });",
+      "after": "// DSHA_ACCOUNT_CLIENT_DIAGNOSTIC_V1: fixed field survives embedded console forwarding.\n\t\t\t\t\tif (value?.status === \"failed\") console.error(\"[deepseek-account] account read failed \" + JSON.stringify({ field }));"
+    }
+  ]
+}

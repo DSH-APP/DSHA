@@ -91,7 +91,7 @@ await test('real MCP stdio initializes and lists exactly fifteen tools without l
   const timer=setTimeout(()=>{child.kill();},5000);
   try{
     const initialized=await Promise.race([request(1,'initialize'),closed.then(()=>{throw Error('stdio closed before initialize: '+errors);})]);
-    assert.equal(initialized.result.serverInfo.name,'DSHA Virtual Screen');assert.match(initialized.result.instructions,/android_vscreen_anchor then android_vscreen_anchored_click/);
+    assert.equal(initialized.result.serverInfo.name,'DSHA Virtual Screen');assert.match(initialized.result.instructions,/锚定三种动作各有独立身份/);
     child.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})+'\n');
     const listed=await Promise.race([request(2,'tools/list'),closed.then(()=>{throw Error('stdio closed before tools/list: '+errors);})]);
     assert.deepEqual(listed.result.tools.map(row=>row.name),tools.map(row=>row.name));assert.equal(listed.result.tools.length,15);

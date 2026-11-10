@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>启动恢复 · 重绘与状态语义原型</title>
+<!-- 离线设计原型：不连接设备或外部网络。时间与耗时取自 2026-11-02 17:50 截图，其余状态为演示样例。 -->
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:system-ui,-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;background:#dde3ec;color:#18273F}
+button,select{font:inherit;color:inherit}
+.tb{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:10px 16px;background:#fff;border-bottom:1px solid #d2d9e4}
+.tb b{font-size:14px;margin-right:4px}
+.tb label{font-size:12px;color:#5A6B86;margin-right:4px}
+.tb select{font-size:13px;padding:5px 8px;border-radius:9px;border:1px solid #c6cfdc;background:#f6f8fb}
+.seg{display:inline-flex;border:1px solid #c6cfdc;border-radius:9px;overflow:hidden;background:#f6f8fb}
+.seg button{border:0;background:none;padding:6px 11px;font-size:13px;cursor:pointer}
+.seg button+button{border-left:1px solid #dbe1ea}
+.seg button.on{background:#1E50D0;color:#fff}
+.stage{display:flex;gap:20px;padding:20px;align-items:flex-start;justify-content:center}
+.notes{flex:0 0 380px;font-size:13px;line-height:1.6;background:#fff;border-radius:14px;padding:14px 18px;color:#34445e;max-height:calc(100vh - 110px);overflow:auto}
+.notes h3{margin:4px 0 6px;font-size:15px;color:#18273F}
+.notes h4{margin:14px 0 4px;font-size:13px;color:#18273F}
+.notes ul{margin:0;padding-left:18px}
+.notes table{border-collapse:collapse;width:100%;font-size:12px;margin-top:4px}
+.notes td,.notes th{border-bottom:1px solid #e4e9f0;padding:4px 4px;text-align:left;vertical-align:top}
+.notes th{color:#5A6B86;font-weight:600}
+.notes code{font-size:11px;background:#eef2f7;border-radius:4px;padding:0 3px;word-break:break-all}
+.notes .warn{color:#8C600D}
+.sw{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:0}
+#devwrap{flex:none;position:relative}
+#device{position:absolute;left:0;top:0;transform-origin:0 0;border-radius:30px;background:#121722;padding:10px;box-shadow:0 18px 50px rgba(20,30,50,.28)}
+
+/* ---------- 屏幕主题（与 shell_ui.xml 同一组语义色） ---------- */
+#screen{--fs:1;position:relative;overflow:hidden;border-radius:22px;display:flex;flex-direction:column;font-size:calc(14px * var(--fs));line-height:1.45;
+  --bg:#F3F6FB;--surface:#FCFDFF;--raised:#E7EDF6;--line:rgba(29,58,96,.08);--line2:rgba(29,58,96,.16);
+  --text:#18273F;--text2:#50617A;--muted:#5A6B86;--accent:#1E50D0;--accent-soft:rgba(30,80,208,.09);--on-accent:#fff;
+  --good:#287453;--warn:#8C600D;--bad:#AF404B;--idle:#66758C;--good-soft:rgba(40,116,83,.10);--warn-soft:rgba(140,96,13,.11);--bad-soft:rgba(175,64,75,.10);--idle-soft:rgba(90,107,134,.10);
+  --scrim:rgba(12,20,36,.38);--shadow:0 10px 30px rgba(24,39,63,.16);
+  background:var(--bg);color:var(--text)}
+#screen.dark{--bg:#0B0F16;--surface:#131923;--raised:#1B2432;--line:rgba(203,220,255,.08);--line2:rgba(208,225,255,.14);
+  --text:#EDF1F7;--text2:#B0BBCC;--muted:#8895AA;--accent:#6AA4FF;--accent-soft:rgba(106,164,255,.12);--on-accent:#091729;
+  --good:#93CCAF;--warn:#E4BE83;--bad:#EEA3A6;--idle:#9AA6B8;--good-soft:rgba(147,204,175,.12);--warn-soft:rgba(228,190,131,.12);--bad-soft:rgba(238,163,166,.12);--idle-soft:rgba(154,166,184,.10);
+  --scrim:rgba(0,0,0,.55);--shadow:0 10px 30px rgba(0,0,0,.5)}
+.sbar{flex:none;height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:12px;font-weight:600}
+.gbar{flex:none;height:18px;display:flex;align-items:center;justify-content:center}
+.gbar i{display:block;width:120px;height:4px;border-radius:3px;background:var(--text);opacity:.55}
+.app{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+.scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+.scroll::-webkit-scrollbar{width:0;height:0}
+.pad{padding:0 16px}
+.wide .pad{padding:0 28px}
+.maxw{max-width:1120px;margin:0 auto}
+svg.i{width:1.36em;height:1.36em;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+svg.s{width:1.05em;height:1.05em}
+.mono{font-family:ui-monospace,"JetBrains Mono",Menlo,monospace;font-size:.9em}
+.muted{color:var(--muted)}
+.ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.appbar{flex:none;display:flex;align-items:center;gap:4px;min-height:56px;padding:0 8px}
+.appbar h1{flex:1;margin:0 4px;font-size:1.22em;font-weight:700}
+.ib{width:44px;height:44px;flex:none;display:inline-flex;align-items:center;justify-content:center;border:0;background:none;border-radius:12px;cursor:pointer;color:var(--text)}
+.ib:hover{background:var(--accent-soft)}
+.spin{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.btn{min-height:44px;border-radius:13px;border:1px solid var(--line2);background:var(--surface);color:var(--text);font-weight:600;padding:0 16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-align:center}
+.btn.p{background:var(--accent);color:var(--on-accent);border-color:transparent}
+.btn.d{color:var(--bad)}
+.btn.t{border-color:transparent;background:none;color:var(--accent);min-height:36px;padding:0 8px}
+.btn[disabled]{opacity:.45;cursor:default}
+.sec{margin:18px 4px 7px;font-size:.88em;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:8px}
+.sec .x{margin-left:auto;font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;min-height:50px;padding:7px 14px;cursor:pointer;border:0;background:none;width:100%;text-align:left}
+.row+.row{border-top:1px solid var(--line)}
+.row:hover{background:var(--accent-soft)}
+.row .ic{width:34px;height:34px;flex:none;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center}
+.row .ic.d{background:var(--bad-soft);color:var(--bad)}
+.row .tx{flex:1;min-width:0}
+.row .tt{font-weight:600}
+.row .sub{font-size:.84em;color:var(--muted);margin-top:1px}
+.row .sub.r{color:var(--warn)}
+.row .chev{color:var(--muted);opacity:.7}
+.row[disabled]{cursor:default}.row[disabled]:hover{background:none}
+.row[disabled] .tt,.row[disabled] .ic{opacity:.45}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--c)}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:.8em;font-weight:700;padding:2px 8px;border-radius:999px;color:var(--c);background:var(--cs);white-space:nowrap}
+.good{--c:var(--good);--cs:var(--good-soft)}.warn{--c:var(--warn);--cs:var(--warn-soft)}.bad{--c:var(--bad);--cs:var(--bad-soft)}
+.info{--c:var(--accent);--cs:var(--accent-soft)}.idle{--c:var(--idle);--cs:var(--idle-soft)}
+.status{border-radius:18px;padding:14px 16px;background:var(--cs);border:1px solid color-mix(in srgb,var(--c) 22%,transparent)}
+.status .h{display:flex;align-items:center;gap:10px;color:var(--c);font-weight:700;font-size:1.12em}
+.status .h .code{margin-left:auto;font-size:.68em;font-weight:600;opacity:.85}
+.status .d{margin:6px 0 0;color:var(--text2);font-size:.92em}
+.status .m{margin-top:6px;font-size:.8em;color:var(--muted)}
+.status .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.status .acts .btn{flex:1 1 auto}
+.banner{display:flex;gap:10px;align-items:flex-start;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--cs);color:var(--text);font-size:.9em}
+.banner svg{color:var(--c);margin-top:1px}
+.banner .x{margin-left:auto;cursor:pointer;color:var(--muted);border:0;background:none;padding:0}
+.rec{display:flex;align-items:center;gap:10px;min-height:46px;padding:6px 14px;cursor:pointer;border:0;background:none;width:100%;text-align:left}
+.rec+.rec{border-top:1px solid var(--line)}
+.rec:hover{background:var(--accent-soft)}
+.rec .w{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.rec .tm{font-variant-numeric:tabular-nums;color:var(--text2);font-size:.9em;white-space:nowrap}
+.rec .el{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.84em;white-space:nowrap}
+.cols{display:grid;grid-template-columns:1fr;gap:0 24px}
+.wide .cols{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.tl .cols{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--raised);margin-top:12px}
+.tabs button{flex:1;border:0;background:none;border-radius:10px;padding:8px 4px;font-weight:600;color:var(--muted);cursor:pointer}
+.tabs button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tabs .n{font-size:.78em;margin-left:4px;color:var(--c,var(--muted))}
+.strip{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:var(--cs);color:var(--c);font-weight:700;cursor:pointer}
+.strip .ell{flex:1}
+.steps{counter-reset:s}
+.steps .row .ic{background:var(--raised);color:var(--text);font-weight:700;font-size:.9em}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.wide .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.tile{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;cursor:pointer;text-align:left;min-height:76px}
+.tile:hover{background:var(--accent-soft)}
+.tile svg{color:var(--accent)}
+.tile .tt{font-weight:600;font-size:.92em}
+.tile .sub{font-size:.78em;color:var(--muted)}
+.tile[disabled]{cursor:default;opacity:.5}.tile[disabled]:hover{background:var(--surface)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.chips::-webkit-scrollbar{height:0}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:7px 10px;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-width:112px;text-align:left}
+.chip .a{display:flex;align-items:center;gap:6px;font-weight:700;font-size:.86em;color:var(--c)}
+.chip .b{font-size:.76em;color:var(--muted);font-variant-numeric:tabular-nums}
+.chip.cur{outline:2px solid var(--accent);outline-offset:-1px}
+.note{padding:12px 14px;color:var(--muted);font-size:.9em}
+.scrimx{position:absolute;inset:0;background:var(--scrim);z-index:30}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:31;background:var(--surface);border-radius:22px 22px 0 0;max-height:82%;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.wide .sheet{left:50%;right:auto;bottom:50%;transform:translate(-50%,50%);width:min(560px,86%);border-radius:22px;max-height:80%}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line2);margin:9px auto 2px}
+.sb{overflow:auto;padding:8px 20px 6px;flex:1;min-height:0}
+.sb h2{font-size:1.12em;margin:6px 0 4px}
+.sf{display:flex;gap:10px;padding:12px 20px 16px;border-top:1px solid var(--line)}
+.sf .btn{flex:1}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:.9em;margin:10px 0}
+.kv dt{color:var(--muted)}.kv dd{margin:0;min-width:0;word-break:break-word}
+pre.log{background:var(--raised);border-radius:12px;padding:10px 12px;font-size:.78em;line-height:1.5;white-space:pre-wrap;word-break:break-word;margin:6px 0 4px;max-height:220px;overflow:auto}
+.toast{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);background:#2B323D;color:#fff;padding:9px 16px;border-radius:12px;font-size:.9em;z-index:40;max-width:86%;text-align:center}
+/* 原版对照 */
+.o .ocard{background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.o .orow{display:flex;align-items:center;gap:16px;min-height:66px;padding:0 18px;font-size:1.08em}
+.o .orow+.orow{border-top:1px solid var(--line)}
+.o .orow .ic{width:38px;height:38px;border-radius:11px;background:var(--raised);color:var(--accent);display:flex;align-items:center;justify-content:center}
+.o .orow .dot{background:var(--good)}
+.o .reason{margin:6px 0 0;border-radius:16px;background:var(--raised);padding:12px 16px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="tb" id="tb"></div>
+<div class="stage">
+  <div id="devwrap"><div id="device"><div id="screen"></div></div></div>
+  <aside class="notes" id="notes"></aside>
+</div>
+<script>
+'use strict';
+/* ---------------- 图标 ---------------- */
+const P={
+ back:'<path d="M15 5l-7 7 7 7"/>',
+ refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/>',
+ shield:'<path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/>',
+ lifebuoy:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M5.6 5.6l3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9"/>',
+ filep:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M12 11v6M9 14h6"/>',
+ wrench:'<path d="M14.7 6.3a4 4 0 0 0-5.3 5.3L4 17l3 3 5.4-5.4a4 4 0 0 0 5.3-5.3l-2.4 2.4-2.6-.4-.4-2.6z"/>',
+ undo:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
+ doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+ archive:'<path d="M4 8h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M3 4h18v4H3zM10 12h4"/>',
+ rollback:'<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/>',
+ puzzle:'<path d="M10 4h4v2.5a1.5 1.5 0 0 0 3 0V4h3v6h-2.5a1.5 1.5 0 0 0 0 3H20v7h-6v-2.5a1.5 1.5 0 0 0-3 0V20H4v-7h2.5a1.5 1.5 0 0 0 0-3H4V4h6"/>',
+ trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+ chev:'<path d="M9 5l7 7-7 7"/>',
+ ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 10"/>',
+ x:'<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
+ alert:'<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5h.01"/>',
+ pause:'<circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>',
+ load:'<path d="M12 3a9 9 0 1 0 9 9"/>',
+ minus:'<circle cx="12" cy="12" r="9"/><path d="M8 12h8"/>',
+ close:'<path d="M6 6l12 12M18 6L6 18"/>',
+ globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+};
+const I=(n,c='i')=>`<svg class="${c}" viewBox="0 0 24 24" aria-hidden="true">${P[n]||''}</svg>`;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------------- 语义：一种颜色只表达一种结论 ----------------
+   good 绿 = 已成功 / 正在正常运行      info 蓝 = 正在进行，尚无结论
+   idle 灰 = 未运行，但不是故障          warn 琥珀 = 需要你处理，不是失败（中断、未完成、忙）
+   bad  红 = 明确失败 / 已损坏 / 不可用 */
+const TONE_ICON={good:'ok',info:'load',idle:'minus',warn:'alert',bad:'x'};
+const TONE_NAME={good:'正常',info:'进行中',idle:'未运行',warn:'需要处理',bad:'错误'};
+
+/* 动作目录：label 为动词开头；fx 说明副作用；guard 决定为何不可用（不可用时显示原因，而不是只变灰）。 */
+const A={
+ back:{l:'返回 Web',ic:'globe',fx:'',nav:true},
+ start:{l:'启动 DSH',ic:'refresh',fx:'正常启动，加载全部已启用插件',guard:'start'},
+ retry:{l:'重试启动',ic:'refresh',fx:'按原配置重新启动一次',guard:'start'},
+ safe:{l:'安全启动',ic:'shield',fx:'只加载官方基础界面；插件开关与配置原样保留',guard:'start'},
+ newcfg:{l:'新建配置文件',ic:'filep',fx:'以默认内容替换所选配置，原文件先存为修复前快照',guard:'repair',stop:true},
+ restore:{l:'恢复最近健康快照',ic:'undo',fx:'只覆盖配置文件；会话、工作区、插件文件不动',guard:'repair',stop:true},
+ recover:{l:'回滚未完成的修复',ic:'wrench',fx:'用修复前快照撤回写了一半的配置',guard:'pending',stop:true},
+ uninstall:{l:'卸载出错插件',ic:'puzzle',fx:'只卸载 file-picker-plus，由插件管理器核验结果',guard:'repair',stop:true},
+ envfix:{l:'修复运行环境',ic:'gear',fx:'进入环境安装与修复；对话与配置单独保护',nav:true},
+ emergency:{l:'启动独立应急 DSH',ic:'lifebuoy',fx:'独立运行根，不读取正式环境，可让 AI 协助排查',nav:true},
+ logs:{l:'查看并下载日志',ic:'doc',fx:'',nav:true},
+ hostbak:{l:'宿主备份与只读救援',ic:'archive',fx:'',nav:true},
+ rollback:{l:'回退兼容运行时',ic:'rollback',fx:'回到上一代健康运行时',guard:'repair',stop:true},
+ install:{l:'环境安装与修复',ic:'gear',fx:'',nav:true},
+ port:{l:'修改 Web 端口',ic:'gear',fx:'打开配置页的端口设置',nav:true},
+};
+
+/* 场景 = 当前状态。code 为稳定错误码；raw 为现有代码里产生它的原始文案（详情中原样保留）。 */
+const ST={
+ idle:{tone:'idle',title:'DSH 未运行',code:'',detail:'当前没有启动任务，也没有未处理的故障。',meta:'上次启动：今天 17:19 成功 · 9s 就绪',acts:['start'],how:'手动打开'},
+ running:{tone:'good',title:'DSH 正在正常运行',code:'',detail:'网页已就绪，最近一次启动没有错误。这里的修复操作会先停止 Web。',meta:'本次启动：今天 17:19 · 9s 就绪',acts:['back'],how:'手动打开'},
+ starting:{tone:'info',title:'正在启动 · 加载插件',code:'',detail:'已用时 12s。启动完成或失败前，会改动配置的操作暂不可用。',meta:'当前阶段：正在加载插件 dsh-web-mobile',acts:['logs'],how:'手动打开'},
+ stopped:{tone:'idle',title:'DSH 已手动停止',code:'',detail:'你在 17:32 停止了 Web，这不是故障。',meta:'停止前运行正常：今天 17:19 · 9s 就绪',acts:['start'],how:'手动打开'},
+ port:{tone:'bad',title:'启动失败：端口 3080 被占用',code:'WEB_PORT_IN_USE',detail:'另一个程序正在使用 3080。改用自动端口或换一个端口后重试。',raw:'Web 端口被占用：3080',stage:'启动 Web 服务',acts:['port','retry'],how:'启动失败后自动打开'},
+ plugin:{tone:'bad',title:'启动失败：插件 file-picker-plus 加载出错',code:'PLUGIN_LOAD_FAILED',detail:'只有这个插件报错。卸载它，或先安全启动再到插件页处理。',raw:'插件加载异常：file-picker-plus',stage:'正在加载插件',acts:['uninstall','safe'],how:'启动失败后自动打开'},
+ exit:{tone:'bad',title:'启动失败：proroot 在鉴权前退出（退出码 139）',code:'PROCESS_EXITED',detail:'服务进程崩溃，没有给出登录链接。日志保留了退出前的输出。',raw:'proroot 进程退出，退出码 139（鉴权前）',stage:'等待鉴权链接',acts:['logs','rollback'],how:'启动失败后自动打开'},
+ config:{tone:'bad',title:'启动失败：配置文件无法解析',code:'CONFIG_UNREADABLE',detail:'settings.yaml 第 12 行格式错误。恢复健康快照或新建该文件。',raw:'启动配置检查失败：settings.yaml: bad indentation (line 12)',stage:'配置检查',acts:['restore','newcfg'],how:'启动失败后自动打开'},
+ health:{tone:'bad',title:'运行中断：服务连续 3 次健康检查无响应',code:'HEALTH_CHECK_TIMEOUT',detail:'Web 曾正常就绪，之后停止响应并被结束。重试通常可以恢复。',raw:'服务连续三次健康检查未响应',stage:'运行中',acts:['retry','logs'],how:'运行中断后自动打开'},
+ page:{tone:'bad',title:'网页加载失败：插件初始化报致命错误',code:'WEB_PAGE_FATAL',detail:'后端已启动，网页插件 dsh-web-mobile 初始化失败。',raw:'dsh-web-mobile：TypeError: Cannot read properties of undefined',stage:'网页初始化',acts:['safe','logs'],how:'网页失败后自动打开'},
+ env:{tone:'bad',title:'运行环境损坏：缺少 Bash 或加载器',code:'RUNTIME_BROKEN',detail:'这不是配置问题，重试与安全启动都无效。请先修复运行环境。',raw:'运行环境的 Bash、启动链接或加载器缺失',stage:'环境检查',acts:['envfix','hostbak'],how:'启动前检查失败'},
+ interrupted:{tone:'warn',title:'上次启动被中断，没有结果',code:'STARTUP_INTERRUPTED',detail:'17:40 的启动未完成也未报错，通常是应用被系统结束。不确定是否有故障。',raw:'status=starting（无结束记录）',stage:'正在加载插件',acts:['retry','logs'],how:'检测到未完成的启动'},
+ pending:{tone:'warn',title:'有一次配置修复没有完成',code:'REPAIR_PENDING',detail:'修复写到一半被中断。必须先回滚，之后才能启动或做其它修复。',raw:'RECOVERY_PENDING',stage:'',acts:['recover'],how:'检测到未完成的修复'},
+ busy:{tone:'warn',title:'环境任务进行中：自动备份',code:'ENV_TASK_BUSY',detail:'正在执行的任务结束后，记录会自动刷新，修复操作随即可用。',raw:'RECOVERY_BUSY',stage:'',acts:[],how:'手动打开'},
+ readerr:{tone:'bad',title:'恢复记录读取失败',code:'RECOVERY_CATALOG',detail:'快照目录索引无法读取，已停止整理以免误删。原文件保留。',raw:'RECOVERY_CATALOG',stage:'',acts:['logs'],how:'手动打开'},
+};
+const SCEN=[['idle','未运行（截图）'],['running','正常运行'],['starting','启动中'],['stopped','手动停止'],['port','失败 · 端口占用'],['plugin','失败 · 插件'],['exit','失败 · 进程退出'],['config','失败 · 配置损坏'],['health','中断 · 健康检查'],['page','失败 · 网页'],['env','环境损坏'],['interrupted','警告 · 启动中断'],['pending','警告 · 修复未完成'],['busy','警告 · 环境忙'],['readerr','错误 · 读取失败'],['mixed','记录全状态演示']];
+
+/* 启动记录：截图里的 5 条 + 场景对应的最新一条。 */
+const BASE=[
+ {t:'17:19:25',d:0,st:'ready',el:9},
+ {t:'05:11:26',d:0,st:'ready',el:15},
+ {t:'04:57:26',d:0,st:'ready',el:41},
+ {t:'04:45:24',d:0,st:'ready',el:17},
+ {t:'04:20:44',d:0,st:'ready',el:29},
+];
+const TOP={
+ starting:{t:'17:50:02',st:'running',el:12,stage:'正在加载插件'},
+ stopped:null,
+ port:{t:'17:48:10',st:'failed',el:3,k:'port'},plugin:{t:'17:48:10',st:'failed',el:21,k:'plugin'},
+ exit:{t:'17:48:10',st:'failed',el:6,k:'exit'},config:{t:'17:48:10',st:'failed',el:1,k:'config'},
+ health:{t:'17:48:10',st:'lost',el:9,k:'health'},page:{t:'17:48:10',st:'failed',el:14,k:'page'},
+ env:{t:'17:48:10',st:'failed',el:0,k:'env'},interrupted:{t:'17:40:31',st:'interrupted',el:18},
+};
+function records(){
+ const s=S.scen;let r=BASE.map(x=>({...x}));
+ if(s==='stopped') r[0].st='stopped_ok';
+ if(s==='mixed') r=[{t:'17:50:02',st:'running',el:12},{t:'17:48:10',st:'failed',el:3,k:'port'},{t:'17:40:31',st:'interrupted',el:18},{t:'17:33:00',st:'cancelled',el:4},{t:'17:19:25',st:'stopped_ok',el:9},{t:'05:11:26',st:'ready',el:15,safe:true},{t:'04:57:26',st:'ready',el:41}];
+ else if(TOP[s]) r=[TOP[s],...r].slice(0,5);
+ return r.map((x,i)=>({...x,id:i}));
+}
+/* 每条记录只有一个结论；“启动中／已中断”这种二选一不再出现。 */
+const KLABEL={port:'端口被占用',plugin:'插件出错',exit:'进程退出',config:'配置损坏',health:'健康检查无响应',page:'网页加载失败',env:'环境损坏'};
+function recView(r){
+ switch(r.st){
+  case 'ready':return {tone:'good',l:r.safe?'成功 · 安全模式':'成功',el:r.el+'s 就绪'};
+  case 'stopped_ok':return {tone:'good',l:'成功 · 后已手动停止',el:r.el+'s 就绪'};
+  case 'running':return {tone:'info',l:'进行中',el:'已用 '+r.el+'s'};
+  case 'cancelled':return {tone:'idle',l:'启动时被手动取消',el:'第 '+r.el+'s'};
+  case 'interrupted':return {tone:'warn',l:'中断 · 无结果',el:'第 '+r.el+'s 后无记录'};
+  case 'lost':return {tone:'bad',l:'就绪后中断 · '+KLABEL[r.k],el:r.el+'s 就绪'};
+  default:return {tone:'bad',l:'失败 · '+KLABEL[r.k],el:'第 '+r.el+'s 失败'};
+ }
+}
+function snaps(){
+ const s=[{t:'05:11:29',k:'healthy',from:'05:11 启动'},{t:'04:57:29',k:'healthy',from:'04:57 启动'},{t:'04:45:28',k:'healthy',from:'04:45 启动'}];
+ if(S.scen==='config'||S.scen==='mixed'){s.unshift({t:'17:47:55',k:'prerepair',from:'新建 settings.yaml 之前'});s.push({t:'04:12:03',k:'damaged',from:'校验和不符'});}
+ if(S.scen==='pending') s.unshift({t:'17:45:12',k:'prerepair',from:'恢复 04:57 快照之前（修复未完成）'});
+ return s.map((x,i)=>({...x,id:i}));
+}
+const SNAP={healthy:{tone:'good',l:'健康启动'},prerepair:{tone:'info',l:'修复之前'},damaged:{tone:'bad',l:'已损坏 · 禁止恢复'}};
+const PLUGINS=['file-picker-plus'];
+
+/* ---------------- 状态 ---------------- */
+const q=new URLSearchParams(location.search);
+const S={v:q.get('v')||'a',device:q.get('device')||'tp',theme:q.get('theme')||'dark',fs:+(q.get('fs')||1),scen:q.get('scenario')||'idle',
+ all:false,tab:q.get('tab')||'do',sheet:null,toast:'',banner:null,refreshing:false,expand:false,outcome:q.get('outcome')||'ok'};
+const DEV={phone:[392,850],tp:[800,1280],tl:[1280,800]};
+const cur=()=>S.scen==='mixed'?ST.port:ST[S.scen];
+const today=t=>'今天 '+t.slice(0,5);
+
+/* 不可用原因：显示在动作下面，而不是只变灰。 */
+function why(id){
+ const a=A[id],s=S.scen;if(!a||a.nav) return '';
+ if(s==='busy') return '等待自动备份完成';
+ if(s==='starting'&&a.guard!=='pending') return '启动进行中';
+ if(s==='pending'&&a.guard!=='pending') return '先回滚未完成的修复';
+ if(s==='env'&&a.guard==='start') return '运行环境未就绪';
+ if(a.guard==='pending'&&s!=='pending') return '没有未完成的修复';
+ if(s==='running'&&a.guard==='start') return '已在运行';
+ return '';
+}
+/* 其它操作：去掉状态卡里已经给出的主操作；“回滚未完成的修复”只在确有待处理时出现。 */
+function restActs(){
+ const shown=new Set(cur().acts),s=S.scen;
+ const rec=[s==='idle'||s==='stopped'?'':'retry','safe','newcfg','restore','emergency'].filter(x=>x&&!shown.has(x));
+ if(s==='pending'&&!shown.has('recover')) rec.unshift('recover');
+ const diag=['logs','hostbak','rollback','install'].filter(x=>!shown.has(x));
+ return {rec,diag};
+}
+
+/* ---------------- 交互 ---------------- */
+function toast(t){S.toast=t;render();clearTimeout(toast.h);toast.h=setTimeout(()=>{S.toast='';render();},2200);}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function runAction(id){
+ const a=A[id];S.sheet=null;
+ if(a.nav){toast('打开「'+a.l+'」');return;}
+ const ok=S.outcome==='ok';
+ S.banner=ok?{tone:'good',t:'已完成：'+a.l+'。'+(a.stop?'Web 与终端已停止，可重新启动。':'')}
+  :{tone:'bad',t:'未执行：'+a.l+'。配置或快照已变化（RECOVERY_CHANGED），请刷新后重新选择。'};
+ render();
+}
+async function refresh(){if(S.refreshing)return;S.refreshing=true;render();await sleep(600);S.refreshing=false;render();toast('记录已刷新');}
+function act(name,arg){
+ switch(name){
+  case 'v':S.v=arg;S.sheet=null;break;
+  case 'device':S.device=arg;S.sheet=null;break;
+  case 'theme':S.theme=arg;break;
+  case 'fs':S.fs=+arg;break;
+  case 'outcome':S.outcome=arg;break;
+  case 'scen':S.scen=arg;S.sheet=null;S.banner=null;S.all=false;break;
+  case 'tab':S.tab=arg;break;
+  case 'all':S.all=!S.all;break;
+  case 'expand':S.expand=!S.expand;break;
+  case 'do':{if(why(arg))return;const a=A[arg];if(a.nav||!a.stop&&a.guard!=='repair')return runAction(arg);S.sheet={k:'confirm',id:arg};break;}
+  case 'run':return runAction(arg);
+  case 'rec':S.sheet={k:'rec',id:+arg};break;
+  case 'snap':S.sheet={k:'snap',id:+arg};break;
+  case 'plug':S.sheet={k:'confirm',id:'uninstall'};break;
+  case 'close':S.sheet=null;break;
+  case 'nobanner':S.banner=null;break;
+  case 'refresh':return refresh();
+  case 'snapdo':{const sn=snaps()[S.sheet.id];S.sheet=null;
+   S.banner=S.outcome==='ok'?{tone:'good',t:arg==='del'?'已删除快照 '+sn.t+'；当前配置未改动。':'已恢复 '+today(sn.t)+' 的健康快照，可重新启动。'}:{tone:'bad',t:'未执行：快照校验失败（RECOVERY_CHECKSUM），配置未改动。'};break;}
+  case 'copy':toast('已复制');break;
+ }
+ render();
+}
+document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el||el.disabled||el.hasAttribute('disabled'))return;act(el.dataset.a,el.dataset.v);});
+document.addEventListener('change',e=>{if(e.target.id==='scensel')act('scen',e.target.value);});
+
+/* ---------------- 共用部件 ---------------- */
+const appbar=()=>`<div class="appbar"><button class="ib" aria-label="返回">${I('back')}</button><h1>启动恢复</h1><button class="ib" data-a="refresh" aria-label="刷新记录">${I('refresh',S.refreshing?'i spin':'i')}</button></div>`;
+function statusCard(compact){
+ const c=cur(),tn=c.tone;
+ const acts=c.acts.map((id,i)=>{const w=why(id);return `<button class="btn ${i===0?'p':''}" data-a="do" data-v="${id}" ${w?'disabled':''}>${esc(A[id].l)}</button>`;}).join('');
+ return `<section class="status ${tn}" role="status"><div class="h">${I(TONE_ICON[tn])}<span>${esc(c.title)}</span>${c.code&&S.device!=='phone'?`<span class="code mono">${c.code}</span>`:''}</div>
+ <p class="d">${esc(c.detail)}</p>${c.meta?`<div class="m">${esc(c.meta)}</div>`:''}<div class="m">${esc(c.how)}${c.stage?' · 失败阶段：'+esc(c.stage):''}${c.code&&S.device==='phone'?' · <span class="mono">'+c.code+'</span>':''}</div>
+ ${S.scen==='busy'?`<div class="m">${I('load','s spin')} 自动备份 · 已用 0:42</div>`:''}
+ ${acts?`<div class="acts">${acts}</div>`:''}</section>${bannerHtml()}`;
+}
+const bannerHtml=()=>S.banner?`<div class="banner ${S.banner.tone}" role="status">${I(TONE_ICON[S.banner.tone],'s')}<span>${esc(S.banner.t)}</span><button class="x" data-a="nobanner" aria-label="关闭">${I('close','s')}</button></div>`:'';
+function actRow(id,sub=true){
+ const a=A[id],w=why(id);
+ return `<button class="row" data-a="do" data-v="${id}" ${w?'disabled':''}><span class="ic">${I(a.ic)}</span><span class="tx"><div class="tt">${esc(a.l)}</div>${w?`<div class="sub r">不可用：${esc(w)}</div>`:sub&&a.fx?`<div class="sub">${esc(a.fx)}</div>`:''}</span>${I('chev','s chev')}</button>`;
+}
+function recRow(r){const v=recView(r);return `<button class="rec" data-a="rec" data-v="${r.id}"><span class="w"><span class="dot ${v.tone}"></span><span class="tag ${v.tone}">${esc(v.l)}</span></span><span class="tm">${today(r.t)}</span><span class="el">${esc(v.el)}</span>${I('chev','s chev')}</button>`;}
+function snapRow(s){const v=SNAP[s.k];return `<button class="rec" data-a="snap" data-v="${s.id}"><span class="w"><span class="tag ${v.tone}">${esc(v.l)}</span><span class="muted ell" style="font-size:.84em">${esc(s.from)}</span></span><span class="tm">${today(s.t)}</span>${I('chev','s chev')}</button>`;}
+function pluginCard(){
+ if(S.scen!=='plugin') return '';
+ return `<div class="sec">插件</div><div class="card"><button class="row" data-a="plug"><span class="ic d">${I('puzzle')}</span><span class="tx"><div class="tt">file-picker-plus</div><div class="sub" style="color:var(--bad)">本次启动报错</div></span><span class="btn t">卸载</span></button></div>`;
+}
+function recordsBlock(limit){
+ const rs=records(),n=limit&&!S.all?rs.slice(0,limit):rs;
+ const fails=rs.filter(r=>['bad','warn'].includes(recView(r).tone)).length;
+ return `<div class="sec">最近启动<span class="muted" style="font-weight:600">${fails?fails+' 次未成功':'全部成功'}</span>${limit&&rs.length>limit?`<button class="btn t x" data-a="all">${S.all?'收起':'全部 '+rs.length}</button>`:''}</div><div class="card">${n.map(recRow).join('')}</div>`;
+}
+function snapsBlock(){
+ const ss=snaps();
+ return `<div class="sec">配置快照<span class="muted" style="font-weight:500">仅配置，不含会话与工作区</span></div><div class="card">${ss.length?ss.map(snapRow).join(''):'<div class="note">还没有快照。下一次无错误的启动会自动保存。</div>'}</div>`;
+}
+
+/* ---------------- A · 状态卡优先 ---------------- */
+function vA(){
+ const {rec,diag}=restActs(),wide=S.device!=='phone';
+ const left=`${statusCard()}${pluginCard()}<div class="sec">其它恢复操作</div><div class="card">${rec.map(x=>actRow(x)).join('')}</div>`;
+ const tools=`<div class="sec">数据与诊断</div><div class="card">${diag.map(x=>actRow(x,false)).join('')}</div>`;
+ const right=`${recordsBlock(wide?0:3)}${snapsBlock()}`;
+ return `${appbar()}<div class="scroll"><div class="pad maxw">${wide?`<div class="cols"><div>${left}${tools}</div><div>${right}</div></div>`:left+right+tools}<div style="height:18px"></div></div></div>`;
+}
+
+/* ---------------- B · 状态条 + 分页签 ---------------- */
+function vB(){
+ const c=cur(),{rec,diag}=restActs(),rs=records(),ss=snaps();
+ const failN=rs.filter(r=>['bad','warn'].includes(recView(r).tone)).length,badSnap=ss.filter(s=>s.k==='damaged').length;
+ const strip=`<div class="strip ${c.tone}" data-a="expand">${I(TONE_ICON[c.tone])}<span class="ell">${esc(c.title)}</span>${I('chev','s')}</div>
+  ${S.expand?`<div style="padding:8px 4px 0;font-size:.9em;color:var(--text2)">${esc(c.detail)}${c.code?` <span class="mono muted">${c.code}</span>`:''}</div>`:''}${bannerHtml()}`;
+ const tabs=`<div class="tabs" role="tablist">${[['do','处理'],['rec','启动记录',failN,'bad'],['snap','配置快照',badSnap,'bad']].map(([k,l,n,t])=>`<button role="tab" class="${S.tab===k?'on':''}" data-a="tab" data-v="${k}">${l}${n?`<span class="n ${t}">${n}</span>`:''}</button>`).join('')}</div>`;
+ let body='';
+ if(S.tab==='do'){
+  const steps=c.acts.map((id,i)=>{const w=why(id),a=A[id];return `<button class="row" data-a="do" data-v="${id}" ${w?'disabled':''}><span class="ic">${i+1}</span><span class="tx"><div class="tt">${esc(a.l)}</div><div class="sub ${w?'r':''}">${esc(w?'不可用：'+w:a.fx||'')}</div></span>${I('chev','s chev')}</button>`;}).join('');
+  body=`${steps?`<div class="sec">建议按顺序处理</div><div class="card steps">${steps}</div>`:''}${pluginCard()}
+  <div class="sec">全部操作</div><div class="grid">${[...rec,...diag].map(id=>{const w=why(id),a=A[id];return `<button class="tile" data-a="do" data-v="${id}" ${w?'disabled':''}>${I(a.ic)}<span class="tt">${esc(a.l)}</span>${w?`<span class="sub" style="color:var(--warn)">${esc(w)}</span>`:''}</button>`;}).join('')}</div>`;
+ } else if(S.tab==='rec') body=`<div style="height:12px"></div><div class="card">${rs.map(recRow).join('')}</div><div class="note">每次启动只显示一个结论。点按查看失败阶段、原因与日志片段。</div>`;
+ else body=`<div style="height:12px"></div><div class="card">${ss.map(snapRow).join('')}</div><div class="note">保留最近 3 份健康启动与 3 份修复前快照；仅保存配置。</div>`;
+ return `${appbar()}<div class="scroll"><div class="pad maxw" style="max-width:760px">${strip}${tabs}${body}<div style="height:18px"></div></div></div>`;
+}
+
+/* ---------------- C · 单屏总览 ---------------- */
+function vC(){
+ const c=cur(),{rec,diag}=restActs(),rs=records(),ss=snaps();
+ const chips=rs.map(r=>{const v=recView(r);return `<button class="chip ${v.tone}" data-a="rec" data-v="${r.id}"><span class="a"><span class="dot"></span>${esc(v.l.split(' · ')[0])}</span><span class="b">${r.t.slice(0,5)} · ${esc(v.el)}</span></button>`;}).join('');
+ const schips=ss.map(s=>{const v=SNAP[s.k];return `<button class="chip ${v.tone}" data-a="snap" data-v="${s.id}"><span class="a">${esc(v.l.split(' · ')[0])}</span><span class="b">${s.t.slice(0,5)}</span></button>`;}).join('');
+ const tiles=ids=>`<div class="grid">${ids.map(id=>{const w=why(id),a=A[id];return `<button class="tile" data-a="do" data-v="${id}" ${w?'disabled':''}>${I(a.ic)}<span class="tt">${esc(a.l)}</span>${w?`<span class="sub" style="color:var(--warn)">${esc(w)}</span>`:''}</button>`;}).join('')}</div>`;
+ return `${appbar()}<div class="scroll"><div class="pad maxw">${statusCard(S.device==='phone')}${pluginCard()}
+  <div class="sec">最近 ${rs.length} 次启动</div><div class="chips">${chips}</div>
+  <div class="sec">配置快照</div><div class="chips">${schips}</div>
+  <div class="sec">恢复</div>${tiles(rec)}<div class="sec">数据与诊断</div>${tiles(diag)}<div style="height:18px"></div></div></div>`;
+}
+
+/* ---------------- 原版对照（按截图结构） ---------------- */
+function vO(){
+ const r=(ic,t)=>`<div class="orow"><span class="ic">${I(ic)}</span><span style="flex:1">${t}</span>${I('chev','s chev')}</div>`;
+ const reason=S.scen==='idle'?'尚未启动':cur().raw||cur().title;
+ const old=st=>({ready:'就绪',stopped_ok:'已停止',failed:'失败',lost:'失败',cancelled:'已停止'}[st]||'启动中／已中断');
+ return `<div class="appbar"><button class="ib">${I('back')}</button><h1 style="font-size:1.5em">启动恢复</h1></div><div class="scroll o"><div class="pad maxw">
+ <div class="reason">进入原因：${esc(reason)}</div>
+ <div class="sec">恢复与修复</div><div class="ocard">${r('shield','启动独立应急 DSH')}${r('refresh','重试启动')}${r('shield','安全启动基础界面')}${r('filep','新建配置文件')}${r('wrench','恢复中断的配置修复')}</div>
+ <div class="sec">最近五次启动</div><div class="ocard">${records().map(x=>`<div class="orow"><span class="dot" style="background:${x.st==='ready'||x.st==='stopped_ok'?'var(--good)':x.st==='failed'||x.st==='lost'?'var(--bad)':'var(--warn)'}"></span><span style="flex:1">2026-11-02 ${x.t} · ${old(x.st)} · ${x.el}s</span>${I('chev','s chev')}</div>`).join('')}</div>
+ <div class="sec">配置快照</div><div class="muted" style="font-size:.85em;margin:-4px 4px 8px">保留三次健康启动与三次修复前快照；仅保存配置，不复制会话、工作区或依赖目录。</div>
+ <div class="ocard">${['04:57:29','05:11:29','04:45:28'].map(t=>`<div class="orow">健康启动 · 2026-11-02 ${t}</div>`).join('')}</div>
+ <div class="sec">其他工具</div><div class="ocard">${r('doc','宿主备份与只读救援')}${r('refresh','回退兼容运行时')}${r('gear','环境安装与修复')}${r('doc','查看并下载日志')}${r('refresh','刷新恢复记录')}</div><div style="height:20px"></div></div></div>`;
+}
+
+/* ---------------- 弹层 ---------------- */
+function sheet(){
+ const sh=S.sheet;if(!sh) return '';
+ let body='',foot='';
+ if(sh.k==='confirm'){const a=A[sh.id];
+  body=`<h2>${esc(a.l)}？</h2><p>${esc(a.fx)}</p>${a.stop?'<p class="muted">会先停止 Web 和终端，并保存修复前快照。</p>':''}`;
+  foot=`<button class="btn" data-a="close">取消</button><button class="btn p" data-a="run" data-v="${sh.id}">${esc(a.l)}</button>`;}
+ if(sh.k==='rec'){const r=records()[sh.id],v=recView(r),k=r.k&&ST[r.k];
+  body=`<h2><span class="tag ${v.tone}">${esc(v.l)}</span></h2><dl class="kv"><dt>开始</dt><dd>2026-11-02 ${r.t}</dd>
+  <dt>${r.st==='ready'||r.st==='stopped_ok'||r.st==='lost'?'就绪用时':'用时'}</dt><dd>${r.el}s${r.st==='ready'||r.st==='stopped_ok'?'（后端鉴权 '+Math.max(1,r.el-3)+'s · 网页 '+r.el+'s）':''}</dd>
+  ${r.safe?'<dt>模式</dt><dd>安全启动（未加载第三方插件）</dd>':''}
+  ${k?`<dt>错误码</dt><dd class="mono">${k.code}</dd><dt>失败阶段</dt><dd>${esc(k.stage)}</dd><dt>原始原因</dt><dd class="mono">${esc(k.raw)}</dd>`:''}
+  ${r.st==='interrupted'?'<dt>最后阶段</dt><dd>正在加载插件</dd><dt>说明</dt><dd>没有成功或失败记录，可能被系统结束。</dd>':''}
+  ${r.st==='cancelled'?'<dt>说明</dt><dd>启动完成前你手动停止了 Web。</dd>':''}</dl>
+  <div class="muted" style="font-size:.84em">日志片段（已脱敏）</div><pre class="log">[0.0s] 开始启动 DSH
+[0.4s] 完成「配置检查」，耗时 0.4s
+[1.1s] 正在启动 Web 服务…
+${k?'['+r.el+'.0s] '+esc(k.raw):'['+r.el+'.0s] BROWSER_READY: '+r.el+'.0s'}</pre>`;
+  foot=`<button class="btn" data-a="copy">复制日志</button><button class="btn p" data-a="close">关闭</button>`;}
+ if(sh.k==='snap'){const s=snaps()[sh.id],v=SNAP[s.k];
+  body=`<h2><span class="tag ${v.tone}">${esc(v.l)}</span> ${today(s.t)}</h2><dl class="kv"><dt>来源</dt><dd>${esc(s.from)}</dd><dt>包含</dt><dd class="mono">web.json · settings.yaml · cordis.patch.yml</dd>
+  ${s.k==='damaged'?'<dt>问题</dt><dd>校验和与记录不符，不能用于恢复。删除它不影响当前配置。</dd>':'<dt>恢复范围</dt><dd>只覆盖上面这些配置文件；已卸载的插件不会自动重装。</dd>'}</dl>`;
+  foot=s.k==='damaged'?`<button class="btn" data-a="close">取消</button><button class="btn d" data-a="snapdo" data-v="del">删除快照</button>`
+   :`<button class="btn d" data-a="snapdo" data-v="del">删除</button><button class="btn p" data-a="snapdo" data-v="restore" ${why('restore')?'disabled':''}>恢复此快照</button>`;}
+ return `<div class="scrimx" data-a="close"></div><div class="sheet" role="dialog">${S.device==='phone'?'<div class="grab"></div>':''}<div class="sb">${body}</div><div class="sf">${foot}</div></div>`;
+}
+
+/* ---------------- 说明 ---------------- */
+const NOTES={
+ o:`<h3>原版（对照）</h3><ul><li>「进入原因：尚未启动」：手动打开时把启动轨迹默认阶段当成原因，读起来像故障。</li><li>记录只有「就绪 / 失败 / 已停止 / 启动中／已中断」；后者把“正在进行”和“异常中断”混成一个琥珀点。成功后手动停止被写成「已停止」，看不出曾经成功。</li><li>“9s”不说明是就绪用时还是失败时刻。</li><li>「恢复中断的配置修复」永远显示，没有待处理修复时也可点。</li><li>快照未按时间排序；损坏快照与正常快照同一种按钮样式。</li><li>每行 66dp，手机上首屏只能看到操作，看不到结论。</li></ul>`,
+ a:`<h3>A · 状态卡优先（推荐）</h3><ul><li>顶部状态卡给出唯一结论 + 1–2 个对症主操作，替代「进入原因」。</li><li>其余操作带一行效果说明；不可用时写明原因（如「先回滚未完成的修复」），不只是变灰。</li><li>手机：记录默认 3 条可展开；行高 46–50dp，首屏能同时看到结论、操作与最近结果。</li><li>平板：左侧状态+操作，右侧记录+快照。</li></ul><h4>代价</h4><ul><li>需要把失败原因分类成稳定错误码（新增 util 纯逻辑 + 单测）。</li></ul>`,
+ b:`<h3>B · 状态条 + 分页签</h3><ul><li>一行状态条（点开看详情），下方「处理 / 启动记录 / 配置快照」三个页签；页签上用红色数字标出未成功次数和损坏快照。</li><li>「处理」页把对症操作编号为建议步骤，其余操作放网格。</li><li>最紧凑，但记录要多点一次才能看到。</li></ul>`,
+ c:`<h3>C · 单屏总览</h3><ul><li>状态卡 + 横向滑动的启动/快照小卡 + 操作网格，一屏放下全部内容。</li><li>适合平板横屏；手机上小卡需要横滑，信息密度最高但可读性最差。</li></ul>`,
+};
+function glossary(){
+ const tone=Object.keys(TONE_NAME).map(t=>`<tr><td><span class="sw" style="background:${{good:'#287453',info:'#1E50D0',idle:'#66758C',warn:'#8C600D',bad:'#AF404B'}[t]}"></span>${TONE_NAME[t]}</td><td>${{good:'已成功 / 正常运行',info:'正在进行，尚无结论',idle:'没在运行，但不是故障',warn:'需要你处理，但不是失败',bad:'明确失败 / 已损坏 / 不可用'}[t]}</td></tr>`).join('');
+ const recs=[['ready','成功'],['ready+safe','成功 · 安全模式'],['stopped（曾就绪）','成功 · 后已手动停止'],['starting（当前代）','进行中'],['stopped（未就绪）','启动时被手动取消'],['starting（非当前代）','中断 · 无结果'],['failed','失败 · <分类>'],['failed（曾就绪）','就绪后中断 · <分类>']].map(([a,b])=>`<tr><td><code>${a}</code></td><td>${b}</td></tr>`).join('');
+ const errs=Object.entries(ST).filter(([,v])=>v.code).map(([,v])=>`<tr><td><span class="sw" style="background:${v.tone==='bad'?'#AF404B':'#8C600D'}"></span><code>${v.code}</code></td><td>${esc(v.title)}</td><td><code>${esc(v.raw||'')}</code></td></tr>`).join('');
+ return `<h4>颜色 = 结论（四个方案共用）</h4><table>${tone}</table>
+ <h4>启动记录状态（现有字段 → 新文案）</h4><table><tr><th>记录</th><th>显示</th></tr>${recs}</table>
+ <p class="muted" style="font-size:12px">“曾就绪”用已持久化的 browserReadyMs ≥ 0 判断；“当前代”用 recordId 判断，不新增存储字段。</p>
+ <h4>错误与警告分类</h4><table><tr><th>错误码</th><th>标题</th><th>现有原始文案</th></tr>${errs}</table>
+ <h4>四个方案都改的</h4><ul><li>只在有未完成修复时显示「回滚未完成的修复」。</li><li>耗时写成「9s 就绪 / 第 3s 失败 / 已用 12s」。</li><li>快照按时间倒序；损坏快照红色标签、只能删除。</li><li>操作结果用绿色「已完成」或红色「未执行 + 原因 + 错误码」横幅，不再与读取错误共用一行灰字。</li><li>“刷新恢复记录”移到顶栏图标。</li></ul>
+ <p class="warn">工具栏「操作结果」切成“失败”可演示失败横幅。</p>`;
+}
+
+/* ---------------- 渲染 ---------------- */
+function seg(name,c,opts){return `<span class="seg">${opts.map(([v,l])=>`<button class="${String(c)===String(v)?'on':''}" data-a="${name}" data-v="${v}">${l}</button>`).join('')}</span>`;}
+function render(){
+ const keep={};document.querySelectorAll('#screen .scroll').forEach((el,i)=>keep[i]=el.scrollTop);
+ document.getElementById('tb').innerHTML=`<b>启动恢复</b>${seg('v',S.v,[['o','原版'],['a','A 状态卡（推荐）'],['b','B 页签'],['c','C 单屏总览']])}
+  <span><label>状态</label><select id="scensel">${SCEN.map(([k,l])=>`<option value="${k}" ${k===S.scen?'selected':''}>${l}</option>`).join('')}</select></span>
+  <span><label>设备</label>${seg('device',S.device,[['phone','手机'],['tp','平板竖'],['tl','平板横']])}</span>
+  <span><label>主题</label>${seg('theme',S.theme,[['light','浅'],['dark','深']])}</span>
+  <span><label>字号</label>${seg('fs',S.fs,[[1,'1×'],[1.3,'1.3×']])}</span>
+  <span><label>操作结果</label>${seg('outcome',S.outcome,[['ok','成功'],['fail','失败']])}</span>`;
+ const [w,h]=DEV[S.device],scr=document.getElementById('screen');
+ scr.className=`${S.theme==='dark'?'dark':''} ${S.device} ${S.device!=='phone'?'wide':''}`;
+ scr.style.setProperty('--fs',S.fs);scr.style.width=w+'px';scr.style.height=h+'px';
+ const body={o:vO,a:vA,b:vB,c:vC}[S.v]();
+ scr.innerHTML=`<div class="sbar"><span>17:50</span><span>40%</span></div><div class="app">${body}${S.v==='o'?'':sheet()}${S.toast?`<div class="toast" role="status">${esc(S.toast)}</div>`:''}</div><div class="gbar"><i></i></div>`;
+ document.querySelectorAll('#screen .scroll').forEach((el,i)=>{if(keep[i])el.scrollTop=keep[i];});
+ document.getElementById('notes').innerHTML=NOTES[S.v]+glossary();
+ fit();
+}
+function fit(){const [w,h]=DEV[S.device];const dw=w+20,dh=h+20;const tb=document.getElementById('tb').offsetHeight;
+ const avail=window.innerWidth-(window.innerWidth>1100?440:40);const sc=Math.min(1,avail/dw,(window.innerHeight-tb-40)/dh);
+ const d=document.getElementById('device');d.style.transform=`scale(${sc})`;const wr=document.getElementById('devwrap');wr.style.width=dw*sc+'px';wr.style.height=dh*sc+'px';}
+window.addEventListener('resize',fit);
+render();
+</script>
+</body>
+</html>

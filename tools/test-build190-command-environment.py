@@ -64,20 +64,19 @@ import java.nio.charset.StandardCharsets;
 public class CommandEnvironmentShell {
   public static void main(String[] a) {
     System.out.print(Base64.getEncoder().encodeToString(WebLaunchCommand.build(
-      a[0],true,a[1],a[2],0,42).getBytes(StandardCharsets.UTF_8)));
+      true,a[0],a[1],0,42).getBytes(StandardCharsets.UTF_8)));
   }
 }
 ''')
     java = Path(os.environ.get("JAVA_HOME", "D:/develop/JDK")) / "bin"
     compile_result = command(out / "compile-shell.log", [str(java / "javac.exe"),
         "-encoding", "UTF-8", "-d", str(classes), *(str(source / (n + ".java"))
-        for n in ["DshEntrypoint", "WebLaunchCommand", "WebProcSel", "ShellQuote"]), str(helper)])
+        for n in ["DshEntrypoint", "WebLaunchCommand", "WebProcSel", "ShellQuote", "PermissionMode"]), str(helper)])
     assert compile_result.returncode == 0, compile_result.stderr
     settings = {
-        "normal": ["ask", "zh", "web"],
-        "web": ["danger-full-access", "zh", "web"],
-        "quoted": ["ask'; touch /root/injected-permission; #",
-                   "zh'\n$(touch /root/injected-language)",
+        "normal": ["zh", "web"],
+        "web": ["zh", "web"],
+        "quoted": ["zh'\n$(touch /root/injected-language)",
                    "web'; touch /root/injected-profile; #"],
     }
     generated = {}
@@ -218,9 +217,9 @@ def inside(root: Path, args):
         assert r.returncode == (127 if mode == "negative" else 0), (mode, r.returncode, r.stderr)
     if not args.web_only:
         quoted = results["quoted"]
-        assert quoted["permission"] == shell_data["settings"]["quoted"][0]
-        assert quoted["language"] == shell_data["settings"]["quoted"][1]
-        assert quoted["profile"] == shell_data["settings"]["quoted"][2]
+        assert quoted["permission"] == "danger-full-access"
+        assert quoted["language"] == shell_data["settings"]["quoted"][0]
+        assert quoted["profile"] == shell_data["settings"]["quoted"][1]
         assert quoted["argv"][1] == quoted["profile"]
         assert not list(Path("/root").glob("injected-*"))
     sentinel = Path("/root/.dsha-stopped")

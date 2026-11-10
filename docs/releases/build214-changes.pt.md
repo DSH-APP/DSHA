@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.3-20261030.2130-dsh0.2.1-rc.5 / build214
+
+- Alinhamento visual da gaveta de sessões do terminal em 224dp no celular em retrato/janela estreita: as ações inferiores agora usam rótulos curtos na mesma grade 2×3, com botões de uma linha e altura igual, o resumo passa a «N sessões» (as contagens completas por grupo ficam no nome de acessibilidade), o subtítulo do cabeçalho fica «Sessões independentes» na gaveta estreita e as margens internas da gaveta são alinhadas à grade de 12dp; o layout de telas largas/tablets não muda.
+- Corrigido o layout das linhas «Fonte do texto / Fonte do código / Fonte do terminal» na folha de configurações móvel do DSH Web UI 0.2.1-rc.5: em telas estreitas o campo de entrada ocupa uma linha inteira própria, então a descrição não é mais exibida um caractere por linha nem infla a folha verticalmente; a correção é aplicada por um patch local do dsh-web-mobile embutido, sem afetar desktop/tablet.
+- versionCode elevado para 214; a revisão do DSHA permanece 0.2.1-rc.3 e o sufixo do DSH embutido é 0.2.1-rc.5; o escopo de build e aceitação segue este run e o recibo do Release.

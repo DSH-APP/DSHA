@@ -9,6 +9,8 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
 import com.deepseekharness.app.util.SensitiveData;
+import com.deepseekharness.app.util.ShizukuChannelStatus;
+import com.deepseekharness.app.util.UiText;
 import rikka.shizuku.Shizuku;
 
 /** Provider 接收服务 Binder，Application 建立监听；不依赖 ADB 开关或 Ubuntu 环境。 */
@@ -19,6 +21,8 @@ public final class ShizukuShell {
   private static volatile IShellService service;
   private static volatile ServiceConnection connection;
   private static volatile String failure = "";
+  // 最近一次用户点击授权的结果，只影响文案；Binder 断开或重新请求时清空。
+  private static volatile ShizukuChannelStatus.Outcome outcome = ShizukuChannelStatus.Outcome.NONE;
   private static Shizuku.UserServiceArgs arguments;
   private static boolean listening;
   private static int requestCode = 9527;
@@ -35,9 +39,10 @@ public final class ShizukuShell {
       Shizuku.addBinderDeadListener(
           () ->
               MAIN.post(
-                  () ->
-                      disconnect(
-                          com.deepseekharness.app.util.UiText.text("Shizuku 服务已停止"), false)));
+                  () -> {
+                    outcome = ShizukuChannelStatus.Outcome.NONE;
+                    disconnect(UiText.text("Shizuku 服务已停止"), false);
+                  }));
       Shizuku.addBinderReceivedListenerSticky(() -> MAIN.post(() -> ensureBound(context)));
     } catch (Throwable e) {
       synchronized (LOCK) {
@@ -81,22 +86,66 @@ public final class ShizukuShell {
         + isReady()
         + ",binding="
         + (connection != null && service == null)
+        + (outcome == ShizukuChannelStatus.Outcome.NONE ? "" : ",request=" + outcome)
         + (failure.isEmpty() ? "" : ",error=" + failure);
   }
 
+  /**
+   * 当前授权步骤。权限只认服务端 checkSelfPermission 的真实结果；管理器可见性按本进程所在用户解析， 分身 / 工作资料里看不到机主空间的管理器时不能就地弹授权页。
+   */
+  public static ShizukuChannelStatus.Step step(Context ctx) {
+    boolean alive = isAvailable();
+    boolean granted = alive && hasPermission();
+    return ShizukuChannelStatus.step(
+        alive,
+        granted,
+        granted && isReady(),
+        !failure.isEmpty(),
+        ctx != null && ShizukuManagerCompat.manager(ctx) != null,
+        ShizukuChannelStatus.isProfileUser(android.os.Process.myUid()));
+  }
+
   public static String userStatus(Context ctx) {
-    if (!isAvailable())
-      return isInstalled(ctx)
-          ? com.deepseekharness.app.util.UiText.text(
-              "管理器已安装，服务尚未连接。点击授权重新连接；若仍未连接，请启动管理器服务，并检查隐藏模式是否允许 DSHA。")
-          : com.deepseekharness.app.util.UiText.text("尚未安装 Shizuku。安装并启动后可在这里授权。");
-    if (!hasPermission())
-      return com.deepseekharness.app.util.UiText.text("服务已连接，尚未授权 DSHA。点击下方授权。");
-    if (isReady())
-      return com.deepseekharness.app.util.UiText.text("已授权 · 设备 Shell 已连接，可直接使用，无需 ADB 配对");
-    if (!failure.isEmpty())
-      return com.deepseekharness.app.util.UiText.format("已授权，连接失败：%s。点击下方重试。", failure);
-    return com.deepseekharness.app.util.UiText.text("已授权，正在连接设备 Shell…");
+    ShizukuChannelStatus.Step step = step(ctx);
+    switch (step) {
+      case INSTALL:
+        return UiText.text("尚未安装 Shizuku。安装并启动后可在这里授权。");
+      case PROFILE_NO_SERVICE:
+        return UiText.choose(
+            "DSHA 正运行在应用分身或工作资料中，本空间没有 Shizuku / Stellar，服务也尚未连接。请在机主空间启动管理器服务后回到这里刷新。",
+            "DSHA is running in an app clone or work profile that has no Shizuku or Stellar, and the service is not connected. Start the manager service in the main profile, then come back and refresh.");
+      case CONNECT:
+        if (ShizukuManagerCompat.isStellar(ctx))
+          return UiText.choose(
+              "已安装 Stellar，Shizuku 兼容层尚未连接。请在 Stellar 中启动服务并确认已开启「Shizuku 兼容层」，回到 DSHA 后点授权。",
+              "Stellar is installed, but the Shizuku compatibility layer is not connected. Start the service in Stellar and make sure the Shizuku compatibility layer is enabled, then return to DSHA and tap Authorize.");
+        return UiText.text("管理器已安装，服务尚未连接。点击授权重新连接；若仍未连接，请启动管理器服务，并检查隐藏模式是否允许 DSHA。");
+      case AUTHORIZE_IN_OWNER:
+        return UiText.choose(
+            "服务已连接，但 DSHA 运行在应用分身或工作资料中，本空间没有管理器，授权窗口无法弹出。请在机主空间打开 Stellar（或 Shizuku）的应用授权列表，允许分身里的 DSHA，然后回到这里点「刷新状态」。",
+            "The service is connected, but DSHA is running in an app clone or work profile with no manager, so the authorization prompt cannot appear. In the main profile, open the app list in Stellar (or Shizuku), allow the cloned DSHA, then come back and tap Refresh.");
+      case REQUEST:
+        if (outcome == ShizukuChannelStatus.Outcome.DENIED)
+          return ShizukuManagerCompat.isStellar(ctx)
+              ? UiText.choose(
+                  "Stellar 拒绝了 DSHA 的授权。若曾选择「始终拒绝」，Stellar 不会再弹窗；请在 Stellar 的应用授权列表中把 DSHA 改为允许，再回到这里刷新。",
+                  "Stellar denied DSHA. If you chose to always deny, Stellar will not ask again; change DSHA to allowed in Stellar's app list, then come back and refresh.")
+              : UiText.choose(
+                  "管理器拒绝了 DSHA 的授权。可再次点击授权，或在管理器的应用列表中允许 DSHA。",
+                  "The manager denied DSHA. Tap Authorize again, or allow DSHA in the manager's app list.");
+        if (outcome == ShizukuChannelStatus.Outcome.TIMEOUT)
+          return UiText.choose(
+              "授权窗口没有返回结果。请确认管理器弹出了授权页；若没有弹出，可在管理器的应用授权列表中直接允许 DSHA，再回到这里刷新。",
+              "The authorization prompt returned no result. Make sure the manager showed its prompt; if not, allow DSHA directly in the manager's app list, then come back and refresh.");
+        return UiText.text("服务已连接，尚未授权 DSHA。点击下方授权。");
+      case READY:
+        return UiText.text("已授权 · 设备 Shell 已连接，可直接使用，无需 ADB 配对");
+      case BIND_FAILED:
+        return UiText.format("已授权，连接失败：%s。点击下方重试。", failure);
+      case BINDING:
+      default:
+        return UiText.text("已授权，正在连接设备 Shell…");
+    }
   }
 
   public static void requestPermission(Shizuku.OnRequestPermissionResultListener callback) {
@@ -108,15 +157,29 @@ public final class ShizukuShell {
               callback.onRequestPermissionResult(0, PackageManager.PERMISSION_GRANTED);
             return;
           }
+          // 当前用户没有管理器（如应用分身）时服务端的授权页弹不出来，也不会回调：不发起注定超时的请求。
+          if (!ShizukuChannelStatus.canRequestPermission(step(context))) {
+            if (callback != null)
+              callback.onRequestPermissionResult(0, PackageManager.PERMISSION_DENIED);
+            return;
+          }
+          outcome = ShizukuChannelStatus.Outcome.NONE;
           final int code = ++requestCode;
           final Shizuku.OnRequestPermissionResultListener[] holder =
               new Shizuku.OnRequestPermissionResultListener[1];
           final boolean[] completed = {false};
+          final boolean[] timedOut = {false};
           holder[0] =
               (received, result) -> {
                 if (received != code || completed[0]) return;
                 completed[0] = true;
                 Shizuku.removeRequestPermissionResultListener(holder[0]);
+                outcome =
+                    result == PackageManager.PERMISSION_GRANTED
+                        ? ShizukuChannelStatus.Outcome.NONE
+                        : timedOut[0]
+                            ? ShizukuChannelStatus.Outcome.TIMEOUT
+                            : ShizukuChannelStatus.Outcome.DENIED;
                 if (result == PackageManager.PERMISSION_GRANTED) ensureBound(context);
                 if (callback != null) callback.onRequestPermissionResult(code, result);
               };
@@ -126,13 +189,15 @@ public final class ShizukuShell {
             MAIN.postDelayed(
                 () -> {
                   if (!completed[0]) {
-                    failure = com.deepseekharness.app.util.UiText.text("授权请求尚未完成，请重试");
+                    timedOut[0] = true;
                     holder[0].onRequestPermissionResult(code, PackageManager.PERMISSION_DENIED);
                   }
                 },
                 60_000);
           } catch (Throwable e) {
             fail(e);
+            // 请求没有送达服务端，不能显示成「管理器拒绝」。
+            timedOut[0] = true;
             holder[0].onRequestPermissionResult(code, PackageManager.PERMISSION_DENIED);
           }
         });

@@ -78,7 +78,7 @@
 
 ## 当前发布文件
 
-目录固定为 `F:\DSHA_RESTART\release`。同名旧 APK/摘要在覆盖前保留到 `release/history/rc1.4-before-functional-audit-20260908`，其他历史文件保留。
+目录固定为 `<local-workspace>`。同名旧 APK/摘要在覆盖前保留到 `release/history/rc1.4-before-functional-audit-20260908`，其他历史文件保留。
 
 | 文件 | 字节数 | MiB | SHA-256 |
 |---|---:|---:|---|
@@ -89,7 +89,7 @@
 
 标准 819、兼容 833 个 arm64 ELF 的 LOAD 16 KB 对齐和 RELRO 在 4/16 KB 映射内覆盖通过，无其他架构混入。[标准报告](evidence/rc1.4-functional/standard-elf.json) / [兼容报告](evidence/rc1.4-functional/low-elf.json)。离线 rootfs 与上一批 rc1.4 摘要一致，未因清理缓存提升环境版本。
 
-GitHub 交付采用 **Pre-release**，由贡献者 [@ym2025szz](https://github.com/ym2025szz) 发布，感谢原作者及其他贡献者。[发布页](https://github.com/DSH-APP/DSHA/releases/tag/v1.2.0-rc1.4)包含同一批双版 APK 及各自 SHA-256；仓库主页仅新增本预览版内容，历史发布和稳定版入口保留。官网/App 更新清单仍按独立的网站发布流程更新。
+GitHub 交付采用 **Pre-release**，由贡献者 [@SunsetRNE](https://github.com/SunsetRNE) 发布，感谢原作者及其他贡献者。[发布页](https://github.com/DSH-APP/DSHA/releases/tag/v1.2.0-rc1.4)包含同一批双版 APK 及各自 SHA-256；仓库主页仅新增本预览版内容，历史发布和稳定版入口保留。官网/App 更新清单仍按独立的网站发布流程更新。
 
 ## 数据保留与验证边界
 

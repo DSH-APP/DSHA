@@ -557,9 +557,12 @@ public final class AdbBridge {
         proot,
         com.deepseekharness.app.util.UiText.text("ADB 后台探活"),
         () -> {
+          // 探活必须真的走 ADB：不带端点时 adb-shell 会先让原生层选 root / Shizuku，
+          // 那条通道返回的 uid=… 会被当成「ADB 已连接」（T38）。显式端口让原生层只给 ADB 计划；
+          // 端口失效时脚本仍会经 mDNS 与历史端口重新发现。
           String options =
               endpoint == null
-                  ? ""
+                  ? " --port " + savedConnectPort(proot)
                   : " --host " + ShellQuote.arg(endpoint.host) + " --port " + endpoint.port;
           return execOwned(
               proot,
@@ -569,6 +572,18 @@ public final class AdbBridge {
                   + " id 2>&1",
               60_000);
         });
+  }
+
+  /** 已验证过的连接端口；缺失或无效时用 ADB 默认端口 5555。 */
+  static int savedConnectPort(ProotBootstrap proot) {
+    String text = "";
+    try {
+      File file = new File(proot.getRootfsDir(), "root/.dsh/adbkeys/connect_port");
+      if (file.isFile() && file.length() <= 16)
+        text = new String(Compat.readAllBytes(file), StandardCharsets.US_ASCII);
+    } catch (Throwable ignored) {
+    }
+    return AdbResult.probePort(text);
   }
 
   public static java.util.Set<String> localAddresses() {

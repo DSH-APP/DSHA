@@ -1,0 +1,20 @@
+{
+  "purpose": "plugin-install-operations/ 子项命名规则；Java util/PluginJournalNames 与 plugin-transactions.py journal_name_kind 共用",
+  "cases": [
+    {"name": "completed", "kind": "HISTORY"},
+    {"name": "0f8e2b1c-1d2e-4f3a-9b8c-7d6e5f4a3b2c", "kind": "TRANSACTION"},
+    {"name": ".completed-proof-v1.json", "kind": "LEGACY_PROOF"},
+    {"name": ".completed-proof-v1.json.previous", "kind": "LEGACY_PROOF"},
+    {"name": ".completed-proof-v1.json.tmp-0f8e2b1c-1d2e-4f3a-9b8c-7d6e5f4a3b2c", "kind": "LEGACY_PROOF"},
+    {"name": ".completed-proof-v1.json.previous-retained-0f8e2b1c-1d2e-4f3a-9b8c-7d6e5f4a3b2c", "kind": "LEGACY_PROOF"},
+    {"name": ".completed-proof-v1.json.restore-0f8e2b1c-1d2e-4f3a-9b8c-7d6e5f4a3b2c", "kind": "LEGACY_PROOF"},
+    {"name": ".completed-proof-v1.json.tmp-not-a-uuid", "kind": "FOREIGN"},
+    {"name": ".completed-proof-v1.json.previous.previous", "kind": "FOREIGN"},
+    {"name": "0F8E2B1C-1D2E-4F3A-9B8C-7D6E5F4A3B2C", "kind": "FOREIGN"},
+    {"name": "0f8e2b1c-1d2e-4f3a-9b8c-7d6e5f4a3b2c.bak", "kind": "FOREIGN"},
+    {"name": "completed.old", "kind": "FOREIGN"},
+    {"name": ".DS_Store", "kind": "FOREIGN"},
+    {"name": "plugin-install-completed-v1.json", "kind": "FOREIGN"},
+    {"name": "", "kind": "FOREIGN"}
+  ]
+}

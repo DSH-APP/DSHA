@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSHA · UI 模板基准导出图（build280 / 核对 build296）</title>
+<style>
+/* 导出图浏览：读取 screens/manifest.json 的同目录副本（manifest.js），只显示 PNG，不运行页面脚本。 */
+:root{color-scheme:light dark;font-family:"Noto Sans CJK SC","WenQuanYi Micro Hei",system-ui,sans-serif}
+body{margin:0;background:#e4eaf3;color:#18273f}
+body.dark{background:#05070b;color:#edf1f7}
+header{position:sticky;top:0;z-index:2;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 16px;background:inherit;border-bottom:1px solid #8884}
+header h1{margin:0;font-size:15px}
+section{padding:14px 16px 0}
+h2{font-size:14px;margin:6px 0 8px;opacity:.75}
+h3{font-size:13px;margin:10px 0 6px;font-weight:600}
+h3 small{font-weight:400;opacity:.65;margin-left:6px}
+.row{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
+figure{margin:0;display:flex;flex-direction:column;gap:4px}
+figcaption{font-size:11px;opacity:.65}
+img{display:block;border-radius:10px;box-shadow:0 0 0 1px #8884;background:#8882}
+</style>
+</head>
+<body>
+<header><h1>DSHA UI 模板基准 · 导出图</h1>
+<label>主题 <select id="th"><option value="light">浅色</option><option value="dark">深色</option></select></label>
+<label>缩放 <select id="sc"><option>0.2</option><option selected>0.25</option><option>0.35</option><option>0.5</option></select></label>
+<label>分组 <select id="gp"><option value="">全部</option></select></label>
+</header>
+<main id="list"></main>
+<script src="screens/manifest.js"></script>
+<script>
+(function () {
+  const M = window.MANIFEST || [];
+  const gp = document.getElementById('gp');
+  [...new Set(M.map(m => m.group))].forEach(g => gp.insertAdjacentHTML('beforeend', `<option>${g}</option>`));
+  const order = ['phone', 'phone-landscape', 'tablet-portrait', 'tablet-landscape'];
+  function draw() {
+    const theme = document.getElementById('th').value, sc = +document.getElementById('sc').value;
+    document.body.className = theme;
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+    let group = null, sec;
+    const seen = new Set();
+    M.filter(m => m.theme === theme && (!gp.value || m.group === gp.value)).forEach(m => {
+      const key = m.page + '/' + m.state;
+      if (seen.has(key)) return;
+      seen.add(key);
+      if (m.group !== group) { group = m.group; sec = document.createElement('section'); sec.innerHTML = `<h2>${group}</h2>`; list.appendChild(sec); }
+      sec.insertAdjacentHTML('beforeend', `<h3>${m.title} · ${m.stateTitle}<small>${m.page}/${m.state} · ${m.source || ''}</small></h3>`);
+      const row = document.createElement('div');
+      row.className = 'row';
+      order.forEach(pf => {
+        const it = M.find(x => x.page === m.page && x.state === m.state && x.profile === pf && x.theme === theme);
+        if (!it) return;
+        row.insertAdjacentHTML('beforeend', `<figure><img loading="lazy" src="${it.file}" width="${Math.round(it.w * sc)}" height="${Math.round(it.h * sc)}" alt="${m.title} ${m.stateTitle} ${pf}"><figcaption>${pf} ${it.w}×${it.h}</figcaption></figure>`);
+      });
+      sec.appendChild(row);
+    });
+  }
+  document.querySelector('header').addEventListener('change', draw);
+  draw();
+})();
+</script>
+</body>
+</html>

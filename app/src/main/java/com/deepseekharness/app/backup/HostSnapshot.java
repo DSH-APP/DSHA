@@ -49,7 +49,8 @@ public final class HostSnapshot {
     boolean[] partial = {false};
     long[] readBytes = {0};
     int[] files = {0};
-    try (OutputStream output = fs.create(archive)) {
+    try (BackupTemporaryFiles cleanup = new BackupTemporaryFiles(fs, capture);
+        OutputStream output = fs.create(archive)) {
       BackupArchive.Writer writer = new BackupArchive.Writer(output, control);
       try (DataOutputStream checks = new DataOutputStream(fs.create(index))) {
         for (BackupSource root : roots) {
@@ -71,6 +72,7 @@ public final class HostSnapshot {
                   java.security.MessageDigest captureDigest = BackupArchive.sha();
                   IOException sourceError = null;
                   InputStream input = null;
+                  Throwable captureFailure = null;
                   try (OutputStream captured = fs.create(capture)) {
                     try {
                       input = root.open(item);
@@ -104,12 +106,26 @@ public final class HostSnapshot {
                       } catch (InterruptedIOException cancelled) {
                         throw cancelled;
                       } catch (IOException e) {
-                        sourceError = e;
+                        if (sourceError == null) sourceError = e;
+                        else if (sourceError != e) sourceError.addSuppressed(e);
+                      } finally {
+                        input = null;
                       }
-                      input = null;
                     }
+                    // Throw before captured.close(): a later flush/fsync failure must be
+                    // suppressed on the source error, not replace the original failure.
+                    if (sourceError != null && !rescue) throw sourceError;
+                  } catch (IOException | RuntimeException | Error failure) {
+                    captureFailure = failure;
+                    throw failure;
                   } finally {
-                    if (input != null) input.close();
+                    if (input != null)
+                      try {
+                        input.close();
+                      } catch (IOException | RuntimeException | Error closing) {
+                        if (captureFailure == null) throw closing;
+                        if (captureFailure != closing) captureFailure.addSuppressed(closing);
+                      }
                   }
                   if (sourceError != null) {
                     fs.delete(capture);
@@ -128,9 +144,10 @@ public final class HostSnapshot {
                   sha = BackupArchive.hex(captureDigest.digest());
                   try (InputStream captured = fs.read(capture, fs.stat(capture))) {
                     writer.add(record(root, item, size, sha), captured);
-                  } finally {
-                    fs.delete(capture);
                   }
+                  // On failure the outer resource performs cleanup without erasing the
+                  // writer/read error. Successful files still release staging immediately.
+                  fs.delete(capture);
                 } else writer.add(record(root, item, 0, ""), null);
                 Map<String, Object> check = new LinkedHashMap<>();
                 check.put("root", root.id());
@@ -206,8 +223,6 @@ public final class HostSnapshot {
                       ? "EXTERNAL_CHECKED"
                       : "QUIESCENT");
       return writer.finish(manifest);
-    } finally {
-      if (!fs.stat(capture).type.equals("MISSING")) fs.delete(capture);
     }
   }
 

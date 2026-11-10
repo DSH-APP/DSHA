@@ -13,7 +13,7 @@ try {
   const source = path.join(project, 'app/src/main/java/com/deepseekharness/app/util');
   const fixture = path.join(project, 'tools/fixtures/WebUiHostFixture.java');
   const compile = spawnSync('javac', ['-encoding', 'UTF-8', '-d', temp, path.join(source, 'WebUploadSessionBudget.java'),
-    path.join(source, 'RecoveryLocalePolicy.java'), fixture], { encoding: 'utf8' });
+    path.join(source, 'UiLanguagePreference.java'), path.join(source, 'RecoveryLocalePolicy.java'), fixture], { encoding: 'utf8' });
   assert.equal(compile.status, 0, `javac failed:\n${compile.stdout}\n${compile.stderr}`);
   const run = spawnSync('java', ['-cp', temp, 'WebUiHostFixture'], { encoding: 'utf8' });
   assert.equal(run.status, 0, `Java fixture failed:\n${run.stdout}\n${run.stderr}`);
@@ -31,7 +31,7 @@ try {
   const nativePort = geckoSurface.match(/NATIVE_PORT\s*=\s*"([^"]+)"/)?.[1];
   const connectName = relay.match(/connectNative\('([^']+)'\)/)?.[1];
   const geckoApplicationName = /^\w+(\.\w+)*$/;
-  assert.equal(recoveryManifest.version, '1.1', 'changed built-in extension must refresh its cached version');
+  assert.equal(recoveryManifest.version, '1.2', 'changed built-in extension must refresh its cached version');
   assert.ok(nativePort && geckoApplicationName.test(nativePort), 'native app name must satisfy Gecko syntax');
   assert.equal(connectName, nativePort, 'Gecko Java and content script must use the same native app name');
   const sent = [], injected = [];
@@ -61,16 +61,17 @@ try {
     browser: { runtime: geckoRuntime },
     MutationObserver: class { observe() {} disconnect() {} },
   });
-  listenerMap.get('message')({ type: 'language', language: 'en' });
-  listenerMap.get('message')({ type: 'language', language: 'fr' });
-  assert.equal(injected.length, 1);
-  assert.match(injected[0], /__DSHA_LANGUAGE__='en'/);
+  const tags=['zh','zh-Hant','en','ru','ja','ko','ar','pt','la','fr'];
+  for(const tag of tags)listenerMap.get('message')({ type: 'language', language: tag });
+  for(const tag of ['system','ar-EG','zh-TW','invalid'])listenerMap.get('message')({ type: 'language', language: tag });
+  assert.equal(injected.length, tags.length);
+  assert.match(injected[2], /__DSHA_LANGUAGE__='en'/);
   assert.deepEqual(sent, []);
-  listenerMap.get('dsha-language-selected')({ detail: 'zh' });
-  listenerMap.get('dsha-language-selected')({ detail: 'fr' });
-  assert.deepEqual(JSON.parse(JSON.stringify(sent)), [{ type: 'language-selected', language: 'zh' }]);
+  for(const tag of tags)listenerMap.get('dsha-language-selected')({ detail: tag });
+  for(const tag of ['system','ar-EG','zh-TW','invalid'])listenerMap.get('dsha-language-selected')({ detail: tag });
+  assert.deepEqual(JSON.parse(JSON.stringify(sent)), tags.map(language=>({ type: 'language-selected', language })));
   assert.doesNotMatch(relay, /cookie|authorization|api.?key/i, 'locale relay must not read or send credentials');
-  console.log('PASS recovery Gecko relay is localhost-only, zh/en-only, and credential-blind');
+  console.log('PASS recovery Gecko relay is localhost-only, canonical-ten-language-only, and credential-blind');
 } finally {
   const resolved = path.resolve(temp);
   if (!resolved.startsWith(tempRoot + path.sep)) throw new Error('refusing to remove fixture path outside temp root');

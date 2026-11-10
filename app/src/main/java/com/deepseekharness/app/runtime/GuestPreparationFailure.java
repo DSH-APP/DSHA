@@ -6,7 +6,8 @@ import java.io.IOException;
 final class GuestPreparationFailure extends IOException {
   enum Code {
     ENV_NOT_READY,
-    BUNDLED_PYTHON_UNAVAILABLE
+    BUNDLED_PYTHON_UNAVAILABLE,
+    PREPARATION_REQUIRED
   }
 
   final Code code;

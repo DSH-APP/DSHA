@@ -9,6 +9,10 @@ import org.junit.Test;
 public final class MainScreenObservationTest {
   private static final ScreenWindowRegion.Bounds FULL = new ScreenWindowRegion.Bounds(0, 0, 6, 8);
 
+  /** 策略用例用真实手机尺寸，避免 1–2px 容差在 6×8 小画布上失真。 */
+  private static final ScreenWindowRegion.Bounds SCREEN =
+      new ScreenWindowRegion.Bounds(0, 0, 1080, 2408);
+
   private static MainScreenWindowPolicy.Window window(
       int id,
       int layer,
@@ -20,7 +24,7 @@ public final class MainScreenObservationTest {
   }
 
   private static MainScreenWindowPolicy.Window app() {
-    return window(7, 1, MainScreenWindowPolicy.Kind.APPLICATION, true, true, FULL);
+    return window(7, 1, MainScreenWindowPolicy.Kind.APPLICATION, true, true, SCREEN);
   }
 
   @Test
@@ -65,7 +69,7 @@ public final class MainScreenObservationTest {
   }
 
   @Test
-  public void chromeAndImeClipOnlyCompleteEdgesOfTheSameObservedWindow() {
+  public void chromeAndImeClipEdgeAttachedCoversOfTheSameObservedWindow() {
     var windows =
         List.of(
             app(),
@@ -75,25 +79,25 @@ public final class MainScreenObservationTest {
                 MainScreenWindowPolicy.Kind.SYSTEM,
                 false,
                 false,
-                new ScreenWindowRegion.Bounds(0, 0, 6, 1)),
+                new ScreenWindowRegion.Bounds(0, 0, 1080, 84)),
             window(
                 9,
                 8,
                 MainScreenWindowPolicy.Kind.SYSTEM,
                 false,
                 false,
-                new ScreenWindowRegion.Bounds(0, 7, 6, 8)),
+                new ScreenWindowRegion.Bounds(0, 2338, 1080, 2408)),
             window(
                 10,
                 9,
                 MainScreenWindowPolicy.Kind.INPUT_METHOD,
                 false,
                 true,
-                new ScreenWindowRegion.Bounds(0, 5, 6, 7)));
+                new ScreenWindowRegion.Bounds(0, 2200, 1080, 2408)));
     assertEquals(0, MainScreenWindowPolicy.select(windows));
     var region = MainScreenWindowPolicy.region(0, windows);
-    assertEquals(FULL, region.window());
-    assertEquals(new ScreenWindowRegion.Bounds(0, 1, 6, 5), region.content());
+    assertEquals(SCREEN, region.window());
+    assertEquals(new ScreenWindowRegion.Bounds(0, 84, 1080, 2200), region.content());
     assertFalse(region.obscured());
   }
 
@@ -110,20 +114,28 @@ public final class MainScreenObservationTest {
               0,
               List.of(
                   app(),
-                  window(8, 9, kind, false, false, new ScreenWindowRegion.Bounds(2, 2, 4, 4))));
+                  window(
+                      8,
+                      9,
+                      kind,
+                      false,
+                      false,
+                      new ScreenWindowRegion.Bounds(500, 800, 502, 802))));
       assertTrue(region.obscured());
-      assertFalse(region.containsTrajectory(1, 1, 4, 6, 1));
-      for (var unknownBounds :
+      assertFalse(region.containsTrajectory(500, 1000, 600, 1000, 1));
+      // P2-1：零面积/无效/未知 bounds 的窗口在几何上不可能覆盖像素，跳过而不是整窗拒绝。
+      for (var skippedBounds :
           new ScreenWindowRegion.Bounds[] {
             new ScreenWindowRegion.Bounds(0, 0, 0, 0),
             new ScreenWindowRegion.Bounds(4, 4, 2, 2),
             null
           }) {
-        var unknown =
+        var skipped =
             MainScreenWindowPolicy.region(
-                0, List.of(app(), window(8, 9, kind, false, false, unknownBounds)));
-        assertTrue(unknown.obscured());
-        assertFalse(unknown.containsTrajectory(1, 1, 4, 6, 1));
+                0, List.of(app(), window(8, 9, kind, false, false, skippedBounds)));
+        assertFalse("退化窗口不得整窗拒绝", skipped.obscured());
+        assertEquals(SCREEN, skipped.content());
+        assertTrue(skipped.containsTrajectory(500, 1000, 600, 1000, 1));
       }
     }
   }

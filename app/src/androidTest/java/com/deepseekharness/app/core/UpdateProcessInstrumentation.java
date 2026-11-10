@@ -152,8 +152,8 @@ public final class UpdateProcessInstrumentation extends Instrumentation {
                 Integer.parseInt(args.getString("code")),
                 "1.2.0-validation",
                 UpdatePolicy.PREVIEW,
-                BuildConfig.LOW_ANDROID ? "low" : "standard",
-                BuildConfig.LOW_ANDROID ? 23 : 30,
+                "standard",
+                false ? 23 : 30,
                 "arm64-v8a",
                 url,
                 hash,
@@ -231,7 +231,13 @@ public final class UpdateProcessInstrumentation extends Instrumentation {
         require(engine.state().getValue().apk != null, engine.state().getValue().message);
         File verified = engine.installableApk();
         require(verified.isFile(), "完整 APK 核验失败");
-        require(page.findViewById(R.id.update_install).isEnabled(), "最终安装按钮没有就绪");
+        com.deepseekharness.app.ui.UpdateProgressButton action =
+            page.findViewById(R.id.update_action);
+        require(
+            action.isEnabled()
+                && action.action().command
+                    == com.deepseekharness.app.util.UpdateActionPolicy.Command.INSTALL,
+            "最终安装按钮没有就绪");
         result.putString(
             "coverage",
             "PASS: 实际 PID 改变、HTTPS 保存进度 "

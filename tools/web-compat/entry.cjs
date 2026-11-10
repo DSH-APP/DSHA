@@ -1,6 +1,7 @@
 // 锁定的 PDF.js 主线程和 Worker 共用；只补齐旧内核缺失或不符合规范的接口。
 require('core-js/actual/iterator');
 require('core-js/actual/url/parse');
+require('core-js/actual/url/can-parse');
 require('core-js/actual/promise/with-resolvers');
 require('core-js/actual/promise/try');
 require('core-js/actual/map/get-or-insert');

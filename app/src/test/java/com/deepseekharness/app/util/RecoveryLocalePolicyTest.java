@@ -26,7 +26,14 @@ public class RecoveryLocalePolicyTest {
     assertFalse(RecoveryLocalePolicy.sameOrigin(base, "http://localhost:3081@evil.test/chat"));
     assertTrue(RecoveryLocalePolicy.supportedLanguage("zh"));
     assertTrue(RecoveryLocalePolicy.supportedLanguage("en"));
-    assertFalse(RecoveryLocalePolicy.supportedLanguage("fr"));
+    for (String language : UiLanguagePreference.LANGUAGES) {
+      assertTrue(RecoveryLocalePolicy.supportedLanguage(language));
+      assertTrue(
+          RecoveryLocalePolicy.pageScript(language)
+              .contains("window.__DSHA_LANGUAGE__='" + language + "'"));
+    }
+    assertFalse(RecoveryLocalePolicy.supportedLanguage("system"));
+    assertFalse(RecoveryLocalePolicy.supportedLanguage("ar-EG"));
     assertTrue(RecoveryLocalePolicy.pageScript("en").contains("window.__DSHA_LANGUAGE__='en'"));
     assertThrows(
         IllegalArgumentException.class,

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 数据与备份首页的入口行：图标 + 标题 + 说明 + 可选右侧值 + 箭头。文案全部由 WorkspaceFragment 设置。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="64dp" android:padding="13dp">
+  <ImageView android:id="@+id/entry_icon" android:layout_width="32dp" android:layout_height="32dp" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" android:importantForAccessibility="no" app:tint="@color/primary" />
+  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:orientation="vertical">
+    <TextView android:id="@+id/entry_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="14sp" android:textColor="@color/shell_text" android:includeFontPadding="false" android:textStyle="bold" />
+    <TextView android:id="@+id/entry_sub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textSize="12sp" android:textColor="@color/shell_text_secondary" android:includeFontPadding="false" android:maxLines="2" android:ellipsize="end" />
+  </LinearLayout>
+  <TextView android:id="@+id/entry_value" style="@style/ShellRowValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:maxWidth="120dp" android:maxLines="1" android:ellipsize="end" android:visibility="gone" />
+  <ImageView android:layout_width="16dp" android:layout_height="16dp" android:layout_marginStart="8dp" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
+</LinearLayout>

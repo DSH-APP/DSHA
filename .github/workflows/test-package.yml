@@ -1,0 +1,270 @@
+name: Test package (on demand)
+
+# 手动构建可安装的测试包，用于真机核对；不创建 tag/Release，不使用任何正式证书。
+# 本工作流保留历史 .test 变体；.debug / .dev 共存变体见 test-package-variants.yml。
+# identity=mod（默认）：io.github.sunsetrne.dsha.test（DSH-A-Su Test，-SunsetTest）；
+# identity=upstream：dsh.android.client.SunsetRNE（DSHA Test，-SunsetTest）。
+# 测试签名证书必须与 mod、upstream 两个正式证书都不同。
+#
+# 节点图：
+#   contracts ────────────────────────┐
+#   inputs ─┬─► patch-chains ─────────┤
+#           ├─► unit（可关闭）─────────┼─► package-sign
+#           └─► lint ─────────────────┘
+# 签名密钥：配置了 SUNSET_TEST_KEYSTORE_B64 时使用它（同证书可覆盖升级），
+# 否则每次生成一次性密钥；私钥只在 package-sign 节点的 RUNNER_TEMP 内，结束即删除。
+on:
+  workflow_dispatch:
+    inputs:
+      run_unit_tests:
+        description: Run the complete fixed-input unit tests before packaging
+        required: false
+        type: boolean
+        default: true
+      identity:
+        description: Release identity whose test package to build (mod or upstream)
+        required: false
+        type: choice
+        options: [mod, upstream]
+        default: mod
+permissions:
+  contents: read
+concurrency:
+  group: test-package-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  contracts:
+    uses: ./.github/workflows/_node-contracts.yml
+  inputs:
+    uses: ./.github/workflows/_node-inputs.yml
+    with:
+      rebuild_runtime: true
+      artifact: test-package-inputs
+  patch-chains:
+    name: Runtime patch upgrades and managed recovery consent
+    needs: inputs
+    uses: ./.github/workflows/_node-host-tests.yml
+    with:
+      stage: runtime
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      playwright: true
+      output: patch-chains
+      artifact: test-package-patch-chains
+      only: >-
+        test-plugin-management-patch-chain.py
+        test-android-image-wire.mjs
+        test-web-fetch-unicode.py
+        test-language-patch-chain.py
+        test-ui-language.mjs
+        test-prompt-language.mjs
+        test-app-activity.mjs
+        test-plugin-runtime-evidence.mjs
+        test-plugin-discovery.py
+        test-plugin-review.py
+        test-plugin-management-probe.mjs
+        test-session-interaction-patch-upgrade.py
+        test-preset-pending-patch-upgrade.py
+        test-recovery-native-consent.mjs
+        test-mobile-server-compression-carrier.mjs
+  unit:
+    if: inputs.run_unit_tests
+    needs: inputs
+    uses: ./.github/workflows/_node-unit-tests.yml
+    with:
+      mode: full
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      require_fixtures: true
+      artifact: test-package-unit-results
+  lint:
+    needs: inputs
+    uses: ./.github/workflows/_node-lint.yml
+    with:
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      artifact: test-package-lint-results
+  package-sign:
+    name: Build, sign and verify test APK
+    needs: [contracts, inputs, patch-chains, unit, lint]
+    # unit 关闭时为 skipped；其余节点必须成功。
+    if: >-
+      !cancelled()
+      && needs.contracts.result == 'success' && needs.inputs.result == 'success'
+      && needs.patch-chains.result == 'success' && needs.lint.result == 'success'
+      && (needs.unit.result == 'success' || (needs.unit.result == 'skipped' && !inputs.run_unit_tests))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      ASSET_SHA: ${{ needs.inputs.outputs.sha256 }}
+      ASSET_FORMAT: ${{ needs.inputs.outputs.format }}
+      UNIT_TESTS_RUN: ${{ inputs.run_unit_tests }}
+      RELEASE_IDENTITY: ${{ inputs.identity || 'mod' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          gradle-cache: 'false'
+      - uses: ./.github/actions/android-sdk
+        with:
+          ndk: 'true'
+      - uses: ./.github/actions/restore-handoff
+        with:
+          artifact: ${{ needs.inputs.outputs.artifact }}
+      - name: Build unsigned Standard test package
+        run: |
+          chmod +x gradlew
+          case "$RELEASE_IDENTITY" in mod|upstream) ;; *) echo 'unknown release identity'; exit 1 ;; esac
+          python3 tools/release-identity.py --check --identity "$RELEASE_IDENTITY" >/dev/null
+          ./gradlew :app:assembleStandardRelease -Pdsha.sunsetTest=true -Pdsha.unsignedPackage=true \
+            "-Pdsha.identity=$RELEASE_IDENTITY" --no-daemon --max-workers=2
+      - name: Prepare configured or ephemeral test signing key
+        env:
+          CONFIGURED_TEST_KEYSTORE_B64: ${{ secrets.SUNSET_TEST_KEYSTORE_B64 }}
+          CONFIGURED_TEST_PASSWORD: ${{ secrets.SUNSET_TEST_STORE_PASSWORD }}
+        run: |
+          set -eu
+          umask 077
+          key="$RUNNER_TEMP/test-package-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.jks"
+          if [ -n "$CONFIGURED_TEST_KEYSTORE_B64" ]; then
+            password="${CONFIGURED_TEST_PASSWORD:-sunset-test-only}"
+            printf '%s' "$CONFIGURED_TEST_KEYSTORE_B64" | base64 -d > "$key"
+            source=configured-secret
+          else
+            password=$(python3 -c 'import secrets; print(secrets.token_hex(24))')
+            source=ephemeral
+          fi
+          echo "::add-mask::$password"
+          export TEST_STORE_PASSWORD="$password"
+          if [ "$source" = ephemeral ]; then
+            keytool -genkeypair -keystore "$key" -storetype PKCS12 -alias sunset-test \
+              -keyalg RSA -keysize 3072 -validity 3650 \
+              -dname 'CN=DSHA Test Package (NOT FOR RELEASE), O=SunsetRNE, C=CN' \
+              -storepass:env TEST_STORE_PASSWORD -keypass:env TEST_STORE_PASSWORD
+          fi
+          mkdir -p out
+          keytool -exportcert -rfc -keystore "$key" -alias sunset-test \
+            -storepass:env TEST_STORE_PASSWORD > out/test-cert.pem
+          printf 'TEST_KEY=%s\nTEST_STORE_PASSWORD=%s\nSIGNING_KEY_SOURCE=%s\n' \
+            "$key" "$password" "$source" >> "$GITHUB_ENV"
+      - name: Sign test APK and verify identity
+        id: sign
+        run: |
+          set -eu
+          buildtools=$(python3 tools/ci-toolchain.py --field buildTools)
+          sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          apksigner="$sdk_root/build-tools/$buildtools/apksigner"
+          aapt2="$sdk_root/build-tools/$buildtools/aapt2"
+          shopt -s nullglob
+          candidates=(app/build/outputs/apk/standard/release/*-unsigned.apk)
+          test "${#candidates[@]}" -eq 1
+          apk="out/dsha-test-${GITHUB_SHA:0:8}.apk"
+          "$apksigner" sign --ks "$TEST_KEY" --ks-key-alias sunset-test \
+            --ks-pass env:TEST_STORE_PASSWORD --key-pass env:TEST_STORE_PASSWORD \
+            --out "$apk" "${candidates[0]}"
+          "$aapt2" dump badging "$apk" > out/apk-badging.txt
+          "$apksigner" verify --verbose --print-certs "$apk" > out/apk-signature.txt
+          package=$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" out/apk-badging.txt)
+          expected=$(python3 tools/release-identity.py --identity "$RELEASE_IDENTITY" --field packageName)$(python3 tools/release-identity.py --identity "$RELEASE_IDENTITY" --field testSuffix)
+          test "$package" = "$expected"
+          grep -q "versionName='.*-SunsetTest'" out/apk-badging.txt
+          if grep -q 'application-debuggable' out/apk-badging.txt; then exit 1; fi
+          cert=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' out/apk-signature.txt | head -1)
+          production=$(python3 -c "import json;print(json.load(open('ci/release-identity.json'))['certificateSha256'])")
+          upstream=$(python3 tools/release-identity.py --identity upstream --field certificateSha256)
+          test -n "$cert"
+          test "$cert" != "$production"
+          test "$cert" != "$upstream"
+          python3 tools/verify-dsh-upgrade-apk.py "$apk" > out/apk-runtime-verification.txt
+          python3 tools/verify-recovery-apk.py "$apk" > out/apk-recovery-verification.txt
+          python3 tools/verify-third-party-apk.py "$apk" --output out/third-party-apk.json
+          python3 tools/verify-apk-managed-assets.py "$apk" > out/apk-managed-assets.txt
+          printf 'apk=%s\ncert=%s\npackage=%s\n' "$apk" "$cert" "$package" >> "$GITHUB_OUTPUT"
+      - name: Remove test private key
+        if: always()
+        run: |
+          python3 - <<'PYCODE'
+          import os
+          from pathlib import Path
+          parent = Path(os.environ['RUNNER_TEMP']).resolve()
+          key = parent / ('test-package-' + os.environ['GITHUB_RUN_ID'] + '-' + os.environ['GITHUB_RUN_ATTEMPT'] + '.jks')
+          if key.is_symlink() or key.resolve().parent != parent:
+              raise SystemExit('UNEXPECTED_TEST_KEY_PATH')
+          key.unlink(missing_ok=True)
+          PYCODE
+      - name: Write commit-bound build receipt
+        env:
+          APK: ${{ steps.sign.outputs.apk }}
+          CERT: ${{ steps.sign.outputs.cert }}
+          PACKAGE: ${{ steps.sign.outputs.package }}
+        run: |
+          python3 - <<'PYCODE'
+          import hashlib, json, os
+          from pathlib import Path
+          apk = Path(os.environ['APK'])
+          meta = json.load(open('app/build/outputs/apk/standard/release/output-metadata.json', encoding='utf-8'))['elements'][0]
+          value = {
+              'schema': 1,
+              'kind': 'dsha-a-su-test-package',
+              'commit': os.environ['GITHUB_SHA'],
+              'ref': os.environ['GITHUB_REF'],
+              'runId': os.environ['GITHUB_RUN_ID'],
+              'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'packageName': os.environ['PACKAGE'],
+              'releaseIdentity': os.environ['RELEASE_IDENTITY'],
+              'versionCode': meta['versionCode'],
+              'versionName': meta['versionName'],
+              'apkFile': apk.name,
+              'apkSize': apk.stat().st_size,
+              'apkSha256': hashlib.sha256(apk.read_bytes()).hexdigest(),
+              'certificateSha256': os.environ['CERT'],
+              'signingKeySource': os.environ['SIGNING_KEY_SOURCE'],
+              'assetBundleSha256': os.environ['ASSET_SHA'],
+              'inputArchiveFormat': os.environ['ASSET_FORMAT'],
+              'unitTestsRun': os.environ['UNIT_TESTS_RUN'] == 'true',
+              'note': 'TEST ONLY - NOT FOR RELEASE',
+          }
+          Path('out/build-info.json').write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          names = [apk.name, 'build-info.json', 'test-cert.pem']
+          Path('out/SHA256SUMS').write_text(''.join(
+              hashlib.sha256((Path('out') / name).read_bytes()).hexdigest() + '  ' + name + '\n' for name in names),
+              encoding='utf-8')
+          print(json.dumps(value, indent=2))
+          PYCODE
+      # archive:false 只接受单文件，artifact 名使用实际文件名。
+      - name: Upload signed APK without archiving
+        id: upload_apk
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          archive: false
+          path: ${{ steps.sign.outputs.apk }}
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload public package evidence
+        id: upload_evidence
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-package-evidence
+          path: |
+            out/SHA256SUMS
+            out/test-cert.pem
+            out/build-info.json
+            out/apk-signature.txt
+            out/apk-badging.txt
+            out/apk-runtime-verification.txt
+            out/apk-recovery-verification.txt
+            out/third-party-apk.json
+            out/apk-managed-assets.txt
+          if-no-files-found: error
+          retention-days: 14
+      - name: Show commit-bound download links
+        env:
+          APK_URL: ${{ steps.upload_apk.outputs.artifact-url }}
+          EVIDENCE_URL: ${{ steps.upload_evidence.outputs.artifact-url }}
+        run: |
+          {
+            echo "### 测试包（非正式发布、未安装）"
+            echo
+            echo "Commit \`$GITHUB_SHA\`"
+            echo
+            echo "[APK]($APK_URL) · [证书、固定输入与校验回执]($EVIDENCE_URL)"
+          } >> "$GITHUB_STEP_SUMMARY"

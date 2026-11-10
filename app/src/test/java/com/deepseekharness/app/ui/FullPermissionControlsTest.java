@@ -58,7 +58,8 @@ public final class FullPermissionControlsTest {
             return context;
           }
         };
-    return new FullPermissionControls(owner, host, changes::incrementAndGet);
+    return new FullPermissionControls(
+        owner, host, new DisclosureCard.Memory(), changes::incrementAndGet);
   }
 
   private static <T> T field(FullPermissionControls controls, String name, Class<T> type)

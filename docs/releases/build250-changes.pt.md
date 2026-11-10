@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.3-20261101.2030-dsh0.2.1-rc.5 / build250
+
+- Os instantâneos de configuração voltam a poder ser apagados. Uma escrita interrompida já não deixa pastas incompletas, e os instantâneos antigos são apagados em dois passos. Um instantâneo danificado ou apagado à mão já não faz falhar o instantâneo anterior à reparação, a criação de configuração nem a remoção de plugins; restos que não podem ser verificados vão para a quarentena e já não enchem o limite.
+- Página de recuperação no arranque: instantâneos danificados mostram o motivo e podem ser apagados; um instantâneo normal oferece Restaurar ou Apagar; a quarentena esvazia-se de uma vez. Apagar remove apenas a cópia; a configuração atual não muda.
+- Âmbito da verificação: apenas testes unitários locais e verificações estáticas; sem instalação em dispositivo, testes de interface e Lint ficam para a CI. versionCode elevado para 250 (com base no build249). A revisão DSHA mantém-se 0.2.1-rc.3 e o DSH incluído mantém-se 0.2.1-rc.5.

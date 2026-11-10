@@ -6,23 +6,18 @@ import android.app.Instrumentation;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import androidx.lifecycle.ViewModelProvider;
 import com.deepseekharness.app.R;
+import com.deepseekharness.app.plugins.PluginManagementEngine;
 import com.deepseekharness.app.ui.MainActivity;
-import java.io.File;
-import java.io.InputStream;
+import com.deepseekharness.app.ui.PluginFragment;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.function.BooleanSupplier;
 
-/** 真实 HTTPS 下载中的插件阶段、旋转和取消；只解析独立归档，不确认安装。 */
+/** 显式设备审计入口：生产应用级订阅、页面重建与过滤状态保存。 不启动下载/inspect（其成功路径会自动安装），不取消、清理或提交任何用户插件任务。 */
 public final class PluginUiInstrumentation extends Instrumentation {
   private volatile MainActivity page;
-  private PluginRepository repository;
   private final Application.ActivityLifecycleCallbacks lifecycle =
       new Application.ActivityLifecycleCallbacks() {
         public void onActivityCreated(Activity a, Bundle b) {}
@@ -52,41 +47,61 @@ public final class PluginUiInstrumentation extends Instrumentation {
     if (!ok) throw new AssertionError(message);
   }
 
+  private void ui(Runnable action) {
+    Throwable[] failure = {null};
+    runOnMainSync(
+        () -> {
+          try {
+            action.run();
+          } catch (Throwable error) {
+            failure[0] = error;
+          }
+        });
+    if (failure[0] != null) throw new AssertionError(failure[0]);
+    waitForIdleSync();
+  }
+
   private void until(BooleanSupplier ready, String reason) throws Exception {
-    long deadline = System.currentTimeMillis() + 90000;
-    while (!ready.getAsBoolean() && System.currentTimeMillis() < deadline) Thread.sleep(100);
-    require(ready.getAsBoolean(), reason);
+    long deadline = android.os.SystemClock.elapsedRealtime() + 30000;
+    boolean[] complete = {false};
+    while (!complete[0] && android.os.SystemClock.elapsedRealtime() < deadline) {
+      ui(() -> complete[0] = ready.getAsBoolean());
+      if (!complete[0]) Thread.sleep(100);
+    }
+    require(complete[0], reason);
   }
 
-  private void phase(String message) {
-    Bundle b = new Bundle();
-    b.putString("phase", message);
-    sendStatus(1, b);
+  private PluginFragment fragment() {
+    var fragment = page.getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+    return fragment instanceof PluginFragment ? (PluginFragment) fragment : null;
   }
 
-  private void shell(String command) throws Exception {
-    try (android.os.ParcelFileDescriptor p = getUiAutomation().executeShellCommand(command);
-        InputStream input = new android.os.ParcelFileDescriptor.AutoCloseInputStream(p)) {
-      while (input.read() != -1) {}
+  private <T extends View> T control(int id) {
+    PluginFragment fragment = fragment();
+    if (fragment == null || fragment.getView() == null) return null;
+    T result = fragment.requireView().findViewById(id);
+    if (result != null) return result;
+    try {
+      for (String name : new String[] {"header", "footer"}) {
+        Field field = PluginFragment.class.getDeclaredField(name);
+        field.setAccessible(true);
+        View part = (View) field.get(fragment);
+        if (part != null && (result = part.findViewById(id)) != null) return result;
+      }
+      return null;
+    } catch (Exception error) {
+      throw new AssertionError(error);
     }
   }
 
-  private String installed() {
-    ArrayList<String> result = new ArrayList<>();
-    for (PluginRepository.Item item : repository.state().getValue().items)
-      result.add(item.name + ":" + item.version + ":" + item.enabled);
-    Collections.sort(result);
-    return result.toString();
-  }
-
-  private String downloads(File home) {
-    String[] names =
-        home.list(
-            (dir, name) ->
-                name.startsWith("plugin-download-") || name.startsWith("plugin-inspect-"));
-    if (names == null) return "";
-    java.util.Arrays.sort(names);
-    return java.util.Arrays.toString(names);
+  private Object pageEngine() {
+    try {
+      Field field = PluginFragment.class.getDeclaredField("repository");
+      field.setAccessible(true);
+      return field.get(fragment());
+    } catch (Exception error) {
+      throw new AssertionError(error);
+    }
   }
 
   @Override
@@ -95,82 +110,48 @@ public final class PluginUiInstrumentation extends Instrumentation {
     Application app = (Application) getTargetContext().getApplicationContext();
     app.registerActivityLifecycleCallbacks(lifecycle);
     try {
-      shell("am start -W -n com.dsh.client/com.deepseekharness.app.ui.MainActivity");
       startActivitySync(
-          new Intent(app, MainActivity.class)
-              .setAction("dsha.test.plugin." + System.nanoTime())
-              .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+          new Intent(app, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
       until(() -> page != null, "主界面未就绪");
-      runOnMainSync(
+      ui(
           () ->
               ((com.google.android.material.bottomnavigation.BottomNavigationView)
                       page.findViewById(R.id.bottom_nav))
                   .setSelectedItemId(R.id.nav_plugins));
-      until(() -> page.findViewById(R.id.btnPluginInstall) != null, "插件页没有加载");
-      runOnMainSync(() -> repository = new ViewModelProvider(page).get(PluginRepository.class));
-      until(() -> !repository.isBusy(), "插件状态没有同步");
-      String before = installed();
-      File rootfs = HarnessController.get(app).proot().getRootfsDir(),
-          home = new File(rootfs, "root/.dsh");
-      String oldDownloads = downloads(home);
-      runOnMainSync(
+      until(() -> control(R.id.btnInstalled) != null, "插件页没有加载");
+      PluginManagementEngine[] engine = {null};
+      ui(
           () -> {
-            ((EditText) page.findViewById(R.id.appbar_github_input))
-                .setText("https://dsha.cc/opt-plugin-cancel-6cb498ed.zip");
-            page.findViewById(R.id.btnPluginInstall).performClick();
+            engine[0] = PluginManagementEngine.get(page);
+            require(pageEngine() == engine[0], "页面未使用生产应用级引擎");
+            control(R.id.btnInstalled).performClick();
+            ((EditText) control(R.id.pluginSearch)).setText("ui-audit-filter");
+            ((CheckBox) control(R.id.chkHideBuiltin)).setChecked(true);
           });
-      until(() -> repository.state().getValue().percent > 0 || !repository.isBusy(), "没有下载进度");
-      require(repository.isBusy(), repository.state().getValue().message);
-      require(repository.state().getValue().message.contains("MiB"), "未显示实际下载字节");
-      require(page.findViewById(R.id.btnCancelPluginTask).isEnabled(), "下载阶段不能取消");
-      require(!((ProgressBar) page.findViewById(R.id.pluginBusy)).isIndeterminate(), "有长度的下载没有百分比");
-      Field taskField = PluginRepository.class.getDeclaredField("activeTask");
-      taskField.setAccessible(true);
-      PluginTask task = (PluginTask) taskField.get(repository);
-      phase("真实下载已显示阶段与百分比；重建插件页面");
       MainActivity old = page;
-      runOnMainSync(old::recreate);
-      until(() -> page != old && page.findViewById(R.id.btnCancelPluginTask) != null, "页面重建失败");
-      PluginRepository[] recreated = new PluginRepository[1];
-      runOnMainSync(() -> recreated[0] = new ViewModelProvider(page).get(PluginRepository.class));
-      require(recreated[0] == repository, "页面重建丢失任务");
-      require(
-          repository.isBusy() && page.findViewById(R.id.btnCancelPluginTask).isEnabled(),
-          "重建后取消状态丢失");
-      runOnMainSync(() -> page.findViewById(R.id.btnCancelPluginTask).performClick());
-      until(() -> !repository.isBusy(), "取消未退出");
-      require(
-          repository.state().getValue().message.contains("取消"),
-          repository.state().getValue().message);
-      require(
-          repository.preview().getValue() == null && !repository.installationSucceeded(),
-          "取消后仍可安装");
-      require(installed().equals(before), "取消改动了已安装插件");
-      require(downloads(home).equals(oldDownloads), "取消留下了临时下载目录");
-      for (String suffix : new String[] {".json", ".json.tmp", ".cancel"})
-        require(
-            !new File(rootfs, "root/.dsha-plugin-task-" + task.id + suffix).exists(), "任务信号没有清理");
-      require(page.findViewById(R.id.pluginBusy).getVisibility() == View.GONE, "任务结束后仍显示进度");
-      require(
-          ((TextView) page.findViewById(R.id.statusText)).getText().toString().contains("取消"),
-          "取消结果没有显示在页面");
+      ui(old::recreate);
+      until(() -> page != old && control(R.id.pluginSearch) != null, "页面重建失败");
+      ui(
+          () -> {
+            require(PluginManagementEngine.get(page) == engine[0], "重建后应用级引擎身份变化");
+            require(pageEngine() == engine[0], "重建后的页面订阅了不同引擎");
+            require(
+                ((EditText) control(R.id.pluginSearch))
+                    .getText()
+                    .toString()
+                    .equals("ui-audit-filter"),
+                "重建后搜索条件丢失");
+            require(((CheckBox) control(R.id.chkHideBuiltin)).isChecked(), "重建后隐藏条件丢失");
+            require(control(R.id.btnInstalled).isSelected(), "重建后管理标签丢失");
+          });
       output.putString("result", "PASS");
-      output.putString(
-          "coverage", "真实 HTTPS 插件下载阶段/字节/百分比、Activity 重建保留同一任务、界面取消、临时目录/信号清理、既有插件保持原状态；未确认安装");
+      output.putString("coverage", "生产应用级引擎身份与页面订阅、Activity重建保留搜索/隐藏/标签；未执行下载、安装、启停或取消任务");
     } catch (Throwable error) {
-      output.putString("result", "FAIL: " + error);
+      output.putString("result", "FAIL: " + android.util.Log.getStackTraceString(error));
     } finally {
-      if (repository != null) {
-        runOnMainSync(repository::cancelTask);
-        try {
-          until(() -> !repository.isBusy(), "测试任务清理失败");
-        } catch (Exception ignored) {
-        }
-        runOnMainSync(repository::discardPreview);
-      }
       if (page != null) {
         Activity current = page;
-        runOnMainSync(current::finish);
+        ui(current::finish);
       }
       app.unregisterActivityLifecycleCallbacks(lifecycle);
     }

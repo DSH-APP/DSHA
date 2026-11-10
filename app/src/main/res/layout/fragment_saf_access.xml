@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+  设置 · 设备能力授权 → 跨应用文件访问（SAF 授权管理）。
+  授权来自系统文档选择器；本页只管「选了哪些目录、允不允许助手写、怎么撤销」。
+  文字全部由 SafAccessFragment 经 UiText 设置，避免把中英文写死在布局里。
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/saf_scroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/shell_bg"
+    android:clipToPadding="false"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/config_page_top"
+        android:paddingBottom="@dimen/shell_page_bottom">
+
+        <TextView
+            android:id="@+id/saf_intro"
+            style="@style/ShellStatusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/config_page_pad_h"
+            android:layout_marginEnd="@dimen/config_page_pad_h"
+            android:layout_marginTop="6dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/config_page_pad_h"
+            android:paddingEnd="@dimen/config_page_pad_h">
+
+            <Button
+                android:id="@+id/saf_add"
+                style="@style/ShellPrimaryButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp" />
+
+            <TextView
+                android:id="@+id/saf_limit"
+                style="@style/ShellStatusText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp" />
+
+            <TextView
+                android:id="@+id/saf_grants_label"
+                style="@style/ConfigLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp" />
+
+            <LinearLayout
+                android:id="@+id/saf_grants"
+                style="@style/ConfigCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/saf_empty"
+                style="@style/ShellStatusText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

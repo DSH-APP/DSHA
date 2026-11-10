@@ -1,14 +1,180 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/surface" android:padding="24dp">
-<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/app_name" android:textStyle="bold" android:textSize="18sp" android:textColor="@color/text" android:layout_marginBottom="24dp"/>
-<TextView android:id="@+id/extract_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="27sp" android:textStyle="bold" android:textColor="@color/text"/>
-<ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="20dp"><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="16dp" android:background="@drawable/bg_card">
-<ProgressBar android:id="@+id/extract_bar" android:layout_width="28dp" android:layout_height="28dp" android:indeterminateTint="@color/primary"/>
-<TextView android:id="@+id/extract_status" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:textColor="@color/text" android:textSize="15sp" android:textStyle="bold"/>
-</LinearLayout>
-<ProgressBar android:id="@+id/extract_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="5dp" android:layout_marginTop="14dp" android:indeterminateTint="@color/primary"/>
-<TextView android:id="@+id/extract_detail" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="150dp" android:layout_marginTop="18dp" android:padding="16dp" android:background="@drawable/bg_ui2_console" android:textColor="@color/ui2_log_text" android:fontFamily="monospace" android:textSize="12sp" android:lineSpacingExtra="5dp"/>
-<TextView android:id="@+id/extract_error" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:padding="14dp" android:textSize="12sp" android:textColor="@color/err" android:background="@drawable/bg_error_box" android:visibility="gone"/>
-</LinearLayout></ScrollView>
-<LinearLayout android:id="@+id/extract_actions" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="12dp"/>
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  运行环境维护详情页（2026-10-31 重构，与部署胶囊面板同一风格）：标题 + 状态标签、说明、
+  分段条 + 阶段列表、失败 / 未就绪说明框、底栏按钮。保留历史 id（extract_title / extract_status /
+  extract_error / extract_bar / extract_progress / extract_retry / extract_enter /
+  extract_emergency / extract_logs / extract_actions），设备审计会按 id 与字段读取。
+  extract_bar 只在维护进行中可见；extract_progress 不再显示（阶段条由代码按阶段绘制）。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/shell_bg"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:id="@+id/extract_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="false">
+
+        <LinearLayout
+            android:id="@+id/extract_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingTop="22dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ProgressBar
+                    android:id="@+id/extract_bar"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginEnd="10dp"
+                    android:indeterminateTint="@color/shell_accent"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/extract_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:accessibilityHeading="true"
+                    android:includeFontPadding="false"
+                    android:textColor="@color/shell_text"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/extract_pill"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/extract_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="3dp"
+                android:textColor="@color/shell_text"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/extract_lead"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="4dp"
+                android:textColor="@color/shell_text_secondary"
+                android:textSize="13.5sp" />
+
+
+            <!-- 方案 A：内容宽度足够时，左列阶段卡、右列失败/未就绪说明并排；无说明时右列隐藏，阶段卡占满。
+                 页内不内嵌维护记录，完整记录走底栏“查看本次维护记录”。 -->
+            <com.deepseekharness.app.ui.AdaptiveColumns
+                android:id="@+id/extract_columns"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp">
+
+                <LinearLayout
+                    android:id="@+id/extract_stage_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
+                    android:background="@drawable/bg_onb_perm"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+    
+                    <TextView
+                        android:id="@+id/extract_stage_line"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:includeFontPadding="false"
+                        android:lineSpacingExtra="3dp"
+                        android:textColor="@color/shell_text"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+    
+                    <ProgressBar
+                        android:id="@+id/extract_progress"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="4dp"
+                        android:layout_marginTop="10dp"
+                        android:indeterminate="true"
+                        android:indeterminateTint="@color/shell_accent"
+                        android:visibility="gone" />
+    
+                    <FrameLayout
+                        android:id="@+id/extract_segments"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" />
+    
+                    <FrameLayout
+                        android:id="@+id/extract_stages"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/extract_focus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- 失败 / 待恢复 / 未通过就绪检查时的直达入口：只读救援导出（NativeDataActivity rescue 模式）。
+                         放在说明上方：失败说明较长，放下方时手机竖屏首屏看不到；底栏三列在大字体下也无余量。 -->
+                    <Button
+                        android:id="@+id/extract_rescue"
+                        style="@style/ShellSecondaryButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:minHeight="@dimen/touch_min"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/extract_error"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_onb_hint_bad"
+                        android:lineSpacingExtra="3dp"
+                        android:padding="12dp"
+                        android:textColor="@color/shell_bad"
+                        android:textIsSelectable="true"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+            </com.deepseekharness.app.ui.AdaptiveColumns>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- 底栏（build249 压缩、build255 状态配色）；首次引导完成页复用同一布局，
+         两页的“更新中 x/5”进度面板与三个描边入口因此保持一套设计。 -->
+    <include
+        layout="@layout/view_extract_footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 </LinearLayout>

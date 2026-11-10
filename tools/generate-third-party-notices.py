@@ -12,14 +12,12 @@ PERMISSIVE = {'MIT', 'ISC', 'BSD-2-Clause', 'BSD-3-Clause', 'Apache-2.0',
 NATIVE_NOTICES = {
     'libtermux.so': ('Apache-2.0 exception', 'tools/termux-jni, v0.118.0 source plus local handshake changes'),
     'libdsha-session.so': ('MIT', 'tools/native-session/session-launcher.c; locked API 23 build'),
-    'libdsha-proroot-compat.so': ('MIT', 'tools/proroot-compat/stack-sysconf.c; independent GNU AArch64 sysconf proxy, locked NDK build; original proroot binaries unchanged'),
+    'libdsha-proroot-compat.so': ('MIT', 'tools/proroot-compat/stack-sysconf.c; independent GNU AArch64 sysconf and fcntl-errno proxy, locked NDK build; original proroot binaries unchanged'),
     'libdsha-proroot-linker.so': ('MIT', 'tools/proroot-compat/linker-entry.c; freestanding GNU AArch64 direct-preload adapter; original proroot binaries unchanged'),
     'libproot.so': ('GPL-2.0', 'Termux proot; original Standard binary exact revision remains unverified'),
     'libprootloader.so': ('GPL-2.0', 'Termux proot; original Standard binary exact revision remains unverified'),
     'libprootloader32.so': ('GPL-2.0', 'Termux proot; original Standard binary exact revision remains unverified'),
-    'libproot_legacy.so': ('GPL-2.0', 'tools/build-low-proot.py, proot v5.1.107.92 source archive and local changes'),
-    'libprootloader_legacy.so': ('GPL-2.0', 'tools/build-low-proot.py, proot v5.1.107.92 source archive'),
-    'libtalloc.so': ('LGPL family; exact binary revision unverified', 'Samba talloc; build-low-proot.py locks talloc 2.4.3 headers, not the origin of this binary'),
+    'libtalloc.so': ('LGPL family; exact binary revision unverified', 'Samba talloc; original Standard binary exact revision unverified'),
     'libandroidshmem.so': ('unknown origin/license for this original binary', 'Retained original; no current exact-source reproduction receipt'),
     'libproroot.so': ('upstream proprietary', 'proroot v1.2.8 original binary; source reproducibility not asserted'),
     'libproroot-runtime.so': ('upstream proprietary', 'proroot v1.2.8 original binary'),
@@ -31,12 +29,13 @@ NATIVE_NOTICES = {
 
 def gradle_coordinates(root=ROOT):
     build = (root / 'app/build.gradle').read_text(encoding='utf-8')
-    return sorted(set(re.findall(r"^\s*(?:implementation|standardImplementation|lowImplementation|coreLibraryDesugaring)\s+'([^']+)'", build, re.M)))
+    return sorted(set(re.findall(r"^\s*(?:implementation|standardImplementation|coreLibraryDesugaring)\s+'([^']+)'", build, re.M)))
 
 
 def native_members(root=ROOT):
-    return sorted(p.relative_to(root).as_posix() for flavor in ('main', 'low')
-                  for p in (root / f'app/src/{flavor}/jniLibs').rglob('*.so'))
+    # 单 Standard 变体只打包 main 源集的 JNI；旧 low 源集及其 legacy proot 已删除。
+    return sorted(p.relative_to(root).as_posix()
+                  for p in (root / 'app/src/main/jniLibs').rglob('*.so'))
 
 
 def render():
@@ -56,6 +55,10 @@ def render():
                        for path in native_members())
     hashes = '\n'.join(f'- `{name}`：`{hashlib.sha256((ASSETS / "builtin-plugins/dsh-web-mobile/lib" / name).read_bytes()).hexdigest()}`'
                        for name in ('client.js', 'index.js', 'compress.js', 'delete-session.js'))
+    gh_lock = json.loads((ROOT / 'tools/gh-cli/packages.lock.json').read_text(encoding='utf-8'))
+    gh_license = (ASSETS / 'licenses/gh-MIT.txt').read_bytes()
+    if hashlib.sha256(gh_license).hexdigest() != gh_lock.get('licenseSha256'):
+        raise ValueError('GH_CLI_LICENSE_NOTICE: assets/licenses/gh-MIT.txt 与 tools/gh-cli/packages.lock.json 不一致')
     return f'''# 第三方组件声明
 
 此文由 `python tools/generate-third-party-notices.py` 从当前锁和实际资产生成。DSHA 自有代码采用 MIT；随包第三方组件分别遵循其许可，不因 APK 顶层许可变成 MIT。
@@ -87,17 +90,17 @@ def render():
 
 ## proot / proroot
 
-- proot（Termux 分支）为 GPL-2.0。标准与兼容资产保留 COPYING；API 23 构建及源码差异见 `tools/build-low-proot.py`。完整声明位于 `assets/licenses/proot-COPYING.txt`。
+- proot（Termux 分支）为 GPL-2.0。包内保留 COPYING；标准 proot 二进制原件的精确修订仍未核实，不声明可逐字节重现。完整声明位于 `assets/licenses/proot-COPYING.txt`。
 - proroot v1.2.8 为上游专有许可。DSHA 分发上游原始二进制，不声称可重编、审计源码或任意修改后再分发；许可证与来源见随包声明。不能用容器 root 身份推断 Android root 权限。
 - Windows 重编、Linux 重编与手机执行是不同证据；不能从一种宿主成功推导全部平台通过。
 
 ## Android 与备份依赖
 
-- Shizuku API/provider：Standard 13.1.5、Low 12.2.0（MIT），公开来源 RikkaApps/Shizuku-API；许可全文随 `assets/licenses/Shizuku-MIT.txt` 保存，原始 Git blob 及 SHA 记录在 build154 审计。
+- Shizuku API/provider：Standard 13.1.5（MIT），公开来源 RikkaApps/Shizuku-API；许可全文随 `assets/licenses/Shizuku-MIT.txt` 保存，原始 Git blob 及 SHA 记录在 build154 审计。
 - Termux terminal-view / terminal-emulator 0.118.0 的 Apache-2.0 例外及全文随 `assets/licenses/Termux-terminal-Apache-2.0.txt` 保存；不将其声明扩展到整个上游工程。
+- terminal-emulator Java 源码固定于 Termux v0.118.0 提交 `6e2689f55295fa444be8ac8592c527c2c5ef3253` 并内置；DSHA 对 `TerminalSession.java`、`TerminalEmulator.java`、`TerminalSessionClient.java` 的修改及自有队列说明见 `app/src/main/java/com/termux/terminal/NOTICE.dsha.md`。terminal-view 保持 0.118.0 上游依赖，JNI 使用项目内已有构建。
 - Gson 2.13.1：Apache-2.0；Bouncy Castle bcprov-jdk15to18 1.85.2：上游许可全文随 `assets/licenses` 保存。版本与 JAR 摘要见 `tools/backup-dependencies.lock.json`，构建执行 `verifyBackupDependencies`。
-- SnakeYAML 2.4（Apache-2.0）：固定官方 Maven Central JAR/POM 与 `snakeyaml-2.4` 源码标签，使用宿主 data-only SafeConstructor 投影凭据中的本机连接字段。许可原文为 `assets/licenses/snakeyaml-LICENSE.txt`，Java 8 类文件及 Android FIELD 路径见 `docs/audits/build156/snakeyaml-official-artifacts.json`；不由静态兼容声明推导旧设备验收完成。
-- Low 的 GeckoView 143.0.20251003115653 为 MPL-2.0，来自 Mozilla Maven；保留相应声明。兼容版最低 API 23，不表示所有旧设备已经验收。
+- SnakeYAML 2.4（Apache-2.0）：固定官方 Maven Central JAR/POM 与 `snakeyaml-2.4` 源码标签，使用宿主 data-only SafeConstructor 投影凭据中的本机连接字段。许可原文为 `assets/licenses/snakeyaml-LICENSE.txt`，Java 8 类文件及 Android FIELD 路径见 `docs/audits/build156/snakeyaml-official-artifacts.json`；当前只支持 Android 11（API 30）及以上，不表示旧设备已经验收。
 - Ubuntu 软件包各自遵循其许可；包内 `/usr/share/doc` 与 common-licenses 保留版权信息。根环境仍为 Ubuntu 24.04 arm64，DSHA 基础环境身份 10。
 - node-semver 7.8.1 为 ISC，完整许可随 `assets/plugin-semver.cjs` 提供。
 
@@ -110,6 +113,10 @@ def render():
 | 资产 | 许可声明 | 来源 / 可核验范围 |
 |---|---|---|
 {native}
+
+## 受管命令行工具
+
+- GitHub CLI（gh）v{gh_lock['version']}：MIT，官方 `https://github.com/cli/cli` release 的 linux-arm64 归档，固定输入 `app/src/main/assets/gh-cli.tar.gz` 的版本、URL、归档与成员摘要见 `tools/gh-cli/packages.lock.json`；许可全文 `assets/licenses/gh-MIT.txt`（SHA-256 `{gh_lock['licenseSha256']}`）。受管安装只提取固定成员并二次校验摘要，不执行归档中的其它内容。
 
 ## npm 锁中需另核对的许可声明
 

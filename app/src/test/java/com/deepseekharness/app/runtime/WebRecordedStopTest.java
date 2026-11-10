@@ -25,7 +25,7 @@ public final class WebRecordedStopTest {
   }
 
   private static final class Io implements WebRecordedStop.Io {
-    boolean root = true, trial, exitAfterTerm, interrupt, transientFailure;
+    boolean root = true, trial, exitAfterTerm, interrupt, transientFailure, requireSavedBirth;
     String record = "42", saved = "42 100";
     long clock;
     int sentinel, inspections, records;
@@ -67,6 +67,10 @@ public final class WebRecordedStopTest {
 
     public String savedIdentity(int pid) {
       return saved;
+    }
+
+    public boolean requireSavedBirth() {
+      return requireSavedBirth;
     }
 
     public WebProcessManager.ProcessState inspect(int pid) throws IOException {
@@ -167,6 +171,23 @@ public final class WebRecordedStopTest {
     io = new Io();
     io.recordChangeAt = 2;
     assertNotNull(WebRecordedStop.run(io));
+    assertTrue(io.terms.isEmpty());
+    assertTrue(io.retired.isEmpty());
+  }
+
+  @Test
+  public void forceModeOnlySignalsWithMatchingSavedBirth() {
+    Io io = new Io();
+    io.requireSavedBirth = true;
+    io.exitAfterTerm = true;
+    assertNull(WebRecordedStop.run(io));
+    assertEquals(List.of(42), io.terms);
+    assertEquals(List.of("42"), io.retired);
+    io = new Io();
+    io.trial = true;
+    io.requireSavedBirth = true;
+    io.saved = null;
+    assertEquals(Code.TRIAL_IDENTITY_CHANGED, WebRecordedStop.run(io).code());
     assertTrue(io.terms.isEmpty());
     assertTrue(io.retired.isEmpty());
   }

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  UI v5 平板外壳（sw600dp）：顶栏 + 左侧 80dp 导航栏 + 右侧内容区。
+  底部胶囊导航仍保留同一 id/类型（单元测试与 debug 工具会强转），但平板形态隐藏它，
+  路由仍由 MainActivity 的 BottomNavigationView 统一承担，ShellRail 只转发点击。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/shell_bg" android:orientation="vertical">
+  <LinearLayout android:id="@+id/app_bar" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="@dimen/shell_header_min_height" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="18dp" android:paddingEnd="12dp">
+    <FrameLayout android:id="@+id/app_logo" android:layout_width="@dimen/shell_brand_size" android:layout_height="@dimen/shell_brand_size" android:background="@drawable/bg_shell_brand">
+      <ImageView android:layout_width="@dimen/shell_brand_icon_size" android:layout_height="@dimen/shell_brand_icon_size" android:layout_gravity="center" android:contentDescription="@null" android:src="@drawable/ic_terminal" app:tint="@color/shell_accent" />
+    </FrameLayout>
+    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/sub_back" android:visibility="gone" android:layout_width="44dp" android:layout_height="44dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_ui_back" android:contentDescription="@string/ui_m0201" app:tint="@color/shell_text_secondary" />
+    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:gravity="center_vertical" android:orientation="vertical">
+      <TextView android:id="@+id/app_title" style="@style/DshaText.PageTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/app_name" android:textColor="@color/shell_text" android:textSize="@dimen/shell_title_text" android:letterSpacing="0.06" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" />
+      <TextView android:id="@+id/app_context" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:textColor="@color/shell_text_secondary" android:textSize="@dimen/shell_context_text" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" />
+    </LinearLayout>
+    <FrameLayout android:id="@+id/btn_more" android:layout_width="44dp" android:layout_height="44dp" android:background="?attr/selectableItemBackgroundBorderless" android:clickable="true" android:focusable="true" android:contentDescription="@string/ui_m0146" android:visibility="gone">
+      <ImageView android:layout_width="18dp" android:layout_height="18dp" android:layout_gravity="center" android:contentDescription="@null" android:src="@drawable/ic_ui_add" app:tint="@color/shell_text_secondary" />
+    </FrameLayout>
+  </LinearLayout>
+  <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/shell_line" />
+  <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
+    <com.deepseekharness.app.ui.ShellRail android:id="@+id/shell_rail" android:visibility="visible" android:layout_width="@dimen/shell_rail_width" android:layout_height="match_parent" android:background="@drawable/bg_shell_rail" />
+    <View android:layout_width="1dp" android:layout_height="match_parent" android:background="@color/shell_line" />
+    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:orientation="vertical">
+      <com.deepseekharness.app.ui.EnvironmentNoticeBanner android:id="@+id/environment_recovery_banner" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_marginEnd="12dp" android:layout_marginTop="8dp" android:layout_marginBottom="2dp" android:visibility="gone" />
+      <FrameLayout android:id="@+id/fragment_container" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    </LinearLayout>
+  </LinearLayout>
+  <com.google.android.material.bottomnavigation.BottomNavigationView android:id="@+id/bottom_nav" android:visibility="gone" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/shell_nav_margin_horizontal" android:layout_marginEnd="@dimen/shell_nav_margin_horizontal" android:layout_marginBottom="@dimen/shell_nav_margin_bottom" android:background="@drawable/bg_shell_nav" android:minHeight="@dimen/shell_nav_height" app:itemIconSize="@dimen/shell_nav_icon_size" app:itemPaddingTop="@dimen/shell_nav_item_padding_top" app:itemPaddingBottom="@dimen/shell_nav_item_padding_bottom" app:itemIconTint="@color/shell_nav_item_tint" app:itemTextColor="@color/shell_nav_item_tint" app:itemRippleColor="@color/shell_nav_ripple" app:itemTextAppearanceActive="@style/Widget.DSHA.ShellNavLabel" app:itemTextAppearanceInactive="@style/Widget.DSHA.ShellNavLabel" app:labelVisibilityMode="labeled" app:elevation="0dp" app:menu="@menu/bottom_nav_menu" />
+</LinearLayout>

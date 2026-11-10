@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 侧栏图标按钮：48dp 触控格内 36dp 圆形按压反馈，静止时透明。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/terminal_ripple">
+    <item
+        android:id="@android:id/mask"
+        android:bottom="6dp"
+        android:left="6dp"
+        android:right="6dp"
+        android:top="6dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFFFF" />
+        </shape>
+    </item>
+</ripple>

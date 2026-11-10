@@ -1,0 +1,142 @@
+name: "Node: host regressions"
+
+# 可复用节点：tools/run-host-tests.py 的一个阶段或 --only 子集。
+# handoff 非空时先还原固定输入与 raw/managed 夹具；toolchains 时暴露 SDK 与已预热的
+# Gradle 用户目录；playwright 时安装锁定的浏览器夹具。
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Exact commit to check out (defaults to the caller's commit)
+        required: false
+        type: string
+        default: ''
+      stage:
+        description: run-host-tests.py --stage
+        required: true
+        type: string
+      only:
+        description: Optional space-separated test file names (--only)
+        required: false
+        type: string
+        default: ''
+      handoff:
+        description: Optional input handoff artifact; enables raw/managed fixtures
+        required: false
+        type: string
+        default: ''
+      toolchains:
+        description: Warm Gradle and expose the locked toolchain root
+        required: false
+        type: boolean
+        default: false
+      playwright:
+        description: Install the pinned Playwright Chromium fixture
+        required: false
+        type: boolean
+        default: false
+      output:
+        description: Report directory under app/build/host-tests
+        required: false
+        type: string
+        default: ''
+      artifact:
+        description: Name of the uploaded host report artifact
+        required: false
+        type: string
+        default: host-tests
+    outputs:
+      artifact:
+        description: Uploaded host report artifact name
+        value: ${{ inputs.artifact }}
+permissions:
+  contents: read
+jobs:
+  host:
+    name: Host regressions (${{ inputs.stage }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-toolchain
+      - uses: ./.github/actions/restore-handoff
+        if: inputs.handoff != ''
+        with:
+          artifact: ${{ inputs.handoff }}
+          fixture: 'true'
+      - uses: ./.github/actions/android-sdk
+        if: inputs.toolchains
+      # 声明 toolchains 的夹具只读取 Gradle 缓存中的锁定 jar；编译一次即可预热。
+      - name: Warm Gradle user home
+        if: inputs.toolchains
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:compileStandardDebugUnitTestJavaWithJavac -Pdsha.sourceOnlyTests=true \
+            -x :app:prepareStandardAssets -x :app:prepareRecoveryAssets --no-daemon --max-workers=2
+      - name: Prepare locked toolchain root for host fixtures
+        if: inputs.toolchains
+        run: |
+          root="$RUNNER_TEMP/dsha-toolchains"
+          gradle_home="${GRADLE_USER_HOME:-$HOME/.gradle}"
+          sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          test -d "$sdk_root"
+          test -d "$gradle_home/caches/modules-2"
+          test -d "$gradle_home/wrapper/dists"
+          mkdir -p "$root/gradle-user-home"
+          ln -sfn "$sdk_root" "$root/android-sdk"
+          ln -sfn "$gradle_home/caches" "$root/gradle-user-home/caches"
+          ln -sfn "$gradle_home/wrapper" "$root/gradle-user-home/wrapper"
+      - name: Prepare pinned plugin browser fixture
+        if: inputs.playwright
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/dsha-plugin-browsers
+        run: |
+          npm ci --prefix tools/ci-browser --ignore-scripts --no-audit --no-fund
+          node tools/ci-browser/node_modules/playwright/cli.js install --with-deps chromium
+      # browser_react 类浏览器用例（如 test-welcome-notice.mjs）读取锁定的 React 18 参照；
+      # 按 sha512 核对后放在 app/build，不进签名资产。
+      - name: Prepare pinned React browser reference
+        if: inputs.playwright
+        run: python3 tools/prepare-browser-react-reference.py
+      # test-plugin-semver.cjs 读取生成的 semver 参照；契约节点生成的副本不跨节点传递。
+      - name: Prepare semver reference
+        run: python3 tools/prepare-semver-reference.py
+      - name: Run host regressions
+        env:
+          STAGE: ${{ inputs.stage }}
+          ONLY: ${{ inputs.only }}
+          OUTPUT: ${{ inputs.output }}
+          TOOLCHAINS: ${{ inputs.toolchains }}
+          PLAYWRIGHT: ${{ inputs.playwright }}
+        run: |
+          set -euf
+          case "$STAGE" in *[!a-z]*|'') echo "unsafe stage"; exit 2 ;; esac
+          args=(--stage "$STAGE" --jdk "$JAVA_HOME")
+          if [ -n "$OUTPUT" ]; then
+            case "$OUTPUT" in *[!a-z0-9-]*) echo "unsafe output"; exit 2 ;; esac
+            args+=(--output "app/build/host-tests/$OUTPUT")
+          fi
+          for name in $ONLY; do
+            case "$name" in *[!A-Za-z0-9_.-]*) echo "unsafe --only name"; exit 2 ;; esac
+            args+=(--only "$name")
+          done
+          if [ "$TOOLCHAINS" = true ]; then args+=(--toolchain-root "$RUNNER_TEMP/dsha-toolchains"); fi
+          if [ "$PLAYWRIGHT" = true ]; then
+            args+=(--playwright "$GITHUB_WORKSPACE/tools/ci-browser/node_modules/playwright"
+                   --browsers-path "$RUNNER_TEMP/dsha-plugin-browsers")
+          fi
+          # raw 夹具只在交接还原后存在；缺失时让依赖它的单个用例显式失败。
+          if [ -f app/build/test-runtimes/current.json ]; then
+            args+=(--raw "$(python3 -c "import json;print(json.load(open('app/build/test-runtimes/current.json'))['raw'])")")
+          fi
+          python3 tools/run-host-tests.py "${args[@]}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ${{ inputs.artifact }}
+          path: app/build/host-tests
+          if-no-files-found: warn
+          retention-days: 14

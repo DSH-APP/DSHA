@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-tool-skill/lib/index.js",
+  "sourceSha256": "c41b4ea6843d7987927593a872777a7eddb348f66512c20209ab871ebf02a8b7",
+  "packageIntegrity": "sha512-tsLsMoudviQqVYlGFk44o24U43sQ/TpO8Y/BUJ8Hq3bePLGF9TMB//x3jBn3rerRmOQVwa72/7cSjhmd/dTF2w==",
+  "patches": [
+    {
+      "before": "function catalogSourceEntries(skills, descriptionMaxLength) {\n\treturn skills.map((skill) => ({\n\t\tname: skill.name,\n\t\tdescription: catalogDescription(skill.description, descriptionMaxLength)\n\t}));\n}",
+      "after": "function catalogSourceEntries(skills, descriptionMaxLength) {\n\t// DSHA_USER_ONLY_SKILL_APPROVAL_V1: durable catalog records retain approval state.\n\treturn skills.map((skill) => ({\n\t\tname: skill.name,\n\t\tdescription: catalogDescription(skill.description, descriptionMaxLength),\n\t\t...isModelInvocable(skill) ? {} : { requiresApproval: true }\n\t}));\n}"
+    },
+    {
+      "before": "const summary = (await ctx.skills.list(lookup)).find((skill) => skill.name === args.name);\n\t\t\tif (!summary) throw new Error(`skill \"${args.name}\" is unknown or no longer available`);\n\t\t\tif (!isModelInvocable(summary)) throw new Error(`skill \"${args.name}\" is not available for model invocation`);\n\t\t\tconst skill = await ctx.skills.get(args.name, lookup);\n\t\t\tif (!skill) throw new Error(`skill \"${args.name}\" is unknown or no longer available`);\n\t\t\tif (!isModelInvocable(skill)) throw new Error(`skill \"${args.name}\" is not available for model invocation`);",
+      "after": "const summary = (await ctx.skills.list(lookup)).find((skill) => skill.name === args.name);\n\t\t\tif (!summary) throw new Error(`skill \"${args.name}\" is unknown or no longer available`);\n\t\t\tlet approvalAsked = false;\n\t\t\tif (!isModelInvocable(summary)) {\n\t\t\t\tif (!isUserInvocable(summary)) throw new Error(`skill \"${args.name}\" is not available for model invocation`);\n\t\t\t\tconst approval = ctx.get(\"approval\");\n\t\t\t\tif (exec.agent === void 0 || typeof approval?.request !== \"function\") throw new Error(`skill \"${args.name}\" requires user approval, but no approval channel is available`);\n\t\t\t\tlet outcome;\n\t\t\t\ttry {\n\t\t\t\t\toutcome = await approval.request({\n\t\t\t\t\t\tagent: exec.agent,\n\t\t\t\t\t\ttoolName: \"skill\",\n\t\t\t\t\t\tcallId: exec.callId,\n\t\t\t\t\t\treason: `load user-only skill \"${args.name}\"`,\n\t\t\t\t\t\tdisplayReason: {\n\t\t\t\t\t\t\tzh: `是否允许模型在本次调用中加载仅限用户调用的技能“${args.name}”？`,\n\t\t\t\t\t\t\ten: `Allow the model to load user-only skill \"${args.name}\" for this call?`\n\t\t\t\t\t\t},\n\t\t\t\t\t\tsignal: exec.signal\n\t\t\t\t\t});\n\t\t\t\t} catch {\n\t\t\t\t\tthrow new Error(`approval failed for user-only skill \"${args.name}\"`);\n\t\t\t\t}\n\t\t\t\tif (outcome !== \"allowed-once\") throw new Error(`user rejected loading user-only skill \"${args.name}\"`);\n\t\t\t\tapprovalAsked = true;\n\t\t\t}\n\t\t\tconst skill = await ctx.skills.get(args.name, lookup);\n\t\t\tif (!skill) throw new Error(`skill \"${args.name}\" is unknown or no longer available`);\n\t\t\tif (!isModelInvocable(skill) && !approvalAsked) throw new Error(`skill \"${args.name}\" invocation policy changed; refusing to load it`);\n\t\t\tif (!isModelInvocable(skill) && !isUserInvocable(skill)) throw new Error(`skill \"${args.name}\" is not available for model invocation`);"
+    },
+    {
+      "before": "const skills = snapshot.skills.filter(isModelInvocable);",
+      "after": "const skills = snapshot.skills.filter((skill) => isModelInvocable(skill) || isUserInvocable(skill));"
+    },
+    {
+      "before": "function renderCatalogEntries(entries) {\n\treturn entries.map((entry) => `- \\`${entry.name}\\`: ${escapeText(entry.description)}`);\n}",
+      "after": "function renderCatalogEntries(entries) {\n\treturn entries.map((entry) => `- \\`${entry.name}\\`: ${escapeText(entry.description)}${entry.requiresApproval === true ? \" [approval required]\" : \"\"}`);\n}"
+    },
+    {
+      "before": "const canonical = entries.map((entry) => JSON.stringify([entry.name, entry.description])).join(\"\\n\");",
+      "after": "const canonical = entries.map((entry) => JSON.stringify([entry.name, entry.description, entry.requiresApproval === true])).join(\"\\n\");"
+    },
+    {
+      "before": "const { name, description } = entry;\n\t\tif (typeof name !== \"string\" || name === \"\" || typeof description !== \"string\") return void 0;\n\t\treadable.push({\n\t\t\tname,\n\t\t\tdescription\n\t\t});",
+      "after": "const { name, description } = entry;\n\t\tif (typeof name !== \"string\" || name === \"\" || typeof description !== \"string\"\n\t\t\t|| entry.requiresApproval !== void 0 && typeof entry.requiresApproval !== \"boolean\") return void 0;\n\t\treadable.push({\n\t\t\tname,\n\t\t\tdescription,\n\t\t\trequiresApproval: entry.requiresApproval === true\n\t\t});"
+    }
+  ]
+}

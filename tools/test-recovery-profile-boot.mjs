@@ -9,13 +9,14 @@ import path from 'node:path';
 import { zstdDecompressSync } from 'node:zlib';
 
 const root=path.resolve(import.meta.dirname,'..');
-const expectedDsh=JSON.parse(await readFile(path.join(root,'tools/dsh-runtime/package.json'),'utf8')).dependencies['@deepseek-ai/dsh'];
+const expectedDsh=JSON.parse(await readFile(path.join(root,'tools/recovery-runtime/lock.json'),'utf8')).dshVersion;
 const fixture=JSON.parse(await readFile(path.join(root,'app/build/test-runtimes/current.json'),'utf8'));
-const runtime=path.resolve(process.env.DSHA_TEST_RUNTIME||fixture.raw);
+const runtime=path.resolve(process.env.DSHA_TEST_RECOVERY_RUNTIME||process.env.DSHA_TEST_RUNTIME||fixture.raw);
 const actual=JSON.parse(await readFile(path.join(runtime,'node_modules/@deepseek-ai/dsh/package.json'),'utf8'));
 assert.equal(actual.version,expectedDsh);
 const tempParent=path.join(root,'app/build/tmp');await mkdir(tempParent,{recursive:true});
 const temp=await mkdtemp(path.join(tempParent,'recovery-profile-'));
+const reports=path.resolve(process.env.DSHA_RECOVERY_BROWSER_REPORTS||path.join(root,'app/build/reports/recovery-browser'));
 const instance=randomBytes(16).toString('hex'),token=randomBytes(32).toString('hex'),profile=`dsha-emergency-${instance}`;
 const temporaryKey=process.env.DSHA_TEST_TEMPORARY_KEY==='1'?`sk-DSHA-SYNTHETIC-${randomBytes(24).toString('hex')}`:'';
 const home=path.join(temp,'home'),data=path.join(home,'.dsh'),profileRoot=path.join(data,'profiles',profile),plugin=path.join(home,'recovery-agent');
@@ -37,8 +38,9 @@ await writeFile(path.join(profileRoot,'package.json'),(await readFile(path.join(
 await writeFile(path.join(profileRoot,'cordis.patch.yml'),(await readFile(path.join(root,'app/src/main/assets/recovery-profile.patch.yml'),'utf8')).replaceAll('@PLUGIN_ROOT@',plugin.replaceAll('\\','/')).replaceAll('@RECOVERY_HOME@',home.replaceAll('\\','/'))
   +`\n- insert:\n    - id: recovery-test-observer\n      name: '${plugin.replaceAll('\\','/')}/test-observer.js'\n`);
 await writeFile(path.join(data,'settings.yaml'),'{}\n');
-let calls=0;
+let calls=0,modelRequests=0;
 const broker=createServer((req,res)=>{
+  if(req.url.startsWith('/fixture-no-model')){modelRequests++;req.resume();res.writeHead(403).end();return;}
   if(req.method!=='POST'||req.url!=='/v1/diagnostics'||req.headers.authorization!==`Bearer ${token}`){res.writeHead(403).end();return;}
   req.resume();calls++;res.writeHead(200,{'Content-Type':'application/json'}).end('{"status":"ok"}');
 });
@@ -49,12 +51,19 @@ try{
     DSHA_RECOVERY_INSTANCE_ID:instance,DSHA_RECOVERY_GENERATION:'1',DSHA_RECOVERY_BROKER_PORT:String(broker.address().port),DSHA_RECOVERY_BROKER_TOKEN:token,
     DSHA_RECOVERY_TEST_SESSION:path.join(temp,'session-observation.json')};
   delete env.DEEPSEEK_API_KEY;delete env.OPENAI_API_KEY;
+  for(const key of Object.keys(env)){
+    if(/API_KEY|TOKEN|SECRET|PASSWORD|COOKIE|AUTHORIZATION/i.test(key)&&key!=='DSHA_RECOVERY_BROKER_TOKEN')delete env[key];
+    if(/proxy/i.test(key))delete env[key];
+  }
+  // The synthetic key must exercise the real launch environment without contacting
+  // a public provider, even for its advisory /models listing. No model may be sent.
+  env.DEEPSEEK_BASE_URL=`http://127.0.0.1:${broker.address().port}/fixture-no-model`;
   if(temporaryKey)env.DEEPSEEK_API_KEY=temporaryKey;
   child=spawn(process.execPath,['--expose-internals',path.join(runtime,'node_modules/@deepseek-ai/dsh/lib/bin.js'),'--profile',profile,'--no-open','--host','127.0.0.1','--port','0'],{cwd:home,env,windowsHide:true,stdio:['ignore','pipe','pipe']});
   child.stdout.on('data',chunk=>{output+=chunk;});child.stderr.on('data',chunk=>{output+=chunk;});child.once('exit',()=>{exited=true;});
   const deadline=Date.now()+60000;
   while(!exited&&!output.includes(`DSHA_RECOVERY_AGENT_READY:${instance}`)&&!output.includes('DSHA_RECOVERY_AGENT_FAILED')&&Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,100));
-  assert.match(output,new RegExp(`DSHA_RECOVERY_AGENT_READY:${instance}`),'complete rc2 profile must publish checked readiness');
+  assert.match(output,new RegExp(`DSHA_RECOVERY_AGENT_READY:${instance}`),'complete pinned profile must publish checked readiness');
   assert.equal(calls,1);
   assert.equal(exited,false);
   // 等 Web 绑定并实际取回 HTML；不把工具初始化完成替代 HTTP 就绪。
@@ -84,7 +93,7 @@ try{
     // 没有模型凭据也必须能关闭配置提示并编辑草稿，不把下载到 HTML 当作浏览器可用。
     const dismiss=page.getByRole('button',{name:/^(稍后配置|Configure later|Later|Skip for now|继续|Continue)$/i});
     for(let attempt=0;attempt<30;attempt++){
-      const visible=await dismiss.all();for(const button of visible)if(await button.isVisible())await button.click();
+      const visible=await dismiss.all();for(const button of visible)if(await button.isVisible()&&await button.isEnabled())await button.click();
       if(await page.locator('[contenteditable="true"]:visible,textarea:visible').count())break;
       await page.waitForTimeout(200);
     }
@@ -115,16 +124,16 @@ try{
     assert.equal(observed.header.agentPreset,'dsha-emergency');
     assert.deepEqual(observed.tools,['dsha_diagnostics','dsha_propose','dsha_read','dsha_result','dsha_targets']);
     assert.ok(observed.extensionPackages?.some(row=>row.name==='dsha-recovery-agent'&&row.version==='0.1.0'),
-      'real rc2 DeepSeek request extension must accept the recovery agent manifest');
+      'real pinned DeepSeek request extension must accept the recovery agent manifest');
     assert.ok(Number.isInteger(observed.extensionPrepareMs)&&observed.extensionPrepareMs<5000,
       `host fixture request-extension preparation was slow: ${observed.extensionPrepareMs}ms`);
     assert.equal(observed.workspaces.length,1);assert.equal(path.resolve(observed.workspaces[0].path),path.resolve(home,'workspace'));
     await page.waitForTimeout(500);
     assert.deepEqual(pageErrors,[],'actual browser must have no uncaught page errors');
     assert.deepEqual(clientWarnings.filter(message=>/did not activate|waiting for service|failed to (?:load|activate)|missing service/i.test(message)),[],'required client services must activate');
-    const reports=path.join(root,'app/build/reports/recovery-browser');await mkdir(reports,{recursive:true});
+    await mkdir(reports,{recursive:true});
     await page.screenshot({path:path.join(reports,'workbench.png'),fullPage:true});
-    await writeFile(path.join(reports,'result.json'),JSON.stringify({dshVersion:actual.version,browser:browser.version(),viewport:{width:393,height:852},workspaceSelected:true,sessionCwdInEmergencyHome:true,agentPreset:observed.header.agentPreset,scopedTools:observed.tools,composerVisible:true,composerEditable:true,sendEnabled:true,pageErrors,clientWarnings},null,2)+'\n');
+    await writeFile(path.join(reports,'result.json'),JSON.stringify({dshVersion:actual.version,browser:browser.version(),viewport:{width:393,height:852},workspaceSelected:true,sessionCwdInEmergencyHome:true,agentPreset:observed.header.agentPreset,scopedTools:observed.tools,extensionPackages:observed.extensionPackages,extensionPrepareMs:observed.extensionPrepareMs,requestExtensionPrepared:true,brokerDiagnosticsCalls:calls,composerVisible:true,composerEditable:true,sendEnabled:true,pageErrors,clientWarnings},null,2)+'\n');
     if(temporaryKey){
       browserStorageEvidence=await page.evaluate(async needle=>{
         const matches=[];let storageValues=0,indexedDbValues=0;
@@ -152,6 +161,10 @@ try{
   const stopped=once(child,'exit');await writeFile(path.join(home,'.recovery-stop'),instance+'\n');
   const exit=await Promise.race([stopped,new Promise((_,reject)=>setTimeout(()=>reject(Error('RECOVERY_NORMAL_STOP_TIMEOUT')),10000))]);
   assert.equal(exit[0],0,'normal emergency shutdown must exit successfully');
+  assert.equal(modelRequests,0,'draft-only qualification must not attempt any model inference');
+  const reportPath=path.join(reports,'result.json');
+  const report=JSON.parse(await readFile(reportPath,'utf8'));
+  await writeFile(reportPath,JSON.stringify({...report,normalExitCode:exit[0],modelRequestsSent:0,externalModelRequestsSent:0,providerEndpoint:'controlled-loopback-disabled'},null,2)+'\n');
   if(temporaryKey){
     assert.equal(output.includes(temporaryKey),false,'temporary API key must not enter startup or shutdown logs');
     const needle=Buffer.from(temporaryKey),matches=[];let filesScanned=0,compressedFilesScanned=0;
@@ -163,11 +176,10 @@ try{
       if(file.endsWith('.zstd')){bytes=zstdDecompressSync(bytes);compressedFilesScanned++;if(bytes.includes(needle))matches.push(path.relative(temp,file)+':decompressed');}
     }}
     await scan(temp);assert.deepEqual(matches,[],'temporary API key must not enter profile, credentials, session, log or workspace files');
-    const reports=path.join(root,'app/build/reports/recovery-browser');
     await writeFile(path.join(reports,'temporary-key.json'),JSON.stringify({dshVersion:actual.version,syntheticKeyOnly:true,modelRequestsSent:0,normalExitCode:exit[0],filesScanned,compressedFilesScanned,browserStorageEvidence,filesystemMatches:matches,processOutputContainsKey:false},null,2)+'\n');
     console.log(`PASS: synthetic temporary API key stayed out of ${filesScanned} fixture files, decompressed sessions, browser storage/cookies and process logs after normal shutdown; no model request`);
   }
-  console.log('PASS: isolated empty rc2 profile, checked repair roster, native auth cookie, real Chromium workbench/composer edit+focus and zero page errors');
+  console.log(`PASS: isolated empty ${actual.version} profile, checked repair roster, native auth cookie, real Chromium workbench/composer edit+focus and zero page errors`);
 }catch(error){
   console.error((temporaryKey?output.replaceAll(temporaryKey,'[synthetic-key]'):output).replaceAll(token,'[broker-token]').replace(/([?&](?:token|auth|key)=)[^\s&]+/g,'$1[redacted]').slice(-14000));throw error;
 }finally{

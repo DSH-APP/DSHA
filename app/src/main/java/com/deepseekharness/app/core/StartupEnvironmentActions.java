@@ -34,6 +34,10 @@ final class StartupEnvironmentActions implements StartupPipeline.Actions {
     return state.lifecycle.isCurrent(generation);
   }
 
+  public void yieldPluginQuery() {
+    com.deepseekharness.app.plugins.PluginManagementEngine.get(owner.context()).yieldToUserAction();
+  }
+
   public void stage(String value) {
     stage.accept(value);
   }

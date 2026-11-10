@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_label" formatted="false">"Controle de tela DSH-A-Su"</string>
+    <string name="accessibility_desc" formatted="false">"Dois usos: ler automaticamente o código de pareamento da depuração sem fio e permitir que o assistente de IA leia a tela, toque, digite, pressione teclas e faça capturas para controlar o telefone. O DSH-A-Su nunca grava a tela em segundo plano; a tela atual é lida apenas enquanto o assistente pede."</string>
+</resources>

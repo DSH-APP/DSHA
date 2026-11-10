@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  候选版本卡（手机 / 平板竖屏）：标题 + build·大小 + 前几行更新记录 + “查看完整记录”。
+  update_release_panel 随是否有候选显隐；update_release_detail 打开完整记录（CardSheet）。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/update_release_panel" style="@style/ShellCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical" android:paddingStart="@dimen/shell_card_pad" android:paddingTop="14dp" android:paddingEnd="8dp" android:paddingBottom="4dp" android:visibility="gone">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginEnd="8dp" android:gravity="center_vertical" android:orientation="horizontal">
+    <ImageView style="@style/ShellRowIcon" android:layout_width="@dimen/shell_row_icon" android:layout_height="@dimen/shell_row_icon" android:contentDescription="@null" android:src="@drawable/ic_ui2_box" />
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
+      <TextView android:id="@+id/update_release_title" style="@style/ShellCardTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityHeading="true" android:textSize="15sp" />
+      <TextView android:id="@+id/update_release_meta" style="@style/ShellStatusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:fontFeatureSettings="tnum" />
+    </LinearLayout>
+  </LinearLayout>
+  <TextView android:id="@+id/update_notes" style="@style/ShellCardBody" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:layout_marginEnd="8dp" android:ellipsize="end" android:maxLines="4" />
+  <LinearLayout android:id="@+id/update_release_detail" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="end" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center_vertical" android:minHeight="@dimen/touch_min" android:orientation="horizontal" android:paddingStart="10dp" android:paddingEnd="8dp">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:text="@string/upd_full_notes" android:textColor="@color/shell_accent" android:textSize="13sp" android:textStyle="bold" />
+    <ImageView android:layout_width="14dp" android:layout_height="14dp" android:layout_marginStart="4dp" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_accent" />
+  </LinearLayout>
+</LinearLayout>

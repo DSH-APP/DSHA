@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+  任务状态上岛（方案 B，见 docs/design/island-status-20261102）：
+  - 第一列：当前状态（回到桌面后的示意胶囊 + 通知、系统状态行、支持的设备入口）与行为开关；
+  - 第二列：上岛顺序五级，高亮当前占岛的级别；
+  - 详情窗格宽度 ≥ island_two_column_dp 时 IslandFragment 把 island_columns 切成两列；
+  - 页底余量用 shell_page_bottom：手机让出悬浮胶囊，平板（左栏导航）回到普通余量；
+  - 文字全部由 IslandFragment 经 UiText 设置；偏好仍只走 ConfigStore 的两个键。
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/island_scroll" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:fillViewport="true" android:background="@color/shell_bg">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingTop="@dimen/config_page_top" android:paddingBottom="@dimen/shell_page_bottom">
+
+        <TextView android:id="@+id/island_intro" style="@style/ShellStatusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/config_page_pad_h" android:layout_marginEnd="@dimen/config_page_pad_h" android:layout_marginTop="6dp" />
+
+        <LinearLayout android:id="@+id/island_columns" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="@dimen/config_page_pad_h" android:paddingEnd="@dimen/config_page_pad_h">
+
+            <!-- ========== 第一列：当前状态 + 行为 ========== -->
+            <LinearLayout android:id="@+id/island_column_start" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                <TextView android:id="@+id/island_label_state" style="@style/ConfigLabel" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                <LinearLayout style="@style/ConfigCard" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <!-- 回到桌面后（示意）：读 AgentTaskState 快照，与通知同一选举 -->
+                    <LinearLayout android:id="@+id/island_preview" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/island_preview_pad" android:focusable="true" android:importantForAccessibility="yes">
+                        <TextView android:id="@+id/island_preview_caption" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:textColor="@color/shell_text_muted" android:importantForAccessibility="no" />
+                        <LinearLayout android:id="@+id/island_strip" android:layout_width="match_parent" android:layout_height="@dimen/island_strip_height" android:layout_marginTop="6dp" android:background="@drawable/bg_island_strip" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="10dp" android:paddingEnd="10dp" android:importantForAccessibility="noHideDescendants">
+                            <TextView android:id="@+id/island_strip_clock" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/shell_text" android:textSize="12sp" android:textStyle="bold" android:includeFontPadding="false" />
+                            <TextView android:id="@+id/island_capsule" android:layout_width="wrap_content" android:layout_height="@dimen/island_capsule_height" android:layout_marginStart="8dp" android:gravity="center" android:paddingStart="9dp" android:paddingEnd="9dp" android:textSize="12sp" android:textStyle="bold" android:maxLines="1" android:includeFontPadding="false" />
+                        </LinearLayout>
+                        <LinearLayout android:id="@+id/island_notice" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/bg_island_notice" android:orientation="vertical" android:paddingStart="12dp" android:paddingEnd="12dp" android:paddingTop="8dp" android:paddingBottom="9dp" android:importantForAccessibility="noHideDescendants">
+                            <TextView android:id="@+id/island_notice_title" style="@style/ConfigRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="1" android:textStyle="bold" />
+                            <TextView android:id="@+id/island_notice_text" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <TextView android:id="@+id/island_preview_note" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:textColor="@color/shell_text_muted" android:maxLines="3" android:importantForAccessibility="no" />
+                    </LinearLayout>
+                    <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                    <!-- 系统状态：状态点 + 标题/说明 + 行尾系统设置 -->
+                    <LinearLayout android:id="@+id/island_state_row" style="@style/ConfigRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="8dp" android:paddingBottom="8dp">
+                        <View android:id="@+id/island_state_dot" android:layout_width="@dimen/island_dot" android:layout_height="@dimen/island_dot" android:layout_marginEnd="12dp" android:background="@drawable/bg_island_dot" android:importantForAccessibility="no" />
+                        <LinearLayout android:id="@+id/island_state_text" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:focusable="true" android:importantForAccessibility="yes">
+                            <TextView android:id="@+id/island_state_title" style="@style/ConfigRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:importantForAccessibility="no" />
+                            <TextView android:id="@+id/island_state_sub" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="4" android:importantForAccessibility="no" />
+                            <TextView android:id="@+id/island_state_api" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="monospace" android:textColor="@color/shell_text_muted" android:textSize="11sp" android:importantForAccessibility="no" />
+                        </LinearLayout>
+                        <Button android:id="@+id/island_open_settings" style="@style/ConfigChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="10dp" />
+                    </LinearLayout>
+                    <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                    <!-- 支持的设备：属于“系统能力”，放在状态卡内而非页底，首屏可见，也不会被手机悬浮胶囊挡住 -->
+                    <TextView android:id="@+id/island_devices" style="@style/ConfigRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:drawableEnd="@drawable/ic_ui2_chevron" android:drawablePadding="8dp" android:textSize="@dimen/shell_row_title" android:textColor="@color/shell_text" android:includeFontPadding="false" android:maxLines="2" android:ellipsize="end" />
+                </LinearLayout>
+
+                <TextView android:id="@+id/island_label_behavior" style="@style/ConfigLabel" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                <LinearLayout style="@style/ConfigCard" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <LinearLayout android:id="@+id/island_enabled_row" style="@style/ConfigRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <LinearLayout android:id="@+id/island_enabled_text" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:importantForAccessibility="noHideDescendants">
+                            <TextView android:id="@+id/island_enabled_title" style="@style/ConfigRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                            <TextView android:id="@+id/island_enabled_sub" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/island_enabled" style="@style/ConfigSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                    <LinearLayout android:id="@+id/island_chronometer_row" style="@style/ConfigRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <LinearLayout android:id="@+id/island_chronometer_text" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:importantForAccessibility="noHideDescendants">
+                            <TextView android:id="@+id/island_chronometer_title" style="@style/ConfigRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                            <TextView android:id="@+id/island_chronometer_sub" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/island_chronometer" style="@style/ConfigSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ========== 第二列：上岛顺序 ========== -->
+            <LinearLayout android:id="@+id/island_column_end" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/config_label_top" android:layout_marginBottom="@dimen/config_label_bottom" android:gravity="center_vertical" android:orientation="horizontal">
+                    <TextView android:id="@+id/island_label_order" style="@style/ConfigLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:layout_marginBottom="0dp" />
+                    <TextView android:id="@+id/island_order_hint" style="@style/ConfigRowSub" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginTop="0dp" android:layout_marginStart="8dp" android:gravity="end" android:textColor="@color/shell_text_muted" />
+                </LinearLayout>
+                <LinearLayout android:id="@+id/island_levels" style="@style/ConfigCard" android:layout_width="match_parent" android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

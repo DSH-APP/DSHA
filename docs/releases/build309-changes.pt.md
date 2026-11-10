@@ -1,0 +1,4 @@
+# DSHA 0.2.1-rc.5-20261104.1930-dsh0.2.1-rc.5 / build309
+
+- Experimental: a identidade de publicação passa a ser comutável (identidade Mod por omissão, além de um fluxo de identidade upstream que só corre no repositório privado de um colaborador); a confirmação de dispositivo externo fixa o dispositivo alvo e os comandos de depuração só de leitura validam os argumentos; as leituras de cópias de segurança abrem em modo não bloqueante com a flag de diretório arm64 corrigida, e as falhas registam a fase (algumas correções escolhidas do colaborador ym2025szz).
+- Âmbito da verificação: apenas testes unitários direcionados, Lint e verificações de código locais; não verificado num dispositivo. versionCode elevado para 309 (com base no build308). A revisão DSHA mantém-se 0.2.1-rc.5 e o DSH incluído mantém-se 0.2.1-rc.5.

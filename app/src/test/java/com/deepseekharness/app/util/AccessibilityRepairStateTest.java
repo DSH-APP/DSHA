@@ -394,4 +394,114 @@ public class AccessibilityRepairStateTest {
     assertEquals(OWN, f.value);
     assertEquals(2, f.writes.size());
   }
+
+  @Test
+  public void successfulRepairRetainsFixedLifecycleAndMonotonicElapsedEvidence() {
+    var s = new AccessibilityRepairState();
+    var f = new Facts();
+    var a = s.begin("private-device-instance", f);
+    f.time = 10;
+    assertTrue(s.disable(a));
+    f.time = 130;
+    s.restore(a);
+    f.time = 180;
+    s.connected();
+    var events = s.drainEvents();
+    assertEquals(
+        List.of(
+            "CHECKING",
+            "DISABLE_SENT",
+            "DISABLED_WAIT",
+            "RESTORE_SENT",
+            "WAITING_CONNECTED",
+            "CONNECTED"),
+        events.stream().map(AccessibilityRepairState.Event::phase).toList());
+    assertEquals(
+        List.of(0L, 10L, 10L, 130L, 130L, 180L),
+        events.stream().map(AccessibilityRepairState.Event::elapsedMillis).toList());
+    assertTrue(
+        events.stream().allMatch(event -> event.repairEpoch() == events.get(0).repairEpoch()));
+    assertFalse(events.get(events.size() - 1).mayRemainDisabled());
+    assertFalse(s.hasEvents());
+    assertEquals("CONNECTED", s.snapshot().phase());
+  }
+
+  @Test
+  public void changedDeadlineAndUnknownResultsHaveEvidenceWithoutEnablingOrRetrying() {
+    for (String outcome : List.of("changed", "deadline", "unknown")) {
+      var s = new AccessibilityRepairState();
+      var f = new Facts();
+      var a = s.begin("private-device-instance", f);
+      if (outcome.equals("unknown")) {
+        f.writeResult = false;
+        assertFalse(s.disable(a));
+      } else {
+        assertTrue(s.disable(a));
+        if (outcome.equals("changed")) {
+          f.value = "private-unrelated/service";
+          s.restore(a);
+          assertEquals("private-unrelated/service", f.value);
+        } else {
+          f.time = 5_000;
+          s.expire(a);
+        }
+      }
+      var events = s.drainEvents();
+      var terminal = events.get(events.size() - 1);
+      assertEquals(
+          outcome.equals("changed")
+              ? "SETTINGS_CHANGED"
+              : outcome.equals("deadline") ? "TIMED_OUT" : "UNKNOWN",
+          terminal.phase());
+      assertTrue(terminal.mayRemainDisabled());
+      assertEquals(1, f.writes.size());
+      s.restore(a);
+      f.time = 60_000;
+      assertNull(s.begin("replacement", f));
+      assertEquals(1, f.writes.size());
+    }
+  }
+
+  @Test
+  public void diagnosticBufferIsBoundedAndNeverContainsSettingsOrDeviceValues() {
+    var s = new AccessibilityRepairState();
+    var f = new Facts();
+    f.value = "private-unrelated/service";
+    for (int index = 0; index < 48; index++) {
+      f.time = index * 30_000L;
+      assertFalse(s.disable(s.begin("private-device-instance", f)));
+    }
+    var events = s.drainEvents();
+    assertEquals(32, events.size());
+    assertTrue(f.writes.isEmpty());
+    for (var event : events) {
+      assertFalse(event.toString().contains("private"));
+      assertFalse(event.toString().contains("service"));
+      assertTrue(event.phase().matches("[A-Z_]+"));
+      assertTrue(event.code().matches("[A-Z_]+"));
+      assertTrue(event.elapsedMillis() >= 0);
+    }
+    assertTrue(s.drainEvents().isEmpty());
+    assertEquals("SERVICE_NOT_ENABLED_OR_AMBIGUOUS", s.snapshot().code());
+  }
+
+  @Test
+  public void cancelledRepairEvidenceDoesNotLetDrainRetireTheUnknownWriteFence() {
+    var s = new AccessibilityRepairState();
+    var f = new Facts();
+    var a = s.begin("private-device-instance", f);
+    assertTrue(s.disable(a));
+    f.time = 50;
+    s.cancel(AccessibilityRepairState.CancelCause.POLICY_CHANGED);
+    var events = s.drainEvents();
+    var last = events.get(events.size() - 1);
+    assertEquals("CANCELLED", last.phase());
+    assertEquals("POLICY_CHANGED", last.code());
+    assertEquals(50L, last.elapsedMillis());
+    assertTrue(last.mayRemainDisabled());
+    f.time = 60_000;
+    assertNull(s.begin("replacement", f));
+    s.restore(a);
+    assertEquals(1, f.writes.size());
+  }
 }

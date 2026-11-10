@@ -74,6 +74,9 @@ public final class MultiTerminalLanguageAudit extends Instrumentation {
   }
 
   private void mount(androidx.fragment.app.Fragment fragment) {
+    Bundle options = new Bundle();
+    options.putBoolean("terminal_skip_initial_create", true);
+    fragment.setArguments(options);
     ui(
         () ->
             page.getSupportFragmentManager()
@@ -83,8 +86,27 @@ public final class MultiTerminalLanguageAudit extends Instrumentation {
     waitForIdleSync();
   }
 
-  private void click(int id) {
-    ui(() -> check(page.findViewById(id).performClick(), "控件未接受点击：" + id));
+  private TerminalPane pane() {
+    return (TerminalPane)
+        page.getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+  }
+
+  private void click(int id) throws Exception {
+    if (id != R.id.terminal_new) {
+      ui(() -> check(page.findViewById(id).performClick(), "控件未接受点击：" + id));
+      waitForIdleSync();
+      return;
+    }
+    TerminalPane current = pane();
+    TerminalTabs.ReadOnly<?> tabs =
+        tabs(current.isPty() ? PtyTerminalFragment.class : TerminalFragment.class);
+    Set<Long> before = new HashSet<>();
+    for (var tab : tabs.snapshot()) before.add(tab.id);
+    ui(current::newSession);
+    long end = System.currentTimeMillis() + 20000;
+    while ((tabs.current() == null || before.contains(tabs.current().id))
+        && System.currentTimeMillis() < end) Thread.sleep(50);
+    check(tabs.current() != null && !before.contains(tabs.current().id), "前台保护准入后未发布新终端");
     waitForIdleSync();
   }
 
@@ -93,15 +115,18 @@ public final class MultiTerminalLanguageAudit extends Instrumentation {
     var snapshot = tabs.snapshot();
     for (int i = 0; i < snapshot.size(); i++) if (snapshot.get(i).id == id) index = i;
     check(index >= 0, "标签不存在");
-    final int at = index;
+    // 夹具只对自己新建的会话执行已授权关闭；生产确认归 TerminalActivity。
+    if (close)
+      check(
+          ownedPty.stream().anyMatch(tab -> tab.id == id && tabs.find(id).value == tab.value)
+              || ownedSimple.stream()
+                  .anyMatch(tab -> tab.id == id && tabs.find(id).value == tab.value),
+          "拒绝关闭非本夹具创建的会话");
     ui(
-        () ->
-            check(
-                ((LinearLayout)
-                        ((LinearLayout) page.findViewById(R.id.terminal_tabs)).getChildAt(at))
-                    .getChildAt(close ? 1 : 0)
-                    .performClick(),
-                "标签操作未执行"));
+        () -> {
+          if (close) pane().closeSession(id);
+          else check(pane().selectSession(id), "标签切换未执行");
+        });
     waitForIdleSync();
   }
 
@@ -355,7 +380,9 @@ public final class MultiTerminalLanguageAudit extends Instrumentation {
       try (var fd =
               getUiAutomation()
                   .executeShellCommand(
-                      "am start -W -n com.dsh.client/com.deepseekharness.app.ui.MainActivity");
+                      "am start -W -n "
+                          + app.getPackageName()
+                          + "/com.deepseekharness.app.ui.MainActivity");
           var input = new android.os.ParcelFileDescriptor.AutoCloseInputStream(fd)) {
         while (input.read() != -1) {}
       }

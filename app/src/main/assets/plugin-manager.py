@@ -10,19 +10,15 @@ import contextlib
 import os
 import re
 import shutil
-import ssl
 import stat
 import subprocess
 import signal
 import sys
-import tarfile
 import tempfile
 import threading
 import time
 import urllib.error
 import urllib.parse
-import urllib.request
-import zipfile
 
 spec = importlib.util.spec_from_file_location("builtin", os.path.join(
     os.path.dirname(__file__), "register-builtin-plugins.py"))
@@ -30,6 +26,7 @@ builtin = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(builtin)
 local = builtin.local
 DSH_HOME = builtin.DSH_HOME
+READ_ONLY = os.environ.get("DSHA_PLUGIN_QUERY") == "1"
 PLUGIN_SRC = os.path.join(DSH_HOME, "plugin-src")
 SOURCES = os.path.join(DSH_HOME, "plugin-sources.json")
 MAX_DOWNLOAD = 256 * 1024 * 1024
@@ -109,6 +106,9 @@ def check_cancel():
 
 
 def progress(stage, message, current=0, total=0, cancellable=True):
+    # 查询不写运行资产；进度只属于可变操作的任务文件。
+    if READ_ONLY:
+        return
     # 更新元数据可并行查询，进度文件仍由一个写者原子发布。
     with _progress_lock:
         _write_progress(stage, message, current, total, cancellable)
@@ -356,6 +356,10 @@ def safe_target(root, name):
 
 
 def extract_archive(path, staging):
+    # Startup migration and local queries do not open package archives. Keep
+    # these modules at the actual archive boundary to avoid proot import I/O.
+    import tarfile
+    import zipfile
     progress('extract', '正在校验并解压插件包…')
     """先校验所有条目，再解包；内部软链接延迟建立，不允许链接写出暂存目录。"""
     size, count, links = 0, 0, []
@@ -457,6 +461,42 @@ def plugin_package(root):
     if pkg["name"] in builtin.OFFICIAL_BUNDLES or pkg["name"] in builtin.builtin_names():
         raise ValueError("系统插件只随签名 APK 更新，不支持用第三方归档覆盖")
     return pkg
+
+
+def plugin_card_metadata(directory):
+    """Display/version metadata only; damaged code must remain removable.
+
+    This is not installation or loadability validation. Deletion still binds
+    every retained object with the transaction's complete NOFOLLOW fingerprint.
+    A bad user package must not hide the other cards or its own recovery action.
+    """
+    if directory is None:
+        return {}, 'PLUGIN_METADATA_MISSING'
+    path = os.path.join(directory, 'package.json')
+    try:
+        before = os.lstat(path)
+        if not stat.S_ISREG(before.st_mode) or before.st_size > 1024 * 1024:
+            raise ValueError('PLUGIN_METADATA_TYPE_OR_SIZE')
+        flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_BINARY', 0)
+        with os.fdopen(os.open(path, flags), 'rb') as stream:
+            opened = os.fstat(stream.fileno())
+            identity = lambda node: (node.st_dev, node.st_ino, node.st_mode, node.st_size, node.st_mtime_ns, node.st_ctime_ns)
+            if identity(before) != identity(opened):
+                raise ValueError('PLUGIN_METADATA_CHANGED')
+            data = stream.read(1024 * 1024 + 1)
+            if len(data) > 1024 * 1024 or identity(before) != identity(os.fstat(stream.fileno())) \
+                    or identity(before) != identity(os.lstat(path)):
+                raise ValueError('PLUGIN_METADATA_CHANGED')
+        package = json.loads(data.decode('utf-8-sig'))
+        if not isinstance(package, dict):
+            raise ValueError('PLUGIN_METADATA_INVALID')
+        # Keep native version comparisons identical to this display projection.
+        for key in ('version', 'description'):
+            if not isinstance(package.get(key), str):
+                package[key] = ''
+        return package, ''
+    except (OSError, ValueError, UnicodeError):
+        return {}, 'PLUGIN_METADATA_UNREADABLE'
 
 
 def find_plugin_roots(staging, subdir=""):
@@ -674,6 +714,7 @@ def resolve_plugin_dir(name, discovered=None):
 
 
 def cmd_export(names, out):
+    import tarfile
     progress('export', '正在打包插件…')
     names = json.loads(names)
     if not isinstance(names, list) or not names or len(names) > 30:
@@ -812,7 +853,7 @@ def cmd_export(names, out):
     return 0
 
 
-def cmd_delete(name):
+def cmd_delete(name, expected_version=None):
     """只移除指定第三方插件；不追随链接去删除用户工作区或共享 pnpm 仓库。"""
     if not builtin.valid_name(name):
         raise ValueError("无效的插件名称")
@@ -823,6 +864,11 @@ def cmd_delete(name):
     if runtime and directory and os.path.realpath(runtime) == os.path.realpath(directory):
         raise ValueError("随 DSH 安装提供的插件请使用禁用开关，不能删除")
     with builtin.operation_lock(check_cancel), committing('正在删除插件：' + name):
+        if expected_version is not None:
+            current_directory = resolve_plugin_dir(name)
+            package, _ = plugin_card_metadata(current_directory)
+            if package.get('version', '') != expected_version:
+                raise ValueError('PLUGIN_TARGET_VERSION_CHANGED')
         doc = builtin.read_manifest()
         if doc is None:
             raise ValueError("插件配置不存在")
@@ -850,7 +896,13 @@ def cmd_delete(name):
                     # 固定原件和日志留在事务目录，下一次仅在维护屏障内恢复。
                     raise
                 raise
-    result("ok", "已移除 " + name + " 的加载入口；原件保留在数据页的保留区。重启 Web 后生效，对话和其他插件保留。")
+    # 删除事务已完成；独立读回加载入口，回执不依赖后续全量目录扫描。
+    confirmed = builtin.read_manifest()
+    if confirmed is None or name in confirmed.get('dependencies', {}) \
+            or name in confirmed.get('dsh', {}).get('profile', {}).get('bundles', []):
+        raise ValueError('插件删除结果未确认；保留事务记录，请核对实际状态')
+    result("ok", "已移除 " + name + " 的加载入口；原件保留在数据页的保留区。重启 Web 后生效，对话和其他插件保留。",
+           name=name, removed=True, deletionVerified=True)
     return 0
 
 
@@ -969,8 +1021,15 @@ def list_state_revision():
     """
     # Do not enter, remove, or wait on another writer's lock. Its manifest and
     # markers may be between atomic steps even when two quick reads look equal.
-    if os.path.lexists(local(builtin.MANIFEST) + '.lock'):
-        raise ValueError('插件配置正在修改或有待确认的锁；保留上次列表，请稍后刷新')
+    # A dead holder is still a pending lock, but name it so the recovery page can
+    # offer the actionable retry instead of reporting an active modification.
+    lock_path = local(builtin.MANIFEST) + '.lock'
+    if os.path.lexists(lock_path):
+        state = builtin.profile_lock_state(lock_path)
+        if state == 'stale':
+            raise ValueError('PLUGIN_PROFILE_LOCK_STALE: 上一次插件写入未完成（持有进程已退出）；可直接重试注册，或清理该锁后刷新列表')
+        if state != 'missing':
+            raise ValueError('插件配置正在修改或有待确认的锁；保留上次列表，请稍后刷新')
     if os.path.isfile(os.path.join(os.path.dirname(local(DSH_HOME)), '.dsha-restore-journal.json')):
         raise ValueError('恢复事务尚未完成；保留上次列表，请先完成恢复')
     state = []
@@ -1040,6 +1099,7 @@ def cmd_list(message="插件状态已同步"):
                                for name in names))
     items = []
     updates = lifecycle().read(lifecycle().path('plugin-updates.json'), {})
+    activations = lifecycle().activation_state()['entries']
     for name in names:
         check_cancel()
         if not builtin.valid_name(name):
@@ -1048,11 +1108,14 @@ def cmd_list(message="插件状态已同步"):
         auto_review = name in builtin.AUTO_REVIEW_ALIASES
         system_plugin = name in system_names or auto_review
         directory = builtin.runtime_bundle_dir(name) if auto_review else resolve_plugin_dir(name, discovered)
-        pkg = read_json(os.path.join(directory, "package.json"), {}) if directory else {}
+        pkg, metadata_error = plugin_card_metadata(directory)
         runtime_directory = builtin.runtime_bundle_dir(name)
         runtime_located = bool(directory and runtime_directory and os.path.realpath(directory) == os.path.realpath(runtime_directory))
+        dsh = pkg.get('dsh')
+        declared_bundle = isinstance(dsh, dict) and isinstance(dsh.get('bundle'), dict) and bool(dsh['bundle'])
+        retained_registration = name in deps and (name in disabled_names or name in sources or name in activations)
         if name not in builtin.OFFICIAL_BUNDLES and not system_plugin \
-                and name not in bundles and not (pkg.get("dsh") or {}).get("bundle"):
+                and name not in bundles and not declared_bundle and not retained_registration:
             continue
         runtime_provided = runtime_located and provenance.managed(name, directory)
         source = repository_url(pkg) if runtime_provided else sources.get(name, "") or repository_url(pkg)
@@ -1066,6 +1129,7 @@ def cmd_list(message="插件状态已同步"):
                           origin='dsha-signed' if system_plugin else 'dsh-managed' if runtime_provided else 'user',
                           official=official, available=official or directory is not None,
                           version=pkg.get("version", ""), description=pkg.get("description", ""),
+                          metadataError=metadata_error if not official and not system_plugin else '',
                           source=source, updatable=updatable,
                           exportable=not official and directory is not None,
                           deletable=not official and not system_plugin and not runtime_located
@@ -1082,7 +1146,6 @@ def cmd_list(message="插件状态已同步"):
                          if update.get('installedVersion') == str(pkg.get('version', '')) else '',
                          rollbackVersion=previous.get('version', ''), compatibility=update.get('compatibility', ''))
     mode = lifecycle().read(lifecycle().path('plugin-safe-mode.json'), {})
-    activations = lifecycle().activation_state()['entries']
     for item in items:
         activation = activations.get(item['name'], {})
         item['loadState'] = activation.get('status', '') if activation.get('version') == item.get('version') else ''
@@ -1160,7 +1223,11 @@ def cmd_npm(package, *, consume=None):
 
 
 def main():
-    os.makedirs(local(DSH_HOME), exist_ok=True)
+    if READ_ONLY:
+        if not os.path.isdir(local(DSH_HOME)):
+            raise ValueError('插件目录缺失，请先完成环境准备')
+    else:
+        os.makedirs(local(DSH_HOME), exist_ok=True)
     args = sys.argv[1:]
     try:
         check_cancel()
@@ -1259,8 +1326,8 @@ def main():
         if args[0] == "export" and len(args) == 3:
             with builtin.operation_lock(check_cancel):
                 return cmd_export(args[1], args[2])
-        if args[0] == "delete" and len(args) == 2:
-            return cmd_delete(args[1])
+        if args[0] == "delete" and len(args) in (2, 3):
+            return cmd_delete(args[1], args[2] if len(args) == 3 else None)
         if args[0] == "download" and len(args) == 2:
             return lifecycle().inspect({"command": " ".join(__import__("shlex").quote(arg) for arg in args)})
         if args[0] == "npm" and len(args) == 2:
@@ -1282,6 +1349,8 @@ def main():
                 429: "请求过于频繁，请稍后重试"}.get(error.code, "服务器返回错误")
         result("error", "下载失败：%s（HTTP %s），也可下载压缩包后本地导入" % (hint, error.code))
     except urllib.error.URLError as error:
+        # Network owns SSL initialization; local commands need no TLS stack.
+        import ssl
         if isinstance(error.reason, ssl.SSLCertVerificationError):
             result("error", "HTTPS 证书校验失败。请更新 DSHA 并重新进入插件页，检查设备日期及网络代理；未关闭证书校验。")
         else:

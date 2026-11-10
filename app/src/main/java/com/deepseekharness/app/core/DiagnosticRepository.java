@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 import com.deepseekharness.app.BuildConfig;
 import com.deepseekharness.app.runtime.ProotBootstrap;
+import com.deepseekharness.app.util.DeviceSupportReport;
 import com.deepseekharness.app.util.SensitiveData;
 import java.io.File;
 import com.deepseekharness.app.util.DiagnosticReport;
@@ -61,7 +62,21 @@ public final class DiagnosticRepository extends AndroidViewModel {
   private void run(boolean repair) {
     if (Boolean.TRUE.equals(busy.getValue())) return;
     HarnessController controller = HarnessController.get(getApplication());
+    var lastStop = controller.lastStopResult();
+    if (!repair
+        && (controller.hasUnresolvedWebSession()
+            || controller.isStarting()
+            || controller.isStopping()
+            || RuntimeTasks.isBusy()
+            || controller.isUserStopped() && (lastStop == null || !lastStop.stopped()))) {
+      runHostState(controller);
+      return;
+    }
     if (com.deepseekharness.app.core.MaintenanceCoordinator.pending(controller)) {
+      if (!repair) {
+        runHostState(controller);
+        return;
+      }
       publishFailure(com.deepseekharness.app.util.UiText.text("上次环境维护未完成，请先到安装与修复页恢复中断维护。"));
       return;
     }
@@ -71,6 +86,10 @@ public final class DiagnosticRepository extends AndroidViewModel {
                 ? com.deepseekharness.app.util.UiText.text("诊断修复")
                 : com.deepseekharness.app.util.UiText.text("环境诊断"));
     if (lease == null) {
+      if (!repair) {
+        runHostState(controller);
+        return;
+      }
       publishFailure(
           com.deepseekharness.app.util.UiText.format(
               "正在%s，完成后可重新生成报告。",
@@ -168,6 +187,91 @@ public final class DiagnosticRepository extends AndroidViewModel {
     }
   }
 
+  /** Blocking maintenance still permits an advisory snapshot; no guest or repair is launched. */
+  private void runHostState(HarnessController controller) {
+    results.setValue(List.of());
+    phase.setValue(Phase.RUNNING);
+    busy.setValue(true);
+    report.setValue(com.deepseekharness.app.util.UiText.text("正在读取设备与环境信息…\n"));
+    try {
+      IO.execute(
+          () -> {
+            try {
+              var snapshot = new com.deepseekharness.app.util.RuntimeStateDiagnostics.Snapshot();
+              snapshot.generation = controller.getWebGeneration();
+              snapshot.starting = controller.isStarting();
+              snapshot.stopping = controller.isStopping();
+              snapshot.userStopped = controller.isUserStopped();
+              snapshot.sessionUnknown = controller.hasUnresolvedWebSession();
+              snapshot.environmentExclusive =
+                  com.deepseekharness.app.util.EnvironmentTaskGate.isBusy();
+              snapshot.environmentSharedLeases =
+                  com.deepseekharness.app.util.EnvironmentTaskGate.sharedCount();
+              snapshot.maintenanceExclusive = MaintenanceCoordinator.isExclusive();
+              var restored = controller.webSessionRestoreStatus();
+              snapshot.recoveryReason = restored.reason();
+              snapshot.recoveryAttempts = restored.attempts();
+              var stop = controller.lastStopResult();
+              if (stop != null) {
+                snapshot.stopStatus = stop.status().name();
+                snapshot.stopCode = stop.code();
+                snapshot.stopFacts =
+                    stop.diagnostics().stream()
+                        .map(value -> value.code())
+                        .collect(java.util.stream.Collectors.toList());
+              }
+              var tasks = RuntimeTasks.snapshot();
+              snapshot.activeTasks = tasks.size();
+              for (var task : tasks)
+                snapshot.oldestTaskMillis = Math.max(snapshot.oldestTaskMillis, task.elapsedMillis);
+              File files = getApplication().getFilesDir();
+              snapshot.maintenance =
+                  com.deepseekharness.app.backup.HostMaintenancePending.inspectAllWithGuest(files)
+                      .stream()
+                      .map(
+                          check ->
+                              new com.deepseekharness.app.util.RuntimeStateDiagnostics.Maintenance(
+                                  check.domain, check.state.name()))
+                      .collect(java.util.stream.Collectors.toList());
+              try {
+                for (var record :
+                    com.deepseekharness.app.runtime.BoundedGuestSessions.inspect(files))
+                  switch (record.state()) {
+                    case "ACTIVE" -> snapshot.boundedActive++;
+                    case "PENDING" -> snapshot.boundedPending++;
+                    default -> snapshot.boundedInvalid++;
+                  }
+              } catch (java.io.IOException | RuntimeException unavailable) {
+                snapshot.boundedReadable = false;
+              }
+              publish(
+                  new DiagnosticReport(
+                      t("DSHA 诊断报告\n", "DSHA diagnostic report\n"),
+                      List.of(
+                          new DiagnosticReport.Check(
+                              "runtime-blocking-state",
+                              DiagnosticReport.Health.UNVERIFIED,
+                              t("环境诊断", "Environment diagnostics"),
+                              t("本次只读采样", "Current read-only sample"),
+                              com.deepseekharness.app.util.RuntimeStateDiagnostics.render(
+                                  snapshot)),
+                          backupOperations()),
+                      t(
+                          "环境任务或旧记录尚待处理，以上仅为只读状态。PENDING 表示待核对记录，不表示进程仍在运行。可复制报告；先正常停止，再到安装与修复恢复中断维护。",
+                          "An environment task or old record needs attention. This is a read-only snapshot. PENDING means a record needs checking, not that a process is running. Copy the report; stop normally, then recover interrupted maintenance in Installation and repair.")));
+              phase.postValue(Phase.SUCCEEDED);
+            } catch (RuntimeException unavailable) {
+              publishFailure("HOST_STATE_UNAVAILABLE");
+            } finally {
+              busy.postValue(false);
+            }
+          });
+    } catch (RuntimeException unavailable) {
+      busy.setValue(false);
+      publishFailure("HOST_STATE_UNAVAILABLE");
+    }
+  }
+
   private void publishFailure(String detail) {
     String safe = SensitiveData.redact(detail == null ? "" : detail);
     publish(
@@ -201,6 +305,7 @@ public final class DiagnosticRepository extends AndroidViewModel {
 
   private DiagnosticReport collect() throws Exception {
     List<DiagnosticReport.Check> rows = new ArrayList<>();
+    rows.add(backupOperations());
     HarnessController controller = HarnessController.get(getApplication());
     ProotBootstrap proot = controller.proot();
     ConfigStore config = new ConfigStore(getApplication());
@@ -220,10 +325,7 @@ public final class DiagnosticRepository extends AndroidViewModel {
         .append(BuildConfig.VERSION_NAME)
         .append(" / ")
         .append(BuildConfig.VERSION_CODE)
-        .append(
-            BuildConfig.LOW_ANDROID
-                ? t(" / 兼容版\n", " / Low edition\n")
-                : t(" / 标准版\n", " / Standard edition\n"));
+        .append(false ? t(" / 兼容版\n", " / Low edition\n") : t(" / 标准版\n", " / Standard edition\n"));
     metadata
         .append(t("系统：Android ", "System: Android "))
         .append(Build.VERSION.RELEASE)
@@ -258,40 +360,44 @@ public final class DiagnosticRepository extends AndroidViewModel {
         t("应用与设备", "App and device"),
         t("本次只读采样", "Current read-only sample"),
         metadata.toString());
-    StringBuilder browser = new StringBuilder();
-    boolean browserAvailable = true;
+    String webPkg = "";
+    String webVer = "";
     try {
       android.content.pm.PackageInfo web =
           Build.VERSION.SDK_INT >= 26 ? android.webkit.WebView.getCurrentWebViewPackage() : null;
-      browser
-          .append("WebView: ")
-          .append(
-              web == null
-                  ? t("系统未提供版本信息", "System did not provide version information")
-                  : web.packageName + " " + web.versionName)
-          .append('\n');
-    } catch (Exception | LinkageError error) {
-      browserAvailable = false;
-      browser
-          .append(t("WebView：不可用（", "WebView: unavailable ("))
-          .append(error.getClass().getSimpleName())
-          .append(")\n");
+      if (web != null) {
+        webPkg = web.packageName == null ? "" : web.packageName;
+        webVer = web.versionName == null ? "" : web.versionName;
+      }
+    } catch (Exception | LinkageError ignored) {
     }
-    browser
-        .append(t("兼容内核：", "Compatibility engine: "))
-        .append(
-            BuildConfig.LOW_ANDROID
-                ? t(
-                    "Gecko 143 可用（旧系统自动切换）",
-                    "Gecko 143 bundled; selected automatically on older systems")
-                : t("未内置", "Not bundled"));
+    DeviceSupportReport support =
+        DeviceSupportReport.from(
+            Build.VERSION.SDK_INT,
+            Build.SUPPORTED_ABIS,
+            Build.MANUFACTURER,
+            Build.BRAND,
+            Build.MODEL,
+            Build.DISPLAY,
+            webPkg,
+            webVer,
+            BuildConfig.VERSION_NAME,
+            BuildConfig.VERSION_CODE);
+    DiagnosticReport.Health browserHealth =
+        support.gate == DeviceSupportReport.Gate.OK
+            ? DiagnosticReport.Health.INFO
+            : DiagnosticReport.Health.NEEDS_ATTENTION;
     add(
         rows,
         "browser",
-        browserAvailable ? DiagnosticReport.Health.INFO : DiagnosticReport.Health.NEEDS_ATTENTION,
+        browserHealth,
         t("网页内核", "Browser engine"),
-        BuildConfig.LOW_ANDROID ? "WebView / Gecko 143" : "System WebView",
-        browser.toString());
+        support.conclusion(),
+        support.copyText
+            + (support.showHint() ? "\n\n" + support.hint() : "")
+            + "\n"
+            + t("兼容内核：", "Compatibility engine: ")
+            + t("未内置", "Not bundled"));
     String cold = ColdInstallDiagnostics.read(getApplication());
     if (!cold.isEmpty())
       add(
@@ -364,11 +470,12 @@ public final class DiagnosticRepository extends AndroidViewModel {
             + t(
                 "\n正在验证所选运行方式（最多 60 秒）与 Node / npm / Python（最多 20 秒）…\n",
                 "\nChecking the selected runtime (up to 60 seconds), then Node / npm / Python (up to 20 seconds)…\n"));
-    String selectedMode = "", smokeStatus = "";
+    String selectedMode = "", selectedDetail = "", smokeStatus = "";
     DiagnosticReport.ToolVersions versions = null;
     if (ready) {
       ProotBootstrap.SmokeResult smoke = proot.smokeTestResult();
       selectedMode = smoke.runtimeMode;
+      selectedDetail = smoke.runtimeDetail;
       String smokeOutput =
           com.deepseekharness.app.util.GuestCommandOutcome.requireCompleted(
               smoke.command, "SELECTED_RUNTIME_SMOKE");
@@ -388,9 +495,14 @@ public final class DiagnosticRepository extends AndroidViewModel {
         "selected-runtime",
         ready ? DiagnosticReport.Health.PASS : DiagnosticReport.Health.UNVERIFIED,
         t("所选运行方式", "Selected runtime"),
-        ready ? selectedMode + " · SMOKE_OK" : t("尚未验证", "Not verified"),
+        ready ? selectedDetail + " · SMOKE_OK" : t("尚未验证", "Not verified"),
         ready
-            ? "runtimeMode=" + selectedMode + "\n" + smokeStatus
+            ? "runtimeMode="
+                + selectedMode
+                + "\nruntimeDetail="
+                + selectedDetail
+                + "\n"
+                + smokeStatus
             : t("运行环境尚未就绪。", "The runtime is not ready."));
     add(
         rows,
@@ -517,6 +629,18 @@ public final class DiagnosticRepository extends AndroidViewModel {
         com.deepseekharness.app.util.UiText.text(
             "\n建议操作\n证书或 npm 异常：点击「修复证书与 npm」。\n文件选择无返回：到插件页使用「其他文件选择器」。\n第三方插件导致启动失败：使用启动页的安全启动，再逐个恢复插件。\n存储不足：清理下载目录后重试，避免重新解压整个环境。\n\n隐私范围：未读取 API 配置、对话、终端命令或系统完整日志；没有自动上传此报告。可在下面补充复现步骤后复制或导出。\n");
     return new DiagnosticReport(t("DSHA 诊断报告\n", "DSHA diagnostic report\n"), rows, footer);
+  }
+
+  /** Fixed host backup facts remain available even when guest execution is blocked. */
+  private DiagnosticReport.Check backupOperations() {
+    return new DiagnosticReport.Check(
+        "backup-operations",
+        DiagnosticReport.Health.INFO,
+        t("数据与备份", "Data and backups"),
+        t("本次只读采样", "Current read-only sample"),
+        com.deepseekharness.app.backup.BackupOperationDiagnostics.describe(
+            new com.deepseekharness.app.backup.AndroidBackupFileSystem(),
+            getApplication().getFilesDir()));
   }
 
   private static void add(

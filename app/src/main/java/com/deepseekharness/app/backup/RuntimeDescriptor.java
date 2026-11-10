@@ -104,6 +104,21 @@ public final class RuntimeDescriptor {
     return (String) value.get("runtimeId");
   }
 
+  public String dshVersion() {
+    return (String) value.get("dshVersion");
+  }
+
+  public String dataWrite() {
+    return (String) value.get("dataWrite");
+  }
+
+  public List<String> dataRead() {
+    List<?> raw = (List<?>) value.get("dataRead");
+    List<String> result = new ArrayList<>(raw.size());
+    for (Object entry : raw) result.add((String) entry);
+    return Collections.unmodifiableList(result);
+  }
+
   public boolean latest(RuntimeDescriptor expected) {
     return id().equals(expected.id())
         && Objects.equals(value.get("inputs"), expected.value.get("inputs"))

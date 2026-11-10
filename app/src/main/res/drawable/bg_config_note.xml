@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 卡片内的警示条（局域网 HTTP 未加密）：警示色软底，不另加圆角，贴合卡片行。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_warn_soft" />
+</shape>

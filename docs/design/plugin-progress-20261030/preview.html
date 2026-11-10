@@ -1,0 +1,1619 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-reduced="false">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>DSHA · 插件页进度条动效方案（仅预览）</title>
+  <style>
+    /* ============================================================
+       UI v5 设计 token 的离线副本：只用于本预览，不参与 Android 资源。
+       浅色 / 夜间与 app/src/main/res/values{,-night}/shell_ui.xml 对齐。
+       ============================================================ */
+    :root {
+      color-scheme: light;
+      --bg: #f3f6fb;
+      --surface: #fcfdff;
+      --surface-2: #f7f9fd;
+      --raised: #e7edf6;
+      --line: rgba(29, 58, 96, .075);
+      --line-2: rgba(29, 58, 96, .145);
+      --text: #18273f;
+      --text-2: #50617a;
+      --muted: #5a6b86;
+      --accent: #1e50d0;
+      --accent-2: #1640a8;
+      --accent-soft: rgba(30, 80, 208, .08);
+      --accent-line: rgba(30, 80, 208, .28);
+      --on-accent: #ffffff;
+      --good: #287453;
+      --good-soft: rgba(40, 116, 83, .10);
+      --warn: #8c600d;
+      --warn-soft: rgba(140, 96, 13, .10);
+      --bad: #af404b;
+      --bad-soft: rgba(175, 64, 75, .10);
+      --track: #e7edf6;
+      --sheen: rgba(255, 255, 255, .38);
+      --code-bg: #0e1a2e;
+      --code-fg: #dce7f8;
+      --inline-bg: rgba(30, 80, 208, .07);
+      --shadow: 0 18px 50px rgba(17, 32, 62, .12);
+      --shadow-soft: 0 6px 18px rgba(17, 32, 62, .07);
+      --sans: system-ui, -apple-system, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --ease: cubic-bezier(.22, 1, .36, 1);
+    }
+
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #0b0f16;
+      --surface: #131923;
+      --surface-2: #0f151e;
+      --raised: #1b2432;
+      --line: rgba(203, 220, 255, .07);
+      --line-2: rgba(203, 220, 255, .13);
+      --text: #edf1f7;
+      --text-2: #b0bbcc;
+      --muted: #8895aa;
+      --accent: #6aa4ff;
+      --accent-2: #8fbbff;
+      --accent-soft: rgba(106, 164, 255, .14);
+      --accent-line: rgba(106, 164, 255, .30);
+      --on-accent: #091729;
+      --good: #93ccaf;
+      --good-soft: rgba(147, 204, 175, .12);
+      --warn: #e4be83;
+      --warn-soft: rgba(228, 190, 131, .12);
+      --bad: #eea3a6;
+      --bad-soft: rgba(238, 163, 166, .12);
+      --track: #1b2432;
+      --sheen: rgba(255, 255, 255, .16);
+      --code-bg: #070d15;
+      --code-fg: #d7e4f7;
+      --inline-bg: rgba(106, 164, 255, .10);
+      --shadow: 0 18px 50px rgba(0, 0, 0, .45);
+      --shadow-soft: 0 6px 18px rgba(0, 0, 0, .28);
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 400 14px/1.65 var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+    [hidden] { display: none !important; }
+    button { font-family: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--accent-line);
+      outline-offset: 2px;
+    }
+    code {
+      font-family: var(--mono);
+      font-size: .92em;
+      background: var(--inline-bg);
+      padding: .08em .34em;
+      border-radius: 4px;
+      color: var(--text);
+      word-break: break-word;
+    }
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 30px 22px 90px; }
+    .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+    /* ---------- 页头 ---------- */
+    .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 10px; font: 700 11px/1 var(--mono); letter-spacing: .12em; color: var(--muted); }
+    .brand i { width: 27px; height: 27px; border-radius: 8px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-style: normal; font-size: 13px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      font: 600 11px/1 var(--mono); letter-spacing: .03em;
+      padding: 6px 9px; border-radius: 999px;
+      border: 1px solid var(--line-2); color: var(--text-2); background: var(--surface);
+    }
+    .chip.ok { color: var(--good); border-color: rgba(40, 116, 83, .24); background: var(--good-soft); }
+    [data-theme="dark"] .chip.ok { border-color: rgba(147, 204, 175, .24); }
+    h1 { font-size: clamp(30px, 4.4vw, 46px); line-height: 1.1; letter-spacing: -.035em; margin: 26px 0 12px; font-weight: 750; }
+    h1 .thin { color: var(--muted); font-weight: 500; }
+    .hero-sub { max-width: 790px; margin: 0; color: var(--text-2); font-size: 14.5px; }
+    .hero-sub strong { color: var(--text); }
+    .jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .jump a {
+      display: inline-flex; align-items: center; min-height: 32px; padding: 0 11px;
+      border: 1px solid var(--line-2); border-radius: 999px;
+      color: var(--text-2); text-decoration: none; font-size: 11.5px; font-weight: 600;
+      background: var(--surface);
+    }
+    .jump a:hover { color: var(--accent); border-color: var(--accent-line); }
+
+    .toolbar {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      margin-top: 24px; padding: 10px;
+      border: 1px solid var(--line); border-radius: 15px;
+      background: var(--surface); box-shadow: var(--shadow-soft);
+    }
+    .toolbar .field { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+    .toolbar .grow { flex: 1; }
+    .seg {
+      display: inline-flex; padding: 3px; border-radius: 10px;
+      background: var(--raised); border: 1px solid transparent;
+    }
+    .seg button {
+      border: 0; background: transparent; color: var(--text-2);
+      padding: 5px 10px; border-radius: 8px;
+      font: 600 12px/1.2 var(--sans); cursor: pointer;
+    }
+    .seg button[aria-pressed="true"] {
+      background: var(--surface); color: var(--text);
+      box-shadow: 0 1px 2px rgba(10, 22, 44, .10);
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      min-height: 38px; padding: 0 14px;
+      border: 1px solid var(--line-2); border-radius: 11px;
+      background: var(--surface); color: var(--text);
+      font: 600 13px/1.2 var(--sans); cursor: pointer;
+    }
+    .btn:hover { border-color: var(--accent-line); }
+    .btn.primary {
+      background: var(--accent); border-color: var(--accent); color: var(--on-accent);
+      box-shadow: 0 6px 16px var(--accent-soft);
+    }
+    .btn.small { min-height: 32px; padding: 0 10px; font-size: 12px; border-radius: 9px; }
+    .toggle {
+      display: inline-flex; align-items: center; gap: 8px;
+      min-height: 38px; padding: 0 12px;
+      border: 1px solid var(--line-2); border-radius: 11px;
+      background: var(--surface); color: var(--text-2);
+      font: 600 12px/1.2 var(--sans); cursor: pointer;
+    }
+    .toggle .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--raised); box-shadow: inset 0 0 0 1px var(--line-2); }
+    .toggle.on { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+    .toggle.on .dot { background: var(--accent); box-shadow: none; }
+
+    /* ---------- 章节 ---------- */
+    .section { margin-top: 64px; }
+    .sec-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+    .sec-num { font: 700 11px/1 var(--mono); letter-spacing: .10em; color: var(--accent); }
+    .sec-title { margin: 0; font-size: 22px; line-height: 1.2; letter-spacing: -.015em; }
+    .sec-note { margin-left: auto; color: var(--muted); font-size: 12px; }
+    .lead { color: var(--text-2); font-size: 13.5px; max-width: 860px; margin: 16px 0 0; }
+    .lead b { color: var(--text); }
+    .fine { color: var(--muted); font-size: 11.5px; line-height: 1.6; margin: 8px 0 0; }
+    .kbd { font-family: var(--mono); font-size: 11px; padding: 1px 5px; border-radius: 4px; background: var(--raised); color: var(--text-2); }
+
+    /* ---------- 01 现状 ---------- */
+    .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+    .fact { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    .fact h3 { margin: 0 0 5px; font: 600 11px/1.4 var(--mono); letter-spacing: .04em; color: var(--muted); }
+    .fact p { margin: 0; font-size: 12.5px; color: var(--text-2); }
+    .eval-grid { display: grid; grid-template-columns: minmax(0, 1.28fr) minmax(0, .72fr); gap: 16px; margin-top: 16px; align-items: start; }
+    .issues { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+    .issue { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; }
+    .sev { font: 700 10px/1.4 var(--mono); letter-spacing: .04em; padding: 3px 6px; border-radius: 6px; height: fit-content; white-space: nowrap; }
+    .sev.mid { color: var(--warn); background: var(--warn-soft); }
+    .sev.low { color: var(--muted); background: var(--raised); }
+    .issue b { font-size: 12.8px; }
+    .issue p { margin: 2px 0 0; font-size: 12.2px; color: var(--text-2); }
+    .baseline { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 17px; position: sticky; top: 14px; }
+    .baseline h3 { margin: 0 0 3px; font-size: 13px; }
+    .baseline .sub { margin: 0 0 14px; color: var(--muted); font-size: 11.5px; }
+    .base-toggle { display: flex; gap: 5px; margin-bottom: 16px; }
+    .base-toggle button {
+      flex: 1; border: 1px solid var(--line-2); background: transparent; color: var(--text-2);
+      padding: 6px 4px; border-radius: 8px; font: 600 11px/1.2 var(--sans); cursor: pointer;
+    }
+    .base-toggle button.on { background: var(--raised); color: var(--text); border-color: var(--line-2); }
+    .base-caption { margin: 12px 0 0; font-size: 12px; color: var(--text-2); }
+    .base-caption b { color: var(--text); }
+
+    /* ---------- 02 方案卡 ---------- */
+    .quick-row { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 16px; font-size: 11.5px; color: var(--muted); }
+    .quick-row .chip-btn { font-size: 11px; }
+    .variant-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 14px; }
+    .variant-card {
+      min-width: 0; display: flex; flex-direction: column; gap: 13px;
+      background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+      padding: 17px; box-shadow: var(--shadow-soft);
+    }
+    .v-head { display: flex; align-items: flex-start; gap: 10px; }
+    .v-badge {
+      width: 30px; height: 30px; flex: 0 0 auto; border-radius: 9px;
+      background: var(--accent-soft); color: var(--accent);
+      display: grid; place-items: center; font: 700 13px/1 var(--mono);
+    }
+    .v-head-text { min-width: 0; }
+    .v-title { font-size: 15px; font-weight: 700; line-height: 1.35; }
+    .v-tag { font-size: 11.5px; color: var(--muted); line-height: 1.45; margin-top: 1px; }
+    .v-stars { margin-left: auto; color: var(--accent); font-size: 11px; letter-spacing: 1px; white-space: nowrap; }
+    .v-context { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+    .v-source { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--muted); margin-bottom: 9px; }
+    .v-source .v-arrow { color: var(--text-2); }
+    .v-state { display: flex; align-items: center; gap: 6px; margin-top: 9px; font-size: 11.5px; color: var(--text-2); min-height: 16px; }
+    .v-state .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex: 0 0 auto; }
+    .v-state[data-kind="busy"] .dot { background: var(--accent); animation: dotPulse 1.6s ease-in-out infinite; }
+    .v-state[data-kind="done"] .dot { background: var(--good); }
+    .v-state[data-kind="error"] .dot { background: var(--bad); }
+    .v-desc { margin: 0; font-size: 12.5px; color: var(--text-2); line-height: 1.6; }
+    .v-io { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--text-2); }
+    .v-io .io { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 6px; }
+    .v-io .io > span { font-weight: 700; line-height: 1.5; }
+    .v-io .pro > span { color: var(--good); }
+    .v-io .con > span { color: var(--warn); }
+    .v-io p { margin: 0; }
+    .v-specs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+    .chip2 { font-size: 10.5px; padding: 3px 8px; border-radius: 999px; background: var(--raised); color: var(--text-2); }
+
+    /* ---------- 进度条公共结构 ---------- */
+    .demo-bar { --p: 0%; --h: 4px; position: relative; width: 100%; }
+    .demo-bar .track {
+      position: relative; width: 100%; height: var(--h, 4px);
+      border-radius: 999px; background: var(--track); overflow: hidden;
+    }
+    .demo-bar.v-A { --h: 4px; }
+    .demo-bar.v-B { --h: 5px; }
+    .demo-bar.v-C { --h: 4px; }
+    .demo-bar.v-D { --h: 6px; display: flex; align-items: center; gap: 10px; }
+    .demo-bar.v-E { --h: 4px; }
+    .demo-bar.v-F { --h: 4px; }
+    .demo-bar.v-base { --h: 3px; }
+    .demo-bar.v-D .track { flex: 1 1 auto; min-width: 0; }
+
+    .demo-bar .fill {
+      position: absolute; left: 0; top: 0; bottom: 0; width: var(--p, 0%);
+      border-radius: inherit; background: var(--accent);
+      transition: width .26s var(--ease), background-color .18s linear;
+      overflow: hidden;
+    }
+    .demo-bar[data-mode="indeterminate"] .fill,
+    .demo-bar[data-mode="idle"] .fill { width: 0 !important; transition: none; }
+    .demo-bar[data-mode="done"] .fill { width: 100% !important; background: var(--good); }
+    .demo-bar[data-mode="error"] .fill { background: var(--bad); }
+    .demo-bar[data-mode="idle"] .track { opacity: 0; }
+
+    .demo-bar .sheen {
+      position: absolute; top: 0; bottom: 0; left: -65%; width: 58%;
+      background: linear-gradient(90deg, transparent, var(--sheen), transparent);
+      opacity: .8; display: none;
+    }
+    .demo-bar[data-mode="determinate"] .sheen { display: block; animation: sheen 2.2s linear infinite; }
+
+    .demo-bar .sweep {
+      position: absolute; top: 0; bottom: 0; left: 0; width: 34%;
+      background: linear-gradient(90deg, transparent, var(--accent) 50%, transparent);
+      opacity: .92; display: none; pointer-events: none;
+    }
+    .demo-bar[data-mode="indeterminate"] .sweep { display: block; animation: sweep 2.6s linear infinite; }
+
+    .demo-bar .comet {
+      position: absolute; top: 50%; left: 0; width: 26%; height: var(--h, 4px);
+      border-radius: 999px; pointer-events: none;
+      background: linear-gradient(90deg, transparent, var(--accent));
+    }
+    .demo-bar .comet::after {
+      content: ""; position: absolute; right: -1px; top: 50%;
+      width: 7px; height: 7px; border-radius: 50%;
+      transform: translate(50%, -50%);
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .demo-bar .comet { display: none; }
+    .demo-bar[data-mode="indeterminate"] .comet { display: block; animation: comet 2.3s linear infinite; }
+
+    .demo-bar .head {
+      position: absolute; top: 50%; left: var(--p, 0%);
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-soft), 0 0 10px var(--accent-soft);
+      transform: translate(-50%, -50%); display: none; pointer-events: none; z-index: 3;
+    }
+    .demo-bar[data-mode="determinate"] .head { display: block; animation: headPulse 1.7s ease-in-out infinite; }
+    .demo-bar[data-mode="done"] .head,
+    .demo-bar[data-mode="error"] .head { display: none; }
+
+    .demo-bar .pulse {
+      position: absolute; top: 50%; left: 50%;
+      width: 26%; height: var(--h, 4px); border-radius: 999px;
+      background: var(--accent); opacity: .5;
+      box-shadow: 0 0 12px 2px var(--accent-soft);
+      transform: translate(-50%, -50%) scaleX(1);
+      display: none; pointer-events: none;
+    }
+    .demo-bar[data-mode="indeterminate"] .pulse { display: block; animation: breathe 2s ease-in-out infinite; }
+
+    .demo-bar .segs { display: flex; gap: 3px; width: 100%; height: 100%; }
+    .demo-bar .seg { position: relative; flex: 1 1 0; min-width: 0; border-radius: 999px; background: transparent; overflow: hidden; }
+    .demo-bar .seg::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--track); }
+    .demo-bar .seg-fill {
+      position: absolute; inset: 0; border-radius: inherit; background: var(--accent); z-index: 1;
+      transform-origin: left center; transform: scaleX(var(--fill, 0));
+      transition: transform .22s var(--ease);
+    }
+    .demo-bar .seg-glow {
+      position: absolute; inset: 0; border-radius: inherit; background: var(--accent);
+      opacity: 0; z-index: 2; pointer-events: none;
+    }
+    .demo-bar[data-mode="indeterminate"] .seg-glow { animation: segPulse 1.7s ease-in-out infinite; animation-delay: calc(var(--i, 0) * .14s); }
+    .demo-bar[data-mode="done"] .seg-fill { background: var(--good); }
+    .demo-bar[data-mode="error"] .seg-fill { background: var(--bad); }
+
+    .demo-bar .pct {
+      flex: 0 0 42px; text-align: right;
+      font: 600 12px/1 var(--mono); color: var(--text-2);
+      font-variant-numeric: tabular-nums;
+    }
+    .demo-bar[data-mode="indeterminate"] .pct { animation: pctPulse 1.5s ease-in-out infinite; }
+    .demo-bar[data-mode="error"] .pct { color: var(--bad); }
+    .demo-bar[data-mode="done"] .pct { color: var(--good); }
+    .demo-bar[data-mode="idle"] .pct { opacity: .35; }
+
+    /* 现状近似：方角、平台方块、无过渡 */
+    .demo-bar.v-base .track { border-radius: 0; background: rgba(80, 97, 122, .18); }
+    [data-theme="dark"] .demo-bar.v-base .track { background: rgba(176, 187, 204, .16); }
+    .demo-bar.v-base .fill { border-radius: 0; transition: none; background: var(--accent); }
+    .demo-bar.v-base .sweep { width: 24%; border-radius: 0; opacity: 1; background: var(--accent); }
+    .demo-bar.v-base[data-mode="indeterminate"] .sweep { display: block; animation: sweep 1.8s linear infinite; }
+    .demo-bar.v-base[data-mode="determinate"] .sweep { display: none; }
+
+    @keyframes sweep { from { transform: translateX(-110%); } to { transform: translateX(310%); } }
+    @keyframes sheen { from { transform: translateX(0); } to { transform: translateX(285%); } }
+    @keyframes comet {
+      from { transform: translate3d(-115%, -50%, 0); }
+      to { transform: translate3d(415%, -50%, 0); }
+    }
+    @keyframes headPulse {
+      0%, 100% { box-shadow: 0 0 0 2px var(--accent-soft), 0 0 8px var(--accent-soft); }
+      50% { box-shadow: 0 0 0 4px var(--accent-soft), 0 0 14px var(--accent-soft); }
+    }
+    @keyframes breathe {
+      0%, 100% { opacity: .32; transform: translate(-50%, -50%) scaleX(.82); }
+      50% { opacity: .92; transform: translate(-50%, -50%) scaleX(1.22); }
+    }
+    @keyframes segPulse { 0%, 100% { opacity: .05; } 50% { opacity: .38; } }
+    @keyframes pctPulse { 50% { opacity: .35; } }
+    @keyframes dotPulse { 50% { opacity: .35; } }
+
+    /* 减少动效：保留“在进行”的静态提示，不逐帧运动 */
+    [data-reduced="true"] .demo-bar .sheen,
+    [data-reduced="true"] .demo-bar .comet::after { animation: none !important; }
+    [data-reduced="true"] .demo-bar .sheen { display: none !important; }
+    [data-reduced="true"] .demo-bar .sweep {
+      animation: none !important; left: 33%; transform: none; opacity: .55;
+    }
+    [data-reduced="true"] .demo-bar .comet {
+      animation: none !important; left: 33%; transform: translateY(-50%); opacity: .65;
+    }
+    [data-reduced="true"] .demo-bar .head,
+    [data-reduced="true"] .demo-bar .pulse,
+    [data-reduced="true"] .demo-bar .pct,
+    [data-reduced="true"] .demo-bar .seg-glow { animation: none !important; }
+    [data-reduced="true"] .demo-bar .pulse { opacity: .45; transform: translate(-50%, -50%) scaleX(1); }
+    [data-reduced="true"] .demo-bar .seg-glow { opacity: .14; }
+    [data-reduced="true"] .demo-bar .fill { transition: none !important; }
+    [data-reduced="true"] .v-state .dot { animation: none !important; }
+
+    body.sim-paused .demo-bar * { animation-play-state: paused !important; }
+
+    /* ---------- 03 页内装配 ---------- */
+    .assembly { display: grid; grid-template-columns: minmax(0, 1fr) 392px; grid-template-areas: "controls phone"; gap: 24px; align-items: start; margin-top: 24px; }
+    .phone-wrap { grid-area: phone; position: sticky; top: 14px; }
+    .assembly-controls { grid-area: controls; display: flex; flex-direction: column; gap: 12px; }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+    .panel h3 { margin: 0 0 11px; font: 700 10.5px/1.3 var(--mono); letter-spacing: .10em; color: var(--muted); text-transform: uppercase; }
+    .chips-line { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip-btn {
+      border: 1px solid var(--line-2); background: transparent; color: var(--text-2);
+      padding: 6px 10px; border-radius: 999px; font: 600 11.5px/1.2 var(--sans); cursor: pointer;
+    }
+    .chip-btn.on { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
+    .slider { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 12px; color: var(--text-2); }
+    .slider input { flex: 1; accent-color: var(--accent); min-width: 0; }
+    .slider output { font: 600 12px/1 var(--mono); color: var(--text); min-width: 38px; text-align: right; }
+    .panel-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .picker { display: flex; flex-wrap: wrap; gap: 6px; }
+    .picker button {
+      width: 34px; height: 34px; border-radius: 9px;
+      border: 1px solid var(--line-2); background: transparent; color: var(--text-2);
+      font: 700 12px/1 var(--mono); cursor: pointer;
+    }
+    .picker button.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+    .picker-name { margin: 10px 0 0; font-size: 12px; color: var(--text-2); }
+    .picker-name b { color: var(--text); }
+    .phone-note { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--muted); margin: 0 0 9px 6px; }
+    .phone-note .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--good); }
+
+    .phone {
+      position: relative;
+      width: min(392px, 100%);
+      background: var(--bg); border: 1px solid var(--line-2); border-radius: 30px;
+      box-shadow: var(--shadow); overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .phone::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26px;
+      background: linear-gradient(transparent, var(--bg) 82%);
+      border-radius: 0 0 30px 30px; pointer-events: none; z-index: 4;
+    }
+    .phone-top {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 18px 8px; color: var(--text);
+      font-size: 14px; letter-spacing: -.01em;
+    }
+    .phone-top .logo { width: 26px; height: 26px; border-radius: 8px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font: 700 12px/1 var(--mono); }
+    .phone-top b { font-weight: 700; }
+    .phone-top .icons { margin-left: auto; display: flex; gap: 14px; color: var(--text-2); font-size: 13px; }
+    .phone-scroll {
+      overflow: auto; overscroll-behavior: contain;
+      padding: 4px 18px 26px;
+      height: clamp(560px, 78vh, 740px);
+      scrollbar-width: thin;
+    }
+    .mock-page-title { margin: 8px 0 4px; font-size: 26px; line-height: 1.15; letter-spacing: -.02em; font-weight: 750; }
+    .mock-tabs { display: flex; gap: 4px; padding: 4px; margin: 18px 0; background: var(--raised); border-radius: 14px; }
+    .mock-tabs button {
+      flex: 1; min-height: 40px; border: 0; border-radius: 10px;
+      background: transparent; color: var(--text-2);
+      font: 600 13px/1.2 var(--sans); cursor: pointer;
+    }
+    .mock-tabs button[aria-selected="true"] { background: var(--surface); color: var(--accent); box-shadow: 0 1px 2px rgba(10, 22, 44, .08); }
+    .mock-card {
+      background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+      padding: 14px 15px; margin-bottom: 12px;
+    }
+    .mock-community { display: flex; align-items: center; gap: 11px; }
+    .mock-community .glyph { width: 32px; height: 32px; border-radius: 9px; background: var(--raised); display: grid; place-items: center; color: var(--accent); font-size: 15px; }
+    .mock-community .txt { min-width: 0; }
+    .mock-community b { display: block; font-size: 13px; }
+    .mock-community small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+    .mock-community .chev { margin-left: auto; color: var(--muted); }
+    .mock-card-title { font-size: 13px; display: block; }
+    .mock-label { font-size: 11.5px; color: var(--muted); margin-top: 12px; }
+    .mock-input {
+      display: flex; align-items: center; min-height: 42px; padding: 0 12px;
+      margin-top: 7px; border: 1px solid var(--line-2); border-radius: 12px;
+      background: var(--surface-2); color: var(--muted); font-size: 12px;
+      overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    }
+    .mock-meta { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+    .mock-actions { display: flex; gap: 8px; margin-top: 11px; }
+    .mock-btn { flex: 1; min-height: 38px; border-radius: 11px; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--raised); color: var(--text); }
+    .mock-btn.primary { background: var(--accent); color: var(--on-accent); }
+    .mock-row-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; }
+    .mock-pill { display: inline-flex; align-items: center; min-height: 30px; padding: 0 10px; border-radius: 9px; background: var(--raised); color: var(--text-2); font-size: 11px; font-weight: 600; }
+    .mock-check { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 11.5px; color: var(--text-2); }
+    .mock-check .box { display: inline-flex; align-items: center; gap: 7px; }
+    .mock-check i { width: 15px; height: 15px; border: 1px solid var(--line-2); border-radius: 4px; display: inline-block; }
+
+    .mock-source {
+      width: 100%; min-height: 46px; margin-top: 12px;
+      border: 1px solid var(--line-2); border-radius: 13px;
+      background: var(--surface); color: var(--text);
+      font: 700 13px/1.2 var(--sans); cursor: pointer;
+    }
+    .mock-source:disabled { opacity: .55; cursor: default; }
+    .mock-source-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+    .mock-source-row .mock-source { flex: 1 1 auto; width: auto; min-width: 0; margin-top: 0; }
+    .mock-info {
+      flex: 0 0 44px; width: 44px; height: 44px; display: grid; place-items: center;
+      border: 1px solid var(--line-2); border-radius: 50%; background: var(--raised);
+      color: var(--text-2); font: 700 13px/1 var(--sans);
+    }
+    .mock-hint { margin: 4px 0 0; font-size: 11.5px; line-height: 1.55; color: var(--muted); }
+    .page-bar-mount { margin-top: 10px; }
+    .page-bar-mount[data-mode="idle"] { display: none; }
+    .mock-status {
+      min-height: 44px; margin-top: 8px; padding: 4px 0;
+      font-size: 12px; line-height: 1.55; color: var(--muted);
+      overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .mock-cancel {
+      min-height: 44px; margin-top: 4px; padding: 0 4px;
+      border: 0; background: none; color: var(--accent);
+      font: 700 13px/1.2 var(--sans); cursor: pointer;
+    }
+    .mock-list-head { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 9px; font-size: 11px; color: var(--muted); }
+    .mock-plugin { display: flex; align-items: flex-start; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 13px; margin-bottom: 9px; }
+    .mock-plugin .glyph { width: 30px; height: 30px; flex: 0 0 auto; border-radius: 8px; background: var(--raised); display: grid; place-items: center; color: var(--accent); font-size: 13px; }
+    .mock-plugin b { display: block; font-size: 12.5px; }
+    .mock-plugin small { display: block; color: var(--muted); font-size: 11px; line-height: 1.45; margin-top: 1px; }
+    .mock-plugin .state { margin-left: auto; color: var(--good); font-size: 10.5px; white-space: nowrap; }
+
+    /* ---------- 04 细节 ---------- */
+    .details { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+    .detail-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; min-width: 0; }
+    .detail-card h3 { margin: 0 0 4px; font-size: 13.5px; }
+    .detail-card .sub { margin: 0 0 12px; color: var(--muted); font-size: 11.5px; }
+    .height-row { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 11px; align-items: center; margin: 12px 0; }
+    .height-row .hl { font: 700 11px/1.3 var(--mono); color: var(--text-2); }
+    .height-row .hn { grid-column: 2; font-size: 10.5px; color: var(--muted); margin-top: -6px; }
+    .clos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .closure { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+    .closure-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-bottom: 11px; }
+    .closure-head b { font-size: 12px; }
+    .closure-head span { font: 600 9.5px/1.2 var(--mono); color: var(--muted); }
+    .closure .demo-bar { transition: opacity .24s linear; }
+    .closure .demo-bar.fade { opacity: 0; }
+    .closure[data-kind="success"] .fill { transition: width 1.3s var(--ease), background-color .2s linear; }
+    .closure[data-kind="error"] .fill { transition: width .35s var(--ease), background-color .2s linear; }
+    .closure-status { margin-top: 10px; min-height: 18px; font-size: 11px; color: var(--text-2); }
+    .closure .btn { margin-top: 9px; width: 100%; }
+    .params { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .params li { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 9px; font-size: 11.5px; color: var(--text-2); }
+    .params b { color: var(--text); font-weight: 600; }
+    .code {
+      background: var(--code-bg); color: var(--code-fg);
+      border-radius: 12px; padding: 13px 15px; overflow: auto;
+      font: 11.5px/1.65 var(--mono); margin: 11px 0 0;
+      white-space: pre;
+    }
+    .bullets { margin: 10px 0 0; padding-left: 18px; color: var(--text-2); font-size: 12px; }
+    .bullets li { margin: 5px 0; }
+    .bullets b { color: var(--text); }
+
+    /* ---------- 05 建议 ---------- */
+    .table-wrap { margin-top: 20px; border: 1px solid var(--line); border-radius: 16px; overflow: auto; background: var(--surface); }
+    table { width: 100%; border-collapse: collapse; font-size: 12.2px; min-width: 760px; }
+    th, td { padding: 11px 13px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font: 600 10.5px/1.4 var(--mono); letter-spacing: .05em; color: var(--muted); background: var(--surface-2); white-space: nowrap; }
+    tr:last-child td { border-bottom: 0; }
+    td b { color: var(--text); }
+    .dots { color: var(--accent); letter-spacing: 1.5px; white-space: nowrap; font-size: 11px; }
+    .dots .off { color: var(--line-2); }
+    .tag { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 5px; background: var(--raised); color: var(--text-2); white-space: nowrap; }
+    .tag.pick { background: var(--accent-soft); color: var(--accent); }
+    .recs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
+    .rec { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 15px; }
+    .rec.primary { border-color: var(--accent-line); background: linear-gradient(var(--accent-soft), transparent 60%), var(--surface); }
+    .rec .rank { font: 700 9.5px/1.4 var(--mono); letter-spacing: .10em; color: var(--accent); }
+    .rec h3 { margin: 5px 0 6px; font-size: 14px; }
+    .rec p { margin: 0; font-size: 12px; color: var(--text-2); }
+    .checklist { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 9px 18px; }
+    .checklist li { position: relative; padding-left: 21px; font-size: 12.2px; color: var(--text-2); }
+    .checklist li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--good); font-weight: 700; }
+    .callout {
+      margin-top: 18px; padding: 13px 15px;
+      border: 1px solid var(--line); border-left: 3px solid var(--accent);
+      border-radius: 10px; background: var(--surface);
+      color: var(--text-2); font-size: 12.2px;
+    }
+    .callout b { color: var(--text); }
+
+    footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+
+    /* ---------- 响应式 ---------- */
+    @media (max-width: 980px) {
+      .assembly { grid-template-columns: 1fr; grid-template-areas: "phone" "controls"; }
+      .phone-wrap { position: static; justify-self: center; width: min(392px, 100%); }
+      .recs { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 820px) {
+      .wrap { padding: 24px 16px 70px; }
+      .section { margin-top: 50px; }
+      .facts, .eval-grid, .details, .variant-grid { grid-template-columns: 1fr; }
+      .baseline { position: static; }
+      .sec-note { width: 100%; margin-left: 0; }
+      .checklist { grid-template-columns: 1fr; }
+      .clos-grid { grid-template-columns: 1fr; }
+      .toolbar { padding: 9px; }
+      .toolbar .grow { display: none; }
+      .phone-top { padding: 10px 18px 6px; }
+      .phone-scroll { padding: 2px 18px 22px; }
+    }
+  </style>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('dsha-progress-theme');
+        if (!(t === 'light' || t === 'dark' || t === 'auto')) t = 'auto';
+        document.documentElement.dataset.theme = t === 'auto'
+          ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : t;
+        document.documentElement.dataset.reduced =
+          matchMedia('(prefers-reduced-motion: reduce)').matches ? 'true' : 'false';
+      } catch (error) { /* 本地存储不可用时保持默认浅色 */ }
+    })();
+  </script>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= 页头 ================= -->
+  <header>
+    <div class="hero-top">
+      <div class="brand"><i>D</i> DSHA · DESIGN PREVIEW</div>
+      <div class="chips">
+        <span class="chip">build211</span>
+        <span class="chip">2026-10-30</span>
+        <span class="chip ok">方案 F · 已落地</span>
+      </div>
+    </div>
+    <h1>插件页进度条<span class="thin"> · 动效方案</span></h1>
+    <p class="hero-sub">
+      位置：<strong>插件市场 / 插件管理</strong>两处的「下载源」按钮之下 —— 两套页面共用同一个
+      <code>pluginBusy</code>，所以方案必须在两处都成立。现已按 <strong>F · 混合</strong>替换为 4dp 自绘控件，
+      下载源说明移入右侧圆形感叹号弹窗；本页继续保留六种方案的离线对比。
+    </p>
+    <nav class="jump" aria-label="页面导航">
+      <a href="#section-variants">六个方案</a>
+      <a href="#section-assembly">页内装配</a>
+      <a href="#section-details">共通细节</a>
+      <a href="#section-verdict">评估建议</a>
+    </nav>
+    <div class="toolbar" role="group" aria-label="预览控制">
+      <div class="field">
+        <span>外观</span>
+        <div class="seg" id="themeSeg" role="group" aria-label="预览外观">
+          <button type="button" data-theme-value="light" aria-pressed="false">浅色</button>
+          <button type="button" data-theme-value="dark" aria-pressed="false">深色</button>
+          <button type="button" data-theme-value="auto" aria-pressed="false">自动</button>
+        </div>
+      </div>
+      <button type="button" class="toggle" id="reduceBtn" role="switch" aria-checked="false">
+        <span class="dot" aria-hidden="true"></span><span>减少动效</span>
+      </button>
+      <div class="grow"></div>
+      <button type="button" class="btn primary" data-play>▶ 播放完整流程</button>
+      <button type="button" class="btn" data-reset>重置</button>
+    </div>
+  </header>
+
+  <!-- ================= 01 现状评估 ================= -->
+  <section class="section" id="section-baseline">
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <h2 class="sec-title">现状评估</h2>
+      <span class="sec-note">按源码与 v5 token 静态还原，未抓取真机动态帧</span>
+    </div>
+    <p class="lead">
+      现状不是“丑”，而是三件事混在一条 3dp 线上：<b>是否在处理</b>、<b>处理到哪</b>、<b>结束得是否正常</b>。
+      动效方案应该先决定这条线主要负责哪一件事，而不是先加装饰。
+    </p>
+
+    <div class="facts">
+      <div class="fact">
+        <h3>落点 · plugin_list_header.xml:65</h3>
+        <p>平台横向 <code>ProgressBar</code>，通栏、3dp 高；只设了 <code>indeterminateTint</code>，轨道、圆角、端点均走平台默认。</p>
+      </div>
+      <div class="fact">
+        <h3>驱动 · PluginFragment.java:651</h3>
+        <p>busy 时显示；<code>percent &lt; 0</code> 转不确定；<code>percent ≥ 0</code> 调 <code>setProgress</code>；忙碌结束立即 GONE。</p>
+      </div>
+      <div class="fact">
+        <h3>数据 · PluginRepository.java:1296</h3>
+        <p><code>percent = current * 100 / total</code>，无总量时为 <code>-1</code>。排队、校验、安装阶段通常拿不到百分比。</p>
+      </div>
+      <div class="fact">
+        <h3>容器 · RecyclerView 头部</h3>
+        <p>插件市场 / 插件管理切换、列表滚动回收都会重新绑定；任何自绘动画都必须可附着、可离开、可幂等重放。</p>
+      </div>
+    </div>
+
+    <div class="eval-grid">
+      <ul class="issues">
+        <li class="issue"><span class="sev mid">中</span><div><b>3dp 太细，缺少轨道对比</b><p>下方是 46dp 的下载源按钮和 12sp 说明，3dp 蓝线在浅色底上存在感很低，容易被当成分隔线。</p></div></li>
+        <li class="issue"><span class="sev low">低</span><div><b>下载源说明常驻两行</b><p>“自动选择可用的 npm 源…”是技术细节，约占 40dp，把进度条推远；按钮标签已经表达默认行为。删掉，或移入下载源弹窗，都合理。</p></div></li>
+        <li class="issue"><span class="sev mid">中</span><div><b>确定态是硬跳变</b><p>一参 <code>setProgress</code> 不做过渡，5% → 37% 会直接跳；平台自带的 animate 参数过渡也偏短，仍接近跳变。</p></div></li>
+        <li class="issue"><span class="sev mid">中</span><div><b>不确定态是系统默认滑块</b><p>与启动页 <code>ShellActivityTrack</code> 已建立的 2dp / 34% 光带语言不一致；同一条产品线出现两种“正在处理”。</p></div></li>
+        <li class="issue"><span class="sev mid">中</span><div><b>没有百分比，也没有收束</b><p>数字只存在于状态文案里；100% 后整条立即消失，看不到“完成”的确认，也分不清是成功还是被截断。</p></div></li>
+        <li class="issue"><span class="sev mid">中</span><div><b>失败 / 取消没有视觉终点</b><p>同样直接隐藏，只剩下方文字。用户滚到列表下方时，抬头只看到“没有进度条”，无法判断刚才是完成还是失败。</p></div></li>
+        <li class="issue"><span class="sev mid">中</span><div><b>TalkBack 语义缺失</b><p>进度条没有 <code>contentDescription</code>；<code>setProgress</code> 不保证播报，状态文字也不是 live region。</p></div></li>
+        <li class="issue"><span class="sev low">低</span><div><b>显示 / 隐藏会顶动下方内容</b><p>GONE ↔ VISIBLE 带来约 13dp 的头部高度变化，状态文字和取消按钮会跟着跳；这与动效无关，但会放大“闪一下”的感觉。</p></div></li>
+      </ul>
+
+      <aside class="baseline">
+        <h3>现状近似还原</h3>
+        <p class="sub">不是像素级截图；只还原结构、3dp、方角与平台滑块。</p>
+        <div class="base-toggle" id="baseToggle" role="group" aria-label="现状状态">
+          <button type="button" data-base="indeterminate" class="on">不确定</button>
+          <button type="button" data-base="determinate">确定 37%</button>
+        </div>
+        <div class="demo-bar v-base" id="baseBar" data-mode="indeterminate" role="img" aria-label="现状进度条近似还原">
+          <div class="track"><div class="fill" style="--p:37%"></div><i class="sweep"></i></div>
+        </div>
+        <p class="base-caption" id="baseCaption"><b>不确定：</b>系统方块横扫，与上方按钮没有视觉关联。</p>
+        <p class="fine">真机上的轨道色还会受主题 <code>colorControlNormal</code> 影响；此处只作对比基线。</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= 02 六个方案 ================= -->
+  <section class="section" id="section-variants">
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <h2 class="sec-title">六个动效方案</h2>
+      <span class="sec-note">同一条模拟任务，六种表现；下方可暂停逐帧看</span>
+    </div>
+    <p class="lead">
+      三条底线：不确定态<b>不暗示百分比</b>；确定态<b>只跟随真实 percent</b>；系统关闭动画时<b>回退静态</b>。
+      六个方案的高度都在 4–6dp，不改变页面结构（D 需要一行数字位）。
+    </p>
+    <div class="quick-row" role="group" aria-label="快速切换方案状态">
+      <span>快速看：</span>
+      <button type="button" class="chip-btn" data-quick="verify">不确定（校验）</button>
+      <button type="button" class="chip-btn" data-quick="download">确定 37%</button>
+      <button type="button" class="chip-btn" data-quick="done">完成收束</button>
+      <button type="button" class="chip-btn" data-quick="error">失败停在 64%</button>
+    </div>
+    <div class="variant-grid" id="variantGrid"></div>
+    <p class="fine" style="margin-top:14px">
+      静态首帧里 A / E / F 都是 37% 的填充，差别在不确定态与换挡；切到「校验」或播放完整流程，才能看到横扫、光点与呼吸的差异。
+      卡片里的“下载源：自动选择（推荐）”只是位置参照。真实顺序是：下载源按钮 → 4dp 说明 → 10dp 进度条；按钮上方另有 8dp 间距。
+    </p>
+  </section>
+
+  <!-- ================= 03 页内装配 ================= -->
+  <section class="section" id="section-assembly">
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <h2 class="sec-title">页内装配</h2>
+      <span class="sec-note">390px 宽 · 两处下载源共用一条进度</span>
+    </div>
+    <p class="lead">
+      这里把方案放回真实位置：<b>下载源按钮 →（可选的说明）→ 进度条 → 状态文字 → 取消当前操作</b>。
+      切换“插件市场 / 插件管理”看两处是否一致；在手机模拟里向下滚动列表，看进度条是否随 header 滚出。
+    </p>
+
+    <div class="quick-row" id="hintChips" role="group" aria-label="下载源说明密度">
+      <span>下载源说明：</span>
+      <button type="button" class="chip-btn" data-hint="full">完整两行</button>
+      <button type="button" class="chip-btn" data-hint="short">精简一行</button>
+      <button type="button" class="chip-btn on" data-hint="off">移除（推荐）</button>
+    </div>
+    <p class="fine" id="hintNote"><b>推荐：</b>页面只留下载源按钮；完整说明最多移进「插件下载源」弹窗。</p>
+
+    <div class="assembly">
+      <div class="assembly-controls">
+        <div class="panel">
+          <h3>模拟状态</h3>
+          <div class="chips-line" id="phaseChips" role="group" aria-label="模拟阶段">
+            <button type="button" class="chip-btn" data-phase="idle">空闲</button>
+            <button type="button" class="chip-btn" data-phase="queued">排队</button>
+            <button type="button" class="chip-btn on" data-phase="download">下载</button>
+            <button type="button" class="chip-btn" data-phase="verify">校验</button>
+            <button type="button" class="chip-btn" data-phase="install">安装</button>
+            <button type="button" class="chip-btn" data-phase="done">完成</button>
+            <button type="button" class="chip-btn" data-phase="error">失败</button>
+          </div>
+          <div class="slider">
+            <label for="pctRange">确定进度</label>
+            <input type="range" id="pctRange" min="0" max="100" step="1" value="37">
+            <output id="pctOut" for="pctRange">37%</output>
+          </div>
+          <div class="panel-actions">
+            <button type="button" class="btn primary" data-play>▶ 播放完整流程</button>
+            <button type="button" class="btn" data-reset>重置</button>
+          </div>
+          <p class="fine">预览控件，不是页面功能。真实百分比只在下载阶段存在；排队 / 校验 / 安装没有总量时 <code>percent = -1</code>。</p>
+        </div>
+
+        <div class="panel">
+          <h3>页内方案</h3>
+          <div class="picker" id="variantPicker" role="group" aria-label="选择页内方案">
+            <button type="button" data-variant="A">A</button>
+            <button type="button" data-variant="B">B</button>
+            <button type="button" data-variant="C">C</button>
+            <button type="button" data-variant="D">D</button>
+            <button type="button" data-variant="E">E</button>
+            <button type="button" data-variant="F" class="on">F</button>
+          </div>
+          <p class="picker-name" id="pageVariantName"><b>F</b> · 混合</p>
+          <p class="fine">切换方案只替换进度条本身；上方按钮、说明与下方状态文字不动。</p>
+        </div>
+
+        <div class="panel">
+          <h3>看什么</h3>
+          <ul class="bullets">
+            <li><b>两处一致：</b>插件市场 / 插件管理切换时，进度不应重置或闪回 0。</li>
+            <li><b>换挡：</b>不确定 → 确定 → 不确定，光带与填充如何交接。</li>
+            <li><b>收束：</b>100% 后是否给出一眼可懂的完成确认。</li>
+            <li><b>滚动：</b>进度条属于 header，滚到列表下方就看不见了。</li>
+            <li><b>失败：</b>停在当前百分比，还是直接消失？</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="phone-wrap">
+        <p class="phone-note"><span class="dot"></span><span id="simReadout">模拟：下载 · 37%</span></p>
+        <div class="phone" id="mockPhone" data-tab="market">
+          <div class="phone-top">
+            <span class="logo">D</span><b>DSHA</b>
+            <span class="icons" aria-hidden="true"><span>◐</span><span>ⓘ</span></span>
+          </div>
+          <div class="phone-scroll">
+            <h3 class="mock-page-title">插件</h3>
+            <div class="mock-tabs" role="tablist" aria-label="插件页分段">
+              <button type="button" id="mockTabMarket" role="tab" aria-selected="true">插件市场</button>
+              <button type="button" id="mockTabInstalled" role="tab" aria-selected="false">插件管理</button>
+            </div>
+
+            <div class="only-market">
+              <div class="mock-card mock-community">
+                <span class="glyph" aria-hidden="true">◈</span>
+                <div class="txt"><b>社区插件生态</b><small>发现社区插件，查看介绍与安装来源</small></div>
+                <span class="chev" aria-hidden="true">›</span>
+              </div>
+              <div class="mock-card">
+                <b class="mock-card-title">从链接安装</b>
+                <div class="mock-label">仓库或下载链接</div>
+                <div class="mock-input">插件链接或 npm 包名</div>
+                <div class="mock-meta">支持仓库、分支/子目录、Release 下载和压缩包直链</div>
+                <div class="mock-actions"><span class="mock-btn">粘贴链接</span><span class="mock-btn primary">解析安装</span></div>
+              </div>
+            </div>
+
+            <div class="only-installed" hidden>
+              <div class="mock-card">
+                <div class="mock-row-line"><b>已安装插件</b><span class="mock-pill">检测插件</span></div>
+                <div class="mock-input" style="margin-top:12px">搜索插件名称或描述</div>
+                <div class="mock-check">
+                  <span class="box"><i aria-hidden="true"></i>只看自己装的</span>
+                  <span class="mock-pill">排序：名称 A–Z</span>
+                </div>
+                <div class="mock-meta">5 / 5 个示例 · 5 个模拟启用</div>
+                <div class="mock-pill" style="margin-top:10px;width:100%;justify-content:center">检查更新</div>
+              </div>
+            </div>
+
+            <div class="mock-source-row">
+              <button type="button" class="mock-source" id="pageSource">下载源：自动选择（推荐）</button>
+              <span class="mock-info" aria-hidden="true">!</span>
+            </div>
+            <p class="mock-hint" id="pageHint">自动选择可用的 npm 源；镜像失败时回退官方源。GitHub 使用官方直连。</p>
+            <div class="page-bar-mount" id="pageBarMount" data-mode="determinate"></div>
+            <div class="mock-status" id="pageStatus">正在下载插件包…</div>
+            <button type="button" class="mock-cancel" id="pageCancel">取消当前操作</button>
+
+            <div class="mock-list">
+              <div class="mock-list-head"><span>已安装插件 · 模拟数据</span><span>3 个</span></div>
+              <div class="mock-plugin">
+                <span class="glyph" aria-hidden="true">◧</span>
+                <div><b>dsh-web-mobile</b><small>移动界面与触控布局 · 随包内置示例</small></div>
+                <span class="state">已启用</span>
+              </div>
+              <div class="mock-plugin">
+                <span class="glyph" aria-hidden="true">◧</span>
+                <div><b>markdown-export</b><small>Markdown 导出 · 社区来源示例</small></div>
+                <span class="state">已启用</span>
+              </div>
+              <div class="mock-plugin">
+                <span class="glyph" aria-hidden="true">◧</span>
+                <div><b>terminal-theme</b><small>终端主题包 · 未启用示例</small></div>
+                <span class="state" style="color:var(--muted)">未启用</span>
+              </div>
+            </div>
+            <p class="fine">页内文案为模拟；真实状态由插件管理器返回，预览不连接任何任务。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 04 共通细节 ================= -->
+  <section class="section" id="section-details">
+    <div class="sec-head">
+      <span class="sec-num">04</span>
+      <h2 class="sec-title">共通细节</h2>
+      <span class="sec-note">动效之外，决定体感的四件事</span>
+    </div>
+
+    <div class="details">
+      <div class="detail-card">
+        <h3>条高与落位</h3>
+        <p class="sub">同一方案在 2 / 3 / 4 / 6dp 下的可读性。当前是 3dp，建议 4dp。</p>
+        <div class="height-row"><span class="hl">2dp</span><div class="demo-bar v-A" data-mode="determinate" style="--p:62%;--h:2px" role="img" aria-label="2dp 进度条示例"><div class="track"><div class="fill"></div></div></div><span class="hn">只适合启动页那种“状态轨迹”，不做主进度。</span></div>
+        <div class="height-row"><span class="hl">3dp</span><div class="demo-bar v-A" data-mode="determinate" style="--p:62%;--h:3px" role="img" aria-label="3dp 进度条示例"><div class="track"><div class="fill"></div></div></div><span class="hn">现状高度；不圆角、无轨道时几乎只剩一条线。</span></div>
+        <div class="height-row"><span class="hl">4dp</span><div class="demo-bar v-A" data-mode="determinate" style="--p:62%;--h:4px" role="img" aria-label="4dp 进度条示例"><div class="track"><div class="fill"></div></div></div><span class="hn">推荐：拇指不挡、视觉可辨、不抢卡片标题。</span></div>
+        <div class="height-row"><span class="hl">6dp</span><div class="demo-bar v-A" data-mode="determinate" style="--p:62%;--h:6px" role="img" aria-label="6dp 进度条示例"><div class="track"><div class="fill"></div></div></div><span class="hn">仅 D 方案：为数字留一行时的胶囊高度。</span></div>
+      </div>
+
+      <div class="detail-card">
+        <h3>完成 / 失败收束</h3>
+        <p class="sub">当前两者都是直接 GONE；建议给一个短终点，再隐藏。</p>
+        <div class="clos-grid">
+          <div class="closure" data-kind="success">
+            <div class="closure-head"><b>完成</b><span>100% → .7s → .24s</span></div>
+            <div class="demo-bar v-A" data-mode="determinate" style="--p:0%" role="img" aria-label="完成收束演示"><div class="track"><div class="fill"></div></div></div>
+            <div class="closure-status">点“重播”查看</div>
+            <button type="button" class="btn small" data-replay="success">重播</button>
+          </div>
+          <div class="closure" data-kind="error">
+            <div class="closure-head"><b>失败</b><span>停在 64% → .9s</span></div>
+            <div class="demo-bar v-A" data-mode="determinate" style="--p:0%" role="img" aria-label="失败收束演示"><div class="track"><div class="fill"></div></div></div>
+            <div class="closure-status">点“重播”查看</div>
+            <button type="button" class="btn small" data-replay="error">重播</button>
+          </div>
+        </div>
+        <p class="fine">建议：完成用 <code>shell_good</code> 填满并停 700ms；失败用 <code>shell_bad</code> 停在当前 percent 并停 900ms，再淡出。两者都不要“瞬间消失”。</p>
+      </div>
+
+      <div class="detail-card">
+        <h3>参数与回退</h3>
+        <p class="sub">可直接交给自绘 View 的初始参数；真机亮度 / 刷新率下再微调。</p>
+        <ul class="params">
+          <li><b>横扫</b><span>2.6s linear，带宽 34%，两端渐变透明</span></li>
+          <li><b>填充</b><span>240ms <code>cubic-bezier(.22,1,.36,1)</code>，只跟随真实 percent</span></li>
+          <li><b>呼吸</b><span>2.0s ease-in-out，透明度 .32 → .92</span></li>
+          <li><b>收束</b><span>完成停 700ms / 失败停 900ms，淡出 240ms</span></li>
+          <li><b>减少动效</b><span>无逐帧动画；不确定态保留静态 34% 光带，确定态直接落位</span></li>
+        </ul>
+        <p class="fine">现有 <code>ShellActivityTrack</code> 已经用 <code>postInvalidateOnAnimation</code> + 时间相位，并在系统关闭动画时保持静态；新控件应沿用这套边界。</p>
+      </div>
+
+      <div class="detail-card">
+        <h3>无障碍与回收</h3>
+        <p class="sub">进度条是“状态”，不是装饰；TalkBack 与列表回收都要有确定行为。</p>
+        <pre class="code">progress.setContentDescription("插件任务进度：" + percent + "%");
+if (percent >= 0) progress.setProgress(percent);
+// 只在 25 / 50 / 75 / 100 或阶段切换时播报，
+// 不要每 1% 调 announceForAccessibility。</pre>
+        <ul class="bullets">
+          <li><b>回收：</b>header 会被销毁重建；动画相位应来自状态与时间，而不是 View 内部的一次性标记。</li>
+          <li><b>可见性：</b><code>onWindowVisibilityChanged</code> 停帧，<code>onDetachedFromWindow</code> 释放 shader。</li>
+          <li><b>换挡：</b>不确定 → 确定时先清掉上一轮进度，避免旧 100% 闪一帧。</li>
+          <li><b>幂等：</b>同一状态重复渲染不重置横扫相位；只在 busy / percent 真正变化时更新。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 05 建议 ================= -->
+  <section class="section" id="section-verdict">
+    <div class="sec-head">
+      <span class="sec-num">05</span>
+      <h2 class="sec-title">评估与建议</h2>
+      <span class="sec-note">默认方案、增强方案与不建议做默认的方案</span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>方案</th><th>小尺寸可读</th><th>与 v5 一致</th><th>信息量</th><th>实现成本</th><th>动效强度</th><th>结论</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>A · 流光拟合</b></td>
+            <td><span class="dots">●●●●○</span></td><td><span class="dots">●●●●●</span></td><td><span class="dots">●●○○○</span></td>
+            <td>低</td><td>低</td><td><span class="tag pick">默认首选</span></td>
+          </tr>
+          <tr>
+            <td><b>B · 分段刻度</b></td>
+            <td><span class="dots">●●●○○</span></td><td><span class="dots">●●●○○</span></td><td><span class="dots">●●○○○</span></td>
+            <td>中</td><td>中</td><td><span class="tag">谨慎</span></td>
+          </tr>
+          <tr>
+            <td><b>C · 光点巡游</b></td>
+            <td><span class="dots">●●●●○</span></td><td><span class="dots">●●●○○</span></td><td><span class="dots">●●○○○</span></td>
+            <td>低</td><td>中</td><td><span class="tag">点缀</span></td>
+          </tr>
+          <tr>
+            <td><b>D · 数值胶囊</b></td>
+            <td><span class="dots">●●●●●</span></td><td><span class="dots">●●●●○</span></td><td><span class="dots">●●●●●</span></td>
+            <td>中低</td><td>低</td><td><span class="tag pick">要数字时</span></td>
+          </tr>
+          <tr>
+            <td><b>E · 呼吸脉冲</b></td>
+            <td><span class="dots">●●●○○</span></td><td><span class="dots">●●●●○</span></td><td><span class="dots">●○○○○</span></td>
+            <td>低</td><td>低</td><td><span class="tag">长等待</span></td>
+          </tr>
+          <tr>
+            <td><b>F · 混合</b></td>
+            <td><span class="dots">●●●●○</span></td><td><span class="dots">●●●●●</span></td><td><span class="dots">●●●○○</span></td>
+            <td>中</td><td>低中</td><td><span class="tag pick">组合首选</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="recs">
+      <div class="rec primary">
+        <div class="rank">01 · 最小闭环</div>
+        <h3>A + 完成收束 + TalkBack</h3>
+        <p>4dp 自绘控件，沿用启动页活动条的语言；确定态 240ms 平滑，完成时 100% 好色停 700ms。改动集中在一个 View 和 header 高度，最容易先落地。</p>
+      </div>
+      <div class="rec">
+        <div class="rank">02 · 明确百分比</div>
+        <h3>D · 胶囊 + 右侧数字</h3>
+        <p>慢镜像 / 大插件时，数字比任何动效都有用。需要把 header 的一行改成 [bar + 42dp 数字位]，并确保 <code>percent &lt; 0</code> 时绝不显示数字。</p>
+      </div>
+      <div class="rec">
+        <div class="rank">03 · 分状态 · 已采用</div>
+        <h3>F · 不确定呼吸 / 确定流光</h3>
+        <p>排队、校验、安装用更安静的呼吸；下载用流光。两套参数共用一条 View，适合“不确定阶段多、下载阶段短”的真实任务。当前 <code>PluginTaskProgress</code> 按这套落地：成功绿色 100% 停 700ms，失败红色停在当前 percent 停 900ms；下载源原文案在右侧圆形感叹号弹窗里。</p>
+      </div>
+    </div>
+
+    <ul class="checklist">
+      <li>插件市场 / 插件管理切换，动画不重置、不闪 0</li>
+      <li>列表滚动回收后重新附着，相位连续、无残影</li>
+      <li>确定 100% → 好色收束 700ms → 240ms 淡出 → GONE</li>
+      <li>失败停在当前 percent，坏色 900ms 后淡出</li>
+      <li>不确定 → 确定 → 不确定，三种换挡无旧值闪烁</li>
+      <li>减少动效：静态 34% 光带或静态 100%</li>
+      <li>深色：轨道 shell_raised、填充 shell_accent</li>
+      <li>1.3× / 2× 字体，header 不因文字变高而错位</li>
+      <li>TalkBack：进度可读，只在里程碑与阶段切换播报</li>
+      <li>后台 / 回前台：停帧，回来按真实状态继续</li>
+    </ul>
+
+    <div class="callout">
+      <b>不建议把 C 的发光或 B 的分段做成默认。</b>
+      C 的 glow 在低端屏与深色底上容易糊，长期使用会腻；B 的分段会被读成“五个阶段”，而真实数据只有一个 percent，容易变成假阶段。
+      两者都可以作为实验开关保留，但默认应当克制、可解释、可回退。
+    </div>
+    <p class="fine" style="margin-top:14px">
+      本页是离线设计预览：没有连接设备、没有触发插件任务、没有修改 <code>app/</code> 下任何文件。
+      资源、深色、字体缩放、TalkBack 与真机刷新率仍需在设备上验收。
+    </p>
+  </section>
+
+  <footer>
+    <span>DSHA · 插件页进度条动效方案</span>
+    <span>build211 · 2026-10-30</span>
+    <span>仅离线预览，不连接网络与设备</span>
+    <span>文件：docs/design/plugin-progress-20261030/preview.html</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (selector, root) { return (root || document).querySelector(selector); };
+  var $$ = function (selector, root) { return Array.prototype.slice.call((root || document).querySelectorAll(selector)); };
+
+  var PHASES = {
+    idle:     { label: '空闲', busy: false, msg: '' },
+    queued:   { label: '排队', busy: true,  msg: '已接收，排队中：安装插件' },
+    download: { label: '下载', busy: true,  msg: '正在下载插件包…' },
+    verify:   { label: '校验', busy: true,  msg: '正在校验插件包…' },
+    install:  { label: '安装', busy: true,  msg: '正在安装插件并写入配置…' },
+    done:     { label: '完成', busy: false, msg: '插件已安装并启用；重启 Web 后生效' },
+    error:    { label: '失败', busy: false, msg: '安装失败：插件包校验不通过（模拟）' }
+  };
+
+  var V = {
+    A: {
+      name: '流光拟合', tag: '横扫光带 · 平滑填充', stars: '★★★★★', rating: '5 / 5',
+      desc: '不确定态用 34% 渐变光带横扫，确定态平滑填充并在填充内保留一道低对比流光。与启动页活动条同一套语言。',
+      pro: '与 ShellActivityTrack 一致；4dp 仍可读；可直接复用它的帧回调与静态回退。',
+      con: '流光过亮会像装饰；深色模式需要把白色叠层压到 12% 以下。',
+      specs: ['条高 4dp', '自绘 View', '动效低', '不改布局']
+    },
+    B: {
+      name: '分段刻度', tag: '五段节拍 · 不是五个阶段', stars: '★★★☆☆', rating: '3 / 5',
+      desc: '整条切成五段，每 20% 一段；段内连续填充。不确定态让五段依次呼吸，但不填充，避免假装知道进度。',
+      pro: '小尺寸下节奏更清楚；20% 的节拍比一条细线更容易被扫到。',
+      con: '分段很容易被读成“五个阶段”，而真实 percent 只有一个；窄屏与 2× 字体下更碎。',
+      specs: ['5 × 5dp', '间隙 3dp', '动效中', '需要说明']
+    },
+    C: {
+      name: '光点巡游', tag: '头部光点 · 拖尾', stars: '★★★★☆', rating: '4 / 5',
+      desc: '确定态在进度头部放一个呼吸光点，位置就是进度；不确定态让光点带 26% 拖尾扫过，不填充轨道。',
+      pro: '头部位置比纯色条更明确；确定态有“正在推进”的生命力。',
+      con: '光点容易被当成可拖动滑块；低端屏上 glow 容易糊；100% 时要把光点收进端点。',
+      specs: ['条高 4dp', '自绘 View', '动效中', '适合强调']
+    },
+    D: {
+      name: '数值胶囊', tag: '6dp 胶囊 · 右侧百分比', stars: '★★★★★', rating: '5 / 5',
+      desc: '确定态显示真实百分比与等宽数字；不确定态把数字位换成“…”，只保留横扫。完成时数字与填充一起变好色。',
+      pro: '数字消除歧义，慢镜像 / 大插件时最有用；读屏也有一致的文本。',
+      con: '需要把 header 一行改成 [bar + 42dp]，多 6–10dp 高；percent 粗跳时数字会显得卡。',
+      specs: ['条高 6dp', '加数字位', '动效低', '信息最强']
+    },
+    E: {
+      name: '呼吸脉冲', tag: '未知等待的轻声提示', stars: '★★★☆☆', rating: '3 / 5',
+      desc: '不确定态只让一段 26% 柔光在中间呼吸，不横扫；确定态 260ms 平滑填充，不再额外流光。',
+      pro: '最安静，适合排队 / 校验这种可能很久且没有百分比的阶段；耗电最低。',
+      con: '方向性弱，可能被当成静态高亮；确定态的完成感一般。',
+      specs: ['条高 4dp', '自绘 View', '动效低', '适合长等待']
+    },
+    F: {
+      name: '混合', tag: '不确定呼吸 · 确定流光', stars: '★★★★★', rating: '5 / 5',
+      desc: '不确定态用 E 的呼吸，确定态用 A 的流光；完成时统一 100% 好色收束。两种信息状态各用合适的动效。',
+      pro: '不确定性安静、确定性清楚；一套 View 两种模式，代码不比 A 多很多。',
+      con: '需要定义 200ms 的换挡过渡，否则切换会跳；两套参数要一起调。',
+      specs: ['条高 4dp', '自研 View', '动效低中', '组合推荐']
+    }
+  };
+
+  var state = {
+    phase: 'download',
+    percent: 37,
+    theme: 'auto',
+    reduced: false,
+    pageVariant: 'F',
+    tab: 'market',
+    hint: 'off'
+  };
+
+  var HINTS = {
+    full: '自动选择可用的 npm 源；镜像失败时回退官方源。GitHub 使用官方直连。',
+    short: '自动选择；镜像失败时回退官方源。',
+    off: ''
+  };
+
+  var sim = { idx: 0, t: 0, last: 0, raf: 0, running: false, paused: false, finished: false };
+  var SEQ = [
+    { phase: 'queued',   dur: 1100 },
+    { phase: 'download', dur: 5400 },
+    { phase: 'verify',   dur: 1300 },
+    { phase: 'install',  dur: 1700 },
+    { phase: 'done',     dur: 900 }
+  ];
+
+  var mqDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  var mqReduce = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+
+  function mode() {
+    if (state.phase === 'idle') return 'idle';
+    if (state.phase === 'download') return 'determinate';
+    if (state.phase === 'done') return 'done';
+    if (state.phase === 'error') return 'error';
+    return 'indeterminate';
+  }
+
+  function barInner(id) {
+    var fill = '<div class="fill"><i class="sheen" aria-hidden="true"></i></div>';
+    if (id === 'A') {
+      return '<div class="track">' + fill + '<i class="sweep" aria-hidden="true"></i></div>';
+    }
+    if (id === 'B') {
+      var segs = '';
+      for (var i = 0; i < 5; i++) {
+        segs += '<span class="seg" style="--i:' + i + '"><i class="seg-fill"></i><i class="seg-glow" aria-hidden="true"></i></span>';
+      }
+      return '<div class="track"><div class="segs">' + segs + '</div></div>';
+    }
+    if (id === 'C') {
+      return '<div class="track"><div class="fill"></div><i class="comet" aria-hidden="true"></i></div><i class="head" aria-hidden="true"></i>';
+    }
+    if (id === 'D') {
+      return '<div class="track"><div class="fill"></div><i class="sweep" aria-hidden="true"></i></div><span class="pct" aria-hidden="true">…</span>';
+    }
+    if (id === 'E') {
+      return '<div class="track"><div class="fill"></div><i class="pulse" aria-hidden="true"></i></div>';
+    }
+    return '<div class="track">' + fill + '<i class="pulse" aria-hidden="true"></i></div>';
+  }
+
+  function barMarkup(id, label) {
+    return '<div class="demo-bar v-' + id + '" data-sync-bar role="progressbar" aria-label="' + label + '" aria-valuemin="0" aria-valuemax="100">' + barInner(id) + '</div>';
+  }
+
+  function initCards() {
+    var grid = $('#variantGrid');
+    grid.innerHTML = ['A', 'B', 'C', 'D', 'E', 'F'].map(function (id) {
+      var v = V[id];
+      return '<article class="variant-card" data-variant-card="' + id + '">' +
+        '<div class="v-head">' +
+          '<span class="v-badge" aria-hidden="true">' + id + '</span>' +
+          '<div class="v-head-text"><div class="v-title">' + v.name + '</div><div class="v-tag">' + v.tag + '</div></div>' +
+          '<span class="v-stars" aria-label="推荐度 ' + v.rating + '">' + v.stars + '</span>' +
+        '</div>' +
+        '<div class="v-context">' +
+          '<div class="v-source"><span>下载源：自动选择（推荐）</span><span class="v-arrow">↓ 下方</span></div>' +
+          barMarkup(id, '方案 ' + id + ' · ' + v.name + ' 的进度条预览') +
+          '<div class="v-state" data-card-state data-kind="busy"><span class="dot" aria-hidden="true"></span><span class="v-state-text">—</span></div>' +
+        '</div>' +
+        '<p class="v-desc">' + v.desc + '</p>' +
+        '<div class="v-io">' +
+          '<div class="io pro"><span aria-hidden="true">＋</span><p>' + v.pro + '</p></div>' +
+          '<div class="io con"><span aria-hidden="true">－</span><p>' + v.con + '</p></div>' +
+        '</div>' +
+        '<div class="v-specs">' + v.specs.map(function (s) { return '<span class="chip2">' + s + '</span>'; }).join('') + '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  function shortState() {
+    var m = mode();
+    if (m === 'idle') return '空闲 · 整条隐藏';
+    if (m === 'determinate') return '下载中 · ' + Math.round(state.percent) + '%';
+    if (m === 'done') return '完成 · 100% 收束';
+    if (m === 'error') return '失败 · 停在 ' + Math.round(state.percent) + '%';
+    if (state.phase === 'queued') return '排队中 · 不确定';
+    if (state.phase === 'verify') return '校验中 · 不确定';
+    return '安装中 · 不确定';
+  }
+
+  function stateKind() {
+    var m = mode();
+    return m === 'done' ? 'done' : m === 'error' ? 'error' : m === 'idle' ? 'idle' : 'busy';
+  }
+
+  function updateBar(el) {
+    var m = mode();
+    var p = Math.max(0, Math.min(100, state.percent));
+    var shown = m === 'done' ? 100 : p;
+    el.dataset.mode = m;
+    el.style.setProperty('--p', shown.toFixed(2) + '%');
+
+    if (m === 'indeterminate' || m === 'idle') {
+      el.removeAttribute('aria-valuenow');
+      el.setAttribute('aria-valuetext', m === 'idle' ? '空闲' : '处理中，进度未知');
+    } else {
+      el.setAttribute('aria-valuenow', String(Math.round(shown)));
+      el.setAttribute('aria-valuetext', m === 'done' ? '已完成 100%' : m === 'error' ? '已中断，停在 ' + Math.round(shown) + '%' : Math.round(shown) + '%');
+    }
+
+    var pct = el.querySelector('.pct');
+    if (pct) {
+      var label = m === 'done' ? '100%' : m === 'error' ? '中断' : m === 'determinate' ? Math.round(p) + '%' : m === 'indeterminate' ? '…' : '';
+      if (pct.textContent !== label) pct.textContent = label;
+    }
+
+    var segs = el.querySelectorAll('.seg');
+    if (segs.length) {
+      var base = m === 'done' ? 100 : p;
+      Array.prototype.forEach.call(segs, function (seg, i) {
+        var value = m === 'idle' || m === 'indeterminate' ? 0 : Math.max(0, Math.min(1, (base - i * 20) / 20));
+        seg.style.setProperty('--fill', value.toFixed(4));
+      });
+    }
+  }
+
+  function render() {
+    var m = mode();
+    var p = Math.max(0, Math.min(100, state.percent));
+
+    $$('.demo-bar[data-sync-bar]').forEach(updateBar);
+
+    var readout;
+    if (m === 'idle') readout = '空闲 · 进度条隐藏';
+    else if (m === 'determinate') readout = '下载 · ' + Math.round(p) + '%';
+    else if (m === 'done') readout = '完成 · 100%';
+    else if (m === 'error') readout = '失败 · 停在 ' + Math.round(p) + '%';
+    else readout = PHASES[state.phase].label + ' · 不确定';
+    $('#simReadout').textContent = '模拟：' + readout;
+
+    var status = $('#pageStatus');
+    var message = PHASES[state.phase].msg;
+    status.textContent = message;
+    status.hidden = !message;
+    $('#pageCancel').hidden = !PHASES[state.phase].busy;
+    var source = $('#pageSource');
+    source.disabled = PHASES[state.phase].busy;
+    $('#pageBarMount').dataset.mode = m;
+
+    var stateText = shortState();
+    var kind = stateKind();
+    $$('[data-card-state]').forEach(function (el) {
+      el.dataset.kind = kind;
+      var label = el.querySelector('.v-state-text');
+      if (label && label.textContent !== stateText) label.textContent = stateText;
+    });
+
+    $$('#phaseChips [data-phase]').forEach(function (btn) {
+      btn.classList.toggle('on', btn.dataset.phase === state.phase);
+    });
+
+    var range = $('#pctRange');
+    range.disabled = state.phase !== 'download';
+    if (state.phase === 'download') range.value = String(Math.round(p));
+    $('#pctOut').textContent = state.phase === 'download' ? Math.round(p) + '%' : '—';
+
+    $$('[data-play]').forEach(function (btn) {
+      var text = sim.running ? '⏸ 暂停' : sim.paused && !sim.finished ? '▶ 继续流程' : '▶ 播放完整流程';
+      if (btn.textContent !== text) btn.textContent = text;
+    });
+  }
+
+  /* ---------- 主题 / 减少动效 ---------- */
+  function applyTheme() {
+    var theme = state.theme === 'auto' ? (mqDark && mqDark.matches ? 'dark' : 'light') : state.theme;
+    document.documentElement.dataset.theme = theme;
+    $$('#themeSeg [data-theme-value]').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(btn.dataset.themeValue === state.theme));
+    });
+  }
+
+  function setTheme(value) {
+    state.theme = value;
+    try { localStorage.setItem('dsha-progress-theme', value); } catch (error) { /* 忽略 */ }
+    applyTheme();
+  }
+
+  function applyReduced() {
+    document.documentElement.dataset.reduced = state.reduced ? 'true' : 'false';
+    var btn = $('#reduceBtn');
+    btn.setAttribute('aria-checked', String(state.reduced));
+    btn.classList.toggle('on', state.reduced);
+  }
+
+  function setReduced(value) {
+    state.reduced = value;
+    applyReduced();
+  }
+
+  /* ---------- 模拟流程 ---------- */
+  function downloadPercent(k) {
+    if (k <= 0.52) return (k / 0.52) * 62;
+    if (k <= 0.66) return 62;
+    return 62 + ((k - 0.66) / 0.34) * 38;
+  }
+
+  function cancelSim() {
+    sim.running = false;
+    sim.paused = false;
+    if (sim.raf) cancelAnimationFrame(sim.raf);
+    sim.raf = 0;
+    document.body.classList.remove('sim-paused');
+  }
+
+  function startSim() {
+    cancelSim();
+    sim.idx = 0;
+    sim.t = 0;
+    sim.last = performance.now();
+    sim.running = true;
+    sim.paused = false;
+    sim.finished = false;
+    state.phase = 'queued';
+    state.percent = 0;
+    render();
+    sim.raf = requestAnimationFrame(tick);
+  }
+
+  function pauseSim() {
+    sim.running = false;
+    sim.paused = true;
+    if (sim.raf) cancelAnimationFrame(sim.raf);
+    sim.raf = 0;
+    document.body.classList.add('sim-paused');
+    render();
+  }
+
+  function resumeSim() {
+    sim.running = true;
+    sim.paused = false;
+    sim.last = performance.now();
+    document.body.classList.remove('sim-paused');
+    render();
+    sim.raf = requestAnimationFrame(tick);
+  }
+
+  function finishSim() {
+    sim.running = false;
+    sim.paused = false;
+    sim.finished = true;
+    if (sim.raf) cancelAnimationFrame(sim.raf);
+    sim.raf = 0;
+    state.phase = 'done';
+    state.percent = 100;
+    render();
+  }
+
+  function tick(now) {
+    if (!sim.running) return;
+    var dt = Math.max(0, Math.min(100, now - sim.last));
+    sim.last = now;
+    sim.t += dt;
+    var item = SEQ[sim.idx];
+    if (!item) { finishSim(); return; }
+    var k = item.dur > 0 ? Math.min(1, sim.t / item.dur) : 1;
+    state.phase = item.phase;
+    if (item.phase === 'download') state.percent = downloadPercent(k);
+    else if (item.phase === 'done') state.percent = 100;
+    else state.percent = 0;
+    render();
+    if (k >= 1) {
+      sim.idx += 1;
+      sim.t = 0;
+      if (sim.idx >= SEQ.length) { finishSim(); return; }
+    }
+    sim.raf = requestAnimationFrame(tick);
+  }
+
+  function togglePlay() {
+    if (sim.running) pauseSim();
+    else if (sim.paused && !sim.finished) resumeSim();
+    else startSim();
+  }
+
+  function stopForManual() {
+    cancelSim();
+    sim.finished = true;
+    sim.idx = 0;
+    sim.t = 0;
+  }
+
+  function setPhase(phase) {
+    stopForManual();
+    state.phase = phase;
+    if (phase === 'download') state.percent = 37;
+    else if (phase === 'done') state.percent = 100;
+    else if (phase === 'error') state.percent = 64;
+    else state.percent = 0;
+    render();
+  }
+
+  function resetAll() {
+    stopForManual();
+    state.phase = 'download';
+    state.percent = 37;
+    render();
+  }
+
+  /* ---------- 页内方案 / 标签 ---------- */
+  function setPageVariant(id) {
+    state.pageVariant = id;
+    $('#pageVariantName').innerHTML = '<b>' + id + '</b> · ' + V[id].name;
+    $('#pageBarMount').innerHTML = barMarkup(id, '插件任务进度');
+    $$('#variantPicker [data-variant]').forEach(function (btn) {
+      btn.classList.toggle('on', btn.dataset.variant === id);
+    });
+    render();
+  }
+
+  function setMockTab(tab) {
+    state.tab = tab;
+    var phone = $('#mockPhone');
+    phone.dataset.tab = tab;
+    $('#mockTabMarket').setAttribute('aria-selected', String(tab === 'market'));
+    $('#mockTabInstalled').setAttribute('aria-selected', String(tab === 'installed'));
+    $$('.only-market', phone).forEach(function (el) { el.hidden = tab !== 'market'; });
+    $$('.only-installed', phone).forEach(function (el) { el.hidden = tab !== 'installed'; });
+  }
+
+  function applyHint() {
+    var text = HINTS[state.hint] || '';
+    var el = $('#pageHint');
+    if (el) {
+      el.textContent = text;
+      el.hidden = !text;
+    }
+    $$('#hintChips [data-hint]').forEach(function (btn) {
+      btn.classList.toggle('on', btn.dataset.hint === state.hint);
+    });
+    var note = $('#hintNote');
+    if (!note) return;
+    if (state.hint === 'off') {
+      note.innerHTML = '<b>推荐：</b>页面只留下载源按钮；完整说明最多移进「插件下载源」弹窗。';
+    } else if (state.hint === 'short') {
+      note.innerHTML = '<b>折中：</b>保留一行，说明仍在页面，但不再占两行。';
+    } else {
+      note.innerHTML = '<b>现状：</b>两行说明约占 40dp，把进度条推远。';
+    }
+  }
+
+  /* ---------- 现状演示 ---------- */
+  function setBase(modeName) {
+    var bar = $('#baseBar');
+    bar.dataset.mode = modeName;
+    $$('#baseToggle [data-base]').forEach(function (btn) {
+      btn.classList.toggle('on', btn.dataset.base === modeName);
+    });
+    $('#baseCaption').innerHTML = modeName === 'indeterminate'
+      ? '<b>不确定：</b>系统方块横扫，与上方按钮没有视觉关联。'
+      : '<b>确定 37%：</b>一参 setProgress 直接落位，没有过渡；圆角与轨道都是平台默认。';
+  }
+
+  /* ---------- 收束演示 ---------- */
+  var closureToken = { success: 0, error: 0 };
+  var closureTimers = { success: [], error: [] };
+
+  function replayClosure(kind) {
+    var box = $('.closure[data-kind="' + kind + '"]');
+    var bar = box.querySelector('.demo-bar');
+    var status = box.querySelector('.closure-status');
+    var token = ++closureToken[kind];
+    closureTimers[kind].forEach(clearTimeout);
+    closureTimers[kind] = [];
+    bar.classList.remove('fade');
+    bar.dataset.mode = 'determinate';
+    bar.style.setProperty('--p', '0%');
+
+    if (kind === 'success') {
+      status.textContent = state.reduced ? '完成 · 100%（静态）' : '填充中…';
+      if (state.reduced) {
+        bar.style.setProperty('--p', '100%');
+      } else {
+        requestAnimationFrame(function () {
+          if (token !== closureToken[kind]) return;
+          bar.style.setProperty('--p', '100%');
+        });
+      }
+      closureTimers[kind].push(setTimeout(function () {
+        if (token !== closureToken[kind]) return;
+        bar.classList.add('fade');
+        status.textContent = '完成 · 收束后隐藏';
+      }, state.reduced ? 900 : 2050));
+    } else {
+      bar.style.setProperty('--p', '64%');
+      bar.dataset.mode = 'error';
+      status.textContent = '失败 · 停在 64%';
+      closureTimers[kind].push(setTimeout(function () {
+        if (token !== closureToken[kind]) return;
+        bar.classList.add('fade');
+        status.textContent = '失败 · 900ms 后隐藏';
+      }, state.reduced ? 900 : 1250));
+    }
+  }
+
+  /* ---------- 事件 ---------- */
+  function wire() {
+    $$('#themeSeg [data-theme-value]').forEach(function (btn) {
+      btn.addEventListener('click', function () { setTheme(btn.dataset.themeValue); });
+    });
+
+    $('#reduceBtn').addEventListener('click', function () { setReduced(!state.reduced); });
+
+    $$('[data-play]').forEach(function (btn) { btn.addEventListener('click', togglePlay); });
+    $$('[data-reset]').forEach(function (btn) { btn.addEventListener('click', resetAll); });
+
+    $$('#phaseChips [data-phase]').forEach(function (btn) {
+      btn.addEventListener('click', function () { setPhase(btn.dataset.phase); });
+    });
+
+    $$('[data-quick]').forEach(function (btn) {
+      btn.addEventListener('click', function () { setPhase(btn.dataset.quick); });
+    });
+
+    $('#pctRange').addEventListener('input', function () {
+      stopForManual();
+      state.phase = 'download';
+      state.percent = Number(this.value);
+      render();
+    });
+
+    $$('#variantPicker [data-variant]').forEach(function (btn) {
+      btn.addEventListener('click', function () { setPageVariant(btn.dataset.variant); });
+    });
+
+    $('#mockTabMarket').addEventListener('click', function () { setMockTab('market'); });
+    $('#mockTabInstalled').addEventListener('click', function () { setMockTab('installed'); });
+
+    $$('#hintChips [data-hint]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        state.hint = btn.dataset.hint;
+        applyHint();
+      });
+    });
+
+    $$('#baseToggle [data-base]').forEach(function (btn) {
+      btn.addEventListener('click', function () { setBase(btn.dataset.base); });
+    });
+
+    $$('[data-replay]').forEach(function (btn) {
+      btn.addEventListener('click', function () { replayClosure(btn.dataset.replay); });
+    });
+  }
+
+  /* ---------- 初始化 ---------- */
+  function boot() {
+    try {
+      var savedTheme = localStorage.getItem('dsha-progress-theme');
+      if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'auto') state.theme = savedTheme;
+      var reducedAttr = document.documentElement.dataset.reduced;
+      if (reducedAttr === 'true') state.reduced = true;
+      else if (reducedAttr === 'false') state.reduced = false;
+      else state.reduced = !!(mqReduce && mqReduce.matches);
+    } catch (error) {
+      state.reduced = !!(mqReduce && mqReduce.matches);
+    }
+
+    initCards();
+    setPageVariant(state.pageVariant);
+    setMockTab('market');
+    applyHint();
+    applyTheme();
+    applyReduced();
+    wire();
+    render();
+
+    if (mqDark) {
+      var onScheme = function () { if (state.theme === 'auto') applyTheme(); };
+      if (mqDark.addEventListener) mqDark.addEventListener('change', onScheme);
+      else if (mqDark.addListener) mqDark.addListener(onScheme);
+    }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

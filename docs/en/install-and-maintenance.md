@@ -1,12 +1,12 @@
 # Installation, component checks, and environment maintenance
 
-> Checked on 2026-10-21 against build190/F12 working-tree behavior. F10 `087724c` and F11 retain their historical reference attribution. This page update ran no builds, software tests, device actions, or endurance acceptance. [README](../../README.en.md) and the [F12 record](releases/v0.2.1-rc.2-build190-fix12-20261021.md) define final identity and formal execution counts. Historical results are not transferred to this work.
+> Checked on 2026-10-31 against the current build356 / DSH 0.2.2-rc.1 source. F10–F13 and build190 records retain their historical attribution. This page update ran no device or endurance acceptance; final identity, software and APK results are in the [README](../../README.en.md) and this CI / Release receipt. Historical results are not transferred to this work.
 
 Installation answers whether the offline environment can run, component checks answer whether a particular tool responds, and environment maintenance answers whether managed files or the environment need transactional repair. Their success criteria differ. See [runtime, data, and plugins](runtime-data-plugin-architecture.md) for the entry-point overview and [startup and diagnostics](startup-and-diagnostics.md) for states after installation.
 
 ## First preparation
 
-A first-time user goes from the welcome screen to preparation, where the complete Ubuntu and DSH assets in the APK are extracted and verified. The Ubuntu base identity is base10 and DSH is `0.2.1-rc.2`. A source checkout without the fixed offline archives cannot be delivered as a complete release installation package. The default engine is proot; proroot is an explicit option. See [runtime engines](runtime-engines.md).
+A first-time user goes from the welcome screen to preparation, where the complete Ubuntu and DSH assets in the APK are extracted and verified. The Ubuntu base identity is base10 and DSH is `0.2.1-rc.5`. A source checkout without the fixed offline archives cannot be delivered as a complete release installation package. The default engine is proot; proroot is an explicit option. See [runtime engines](runtime-engines.md).
 
 A genuinely empty first environment uses a cold-install transaction: prepare the environment, verify it by running it, and confirm the actual runtime mode and environment identity. The component page does not automatically erase or re-extract an existing environment merely because Bash or a marker is damaged. On completion, Main appears first, then submits one generation-fenced background Web startup request. Models and API keys are configured in Web settings. [EnvironmentMaintenance](../../app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java) and [FirstRunWebStart](../../app/src/main/java/com/deepseekharness/app/ui/FirstRunWebStart.java) are the respective entry points.
 

@@ -1,6 +1,6 @@
 # DNS 配置与解析边界
 
-本文按 build190 / F10 实际源码解释“配置 → DNS 解析策略”。
+本文解释“配置 → DNS 解析策略”。
 Web、能力桥、LAN 与 ADB 的端口另见[端口与网络](ports-and-networking.md)。
 运行引擎另见[运行引擎](runtime-engines.md)。
 DNS 设置处理名称解析兼容，不是系统 VPN、代理、网络权限或 HTTP 重试开关。
@@ -21,6 +21,8 @@ DNS 设置处理名称解析兼容，不是系统 VPN、代理、网络权限或
 三个模式仍经过相同的 guest `resolv.conf` 协调逻辑。
 它们也不会自动修改手机全局 DNS、VPN 或 Android 系统设置。
 
+自动及 IPv4 模式还会在 guest `/etc/gai.conf` 没有用户启用的配置时，添加带标记的 glibc IPv4 优先地址排序表。对于 Python `urllib` 等逐个尝试地址的程序，这可以减少 IPv6 黑洞造成的等待；IPv6 地址仍可回退。glibc 还会使用其他地址选择规则，因此不能保证所有 IPv4 一定排在所有 IPv6 之前。这不是 Happy Eyeballs，也不能修复 IPv4 路由黑洞。原生模式会移除完全未修改的 DSHA 自有段；用户启用的任意配置、被修改的自有段、软链接和特殊文件均保留。现有进程可能缓存配置，需要正常重启。非 glibc 解析器、应用自行排序或代理端解析不一定受此表影响。
+
 ## auto 只重试特定的 Node 名称解析
 
 [dns-compat.cjs](../app/src/main/assets/dns-compat.cjs) 通过 Node 预加载安装。
@@ -33,7 +35,8 @@ Symbol 标记防止同一进程重复加载时层层包装。
 1. 先调用原生 lookup，保留原参数与正常双栈结果。
 2. 仅当错误码是 `EAI_AGAIN` 或 `EAI_FAIL` 才考虑兼容重试。
 3. 调用没有指定 family，或 family 为数值 `0`，才允许一次 family `4` 重试。
-4. IPv4 成功就返回该结果；仍失败则返回第一次的原错误。
+4. IPv4 成功就返回该结果。
+5. 仍是 `EAI_AGAIN`／`EAI_FAIL` 时，经本机能力桥 `/app/net/resolve` 请 Android 系统解析器在当前默认网络上解析一次（见下文“宿主解析兜底”）；仍失败则返回第一次的原错误。
 
 显式 family `4`／`6` 以及字符串 IPv4／IPv6 不因该补丁再降级。
 `ENOTFOUND`、参数错误和其他错误不会走这个兼容分支。
@@ -41,12 +44,27 @@ Symbol 标记防止同一进程重复加载时层层包装。
 正常 IPv6 解析成功时没有额外 IPv4 请求。
 
 该补丁没有调用 `setDefaultResultOrder('ipv4first')`。
-所以不能把 auto 描述成“IPv4 优先排序”或“关闭 IPv6”。
+该 Node 补丁本身不关闭 IPv6；独立的 guest glibc 排序表可能影响系统 lookup 的地址顺序。
 它也没有替换 `dns.resolve*()`、独立 Resolver 或应用自带的 DoH 客户端。
 使用自定义 lookup、清理环境或另建解析栈的插件须按其实际调用另查。
 
 Node 官方说明中，lookup 使用系统 `getaddrinfo`，而 resolve 系列直接使用 DNS 协议。
 两条路径的配置和行为不同，详见 [Node 24 DNS 文档](https://nodejs.org/download/release/v24.19.0/docs/api/dns.html#implementation-considerations)。
+
+## 宿主解析兜底（实验性）
+
+> 实验性更新：以下切网刷新、宿主解析兜底与 `/app/net` 诊断属于争取性修复，用于减少“切换移动数据后容器无外网”，不保证在所有机型、ROM、运营商、VPN 或私有 DNS 组合下可靠；验证范围以对应版本记录为准。
+
+容器 resolv.conf 只能表达“向哪几台服务器发明文 DNS”。切网后旧服务器不可达、系统开启私有 DNS（DoT）、运营商 DNS64 或 VPN 分流，都可能让 guest glibc 解析超时，而 Android 本身仍能解析。兜底只处理这一类失败：
+
+- 只在 `EAI_AGAIN`／`EAI_FAIL`（超时或服务器失败）时触发；`ENOTFOUND` 等明确结果不改判。
+- 只发一次宿主请求，不重放 HTTP、模型请求或工具调用；IP 字面量、`localhost`、单标签名不送宿主。
+- 显式 family 按原 family 请求宿主，不降级；`all`／`order:'ipv6first'` 保留结果形状。
+- 同一主机并发合并，失败结果负缓存 10 秒，同时最多 4 个宿主请求；成功结果不缓存。
+- 凭据与端口每次从 `/root/.dsh/.bridge_headers`、`.bridge_port` 私有普通文件读取，不跟随链接；旧版 App（端点返回 `[NO_CMD]`）或桥不可用时返回原错误。
+- 宿主端用 `DnsResolver` 在当前默认网络上查询，单次 4 秒上限、最多 2 个并发，只返回数字地址，不建立连接，也不记录主机名。
+
+`native` 模式或环境变量 `DSHA_DNS_HOST_FALLBACK=0` 关闭兜底。curl、git、Python 等不经 Node lookup 的程序不受兜底覆盖，依赖下一节的 resolv.conf 刷新。
 
 ## IPv4 模式额外改变的是 glibc stub resolver
 
@@ -77,9 +95,10 @@ Android Java 网络、WebView／Gecko 自己的外网解析不由此 Node 补丁
 
 协调代码是 [ResolverConfig.java](../app/src/main/java/com/deepseekharness/app/util/ResolverConfig.java)。
 实际文件操作在 [RuntimeTools.java](../app/src/main/java/com/deepseekharness/app/runtime/RuntimeTools.java)。
-Android 侧从当前活动网络 `LinkProperties.getDnsServers()` 读取 DNS 地址。
+Android 侧由 `device/NetworkStateMonitor` 统一读取默认网络的 `LinkProperties.getDnsServers()`；启动时即时查询，此后跟随默认网络回调。带 `%iface` 的 IPv6 链路本地地址不写入。
 只接纳校验通过的数字 IPv4／IPv6 地址，并去重，不为此发主机名解析。
 代码没有通过 shell 调用 Android `dnsresolver` 命令修改系统服务。
+随包旧 rootfs 的原始文件恰为 `8.8.8.8`、`223.5.5.5` 两行；去掉 DSHA 自有段后，只有剩余内容与该默认值逐字节一致，且已读到有效设备 DNS 时，才迁移为设备 DNS。暂时无有效设备 DNS 时保留旧文件。任何其他内容（包括注释、换行格式或重新排序）均按用户配置保留；若有意继续使用这两台服务器，可在文件中加一行注释以避免被识别为原始默认值。设备 DNS 地址不等于完整复用 Android 私有 DNS 的加密解析行为。
 
 对已有 guest 文件采用以下次序：
 
@@ -140,10 +159,14 @@ Web 的启动观察器还会追加独立 `--import`；不要修 DNS 时删除观
 查询系统网络服务在资产准备锁外进行，避免跨 Binder 查询长时间占锁。
 读取网络信息失败不要求启动时一定联网；写文件失败记录警告／DNS_PREPARE 诊断。
 
-这不是持续监听网络变化并实时重配所有旧进程的承诺。
-切换 Wi-Fi／移动网络后，新的受管启动会再读取当时的设备 DNS。
-已有进程、解析缓存、HTTP 连接池可能保留旧状态，排查时要记录其启动时间。
-不能把反复刷新网页等同于重建后端进程环境。
+实验性：切换 Wi-Fi／移动网络时，`runtime/ResolverRefresher` 订阅同一网络监听，在设备 DNS 变为新的非空列表后（400 ms 合并）按上面的同一协调规则重写本进程准备过的 guest resolv.conf：
+
+- 只替换 DSHA 托管段；用户 nameserver、软链接与特殊文件不动。
+- 断网瞬间 DNS 为空时不写，保留上次有效段；同一组 DNS 不重复写。
+- 数据维护独占期间推迟，5 秒后再判断；写入在资产准备锁内进行，不与并发准备交错。
+- resolv.conf 不计入受管资产戳，切网不会让下次启动重做整套资产准备。
+
+guest glibc（2.26 起）在文件变化后自动重读，运行中的 Node、curl、git、pip 不需要重启。已建立的 TCP/WebSocket 长连接在切网时仍会断开，这是传输层行为，需应用自行重连；DNS 刷新保证的是重连时能解析。应用自带的解析缓存、c-ares `dns.resolve*()` 与 DoH 客户端不在此范围内。
 
 ## 备份与恢复范围
 
@@ -162,7 +185,7 @@ Web 的启动观察器还会追加独立 `--import`；不要修 DNS 时删除观
 
 | 现象／需要 | 建议先做的判断 |
 |---|---|
-| 正常双栈网络 | 保持 auto，正常 IPv6 结果不会被补丁降级 |
+| 正常双栈网络 | auto 使用 guest glibc 的 IPv4 优先表；选择原生模式可恢复系统排序 |
 | Node 报 EAI_AGAIN／EAI_FAIL | 核实际模式、预加载与系统解析，再看一次 IPv4 重试结果 |
 | 系统 glibc 查询在 AAAA 环节确有兼容问题 | 可明确选择 IPv4，正常停止后重启验证 |
 | 要观察未经 Node 兼容替换的行为 | 选择 native，保留用户 resolver 配置后比较 |
@@ -175,17 +198,27 @@ Main 的启动记录与诊断可区分环境准备、后端退出和网页就绪
 超时、受限网络和 EXECUTION_UNKNOWN 不能成为自动换策略、换通道再执行的依据。
 需要恢复正常默认时，明确选 auto、保存并正常重启，保留原失败记录供比较。
 
+## 一条命令诊断（实验性）
+
+```sh
+curl -s -H @/root/.dsh/.bridge_headers "http://127.0.0.1:$(cat /root/.dsh/.bridge_port)/app/net"
+```
+
+输出 `DSHA_NET_V1` 段：默认网络类型、VPN、是否验证、是否被系统拦截、IP 栈、设备 DNS、私有 DNS、DNS 模式、最近一次刷新结果，以及每个 rootfs 的 `resolv_source`（managed／user／legacy／none）与 `resolv_state`（current／stale／user／empty）。不含本机 IP、SSID 或运营商名。对照 `getent hosts 域名` 与 `/app/net/resolve?host=域名` 可区分“容器 DNS 失效”与“宿主本身无网”。`blocked=true` 表示系统对 DSHA 关闭了该网络（流量权限、省流模式等），需在系统设置中处理。
+
 ## 修改与测试定位
 
 改模式值：同步 ConfigStore、ResolverConfig、RuntimeHostPorts.Settings 与配置页三选项。
 改文件协调：覆盖自有段撤销、用户 DNS 优先、临时无网、IPv6 数字地址和软链接跳过。
 改 Node 补丁：覆盖 callback／Promise／promisify、family、all/options 与重载幂等。
-必须核对一次失败解析最多两次底层 lookup，业务 HTTP 仍只发送一次。
+必须核对一次失败解析最多两次底层 lookup 加一次宿主请求，业务 HTTP 仍只发送一次。
+改网络监听：DeviceBridgeService 与 ResolverRefresher 共用 NetworkStateMonitor，不再各自注册回调。
 改启动链：检查主 Web、普通命令、PTY、简易终端及子进程环境，不只测登录 profile。
 
-已有入口如下，本文只读核对，没有重新运行测试或连接设备：
+已有入口如下，下列为测试位置；某次运行结论以对应记录为准：
 
-- `app/src/test/java/com/deepseekharness/app/util/ResolverConfigTest.java`。
+- `app/src/test/java/com/deepseekharness/app/util/ResolverConfigTest.java`：含 WiFi → 流量 → 断网 → WiFi 序列与 describe。
+- `NetworkSnapshotTest`、`ResolverRefreshPolicyTest`、`HostLookupTest`（同目录）：快照去重、刷新判定、主机名与响应格式。
 - `app/src/test/java/com/deepseekharness/app/runtime/RuntimePackageCommandsAndroidTest.java`。
 - `tools/test-dns-compat.mjs`：含 Linux 原生 getaddrinfo 边界夹具，其他平台该项会 skip。
 - `tools/test-dns-compat-device.mjs`、`tools/dns-compat-fixture.c`：名称含 device 不等于已做手机验收。

@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.3-20261030.2130-dsh0.2.1-rc.5 / build214
+
+- Visual alignment pass for the 224dp phone-portrait/narrow-window terminal session drawer: the footer actions now use short labels in the same 2×3 layout with single-line, equal-height buttons, the summary becomes "N sessions" (the full per-group counts stay in the accessibility name), the header subtitle shortens to "Independent sessions" in the narrow drawer, and the drawer insets snap to a 12dp grid; wide-screen/tablet layouts are unchanged.
+- Fixed the "Text font / Code font / Terminal font" rows in the DSH Web UI 0.2.1-rc.5 mobile settings sheet: on narrow screens the input field now takes its own full-width row, so the description no longer renders one character per line or inflates the sheet vertically; delivered as a local dsh-web-mobile patch, with desktop/tablet unaffected.
+- versionCode is raised to 214; the DSHA revision stays 0.2.1-rc.3 and the bundled-DSH suffix is 0.2.1-rc.5; build and acceptance scope follows this run and the Release receipt.

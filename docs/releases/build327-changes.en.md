@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.5-20261105.2310-dsh0.2.2-rc.1 / build327
+
+- Overwrite maintenance now completes in one step: on the maintenance page, "update runtime" fully stops the old web process after birth-identity verification, then takes the maintenance barrier and runs the update; there is no need to enter the limited main screen, press "stop", and return to the maintenance page.
+- The built-in portrait-adaptation plugin (`dsh-web-mobile`) is disabled by default and stays disabled after an overwrite update; it only takes effect when the user explicitly enables it in the native plugin page within the current version, and the next APK overwrite update collapses it back to disabled. Much of its code is not adapted to the new pages and logic since build324, which caused a blank main screen and a duplicated sidebar; restoring the default enablement requires meeting the hard gate in [docs/plugins.md](../en/plugins.md) with device evidence.
+- Verification scope: host tests, the full contracts group and source/descriptor gates; device conclusions follow the actual confirmation record for that run and no pass is pre-written. Raises versionCode to 327 (based on build326).

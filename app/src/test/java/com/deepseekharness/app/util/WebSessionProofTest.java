@@ -81,6 +81,27 @@ public final class WebSessionProofTest {
   }
 
   @Test
+  public void launcherMustMatchItsOwnBirthUidCommandAndGeneration() {
+    assertTrue(WebSessionProof.matchesLauncher(saved(), 10001, launcher()));
+    for (var p :
+        java.util.List.of(
+            // PID 复用：编号相同但出生时间已变。
+            new WebSessionProof.Process(100, 1234, 10001, LAUNCHER, "7", INSTANCE, NONCE, true),
+            // 编号被其它应用复用：UID 不符。
+            new WebSessionProof.Process(100, 1233, 10002, LAUNCHER, "7", INSTANCE, NONCE, true),
+            // 命令行不是记录里的启动器。
+            new WebSessionProof.Process(100, 1233, 10001, WEB, "7", INSTANCE, NONCE, true),
+            // 代次 / 实例 / nonce 任一不符。
+            new WebSessionProof.Process(100, 1233, 10001, LAUNCHER, "8", INSTANCE, NONCE, true),
+            new WebSessionProof.Process(100, 1233, 10001, LAUNCHER, "7", BOOT, NONCE, true),
+            new WebSessionProof.Process(
+                100, 1233, 10001, LAUNCHER, "7", INSTANCE, "cd".repeat(32), true),
+            // 记录里的进程已退出。
+            new WebSessionProof.Process(100, 0, -1, "", "", "", "", false)))
+      assertFalse(WebSessionProof.matchesLauncher(saved(), 10001, p));
+  }
+
+  @Test
   public void stopAndNewStartFenceAdoption() {
     WebLifecycle gate = new WebLifecycle();
     assertTrue(gate.adoptRunning(7));

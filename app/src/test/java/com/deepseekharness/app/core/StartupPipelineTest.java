@@ -10,11 +10,13 @@ public class StartupPipelineTest {
   static final class Fixture
       implements StartupPipeline.Runtime, StartupPipeline.Diagnostics, StartupPipeline.Actions {
     final List<String> calls = new ArrayList<>();
+    final List<String> messages = new ArrayList<>();
     boolean current = true;
     String failure = "";
     String staleAt = "", stopError = "";
     String casReceipt = receipt(false, 0, "");
     BoundedProcessRunner.Result casOutcome;
+    boolean pluginScopeClosed;
 
     void step(String name) throws IOException {
       calls.add(name);
@@ -66,8 +68,26 @@ public class StartupPipelineTest {
       return "ok";
     }
 
-    public BoundedProcessRunner.Result materializeCasLinks() throws Exception {
+    public StartupPipeline.Plugins startupPlugins() {
+      return new StartupPipeline.Plugins() {
+        public String register() throws Exception {
+          return Fixture.this.register();
+        }
+
+        public String legacy() throws Exception {
+          return Fixture.this.legacyPlugins();
+        }
+
+        public void close() {
+          pluginScopeClosed = true;
+        }
+      };
+    }
+
+    public BoundedProcessRunner.Result materializeCasLinks(
+        java.util.function.Consumer<String> timing) throws Exception {
       step("cas-copy");
+      timing.accept("CAS_HOST_TIMING: phase=process-collect durationMs=10 elapsedMs=14");
       return casOutcome == null ? BoundedProcessRunner.localCompletion(casReceipt) : casOutcome;
     }
 
@@ -75,7 +95,9 @@ public class StartupPipelineTest {
       return "fixture";
     }
 
-    public void message(long g, String s) {}
+    public void message(long g, String s) {
+      messages.add(g + ":" + s);
+    }
 
     public void issue(long g, String n, String s) {
       calls.add("issue");
@@ -141,6 +163,36 @@ public class StartupPipelineTest {
             "unlock",
             "checkpoint"),
         f.calls);
+    assertTrue(f.pluginScopeClosed);
+  }
+
+  @Test
+  public void builtinOrLegacyFailureClosesPreparationAndCannotUnlockOrActivate() throws Exception {
+    for (String phase : List.of("register", "legacy")) {
+      Fixture f = new Fixture();
+      f.failure = phase;
+      assertThrows(IOException.class, () -> new StartupPipeline(f, f).prepare(47, false, f));
+      assertTrue(f.pluginScopeClosed);
+      assertFalse(f.calls.contains("activate"));
+      assertFalse(f.calls.contains("unlock"));
+      assertTrue(
+          f.messages.stream()
+              .anyMatch(
+                  line ->
+                      line.contains(
+                              "phase="
+                                  + (phase.equals("register")
+                                      ? "register-builtins"
+                                      : "legacy-plugin-reviews"))
+                          && line.endsWith("outcome=threw")));
+      if (phase.equals("register")) assertFalse(f.calls.contains("legacy"));
+    }
+    Fixture stale = new Fixture();
+    stale.staleAt = "register";
+    assertNull(new StartupPipeline(stale, stale).prepare(48, false, stale));
+    assertTrue(stale.pluginScopeClosed);
+    assertFalse(stale.calls.contains("legacy"));
+    assertFalse(stale.calls.contains("unlock"));
   }
 
   @Test
@@ -202,6 +254,36 @@ public class StartupPipelineTest {
     assertTrue(f.calls.indexOf("cas-copy") < f.calls.indexOf("register"));
     assertTrue(f.calls.indexOf("cas-copy") < f.calls.indexOf("activate"));
     assertTrue(f.calls.indexOf("cas-copy") < f.calls.indexOf("unlock"));
+  }
+
+  @Test
+  public void casTimingIsBoundedAndCannotAuthorizeWithoutACompletedReceipt() throws Exception {
+    Fixture f = new Fixture();
+    f.casReceipt =
+        "CAS_TIMING: {\"phase\":\"scan\",\"durationMs\":12}\n" + "ordinary script output\n";
+    IOException failure =
+        assertThrows(IOException.class, () -> new StartupPipeline(f, f).prepare(31, false, f));
+    assertEquals("PLUGIN_CAS_COPY_RESULT_MISSING", failure.getMessage());
+    assertTrue(f.messages.stream().anyMatch(line -> line.startsWith("31:CAS_HOST_TIMING:")));
+    assertTrue(f.messages.stream().anyMatch(line -> line.startsWith("31:CAS_TIMING:")));
+    assertFalse(f.messages.stream().anyMatch(line -> line.contains("ordinary script output")));
+    assertFalse(f.calls.contains("register"));
+    assertFalse(f.calls.contains("unlock"));
+
+    Fixture large = new Fixture();
+    large.casReceipt =
+        "CAS_TIMING: "
+            + "0".repeat(5000)
+            + "\n"
+            + "CAS_TIMING: {\"phase\":\"scan\",\"durationMs\":12}\n".repeat(100)
+            + receipt(false, 0, "");
+    assertEquals("web", new StartupPipeline(large, large).prepare(32, false, large));
+    assertEquals(
+        24, large.messages.stream().filter(line -> line.startsWith("32:CAS_TIMING:")).count());
+    assertTrue(
+        large.messages.stream()
+            .filter(line -> line.startsWith("32:CAS_TIMING:"))
+            .allMatch(line -> line.length() <= 4099));
   }
 
   @Test

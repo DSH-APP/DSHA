@@ -20,12 +20,13 @@ def apk_name_version(root=ROOT):
     return _version(match[1])
 
 def apk_filename(flavor, root=ROOT):
-    if flavor not in ('standard', 'low'):
+    """Sunset-3090-Q 只有单 Standard 变体；旧的 low 稳定名不再生成。"""
+    if flavor != 'standard':
         raise ValueError('DELIVERY_FLAVOR')
-    return f'dsha-{apk_name_version(root)}{"low" if flavor == "low" else ""}.apk'
+    return f'dsha-{apk_name_version(root)}.apk'
 
 def apk_version_from_filename(name):
-    """Read only the conventional APK name, including historical names."""
+    """Read only the conventional Standard APK name; old -low names are rejected."""
     if not isinstance(name, str) or Path(name).name != name:
         raise ValueError('DELIVERY_APK_FILENAME')
     if name.endswith('.apk.sha256'):
@@ -34,7 +35,7 @@ def apk_version_from_filename(name):
         raise ValueError('DELIVERY_APK_FILENAME')
     value = name[5:-4]
     if value.endswith('low'):
-        value = value[:-3]
+        raise ValueError('DELIVERY_APK_FILENAME')
     return _version(value)
 
 def _workspace_path(root, *parts):

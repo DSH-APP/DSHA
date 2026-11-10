@@ -2,10 +2,12 @@ package com.deepseekharness.app.util;
 
 /** 网页文件边界；文件名不能变成路径，长度声明不能越过本地容量限制。 */
 public final class WebTransferPolicy {
-  public static final long DOWNLOAD_LIMIT = 2L * 1024 * 1024 * 1024;
+  public static final long DOWNLOAD_LIMIT = 5_000_000_000L;
 
-  /** 一次系统选择的总字节上限，允许单个 5,000,000,000 字节文件。 */
+  /** 一次系统选择的累计上限；独立于单文件的十进制 5GB 边界。 */
   public static final long UPLOAD_LIMIT = 5L * 1024 * 1024 * 1024;
+
+  public static final long UPLOAD_FILE_LIMIT = 5_000_000_000L;
 
   /** 暂存缓存所在卷须留下的余量；不代表后端附件发布的全部空间需求。 */
   public static final long UPLOAD_RESERVE = 1024L * 1024 * 1024;

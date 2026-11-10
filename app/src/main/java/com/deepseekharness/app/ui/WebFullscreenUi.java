@@ -68,6 +68,8 @@ public final class WebFullscreenUi {
     WindowCompat.setDecorFitsSystemWindows(activity.getWindow(), false);
     View content = activity.findViewById(android.R.id.content);
     activity.getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+    if (android.os.Build.VERSION.SDK_INT >= 29)
+      activity.getWindow().setStatusBarContrastEnforced(false);
     new ContentInsets(activity, content);
     applySystemBars(activity);
     ViewCompat.requestApplyInsets(content);
@@ -91,7 +93,7 @@ public final class WebFullscreenUi {
     private Object bridgeIdentity;
     private boolean bridgeSupported;
     private long epoch = IME_EPOCH.incrementAndGet(), sequence, inFlight;
-    private org.json.JSONObject pendingFrame;
+    private org.json.JSONObject pendingFrame, inFlightFrame;
     private boolean canceled = true;
     private int observedWidth;
 
@@ -183,7 +185,19 @@ public final class WebFullscreenUi {
       if (!hasFocus) {
         forgetKeyboard();
         render();
-      } else if (attached) ViewCompat.requestApplyInsets(content);
+      } else if (attached) {
+        // #190：带键盘切后台再回来时 IME 已消失，但系统派发的边距可能仍带着键盘
+        // 占位，而 WebView 的布局视口就此停在矮视口且不再随任何事件收敛。
+        // 回前台核对 IME 的真实可见性：不可见就清掉键盘边距并强制一次布局，
+        // 等价于网页侧 workaround 里那次真实的 IME 高度变化。
+        WindowInsetsCompat now = ViewCompat.getRootWindowInsets(content);
+        if (now == null || !now.isVisible(WindowInsetsCompat.Type.ime())) {
+          forgetKeyboard();
+          render();
+          content.requestLayout();
+        }
+        ViewCompat.requestApplyInsets(content);
+      }
     }
 
     @Override
@@ -241,6 +255,14 @@ public final class WebFullscreenUi {
       int width = content.getWidth() - safe.left - safe.right;
       int height = content.getHeight() - safe.top - Math.max(safe.bottom, keyboard);
       if (width <= 0 || height <= 0) return;
+      // Repeated insets can arrive before the renderer acknowledges the same geometry.
+      // Keep the latest distinct frame, without adding an identical tail IPC/RAF. Do not
+      // cache acknowledged frames: focus/session changes can cancel the JS seat on their own.
+      org.json.JSONObject latest = pendingFrame != null ? pendingFrame : inFlightFrame;
+      if (latest != null
+          && latest.optInt("width") == width
+          && latest.optInt("height") == height
+          && phase.equals(latest.optString("phase"))) return;
       try {
         pendingFrame =
             new org.json.JSONObject()
@@ -260,6 +282,7 @@ public final class WebFullscreenUi {
       org.json.JSONObject frame = pendingFrame;
       pendingFrame = null;
       inFlight = frame.optLong("frameId");
+      inFlightFrame = frame;
       boolean sent;
       try {
         sent = host.sendImeFrame(bridgeIdentity, frame);
@@ -268,6 +291,7 @@ public final class WebFullscreenUi {
       }
       if (!sent) {
         inFlight = 0;
+        inFlightFrame = null;
         bridgeSupported = false;
       }
     }
@@ -275,6 +299,7 @@ public final class WebFullscreenUi {
     private void acknowledge(Object identity, long frame, boolean supported) {
       if (identity != bridgeIdentity || frame != inFlight || inFlight == 0) return;
       inFlight = 0;
+      inFlightFrame = null;
       bridgeSupported = supported;
       if (supported && !imeAnimations.isEmpty() && ownsKeyboard() && !expanded) {
         // hide 只在边界扩容一次；网页 resize 按同一绝对目标保持 composer 的位置。
@@ -290,6 +315,7 @@ public final class WebFullscreenUi {
       epoch = IME_EPOCH.incrementAndGet();
       pendingFrame = null;
       inFlight = 0;
+      inFlightFrame = null;
       bridgeSupported = false;
       if (bridgeIdentity != null && activity instanceof Host host) {
         try {

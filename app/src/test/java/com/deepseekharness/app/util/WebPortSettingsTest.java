@@ -12,6 +12,9 @@ public final class WebPortSettingsTest {
     assertEquals("fixed", WebPortSettings.mode("fixed", "3080"));
     assertEquals("auto", WebPortSettings.mode("auto", "45678"));
     assertEquals("auto", WebPortSettings.mode(null, "3090"));
+    assertEquals("auto", WebPortSettings.mode(null, "3091"));
+    assertEquals("auto", WebPortSettings.mode(null, "3099"));
+    assertEquals("auto", WebPortSettings.mode(null, "3082"));
     assertEquals("auto", WebPortSettings.mode(null, "invalid"));
     assertEquals("auto", WebPortSettings.mode("invalid", "45678"));
   }
@@ -20,7 +23,7 @@ public final class WebPortSettingsTest {
   public void onlyFixedModeRequiresAValidUnreservedPort() {
     assertEquals(0, WebPortSettings.requested("auto", 3080));
     assertEquals(45678, WebPortSettings.requested("fixed", 45678));
-    for (int port : new int[] {0, -1, 3081, 3090, 65536}) {
+    for (int port : new int[] {0, -1, 3081, 3082, 3090, 3091, 3099, 65536}) {
       try {
         WebPortSettings.requested("fixed", port);
         fail();
@@ -41,7 +44,9 @@ public final class WebPortSettingsTest {
     assertEquals(3080, WebPortSettings.fixedImport("3080"));
     assertEquals(45678, WebPortSettings.fixedImport(" 45678 "));
     for (Object value :
-        new Object[] {null, 3080, false, "", "oops", "0", "65536", "3081", "3090"}) {
+        new Object[] {
+          null, 3080, false, "", "oops", "0", "65536", "3081", "3082", "3090", "3091", "3099"
+        }) {
       try {
         WebPortSettings.fixedImport(value);
         fail(String.valueOf(value));

@@ -77,6 +77,17 @@ Core的close回复只代表显示释放的应答。Manager用原通道对原出�
 
 这里的Core退出与Ubuntu内DSH guest退出是两套证明。正常停止Web仍由WebStopCoordinator分别确认guest及owned launcher退出；WebLifecycleController只在同代次finishStop后、无新启动且有本次成功证明时退休HarnessService。Core close成功不替代这两项，失败也不能借旧成功证明释放服务；用户独立DeviceBridge不是该服务退休的对象。[Web退出协调](../../app/src/main/java/com/deepseekharness/app/core/WebStopCoordinator.java)、[Web停止与退休](../../app/src/main/java/com/deepseekharness/app/core/WebLifecycleController.java)
 
+## 决定六：识屏模式互斥，开启虚拟识屏即创建（2026-11-03 修订）
+
+识屏模式只表示**助手可以使用哪块屏**：`off | physical | virtual`，由[ScreenMode](../../app/src/main/java/com/deepseekharness/app/screen/ScreenMode.java)唯一读写（新键`screen_mode`，不进可迁移设置）。规则见[ScreenModePolicy](../../app/src/main/java/com/deepseekharness/app/util/ScreenModePolicy.java)，准入见[ScreenCapabilityGate](../../app/src/main/java/com/deepseekharness/app/util/ScreenCapabilityGate.java)：
+
+- 实体识屏本期只认无障碍；虚拟识屏要求Root（已启用且su存在）、Shizuku（已授权且用户服务已绑定）或ADB（已启用、局域网已授权且连接已验证）任一真正可用，无障碍只增强节点与中文输入。心跳与退出核验只要求授权仍在（宽判据），避免短暂重绑把可用会话判为断连。
+- 桥按模式放行：`/app/ui/*`、`/app/sense/*`只在physical，`/app/vscreen/*`只在virtual；否则返回`SCREEN_MODE_OFF`、`SCREEN_MODE_PHYSICAL_OFF`或`SCREEN_MODE_VIRTUAL_OFF`，不回退另一块屏。仅`/app/ui/task-end`收尾不受限。
+- 切换先收尾当前模式：离开virtual先close，待清理（START_UNKNOWN/DISCONNECTED/CLOSING/CLOSE_UNKNOWN）时拒绝切换；离开physical撤销本轮授权与节点租约。开启virtual时自动创建虚拟屏，取代此前“打开页面或开启无障碍不自动创建”的约定；创建失败模式仍为virtual，可再次选择或在虚拟识屏页重试。
+- 能力撤销统一经`VirtualScreenManager.revokeFor(reason)`：回收虚拟屏后由ScreenMode判定当前模式是否仍保有授权，不再保有则降为off并记录原因，不自动换模式。
+- 助手侧与操作者侧分开（用户 2026-11-03 决定）：桥 / MCP 按模式放行；虚拟识屏页等操作者面板的创建、旋转、输入与关闭只受设备能力（ScreenCapabilityGate）与生命周期约束，不读写模式。模式为off或physical时用户仍可自己使用虚拟屏，助手调用仍返回`SCREEN_MODE_VIRTUAL_OFF`；面板只显示助手能否使用本屏。两侧共用能力判定、`revokeFor`与待清理状态。离开virtual时仍关闭当前Core，不区分由谁创建。
+- 首次升级（新键缺失）按现状迁移：虚拟屏运行或待清理→virtual，无障碍已开启→physical，否则off。
+
 ## 恢复、升级及平台边界
 
 Manager在rootfs外的应用私有journal保存生命周期、boot、原通道及握手。相同boot恢复未完成handle时进入DISCONNECTED并保留原身份供清理；缺handle/损坏记录进入START_UNKNOWN。不会据journal自动恢复可写许可或假装重连READY。明确boot_id变化可收敛旧boot尝试；不可读取boot不是“已变化”。新安装APK启动命令使用当前安装路径，不能拿旧Core/旧屏幕ID冒充升级后的当前会话。[恢复逻辑](../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java)、[持久journal](../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenSessionJournal.java)
@@ -98,7 +109,7 @@ Standard且API30+才支持虚拟屏；Low即使运行在现代系统也明确拒
 
 ## 受影响文件与维护不变量
 
-入口与协议涉及`dsh-tool-vscreen/lib/server.cjs`、HttpShellService；编排与持久化涉及VirtualScreenManager/Launcher/Transport/SessionJournal；设备侧涉及VirtualScreenCore/DisplaySession/Input/Pixels/ObservedPixels；语义与UI涉及SemanticAdapter/Accessibility/AnchorProof/ObservedControl/NativeControls、VirtualScreenActivity、NativeScreenControlLease。以上链接指向当前职责，不表示本ADR修改这些文件。
+入口与协议涉及`dsh-tool-vscreen/lib/server.cjs`、HttpShellService；编排与持久化涉及VirtualScreenManager/Launcher/Transport/SessionJournal；设备侧涉及VirtualScreenCore/DisplaySession/Input/Pixels/ObservedPixels；语义与UI涉及SemanticAdapter/Accessibility/AnchorProof/ObservedControl/NativeControls、VirtualScreenActivity、NativeScreenControlLease；前台预览形态（2026-11-06 补充）涉及VirtualScreenForeground/VirtualScreenStrip/VirtualScreenPreviewSettings/VirtualScreenPreviewPolicy。以上链接指向当前职责，不表示本ADR修改这些文件。
 
 维护时必须保留以下不变量：
 
@@ -108,6 +119,8 @@ Standard且API30+才支持虚拟屏；Low即使运行在现代系统也明确拒
 4. id在派发前一次消费；UNKNOWN不重放，旧失败响应不能被新实例重新标注。
 5. close释放应答、Core EXITED、journal提交、guest退出与launcher退出分别取证；任一未知不能借另一项成功清障。
 6. 升级/进程重建只恢复清理事实，不导入备份授权、不恢复旧观察或重放未确认动作；Low保持显式不支持。
+7. 识屏模式互斥且只约束助手：模式不匹配的助手屏幕请求一律拒绝且不回退；操作者面板不读写模式；虚拟屏待清理时不得离开virtual。
+8. 前台预览形态（提示条 / 完整预览 / 关闭）只是UI与偏好：提示条只显示Manager的只读目标与代次状态，不签发帧或节点凭据、不转发触摸；收起意图持久化，但不改变任何观察、输入或授权门。
 
 ## 回归用例
 
@@ -121,6 +134,6 @@ Standard且API30+才支持虚拟屏；Low即使运行在现代系统也明确拒
 | 预览与手势互斥、旧手势不能释放新手势 | [PreviewInputGateTest](../../app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewInputGateTest.java) |
 | pause/换窗口/连接epoch、截断文本与一次提交 | [NativeControlsTest](../../app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenNativeControlsTest.java)、[ActivityNodeControlsTest](../../app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenActivityNodeControlsTest.java) |
 | 原通道不可用、迟到EXITED、journal失败仍保留pending | [CloseReconcileTest](../../app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenCloseReconcileTest.java)、[PersistentCleanupTest](../../app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenPersistentCleanupTest.java) |
-| Low/API23不解析API30执行能力或打开journal | [LowBoundaryTest](../../app/src/test/java/com/deepseekharness/app/vscreen/VirtualScreenLowBoundaryTest.java) |
+| 旧 low/API23 边界 | 已随 low 源集在 build209 删除；当前唯一变体为 Standard（API 30+） |
 
 设备显示/输入、OEM兼容、真实背景/恢复和长时场景仍需各自明确授权与对应正式包证据；本文不以宿主回归数量宣称这些范围完成。

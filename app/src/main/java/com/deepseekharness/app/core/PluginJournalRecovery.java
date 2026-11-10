@@ -50,6 +50,7 @@ public final class PluginJournalRecovery {
           fs,
           new UserDataLayout(fs, root.getParentFile().getParentFile().getCanonicalFile())
               .current());
+      PluginRepository.get(controller.context()).invalidateInstalledState();
       return com.deepseekharness.app.util.UiText.text("中断的插件操作已恢复，旧版本、依赖与失败候选均保留。");
     } finally {
       if (fs.stat(proof).kind != FileKind.MISSING) fs.delete(proof);

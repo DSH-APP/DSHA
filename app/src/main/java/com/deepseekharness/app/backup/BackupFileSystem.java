@@ -115,6 +115,14 @@ public interface BackupFileSystem {
     }
   }
 
+  /**
+   * 读取由写方原子替换的当前快照。只要求已打开描述符内的字节一致；写方用 rename 正常换代导致
+   * 路径 inode 变化不算读取失败。需要路径全程稳定的备份/事务仍使用 small/read。
+   */
+  default byte[] currentSnapshot(File file, int limit) throws IOException {
+    return small(file, limit);
+  }
+
   default void atomic(File directory, String name, byte[] bytes) throws IOException {
     BackupLimits.path(name);
     if (name.contains("/") || bytes == null) throw new IOException("RECORD_NAME");

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 严重警告图标 18dp（包装 @drawable/ic_onb_alert，颜色由 drawableTint 决定）。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="18dp" android:height="18dp" android:drawable="@drawable/ic_onb_alert" />
+</layer-list>

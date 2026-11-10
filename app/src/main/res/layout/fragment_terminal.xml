@@ -1,19 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/surface" android:orientation="vertical" android:paddingStart="@dimen/page_pad" android:paddingEnd="@dimen/page_pad" android:paddingTop="6dp" android:paddingBottom="@dimen/gap_control">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingBottom="@dimen/gap_control">
-        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:background="@drawable/bg_chip" android:fontFamily="monospace" android:paddingStart="@dimen/gap_control" android:paddingTop="7dp" android:paddingEnd="@dimen/gap_control" android:paddingBottom="7dp" android:text="@string/ui_m0178" android:ellipsize="end" android:maxLines="1" android:textColor="@color/text_secondary" android:textSize="@dimen/text_caption" android:gravity="center" android:includeFontPadding="false" />
-        <TextView android:id="@+id/term_ctrlc" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_m0050" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" style="@style/Widget.DSHA.ToolbarAction" />
-        <TextView android:id="@+id/term_clear" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:text="@string/ui_m0164" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" style="@style/Widget.DSHA.ToolbarAction" />
-        <TextView android:id="@+id/term_pty" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:text="@string/ui_terminal_pty" android:textColor="@color/text_muted" android:textSize="@dimen/text_caption" style="@style/Widget.DSHA.ToolbarAction" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/terminal_surface" android:orientation="vertical">
+    <TextView android:id="@+id/term_status" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:padding="6dp"
+        android:textColor="@color/terminal_foreground" android:textSize="13sp"
+        android:visibility="gone" android:textIsSelectable="true" />
+    <!-- 目录、模式与新建在宿主中；保留旧ID供迁移夹具定位。 -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:visibility="gone"
+        android:importantForAccessibility="noHideDescendants">
+        <TextView android:id="@+id/term_pty" android:layout_width="wrap_content"
+            android:layout_height="48dp" android:text="@string/ui_terminal_pty" />
+        <include layout="@layout/view_terminal_tabs" />
     </LinearLayout>
-    <include layout="@layout/view_terminal_tabs" />
-    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:background="@drawable/bg_preview" android:orientation="vertical">
-        <ScrollView android:id="@+id/term_scroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true">
-            <TextView android:id="@+id/term_output" android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="monospace" android:padding="@dimen/card_pad" android:textColor="@color/text_secondary" android:textIsSelectable="true" android:textSize="@dimen/text_caption" />
-        </ScrollView>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@color/card" android:gravity="center_vertical" android:orientation="horizontal" android:padding="@dimen/gap_tight">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="monospace" android:text="@string/ui_terminal_prompt" android:textColor="@color/ok" android:textSize="@dimen/text_caption" />
-            <EditText android:id="@+id/term_input" android:minHeight="48dp" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:background="@android:color/transparent" android:fontFamily="monospace" android:hint="@string/ui_m0024" android:imeOptions="actionSend" android:inputType="text" android:maxLines="1" android:textColor="@color/text" android:textColorHint="@color/text_muted" android:textSize="@dimen/text_label" />
+    <ScrollView android:id="@+id/term_scroll" android:layout_width="match_parent"
+        android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true">
+        <TextView android:id="@+id/term_output" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:fontFamily="monospace" android:padding="2dp"
+            android:textColor="@color/terminal_foreground" android:textIsSelectable="true"
+            android:layoutDirection="ltr" android:textDirection="ltr" android:textSize="13sp" />
+    </ScrollView>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical" android:orientation="horizontal" android:paddingHorizontal="2dp"
+        android:layoutDirection="ltr">
+        <TextView android:layout_width="wrap_content" android:layout_height="48dp"
+            android:gravity="center" android:fontFamily="monospace" android:text="@string/ui_terminal_prompt"
+            android:textColor="@color/terminal_foreground" android:textSize="13sp" />
+        <view class="com.deepseekharness.app.ui.TerminalFragment$CommandInput"
+            android:id="@+id/term_input" android:minHeight="48dp" android:layout_width="0dp"
+            android:layout_height="wrap_content" android:layout_weight="1"
+            android:background="@android:color/transparent" android:fontFamily="monospace"
+            android:hint="@string/ui_m0024" android:imeOptions="actionSend|flagNoExtractUi"
+            android:inputType="textMultiLine|textNoSuggestions" android:maxLines="3"
+            android:textColor="@color/terminal_foreground" android:textColorHint="@color/terminal_foreground"
+            android:textDirection="ltr" android:textSize="13sp" />
+        <TextView android:id="@+id/term_send" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:minWidth="48dp" android:minHeight="48dp"
+            android:gravity="center" android:paddingHorizontal="12dp" android:paddingVertical="8dp"
+            android:textColor="@color/terminal_foreground" android:textSize="13sp"
+            android:focusable="true" android:background="?android:attr/selectableItemBackground" />
+    </LinearLayout>
+    <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:fillViewport="true" android:scrollbars="none">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="center_vertical">
+            <TextView android:id="@+id/term_ctrlc" android:layout_width="0dp" android:layout_weight="1"
+                android:layout_height="wrap_content" android:minHeight="48dp" android:minWidth="144dp"
+                android:gravity="center" android:paddingHorizontal="12dp" android:paddingVertical="8dp"
+                android:text="@string/ui_m0050" android:textColor="@color/terminal_foreground"
+                android:textSize="13sp" android:background="?android:attr/selectableItemBackground" />
+            <TextView android:id="@+id/term_clear" android:layout_width="0dp" android:layout_weight="1"
+                android:layout_height="wrap_content" android:minHeight="48dp" android:minWidth="96dp"
+                android:gravity="center" android:paddingHorizontal="12dp" android:paddingVertical="8dp"
+                android:text="@string/ui_m0164" android:textColor="@color/terminal_foreground"
+                android:textSize="13sp" android:background="?android:attr/selectableItemBackground" />
         </LinearLayout>
-    </LinearLayout>
+    </HorizontalScrollView>
 </LinearLayout>

@@ -2,9 +2,9 @@
 <resources>
     <string name="ui2_stopped">DSH is not running</string>
     <string name="ui2_launch_hint">Ready for your next task.</string>
-    <string name="ui2_start">▶  Start DSHA</string>
-    <string name="ui2_restart">↻  Restart</string>
-    <string name="ui2_stop">□  Stop</string>
+    <string name="ui2_start">Start DSHA</string>
+    <string name="ui2_restart">Restart</string>
+    <string name="ui2_stop">Stop</string>
     <string name="ui2_port">Active Web port</string>
     <string name="ui2_environment">Runtime environment</string>
     <string name="ui2_address">Access addresses</string>

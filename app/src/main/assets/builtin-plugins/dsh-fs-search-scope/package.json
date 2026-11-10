@@ -1,0 +1,18 @@
+{
+  "name": "dsh-fs-search-scope",
+  "description": "DSHA builtin fix plugin: the glob tool skips nested git worktrees (.agents/worktrees and linked worktrees inside the search root) unless path points into one. Reuses upstream dsh-tool-fs-search for parsing, ripgrep and results, and keeps DSHA required policy checks. Temporary until upstream glob prunes nested worktrees",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT"
+}

@@ -182,13 +182,17 @@ public final class WorkspaceFilesActivity extends AppCompatActivity {
     body.setBackgroundColor(getColor(R.color.surface));
     body.setPadding(dp(12), dp(6), dp(12), dp(12));
     setContentView(body);
+    PressFeedback.attachButtons(findViewById(android.R.id.content));
     UiNavigation.addHeader(this, body, UiText.choose("作品文件导出", "Export work files"), this::finish);
-    TextView note =
-        text(
-            UiText.choose(
-                "选择工作目录里的作品文件，保存到手机或分享给其他应用。无需 Root；这是普通文件导出，完整数据备份另有入口。",
-                "Choose a file from your workspace to save on the device or share with another app. No root is needed. Full data backups have a separate entry."),
-            13);
+    // 页首只留一句摘要，完整说明点开 ⓘ（审计 D-06）。
+    TextView note = text(UiText.text("导出工作区文件"), 13);
+    InfoHint.bind(
+        note,
+        UiText.choose("作品文件导出", "Export work files"),
+        UiText.text("导出工作区文件"),
+        UiText.choose(
+            "选择工作目录里的作品文件，保存到手机或分享给其他应用。无需 Root；这是普通文件导出，完整数据备份另有入口。",
+            "Choose a file from your workspace to save on the device or share with another app. No root is needed. Full data backups have a separate entry."));
     body.addView(note);
     LinearLayout navigation = new LinearLayout(this);
     workspace = button(UiText.choose("工作目录", "Workspace"), () -> load(workspaceId, 0, true));
@@ -393,7 +397,7 @@ public final class WorkspaceFilesActivity extends AppCompatActivity {
             .setType(source.mime)
             .putExtra(Intent.EXTRA_TITLE, source.name);
     try {
-      savePicker.launch(picker);
+      RecentsPrivacyGuard.launch(savePicker, picker);
       render();
     } catch (RuntimeException unavailable) {
       model.pending = null;
@@ -486,7 +490,7 @@ public final class WorkspaceFilesActivity extends AppCompatActivity {
         message = UiText.format("已保存文件：%s", notice.detail);
         break;
       case CANCELLED:
-        message = UiText.choose("已取消文件操作。", "File operation cancelled.");
+        message = UiText.choose("文件操作已取消。", "File operation cancelled.");
         break;
       case ERROR:
         message = UiText.format("文件操作未完成：%s\n可刷新目录，或返回上一级查找作品文件。", errorText(notice.detail));

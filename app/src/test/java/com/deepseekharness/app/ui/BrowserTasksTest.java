@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.os.Bundle;
+import com.deepseekharness.app.core.ConfigStore;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +60,21 @@ public final class BrowserTasksTest {
     }
   }
 
+  private static final class ExplodingContext extends ContextWrapper {
+    ExplodingContext() {
+      super(RuntimeEnvironment.getApplication());
+    }
+
+    @Override
+    public Object getSystemService(String name) {
+      if (Context.ACTIVITY_SERVICE.equals(name))
+        throw new IllegalStateException("activity service unavailable");
+      return super.getSystemService(name);
+    }
+  }
+
   public static final class Host extends Activity {
+    final List<Intent> starts = new ArrayList<>();
     int id = 7;
     boolean root = true;
     boolean finished, removed;
@@ -92,6 +107,11 @@ public final class BrowserTasksTest {
     @Override
     public Object getSystemService(String name) {
       return RuntimeEnvironment.getApplication().getSystemService(name);
+    }
+
+    @Override
+    public void startActivity(Intent intent) {
+      starts.add(intent);
     }
   }
 
@@ -178,6 +198,7 @@ public final class BrowserTasksTest {
   @Before
   public void isolateTaskRegistry() throws Exception {
     context = new RecordingContext();
+    new ConfigStore(context).setHideFromRecents(false);
     manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
     Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of());
     var nativeMain = BrowserTasks.class.getDeclaredField("nativeMain");
@@ -222,13 +243,13 @@ public final class BrowserTasksTest {
   }
 
   @Test
-  public void legacyBrowserRootWithNativePagesCreatesIndependentNativeShell() {
+  public void missingNativeRootFallsBackToAffinityWithoutForcingAnotherTask() {
     var mixed = task(7, WebPreviewActivity.class, 4);
     Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(mixed));
     BrowserTasks.openMain(context);
     Intent intent = opened();
     assertTrue((intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0);
-    assertTrue((intent.getFlags() & Intent.FLAG_ACTIVITY_MULTIPLE_TASK) != 0);
+    assertEquals(0, intent.getFlags() & Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
     assertFalse(Shadow.<ShadowAppTask>extract(mixed).isFinishedAndRemoved());
   }
 
@@ -242,7 +263,8 @@ public final class BrowserTasksTest {
     assertFalse(browser.finished);
     assertEquals(1, browser.cancelled);
     assertEquals(MainActivity.class.getName(), browser.starts.get(0).getComponent().getClassName());
-    assertTrue((browser.starts.get(0).getFlags() & Intent.FLAG_ACTIVITY_MULTIPLE_TASK) != 0);
+    assertEquals(0, browser.starts.get(0).getFlags() & Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+    assertEquals(0, browser.starts.get(0).getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK);
     assertFalse(Shadow.<ShadowActivity>extract(browser).isTaskMovedToBack());
     browser.hideConversation();
     assertFalse(browser.finished);
@@ -276,7 +298,92 @@ public final class BrowserTasksTest {
     Shadow.<ShadowActivityManager>extract(manager)
         .setAppTasks(List.of(task(-1, MainActivity.class, 0)));
     BrowserTasks.openMain(context);
-    assertTrue((opened().getFlags() & Intent.FLAG_ACTIVITY_MULTIPLE_TASK) != 0);
+    assertEquals(0, opened().getFlags() & Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+  }
+
+  @Test
+  public void repeatedHomeFromALegacySharedTaskKeepsReorderingTheSameMain() {
+    var mixed = task(7, MainActivity.class, 4);
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(mixed));
+    var browser = new Browser();
+    browser.hideConversation();
+    browser.hideConversation();
+    assertEquals(2, browser.starts.size());
+    for (Intent intent : browser.starts) {
+      assertEquals(MainActivity.class.getName(), intent.getComponent().getClassName());
+      assertEquals(
+          Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP,
+          intent.getFlags());
+    }
+    assertFalse(browser.finished);
+    assertFalse(Shadow.<ShadowAppTask>extract(mixed).isFinishedAndRemoved());
+  }
+
+  @Test
+  public void oneMainCardHidesDuplicateNativeAndBrowserTasksWithoutFinishingTheirPages() {
+    var oldMain = task(3, MainActivity.class, 4);
+    var currentMain = task(8, MainActivity.class, 1);
+    var browser = task(7, WebPreviewActivity.class, 1);
+    var otherPage = task(9, DiagnosticActivity.class, 1);
+    Shadow.<ShadowActivityManager>extract(manager)
+        .setAppTasks(List.of(oldMain, currentMain, browser, otherPage));
+    BrowserTasks.reconcileRecents(context, 8);
+    assertTrue(Shadow.<ShadowAppTask>extract(oldMain).isExcludedFromRecents());
+    assertFalse(Shadow.<ShadowAppTask>extract(currentMain).isExcludedFromRecents());
+    assertTrue(Shadow.<ShadowAppTask>extract(browser).isExcludedFromRecents());
+    assertFalse(Shadow.<ShadowAppTask>extract(otherPage).isExcludedFromRecents());
+    for (var task : List.of(oldMain, currentMain, browser, otherPage))
+      assertFalse(Shadow.<ShadowAppTask>extract(task).isFinishedAndRemoved());
+  }
+
+  @Test
+  public void mainBackOpensDesktopAndBackgroundsTheTaskWithoutCreatingAnotherMain() {
+    var host = new Host();
+    var main = task(7, MainActivity.class, 4);
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(main));
+    BrowserTasks.exitMain(host);
+    assertTrue(Shadow.<ShadowActivity>extract(host).isTaskMovedToBack());
+    assertFalse(host.finished);
+    assertFalse(Shadow.<ShadowAppTask>extract(main).isFinishedAndRemoved());
+    assertEquals(1, host.starts.size());
+    assertEquals(Intent.ACTION_MAIN, host.starts.get(0).getAction());
+    assertTrue(host.starts.get(0).hasCategory(Intent.CATEGORY_HOME));
+    assertNull(host.starts.get(0).getComponent());
+    assertTrue(context.starts.isEmpty());
+  }
+
+  @Test
+  public void notificationHomeHasAnExplicitNativeDestinationWithoutClearingTheBrowser() {
+    Intent intent = MainActivity.homeIntent(context);
+    assertTrue(BrowserTasks.nativeDestination(intent));
+    assertTrue((intent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0);
+    assertTrue((intent.getFlags() & Intent.FLAG_ACTIVITY_REORDER_TO_FRONT) != 0);
+    assertEquals(
+        0,
+        intent.getFlags()
+            & (Intent.FLAG_ACTIVITY_CLEAR_TOP
+                | Intent.FLAG_ACTIVITY_CLEAR_TASK
+                | Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                | Intent.FLAG_ACTIVITY_NEW_DOCUMENT));
+    intent.removeExtra(BrowserTasks.NATIVE_HOME);
+    assertFalse(
+        "stale open_launch must not hijack a later browser Home return",
+        BrowserTasks.nativeDestination(intent));
+  }
+
+  @Test
+  public void specificNativeDestinationDoesNotAlsoRequestTheLaunchTab() {
+    Intent intent = MainActivity.navigationIntent(context).putExtra("open_plugins", true);
+    assertTrue(BrowserTasks.nativeDestination(intent));
+    assertTrue(intent.getBooleanExtra("open_plugins", false));
+    assertFalse(intent.getBooleanExtra("open_launch", false));
+    assertEquals(
+        0,
+        intent.getFlags()
+            & (Intent.FLAG_ACTIVITY_CLEAR_TOP
+                | Intent.FLAG_ACTIVITY_CLEAR_TASK
+                | Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                | Intent.FLAG_ACTIVITY_NEW_DOCUMENT));
   }
 
   @Test
@@ -323,5 +430,177 @@ public final class BrowserTasksTest {
     Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of());
     assertTrue(BrowserTasks.finishEmptyHost(unknown));
     assertFalse(unknown.removed);
+  }
+
+  private static void setField(Class<?> type, String name, Object value) throws Exception {
+    var field = type.getDeclaredField(name);
+    field.setAccessible(true);
+    field.set(null, value);
+  }
+
+  /** 以 Web 为根、但存活 Main 已加入的同一任务（通知先开 Web 的单任务布局）。 */
+  private Host liveMainIn(int task) throws Exception {
+    var main = new Host();
+    main.id = task;
+    main.root = false;
+    setField(BrowserTasks.class, "nativeMain", new WeakReference<Activity>(main));
+    return main;
+  }
+
+  @Test
+  public void sharedWebRootedTaskWithLiveMainStaysTheOneVisibleCard() throws Exception {
+    liveMainIn(7);
+    var shared = task(7, WebPreviewActivity.class, 2);
+    var legacyMain = task(3, MainActivity.class, 1);
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(legacyMain, shared));
+    BrowserTasks.reconcileRecents(context, -1);
+    assertFalse(Shadow.<ShadowAppTask>extract(shared).isExcludedFromRecents());
+    assertTrue(Shadow.<ShadowAppTask>extract(legacyMain).isExcludedFromRecents());
+  }
+
+  @Test
+  public void explicitHomeReordersMainInsideTheSharedTaskInsteadOfAnotherWindow() throws Exception {
+    liveMainIn(7);
+    var browser = new Browser();
+    setField(
+        BrowserConversationRoute.class,
+        "browser",
+        new WeakReference<PictureInPictureActivity>(browser));
+    var shared = task(7, WebPreviewActivity.class, 2);
+    var legacyMain = task(9, MainActivity.class, 1);
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(legacyMain, shared));
+    browser.hideConversation();
+    assertEquals(1, browser.starts.size());
+    Intent intent = browser.starts.get(0);
+    assertEquals(MainActivity.class.getName(), intent.getComponent().getClassName());
+    // 经 AppTask 派发进同一任务：不带 NEW_TASK，也不清栈。
+    assertEquals(
+        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP, intent.getFlags());
+    assertFalse(browser.finished);
+  }
+
+  @Test
+  public void duplicateHostForwardsTheRequestIntoTheLiveHostTaskOnce() throws Exception {
+    var live = new Browser();
+    setField(
+        BrowserConversationRoute.class,
+        "browser",
+        new WeakReference<PictureInPictureActivity>(live));
+    Shadow.<ShadowActivityManager>extract(manager)
+        .setAppTasks(List.of(task(7, WebPreviewActivity.class, 1)));
+    var created = new Browser();
+    created.entry =
+        new Intent()
+            .putExtra(BrowserConversationRoute.MODE, "FULL")
+            .putExtra(BrowserConversationRoute.SESSION, "s1")
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    assertTrue(BrowserTasks.forwardToLiveBrowser(created));
+    assertEquals(1, created.starts.size());
+    Intent forward = created.starts.get(0);
+    assertEquals(Browser.class.getName(), forward.getComponent().getClassName());
+    assertEquals("FULL", forward.getStringExtra(BrowserConversationRoute.MODE));
+    assertEquals("s1", forward.getStringExtra(BrowserConversationRoute.SESSION));
+    assertTrue(forward.getBooleanExtra(BrowserTasks.FORWARDED, false));
+    assertEquals(
+        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP,
+        forward.getFlags());
+    // 已转交过的请求不再转交，避免来回弹跳。
+    var bounced = new Browser();
+    bounced.entry = forward;
+    assertFalse(BrowserTasks.forwardToLiveBrowser(bounced));
+    assertTrue(bounced.starts.isEmpty());
+  }
+
+  @Test
+  public void hostWithoutAnotherLiveOwnerOrReachableTaskKeepsTheRequest() throws Exception {
+    var created = new Browser();
+    assertFalse(BrowserTasks.forwardToLiveBrowser(created));
+    setField(
+        BrowserConversationRoute.class,
+        "browser",
+        new WeakReference<PictureInPictureActivity>(created));
+    assertFalse(BrowserTasks.forwardToLiveBrowser(created));
+    var live = new Browser();
+    setField(
+        BrowserConversationRoute.class,
+        "browser",
+        new WeakReference<PictureInPictureActivity>(live));
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of());
+    var orphan = new Browser();
+    assertFalse(BrowserTasks.forwardToLiveBrowser(orphan));
+    assertTrue(orphan.starts.isEmpty());
+  }
+
+  @Test
+  public void hidePreferenceHidesEveryAppTaskEvenTheSelectedMain() {
+    new ConfigStore(context).setHideFromRecents(true);
+    var currentMain = task(8, MainActivity.class, 1);
+    var browser = task(7, WebPreviewActivity.class, 1);
+    var otherPage = task(9, DiagnosticActivity.class, 1);
+    Shadow.<ShadowActivityManager>extract(manager)
+        .setAppTasks(List.of(currentMain, browser, otherPage));
+    assertTrue(BrowserTasks.reconcileRecents(context, 8));
+    for (ActivityManager.AppTask hidden : List.of(currentMain, browser, otherPage))
+      assertTrue(Shadow.<ShadowAppTask>extract(hidden).isExcludedFromRecents());
+  }
+
+  @Test
+  public void applyingTheHidePreferenceImmediatelyHidesAllTasks() {
+    new ConfigStore(context).setHideFromRecents(true);
+    var currentMain = task(8, MainActivity.class, 1);
+    var browser = task(7, WebPreviewActivity.class, 1);
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(currentMain, browser));
+    assertTrue(BrowserTasks.applyRecentsPreference(context));
+    assertTrue(Shadow.<ShadowAppTask>extract(currentMain).isExcludedFromRecents());
+    assertTrue(Shadow.<ShadowAppTask>extract(browser).isExcludedFromRecents());
+  }
+
+  @Test
+  public void disablingThePreferenceRestoresTheSingleMainCard() throws Exception {
+    new ConfigStore(context).setHideFromRecents(false);
+    liveMainIn(8);
+    var oldMain = task(3, MainActivity.class, 4);
+    var currentMain = task(8, MainActivity.class, 1);
+    var browser = task(7, WebPreviewActivity.class, 1);
+    Shadow.<ShadowActivityManager>extract(manager)
+        .setAppTasks(List.of(oldMain, currentMain, browser));
+    assertTrue(BrowserTasks.applyRecentsPreference(context));
+    assertTrue(Shadow.<ShadowAppTask>extract(oldMain).isExcludedFromRecents());
+    assertFalse(Shadow.<ShadowAppTask>extract(currentMain).isExcludedFromRecents());
+    assertTrue(Shadow.<ShadowAppTask>extract(browser).isExcludedFromRecents());
+  }
+
+  @Test
+  public void failedApplyKeepsTheSavedPreferenceAndDoesNotCrash() {
+    new ConfigStore(context).setHideFromRecents(true);
+    assertFalse(BrowserTasks.applyRecentsPreference(new ExplodingContext()));
+    assertTrue(new ConfigStore(context).isHideFromRecents());
+  }
+
+  @Test
+  public void replayingAfterANewPreviewTaskAppearsHidesItWhenEnabled() {
+    new ConfigStore(context).setHideFromRecents(true);
+    var currentMain = task(8, MainActivity.class, 1);
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(currentMain));
+    assertTrue(BrowserTasks.applyRecentsPreference(context));
+    // 预览宿主后建：晚于上一次重放才进入系统任务列表（ColorOS 16 留下独立卡片的现场）。
+    var preview = task(9, WebPreviewActivity.class, 1);
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(currentMain, preview));
+    assertTrue(BrowserTasks.applyRecentsPreference(context));
+    assertTrue(Shadow.<ShadowAppTask>extract(preview).isExcludedFromRecents());
+    assertTrue(Shadow.<ShadowAppTask>extract(currentMain).isExcludedFromRecents());
+  }
+
+  @Test
+  public void replayingOnResumeWithThePreferenceOffKeepsTheLiveMainCardVisible() throws Exception {
+    new ConfigStore(context).setHideFromRecents(false);
+    liveMainIn(8);
+    var currentMain = task(8, MainActivity.class, 1);
+    var preview = task(7, WebPreviewActivity.class, 1);
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(currentMain, preview));
+    assertTrue(BrowserTasks.applyRecentsPreference(context));
+    assertFalse(Shadow.<ShadowAppTask>extract(currentMain).isExcludedFromRecents());
+    // 网页宿主按既有单主卡规则继续隐藏，关闭偏好不会把预览页放回最近任务。
+    assertTrue(Shadow.<ShadowAppTask>extract(preview).isExcludedFromRecents());
   }
 }

@@ -40,7 +40,12 @@ class SourceTextTest(unittest.TestCase):
         write_text(target,raw.decode('utf-8'));self.assertEqual(raw,target.read_bytes())
     def test_real_ui_generator_repairs_preexisting_crlf(self):
         ui=module('prepare-ui-languages.py');source=self.root/'tools/i18n/messages.json';source.parent.mkdir(parents=True)
-        source.write_bytes(json.dumps([dict(zh='完整模板 %s',en='Complete template %s',uiFormat=True)]).encode('utf-8'))
+        source.write_bytes(json.dumps([dict(id='fixture0',zh='完整模板 %s',en='Complete template %s',uiFormat=True)]).encode('utf-8'))
+        from ui_language_catalog import LANGUAGES
+        translations=source.parent/'translations';translations.mkdir()
+        for language in LANGUAGES:
+            if language not in ('zh','en'):
+                (translations/(language+'.json')).write_bytes(json.dumps({'fixture0':language+' template %s'}).encode('utf-8'))
         output=self.root/'output';target=output/'com/deepseekharness/app/util/UiMessages.java'
         with contextlib.redirect_stdout(io.StringIO()):ui.generate(self.root,output)
         expected=target.read_bytes();self.assertNotIn(b'\r',expected);target.write_bytes(expected.replace(b'\n',b'\r\n'))

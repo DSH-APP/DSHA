@@ -6,7 +6,6 @@
 export declare const FILE_SHARE_NS = "dshWebMobileNavFileShare";
 /** Simplified Chinese dictionary (the key-set source of truth). */
 export declare const fileShareZh: {
-    readonly share: "分享";
     readonly shareFile: "分享「{name}」";
     readonly downloadFile: "下载「{name}」";
     readonly sharing: "正在准备文件…";
@@ -28,3 +27,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
     }
 }
 //# sourceMappingURL=file-share-locale.d.ts.map
+// DSHA_MOBILE_LOCALES_V1: generated from tools/mobile-locales.json; do not edit here.
+export declare const fileShareLocales: Record<string, Record<FileShareKey, string>>;
+export declare const nativeFileActionLocales: Record<string, Record<string, string>>;
+export declare function nativeFileCopy(language?: string): Record<string, string>;

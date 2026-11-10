@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 概览胶囊：raised 底 + 细边，可点（跳到对应分组）。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/shell_nav_ripple">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/shell_raised" />
+            <corners android:radius="12dp" />
+            <stroke android:width="1dp" android:color="@color/shell_line" />
+        </shape>
+    </item>
+</ripple>

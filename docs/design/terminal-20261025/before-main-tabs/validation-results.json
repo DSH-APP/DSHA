@@ -1,0 +1,689 @@
+{
+  "startedAt": "2026-10-25T11:11:18.149Z",
+  "scope": "offline HTML prototype only; not Android validation",
+  "checks": [
+    {
+      "name": "内嵌脚本语法",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "禁止网络的 CSP",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "无执行/网络/用户持久化 API",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 主导航四入口",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 默认极简模式",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 极简隐藏工具栏与侧栏",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 极简菜单返回主界面",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 极简重进会话不变",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 全视口覆盖",
+      "passed": true,
+      "detail": "{\"width\":320,\"height\":568,\"scrollWidth\":320,\"terminal\":{\"x\":0,\"y\":0,\"width\":320,\"height\":568},\"layout\":\"drawer\"}"
+    },
+    {
+      "name": "320x568 主壳隐藏",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 自动断点",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 无页面级横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 模拟响应",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 模拟键盘展开",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 键盘展开后提交可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 新建 simple",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 切回原 PTY 输出保留",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320x568 退出再进保留身份",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 主导航四入口",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 默认极简模式",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 极简隐藏工具栏与侧栏",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 极简菜单返回主界面",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 极简重进会话不变",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 全视口覆盖",
+      "passed": true,
+      "detail": "{\"width\":390,\"height\":844,\"scrollWidth\":390,\"terminal\":{\"x\":0,\"y\":0,\"width\":390,\"height\":844},\"layout\":\"drawer\"}"
+    },
+    {
+      "name": "390x844 主壳隐藏",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 自动断点",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 无页面级横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 模拟响应",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 模拟键盘展开",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 键盘展开后提交可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 新建 simple",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 切回原 PTY 输出保留",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390x844 退出再进保留身份",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 主导航四入口",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 默认极简模式",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 极简隐藏工具栏与侧栏",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 极简菜单返回主界面",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 极简重进会话不变",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 全视口覆盖",
+      "passed": true,
+      "detail": "{\"width\":740,\"height\":360,\"scrollWidth\":740,\"terminal\":{\"x\":0,\"y\":0,\"width\":740,\"height\":360},\"layout\":\"drawer\"}"
+    },
+    {
+      "name": "740x360 主壳隐藏",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 自动断点",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 无页面级横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 模拟响应",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 模拟键盘展开",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 键盘展开后提交可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 新建 simple",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 切回原 PTY 输出保留",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740x360 退出再进保留身份",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 主导航四入口",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 默认极简模式",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 极简隐藏工具栏与侧栏",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 极简菜单返回主界面",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 极简重进会话不变",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 全视口覆盖",
+      "passed": true,
+      "detail": "{\"width\":840,\"height\":900,\"scrollWidth\":840,\"terminal\":{\"x\":0,\"y\":0,\"width\":840,\"height\":900},\"layout\":\"sidebar\"}"
+    },
+    {
+      "name": "840x900 主壳隐藏",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 自动断点",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 无页面级横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 模拟响应",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 模拟键盘展开",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 键盘展开后提交可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 新建 simple",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 切回原 PTY 输出保留",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840x900 退出再进保留身份",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 主导航四入口",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 默认极简模式",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 极简隐藏工具栏与侧栏",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 极简菜单返回主界面",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 极简重进会话不变",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 全视口覆盖",
+      "passed": true,
+      "detail": "{\"width\":1024,\"height\":768,\"scrollWidth\":1024,\"terminal\":{\"x\":0,\"y\":0,\"width\":1024,\"height\":768},\"layout\":\"sidebar\"}"
+    },
+    {
+      "name": "1024x768 主壳隐藏",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 自动断点",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 无页面级横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 模拟响应",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 模拟键盘展开",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 键盘展开后提交可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 新建 simple",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 切回原 PTY 输出保留",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024x768 退出再进保留身份",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 主导航四入口",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 默认极简模式",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 极简隐藏工具栏与侧栏",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 极简菜单返回主界面",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 极简重进会话不变",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 全视口覆盖",
+      "passed": true,
+      "detail": "{\"width\":1280,\"height\":800,\"scrollWidth\":1280,\"terminal\":{\"x\":0,\"y\":0,\"width\":1280,\"height\":800},\"layout\":\"sidebar\"}"
+    },
+    {
+      "name": "1280x800 主壳隐藏",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 自动断点",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 无页面级横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 模拟响应",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 模拟键盘展开",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 键盘展开后提交可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 新建 simple",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 切回原 PTY 输出保留",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280x800 退出再进保留身份",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "悬浮球52px圆形触控目标",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "悬浮球仅在终端内",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "拖动后吸附左边并保持全球可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "拖动不误开菜单",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "拖动不注入终端输入",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "拖动结束后的下一次点击仍可开菜单",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "菜单关闭焦点回悬浮球",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "键盘方向键移动不输入终端",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "键盘Enter能开悬浮球菜单",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "模拟键盘展开悬浮球避开附加键和输入行",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "触摸拖动吸附左边且不误开",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "取消触摸不遗留拖动态或误开菜单",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "闲置后降低透明度且仍可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "键盘聚焦恢复清晰",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "横屏缩小仍约束在附加键上方",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "返回主界面悬浮球不跨页面显示",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "同页返回再进保留停靠侧和高度",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "返回原主页面选中项",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "离开终端计数仍继续",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "同会话草稿保留",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "任务仍运行",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "echo 不解析 HTML",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "未知命令拒绝模拟执行",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "PTY/simple 独立身份",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "取消关闭保留目标",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "确认只移除指定目标",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "ID递增而展示号复用",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "字号可调整",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "长行可切换局部横滚",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "抽屉焦点不逃逸",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "关闭抽屉恢复触发器焦点",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "宽度变化不新建/更换会话",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "窄屏两倍根字号对话框操作可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "两倍根字号无页面横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "全部关闭展示空态",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "空态重进不自动新建",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "空态可显式新建且ID不回收",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "重新载入文档重置仅页面内存状态",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "无浏览器脚本异常",
+      "passed": true,
+      "detail": "[]"
+    },
+    {
+      "name": "无外部网络请求",
+      "passed": true,
+      "detail": "[]"
+    }
+  ],
+  "screenshots": [
+    "phone-minimal-preview.png",
+    "phone-preview.png",
+    "phone-keyboard-preview.png",
+    "tablet-minimal-preview.png",
+    "tablet-preview.png",
+    "phone-floating-ball.png",
+    "phone-floating-menu.png",
+    "home-preview.png"
+  ],
+  "pageErrors": [],
+  "externalRequests": [],
+  "browser": "141.0.7390.37",
+  "loadMethod": "page.setContent of exact file text (navigation timed out in this container)",
+  "previewSha256": "3bd093982dc64391e6357b164ebe60c63e8d3b2c5799fc867731c36c76b79a69",
+  "passed": true,
+  "finishedAt": "2026-10-25T11:12:07.442Z",
+  "checkCount": 133
+}

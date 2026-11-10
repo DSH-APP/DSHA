@@ -23,10 +23,6 @@ final class RuntimeNativeFiles {
   }
 
   File find(String name) {
-    if (com.deepseekharness.app.BuildConfig.LOW_ANDROID) {
-      if (name.equals("libproot.so")) name = "libproot_legacy.so";
-      else if (name.equals("libprootloader.so")) name = "libprootloader_legacy.so";
-    }
     File direct = new File(nativeDirectory, name);
     if (direct.isFile()) return direct;
     File parent = nativeDirectory.getParentFile();

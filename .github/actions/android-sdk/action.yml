@@ -1,0 +1,30 @@
+name: DSHA Android SDK
+description: 按 ci/toolchain.lock.json 安装 platform / build-tools（可选 NDK）。
+inputs:
+  ndk:
+    description: Also install the locked NDK
+    required: false
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - name: Install locked Android SDK packages
+      shell: bash
+      env:
+        WITH_NDK: ${{ inputs.ndk }}
+      run: |
+        set -eu
+        platform=$(python3 tools/ci-toolchain.py --field androidPlatform)
+        buildtools=$(python3 tools/ci-toolchain.py --field buildTools)
+        packages=("platforms;$platform" "build-tools;$buildtools")
+        if [ "$WITH_NDK" = true ]; then
+          packages+=("ndk;$(python3 tools/ci-toolchain.py --field ndk)")
+        fi
+        # 托管 runner 不一定把 sdkmanager 放进 PATH；从 SDK 根目录解析。
+        sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+        sdkmanager_bin="$sdk_root/cmdline-tools/latest/bin/sdkmanager"
+        if [ ! -x "$sdkmanager_bin" ]; then
+          sdkmanager_bin=$(find "$sdk_root" -path '*/cmdline-tools/*/bin/sdkmanager' | head -1)
+        fi
+        test -x "$sdkmanager_bin"
+        "$sdkmanager_bin" "${packages[@]}"

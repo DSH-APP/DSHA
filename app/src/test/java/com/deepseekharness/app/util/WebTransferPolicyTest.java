@@ -31,7 +31,7 @@ public class WebTransferPolicyTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> WebTransferPolicy.checkUploadSpace(65536, reserve + 65535));
-    assertEquals(2L * 1024 * 1024 * 1024, WebTransferPolicy.DOWNLOAD_LIMIT);
+    assertEquals(5_000_000_000L, WebTransferPolicy.DOWNLOAD_LIMIT);
   }
 
   @Test
@@ -66,6 +66,22 @@ public class WebTransferPolicyTest {
       } catch (IllegalArgumentException expected) {
       }
     }
+  }
+
+  @Test
+  public void downloadLimitUsesDecimalFiveGigabytesAtExactBoundary() {
+    WebTransferPolicy.checkSize(
+        5_000_000_000L, 5_000_000_000L, WebTransferPolicy.DOWNLOAD_LIMIT, true);
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            WebTransferPolicy.checkSize(
+                5_000_000_001L, -1, WebTransferPolicy.DOWNLOAD_LIMIT, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            WebTransferPolicy.checkSize(
+                0, 5_000_000_001L, WebTransferPolicy.DOWNLOAD_LIMIT, false));
   }
 
   @Test

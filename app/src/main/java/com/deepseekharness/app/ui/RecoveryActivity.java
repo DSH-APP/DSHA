@@ -8,25 +8,31 @@ import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.recovery.*;
-import com.deepseekharness.app.util.UiText;
 import com.deepseekharness.app.util.RecoveryStatusText;
 import com.deepseekharness.app.util.SensitiveData;
-import org.json.*;
+import com.deepseekharness.app.util.UiText;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.json.*;
 
 /** 无正式环境门禁的恢复入口；原生页面负责用户确认，应急网页没有确认能力。 */
 public final class RecoveryActivity extends AppCompatActivity {
   private final Handler main = new Handler(Looper.getMainLooper());
   private final AtomicBoolean reading = new AtomicBoolean();
+  private final List<String> repairLabels = new ArrayList<>(),
+      repairIds = new ArrayList<>(),
+      repairActions = new ArrayList<>();
   private CardPage page;
   private TextView status, operation;
   private EditText temporaryKey;
-  private Button start, open, stop;
-  private LinearLayout proposals;
+  private Button start, open, stop, temporaryKeyToggle, toolsToggle;
+  private LinearLayout temporaryKeyBox, toolsBox, proposals;
+  private RecoveryRepairSheet repairSheet;
   private RecoveryController controller;
   private String lastState = "", lastPlans = "";
   private long lastPoll;
-  private boolean applying, resumed;
+  private boolean applying, resumed, temporaryKeyOpen, toolsOpen;
 
   private static String t(String zh, String en) {
     return UiText.choose(zh, en);
@@ -36,39 +42,45 @@ public final class RecoveryActivity extends AppCompatActivity {
   protected void onCreate(Bundle saved) {
     super.onCreate(saved);
     controller = RecoveryController.get(this);
-    page = new CardPage(this, t("应急 DSH", "Emergency DSH"), "");
+    String title = t("应急 DSH", "Emergency DSH");
+    String summary =
+        t(
+            "维护失败时，从这里启动独立的应急 DSH。",
+            "Start a separate emergency DSH when regular maintenance fails.");
+    String detail =
+        t(
+            "正式环境维护失败时，可在这里启动独立的空白 DSH。它可以读取相关故障文件并向当前模型服务发送内容，提出修复方案；每次正式数据写入都需在此确认。",
+            "Start a separate, empty DSH when the regular environment fails. It can read affected files and send their contents to your model service to propose repairs. Confirm each write to regular data here.");
+    page = new CardPage(this, title, summary);
     setContentView(page.root);
-    LinearLayout intro = page.card();
-    intro.addView(
-        page.text(
-            t(
-                "正式环境维护失败时，可在这里启动独立的空白 DSH。它可以读取相关故障文件并向当前模型服务发送内容，提出修复方案；每次正式数据写入都需在此确认。",
-                "Start a separate, empty DSH when the regular environment fails. It can read affected files and send their contents to your model service to propose repairs. Confirm each write to regular data here."),
-            14,
-            R.color.text_secondary));
+    PressFeedback.attachButtons(findViewById(android.R.id.content));
+    // 首屏只留一行结论；可读取故障文件、外发模型与逐次确认写入的边界收进 ⓘ。
+    InfoHint.bind(page.subtitle, title, summary, detail);
+    repairSheet =
+        new RecoveryRepairSheet(
+            this,
+            new RecoveryRepairSheet.Listener() {
+              public void onChoice(int index) {
+                proposeRepair(index);
+              }
+
+              public void onConfirm(String proposalId) {
+                confirmRepair(proposalId);
+              }
+
+              public void onReject(String proposalId) {
+                rejectRepair(proposalId);
+              }
+            });
+
+    LinearLayout startCard = page.card();
     status = page.text("", 15, R.color.text);
     status.setTextIsSelectable(true);
-    intro.addView(status);
-    LinearLayout actions = page.card();
-    actions.addView(
-        page.text(
-            t(
-                "临时 API Key（可选，仅本次应急会话使用）",
-                "Temporary API key (optional, this emergency session only)"),
-            14,
-            R.color.text));
-    temporaryKey = new EditText(this);
-    temporaryKey.setSingleLine(true);
-    temporaryKey.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-    temporaryKey.setSaveEnabled(false);
-    temporaryKey.setTextSize(15);
-    temporaryKey.setHint(t("留空时尝试已有可读凭据", "Leave blank to try an existing readable key"));
-    actions.addView(temporaryKey, new LinearLayout.LayoutParams(-1, -2));
-    if (Build.VERSION.SDK_INT >= 26)
-      temporaryKey.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO);
+    status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+    startCard.addView(status);
     start =
         page.button(
-            actions,
+            startCard,
             t("启动应急 DSH", "Start emergency DSH"),
             true,
             () -> {
@@ -76,7 +88,7 @@ public final class RecoveryActivity extends AppCompatActivity {
                 String key = temporaryKey.getText().toString();
                 RecoveryService.start(this, key.isEmpty() ? null : key);
                 temporaryKey.setText("");
-                status.setText(t("正在准备应急服务…", "Preparing the emergency service…"));
+                UiMotion.crossFadeText(status, t("正在准备应急服务…", "Preparing the emergency service…"));
               } catch (Exception error) {
                 message(error);
               }
@@ -84,28 +96,69 @@ public final class RecoveryActivity extends AppCompatActivity {
             });
     open =
         page.button(
-            actions,
+            startCard,
             t("进入空白应急 Web", "Open emergency Web"),
             true,
             () -> startActivity(new Intent(this, RecoveryWebActivity.class)));
     stop =
         page.button(
-            actions,
+            startCard,
             t("停止应急 DSH", "Stop emergency DSH"),
             false,
             () -> {
               controller.stop();
               main.post(refresh);
             });
-    actions.addView(
+    temporaryKeyToggle =
+        page.button(
+            startCard,
+            t("临时 API Key（仅本次会话）", "Temporary API key (optional, this emergency session only)"),
+            false,
+            this::toggleTemporaryKey);
+    temporaryKeyBox = page.column();
+    temporaryKeyBox.setVisibility(View.GONE);
+    startCard.addView(temporaryKeyBox, new LinearLayout.LayoutParams(-1, -2));
+    temporaryKey = new EditText(this);
+    temporaryKey.setSingleLine(true);
+    temporaryKey.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+    temporaryKey.setSaveEnabled(false);
+    temporaryKey.setTextSize(15);
+    temporaryKey.setHint(t("留空时尝试已有可读凭据", "Leave blank to try an existing readable key"));
+    temporaryKeyBox.addView(temporaryKey, new LinearLayout.LayoutParams(-1, -2));
+    if (Build.VERSION.SDK_INT >= 26)
+      temporaryKey.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO);
+    TextView keyNote =
         page.text(
             t(
-                "需要更换临时密钥时，请先停止应急 DSH，再填写并重新启动。",
+                "更换密钥前请先停止服务",
                 "To change the temporary key, stop emergency DSH, enter the key, then start it again."),
             14,
-            R.color.text_secondary));
+            R.color.text_secondary);
+    keyNote.setPadding(0, page.dp(8), 0, 0);
+    temporaryKeyBox.addView(keyNote);
+
+    operation = page.text("", 14, R.color.text_secondary);
+    operation.setTextIsSelectable(true);
+    operation.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+    page.content.addView(operation);
+
+    LinearLayout repairCard = page.card();
+    TextView repairTitle = page.text(t("修复提案", "Repair proposals"), 17, R.color.text);
+    repairTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+    repairCard.addView(repairTitle);
+    proposals = page.column();
+    repairCard.addView(proposals);
+    renderPlans(new JSONArray());
     page.button(
-        actions,
+        repairCard, t("查看无需模型的修复选项", "Review repairs without a model"), false, this::repairOptions);
+
+    LinearLayout toolsCard = page.card();
+    toolsToggle = page.button(toolsCard, t("更多", "More"), false, this::toggleTools);
+    toolsBox = page.column();
+    toolsBox.setVisibility(View.GONE);
+    toolsCard.addView(toolsBox, new LinearLayout.LayoutParams(-1, -2));
+    page.button(
+        toolsBox,
         t("查看原生诊断", "View native diagnostics"),
         false,
         () ->
@@ -120,30 +173,39 @@ public final class RecoveryActivity extends AppCompatActivity {
                   String data = broker.diagnostics().toString(2);
                   ui(() -> showText(t("诊断结果", "Diagnostics"), data));
                 }));
-    operation = page.text("", 14, R.color.text_secondary);
-    operation.setTextIsSelectable(true);
-    page.content.addView(operation);
     page.button(
-        actions, t("查看无需模型的修复选项", "Review repairs without a model"), false, this::repairOptions);
-    proposals = page.card();
-    renderPlans(new JSONArray());
-    LinearLayout tools = page.card();
-    page.button(
-        tools,
+        toolsBox,
         t("查看并下载错误日志", "View and export error logs"),
         false,
         () -> startActivity(DiagnosticActivity.downloadLogs(this)));
     page.button(
-        tools,
+        toolsBox,
         t("备份与保留数据", "Backups and retained data"),
         false,
         () -> startActivity(new Intent(this, NativeDataActivity.class)));
     page.button(
-        tools,
+        toolsBox,
         t("返回正式环境恢复页", "Return to regular environment recovery"),
         false,
         () -> startActivity(new Intent(this, ExtractActivity.class).putExtra("review_only", true)));
     page.button(page.footer, t("返回", "Back"), false, this::finish);
+  }
+
+  private void toggleTemporaryKey() {
+    temporaryKeyOpen = !temporaryKeyOpen;
+    temporaryKeyBox.setVisibility(temporaryKeyOpen ? View.VISIBLE : View.GONE);
+    temporaryKeyToggle.setText(
+        temporaryKeyOpen
+            ? t("收起", "Collapse")
+            : t("临时 API Key（仅本次会话）", "Temporary API key (optional, this emergency session only)"));
+    if (temporaryKeyOpen) UiMotion.reveal(temporaryKeyBox);
+  }
+
+  private void toggleTools() {
+    toolsOpen = !toolsOpen;
+    toolsBox.setVisibility(toolsOpen ? View.VISIBLE : View.GONE);
+    toolsToggle.setText(toolsOpen ? t("收起", "Collapse") : t("更多", "More"));
+    if (toolsOpen) UiMotion.reveal(toolsBox);
   }
 
   private void ui(Runnable work) {
@@ -155,12 +217,14 @@ public final class RecoveryActivity extends AppCompatActivity {
 
   private void message(Throwable error) {
     ui(
-        () ->
-            operation.setText(
-                SensitiveData.redact(
-                    error.getMessage() == null
-                        ? error.getClass().getSimpleName()
-                        : error.getMessage())));
+        () -> {
+          String text =
+              SensitiveData.redact(
+                  error.getMessage() == null
+                      ? error.getClass().getSimpleName()
+                      : error.getMessage());
+          UiMotion.crossFadeText(operation, text);
+        });
   }
 
   private interface Work {
@@ -193,19 +257,21 @@ public final class RecoveryActivity extends AppCompatActivity {
         .show();
   }
 
+  /** 打开修复选择层；选择与预览共用一个对话框，返回只退一层。 */
   private void repairOptions() {
     RecoveryRepairBroker broker = controller.broker();
     if (broker == null) {
-      operation.setText(
+      UiMotion.crossFadeText(
+          operation,
           t("请先启动应急服务；无需配置模型。", "Start the emergency service first. A model is not required."));
       return;
     }
     background(
         () -> {
+          List<String> labels = new ArrayList<>(),
+              ids = new ArrayList<>(),
+              actions = new ArrayList<>();
           JSONArray targets = broker.targets();
-          java.util.ArrayList<String> labels = new java.util.ArrayList<>(),
-              ids = new java.util.ArrayList<>(),
-              actions = new java.util.ArrayList<>();
           for (int i = 0; i < targets.length(); i++) {
             JSONObject target = targets.getJSONObject(i);
             JSONArray choices = target.optJSONArray("actions");
@@ -216,6 +282,8 @@ public final class RecoveryActivity extends AppCompatActivity {
               String label =
                   switch (action) {
                     case "recover-maintenance" -> t("恢复中断维护", "Recover interrupted maintenance");
+                    case "isolate-plugin-journals" ->
+                        t("隔离无法读取的插件日志", "Isolate unreadable plugin journals");
                     case "repair-runtime" -> t("修复受管运行时", "Repair managed runtime");
                     case "repair-cli-dependencies" ->
                         t("修复 CLI/Node 依赖", "Repair CLI/Node dependencies");
@@ -233,129 +301,156 @@ public final class RecoveryActivity extends AppCompatActivity {
             }
           }
           ui(
-              () ->
-                  new DshaDialogBuilder(this)
-                      .setTitle(t("选择要预览的修复", "Choose a repair to preview"))
-                      .setItems(
-                          labels.toArray(new String[0]),
-                          (dialog, index) ->
-                              background(
-                                  () -> {
-                                    JSONObject source = broker.read(ids.get(index));
-                                    JSONObject request =
-                                        new JSONObject()
-                                            .put("action", actions.get(index))
-                                            .put("targetId", ids.get(index))
-                                            .put("sourceSha256", source.getString("sourceSha256"))
-                                            .put(
-                                                "dataGeneration",
-                                                source.getString("dataGeneration"));
-                                    JSONObject proposal = broker.propose(request);
-                                    ui(
-                                        () -> {
-                                          lastPlans = "";
-                                          preview(proposal.optString("id"));
-                                        });
-                                  }))
-                      .setNegativeButton(t("返回", "Back"), null)
-                      .show());
+              () -> {
+                if (broker != controller.broker()) return;
+                repairLabels.clear();
+                repairLabels.addAll(labels);
+                repairIds.clear();
+                repairIds.addAll(ids);
+                repairActions.clear();
+                repairActions.addAll(actions);
+                if (labels.isEmpty()) {
+                  UiMotion.crossFadeText(operation, t("没有可预览的修复。", "No repairs to preview."));
+                  return;
+                }
+                repairSheet.showChoices(labels.toArray(new String[0]));
+              });
         });
   }
 
-  private void preview(String id) {
+  /** 选择一层修复：生成候选后在同一个人对话框里切到预览，不再叠第二层。 */
+  private void proposeRepair(int index) {
     RecoveryRepairBroker broker = controller.broker();
-    if (broker == null) return;
+    if (broker == null || index < 0 || index >= repairIds.size()) {
+      UiMotion.crossFadeText(
+          operation,
+          t("请先启动应急服务；无需配置模型。", "Start the emergency service first. A model is not required."));
+      if (repairSheet.isShowing()) repairSheet.showChoices(repairLabels.toArray(new String[0]));
+      return;
+    }
+    String targetId = repairIds.get(index), action = repairActions.get(index);
     background(
         () -> {
-          JSONObject proposal = broker.preview(id);
-          ui(
-              () -> {
-                ScrollView scroll = new ScrollView(this);
-                LinearLayout content = page.column();
-                content.setPadding(page.dp(18), page.dp(12), page.dp(18), page.dp(12));
-                scroll.addView(content);
-                for (String[] row :
-                    new String[][] {
-                      {t("操作", "Operation"), proposal.optString("description")},
-                      {t("目标", "Target"), proposal.optString("targetId")},
-                      {t("原件 SHA-256", "Original SHA-256"), proposal.optString("sourceSha256")},
-                      {t("修改前", "Before"), proposal.optString("before")},
-                      {t("候选修改后", "Proposed after"), proposal.optString("after")}
-                    }) {
-                  TextView heading = page.text(row[0], 15, R.color.text);
-                  heading.setTypeface(null, android.graphics.Typeface.BOLD);
-                  content.addView(heading);
-                  TextView value = page.text(row[1], 14, R.color.text_secondary);
-                  value.setTextIsSelectable(true);
-                  value.setPadding(0, page.dp(6), 0, page.dp(16));
-                  content.addView(value);
-                }
-                var dialog =
-                    new DshaDialogBuilder(this)
-                        .setTitle(t("确认这一次修复", "Confirm this repair"))
-                        .setView(scroll)
-                        .setNegativeButton(t("返回", "Back"), null)
-                        .create();
-                if (proposal.optBoolean("writeBlocked"))
-                  content.addView(
-                      page.text(proposal.optString("writeBlockedReason"), 14, R.color.err));
-                if ("PENDING".equals(proposal.optString("status"))
-                    && !proposal.optBoolean("writeBlocked")) {
-                  // 决议按钮放进同一个滚动内容，避免短屏/大字体下三行对话框按钮挤出屏幕。
-                  page.button(
-                      content,
-                      t("保存原件并执行", "Save original and apply"),
-                      true,
-                      () -> {
-                        dialog.dismiss();
-                        applying = true;
-                        operation.setText(
-                            t(
-                                "正在核验停止屏障、源摘要并执行修复…",
-                                "Verifying stopped processes and source hashes, then applying the repair…"));
-                        background(
-                            () -> {
-                              try {
-                                JSONObject result = broker.confirm(id);
-                                ui(() -> operation.setText(result.optString("message")));
-                              } finally {
-                                ui(
-                                    () -> {
-                                      applying = false;
-                                      lastPlans = "";
-                                      main.post(refresh);
-                                    });
-                              }
-                            });
-                      });
-                  page.button(
-                      content,
-                      t("拒绝提案", "Reject"),
-                      false,
-                      () -> {
-                        dialog.dismiss();
-                        background(
-                            () -> {
-                              broker.reject(id);
-                              ui(() -> lastPlans = "");
-                            });
-                      });
-                }
-                dialog.show();
-              });
+          try {
+            JSONObject source = broker.read(targetId);
+            JSONObject request =
+                new JSONObject()
+                    .put("action", action)
+                    .put("targetId", targetId)
+                    .put("sourceSha256", source.getString("sourceSha256"))
+                    .put("dataGeneration", source.getString("dataGeneration"));
+            JSONObject proposal = broker.propose(request);
+            String id = proposal.optString("id");
+            JSONObject preview = broker.preview(id);
+            List<String[]> rows = previewRows(preview);
+            String blocked = blockedReason(preview);
+            boolean pending = proposalPending(preview);
+            ui(
+                () -> {
+                  if (broker != controller.broker()) return;
+                  lastPlans = "";
+                  if (repairSheet.isShowing())
+                    repairSheet.showPreview(id, rows, blocked, pending, true);
+                  main.post(refresh);
+                });
+          } catch (Exception error) {
+            message(error);
+            // 用户可能在等待期间关掉对话框；只有它还在显示时才重置选择层。
+            ui(
+                () -> {
+                  if (repairSheet.isShowing())
+                    repairSheet.showChoices(repairLabels.toArray(new String[0]));
+                });
+            main.post(refresh);
+          }
+        });
+  }
+
+  /** 从「修复提案」列表直接打开预览；返回关闭这一层，不回到选择层。 */
+  private void previewPlan(String id) {
+    RecoveryRepairBroker broker = controller.broker();
+    if (broker == null || id.isEmpty()) return;
+    background(
+        () -> {
+          try {
+            JSONObject preview = broker.preview(id);
+            List<String[]> rows = previewRows(preview);
+            String blocked = blockedReason(preview);
+            boolean pending = proposalPending(preview);
+            ui(
+                () -> {
+                  if (broker == controller.broker())
+                    repairSheet.showPreview(id, rows, blocked, pending, false);
+                });
+          } catch (Exception error) {
+            message(error);
+          }
+        });
+  }
+
+  private static List<String[]> previewRows(JSONObject proposal) {
+    List<String[]> rows = new ArrayList<>();
+    rows.add(new String[] {t("操作", "Operation"), proposal.optString("description")});
+    rows.add(new String[] {t("目标", "Target"), proposal.optString("targetId")});
+    rows.add(
+        new String[] {t("原件 SHA-256", "Original SHA-256"), proposal.optString("sourceSha256")});
+    rows.add(new String[] {t("修改前", "Before"), proposal.optString("before")});
+    rows.add(new String[] {t("候选修改后", "Proposed after"), proposal.optString("after")});
+    return rows;
+  }
+
+  private static boolean proposalPending(JSONObject proposal) {
+    return "PENDING".equals(proposal.optString("status"))
+        && !proposal.optBoolean("writeBlocked")
+        && !proposal.optString("id").isEmpty();
+  }
+
+  private static String blockedReason(JSONObject proposal) {
+    return proposal.optBoolean("writeBlocked") ? proposal.optString("writeBlockedReason") : "";
+  }
+
+  private void confirmRepair(String id) {
+    RecoveryRepairBroker broker = controller.broker();
+    if (broker == null || id.isEmpty()) return;
+    applying = true;
+    UiMotion.crossFadeText(
+        operation,
+        t(
+            "正在核验停止屏障、源摘要并执行修复…",
+            "Verifying stopped processes and source hashes, then applying the repair…"));
+    background(
+        () -> {
+          try {
+            JSONObject result = broker.confirm(id);
+            ui(() -> UiMotion.crossFadeText(operation, result.optString("message")));
+          } finally {
+            ui(
+                () -> {
+                  applying = false;
+                  lastPlans = "";
+                  main.post(refresh);
+                });
+          }
+        });
+  }
+
+  private void rejectRepair(String id) {
+    RecoveryRepairBroker broker = controller.broker();
+    if (broker == null || id.isEmpty()) return;
+    background(
+        () -> {
+          broker.reject(id);
+          ui(() -> lastPlans = "");
         });
   }
 
   private void renderPlans(JSONArray rows) {
     proposals.removeAllViews();
-    TextView title = page.text(t("修复提案", "Repair proposals"), 17, R.color.text);
-    title.setTypeface(null, android.graphics.Typeface.BOLD);
-    proposals.addView(title);
     if (rows.length() == 0) {
       proposals.addView(
           page.text(
               t(
-                  "应急 DSH 提出方案后在此查看和确认。尚未确认的提案不会修改正式数据。",
+                  "提案在此确认；未确认不修改数据",
                   "Review and confirm proposals here after emergency DSH creates them. Unconfirmed proposals do not change regular data."),
               14,
               R.color.text_secondary));
@@ -374,7 +469,7 @@ public final class RecoveryActivity extends AppCompatActivity {
                   + "\n"
                   + statusLabel(row.optString("status")),
               false,
-              () -> preview(id));
+              () -> previewPlan(id));
       button.setEnabled(!applying);
       String reason = row.optString("reason");
       if (!reason.isEmpty()) proposals.addView(page.text(reason, 14, R.color.text_secondary));
@@ -413,7 +508,8 @@ public final class RecoveryActivity extends AppCompatActivity {
                   + UiText.language();
           if (!key.equals(lastState)) {
             lastState = key;
-            status.setText(
+            UiMotion.crossFadeText(
+                status,
                 UiText.format(
                     "%s%s",
                     RecoveryStatusText.render(state.state, state.detail),

@@ -86,7 +86,8 @@ def apply_recipe(data, recipe):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-root', type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument('--historical', type=Path, help='exact old VIEW_V1 fixture (SHA pinned)')
+    parser.add_argument('--historical', type=Path, help='exact old VIEW_V1 recipe fixture (SHA pinned)')
+    parser.add_argument('--historical-module', type=Path, help='exact SHA-pinned rc2 source; defaults to preserved official fixture')
     parser.add_argument('--jdk', type=Path)
     parser.add_argument('--anchor-negative', action='store_true', help='restore only the faulty short VIEW_V2 anchor; must fail')
     args = parser.parse_args()
@@ -99,13 +100,19 @@ def main():
     old = json.loads(historical_bytes)
     current_bytes = (assets / 'agent-preset-pending-patch.json').read_bytes()
     current = json.loads(current_bytes)
-    selected = json.loads((root / 'app/build/test-runtimes/current.json').read_text(encoding='utf-8'))
-    canonical = (Path(selected['raw']) / 'node_modules' / current['module']).read_bytes()
+    selected = os.environ.get('DSHA_TEST_RUNTIME')
+    if selected is None:
+        selected = json.loads((root / 'app/build/test-runtimes/current.json').read_text(encoding='utf-8'))['raw']
+    canonical = (Path(selected) / 'node_modules' / current['module']).read_bytes()
+    historical_module = args.historical_module or root / 'tools/fixtures/rc2-upgrade-source/dsh-client-ui-agent-preset.js'
+    historical_canonical = historical_module.read_bytes()
     lock = json.loads((root / 'tools/dsh-runtime/package-lock.json').read_text(encoding='utf-8'))
     package = 'node_modules/' + current['module'].split('/lib/')[0]
     assert old['module'] == current['module']
-    assert old['sourceSha256'] == current['sourceSha256'] == sha(canonical)
-    assert old['packageIntegrity'] == current['packageIntegrity'] == lock['packages'][package]['integrity']
+    assert old['dshVersion'] == '0.2.1-rc.2' and current['dshVersion'] == json.loads((root / 'tools/dsh-runtime/package.json').read_text(encoding='utf-8'))['dependencies']['@deepseek-ai/dsh']
+    assert old['sourceSha256'] == sha(historical_canonical), 'unknown historical rc2 canonical bytes'
+    assert current['sourceSha256'] == sha(canonical), 'unknown current runtime canonical bytes'
+    assert current['packageIntegrity'] == lock['packages'][package]['integrity']
     business = lambda recipe: [patch for patch in recipe['patches'] if 'DSHA_PRESET_PENDING_VIEW_' not in patch['after']]
     assert business(old) == business(current), 'layout fix must not change save/read/sync patches'
     views = [patch for patch in current['patches'] if 'DSHA_PRESET_PENDING_VIEW_V2' in patch['after']]
@@ -115,7 +122,7 @@ def main():
     if args.anchor_negative:
         view['before'] = view['before'][:-len(BOUNDARY)]
         view['after'] = view['after'][:-len(BOUNDARY)]
-    previous = apply_recipe(canonical, old)
+    previous = apply_recipe(historical_canonical, old)
     expected = apply_recipe(canonical, current)
     assert previous != expected
     registry = json.loads((assets / 'runtime-patches.json').read_text(encoding='utf-8'))
@@ -166,7 +173,7 @@ def main():
     (output / 'java.log').write_bytes(ran.stdout + ran.stderr)
     result = dict(status='PASS' if ran.returncode == 0 else 'FAIL', negative=args.anchor_negative,
                   historicalRecipeSha256=OLD_SHA256, currentRecipeSha256=sha(current_bytes),
-                  canonicalSha256=sha(canonical), oldV1ModuleSha256=sha(previous), currentV2ModuleSha256=sha(expected),
+                  canonicalSha256=sha(canonical), historicalCanonicalSha256=sha(historical_canonical), oldV1ModuleSha256=sha(previous), currentV2ModuleSha256=sha(expected),
                   productionAlgorithmSha256={name: sha((production / name).read_bytes()) for name in ['ManagedPatchChain.java', 'ExactTextPatch.java']},
                   registrySha256=sha((assets / 'runtime-patches.json').read_bytes()), javaCases=4, archiveCases=3,
                   deviceValidation=False, exitCode=ran.returncode, output=str(output))

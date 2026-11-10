@@ -172,6 +172,37 @@ class TransactionTest(unittest.TestCase):
             self.assertEqual(129,len(list((home/'completed').iterdir())))
             self.assertTrue(all((home/'completed'/entry.name/'plan.json').is_file() for entry in retained))
 
+    def test_journal_name_rules_match_shared_java_fixture(self):
+        fixture = json.loads((ROOT / 'app/src/test/resources/plugins/journal-names.json').read_text(encoding='utf8'))
+        spec = importlib.util.spec_from_file_location('plugin_transactions_names', ASSETS / 'plugin-transactions.py')
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        self.assertGreaterEqual(len(fixture['cases']), 10)
+        for case in fixture['cases']:
+            self.assertEqual(case['kind'], module.journal_name_kind(case['name']), case['name'])
+        self.assertEqual({'HISTORY', 'TRANSACTION', 'LEGACY_PROOF', 'FOREIGN'}, {case['kind'] for case in fixture['cases']})
+
+    def test_legacy_proof_residue_and_foreign_entries_do_not_block_new_work(self):
+        # 复现 PLUGIN_JOURNAL_ID：旧版目录内证明的原子写残留与外来条目原样保留，不阻塞也不重放。
+        with manager(self.root) as module:
+            transaction = module.transactions()
+            home = Path(transaction.directory); (home / 'completed').mkdir(parents=True)
+            names = ['.completed-proof-v1.json', '.completed-proof-v1.json.previous',
+                     '.completed-proof-v1.json.previous-retained-' + str(uuid.uuid4()),
+                     '.completed-proof-v1.json.tmp-' + str(uuid.uuid4()), '.DS_Store']
+            for name in names:
+                (home / name).write_text('retained ' + name, encoding='utf8')
+            foreign = home / str(uuid.uuid4()).upper(); foreign.mkdir()
+            (foreign / 'plan.json').write_text(json.dumps({'format': 2, 'id': foreign.name}), encoding='utf8')
+            self.assertEqual([], transaction.pending())
+            with transaction.workspace() as current:
+                (Path(current) / 'plan.json').write_text(json.dumps({'format': 2, 'id': Path(current).name}), encoding='utf8')
+                transaction.mark(current, 'committed')
+            self.assertTrue((home / 'completed' / Path(current).name).is_dir())
+            self.assertEqual([], transaction.pending())
+            for name in names:
+                self.assertEqual('retained ' + name, (home / name).read_text(encoding='utf8'))
+            self.assertTrue((foreign / 'plan.json').is_file())
+
     def test_delete_crash_boundaries_restore_or_leave_committed_user_changes(self):
         boundaries = ('delete-prepared', 'delete-source-moved', 'delete-link-moved',
                       'delete-marker-moved', 'delete-history-moved',

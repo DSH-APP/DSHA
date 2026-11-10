@@ -1,5 +1,6 @@
 package com.deepseekharness.app.backup;
 
+import com.deepseekharness.app.util.MaintenanceToolPaths;
 import com.deepseekharness.app.util.ManagedRuntimeLayout;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -7,27 +8,6 @@ import java.util.*;
 
 /** 本机环境重建的数据副本：保留原有目录关系，不归档 Ubuntu/Node 系统树。 */
 public final class MaintenanceDataSnapshot {
-  private static final Set<String> SYSTEM =
-      Set.of(
-          "bin",
-          "sbin",
-          "lib",
-          "lib64",
-          "usr",
-          "etc",
-          "var",
-          "tmp",
-          "run",
-          "proc",
-          "dev",
-          "sys",
-          "root",
-          ".l2s",
-          "lost+found",
-          "sdcard",
-          "storage",
-          "system",
-          "apex");
   private static final Set<String> EXTERNAL =
       Set.of("proc", "dev", "sys", "sdcard", "storage", "system", "apex");
   private static final Set<String> HOT =
@@ -77,14 +57,67 @@ public final class MaintenanceDataSnapshot {
   }
 
   private boolean managed(String path) {
-    return ManagedRuntimeLayout.paths().stream()
-        .anyMatch(root -> path.equals(root) || path.startsWith(root + "/"));
+    return MaintenanceToolPaths.managed(path);
+  }
+
+  /** 用户工具目录预检结果；条目上限与文档契约一致（{@link BackupLimits#ENTRIES}）。 */
+  public static final class ToolRootUsage {
+    public final long entries, bytes;
+    public final boolean overflowed;
+
+    ToolRootUsage(long entries, long bytes, boolean overflowed) {
+      this.entries = entries;
+      this.bytes = bytes;
+      this.overflowed = overflowed;
+    }
+  }
+
+  /**
+   * 重建快照的用户工具目录预检：只统计不跟随符号链接，达到条目上限立即停止，保证扫描有界。
+   * 该目录会随重建被复制并恢复（/opt 实测 3.5GB、48,294 条目），因此必须在切换旧树前给出
+   * 可操作错误，而不是让快照在写入过程中以泛化的 ENTRY_LIMIT 失败。
+   */
+  public static ToolRootUsage inspectToolRoots(BackupFileSystem fs, File rootfs, long entryLimit)
+      throws IOException {
+    long entries = 0, bytes = 0;
+    for (String root : MaintenanceToolPaths.USER_TOOL_ROOTS) {
+      File directory = new File(rootfs, root);
+      var state = fs.stat(directory);
+      if (state.type.equals("MISSING")) continue;
+      entries++;
+      bytes += state.size;
+      if (entries > entryLimit) return new ToolRootUsage(entries, bytes, true);
+      if (!state.type.equals("DIRECTORY")) continue;
+      ArrayDeque<File> pending = new ArrayDeque<>();
+      pending.add(directory);
+      boolean overflowed = false;
+      while (!pending.isEmpty() && !overflowed) {
+        File current = pending.removeFirst();
+        for (String name : fs.list(current)) {
+          File child = new File(current, name);
+          var node = fs.stat(child);
+          entries++;
+          bytes += node.size;
+          if (entries > entryLimit) {
+            overflowed = true;
+            break;
+          }
+          if (node.type.equals("DIRECTORY")) pending.add(child);
+        }
+      }
+      if (overflowed) return new ToolRootUsage(entries, bytes, true);
+    }
+    return new ToolRootUsage(entries, bytes, false);
   }
 
   private boolean machine(String relative) {
     String leaf = new File(relative).getName();
     String checkpoints = "root/.dsh/dsha-startup-checkpoints";
     if (relative.equals(checkpoints)) return false;
+    // ADB 配对密钥不进用户备份 / 导出，但本机环境重建只在本机私有目录间迁移：
+    // 保留原有配对，避免重建后被迫重新配对。
+    String adbKeys = "root/.dsh/adbkeys";
+    if (relative.equals(adbKeys) || relative.startsWith(adbKeys + "/")) return false;
     if (relative.startsWith(checkpoints + "/"))
       return !relative
           .substring(checkpoints.length() + 1)
@@ -186,7 +219,7 @@ public final class MaintenanceDataSnapshot {
       }
     for (String name : fs.list(rootfs)) {
       control.check();
-      if (!SYSTEM.contains(name)) add(name, new File(rootfs, name), false, false);
+      if (!MaintenanceToolPaths.system(name)) add(name, new File(rootfs, name), false, false);
     }
     File global = new File(rootfs, "usr/local/lib/node_modules");
     if (fs.stat(global).type.equals("DIRECTORY"))
@@ -234,7 +267,8 @@ public final class MaintenanceDataSnapshot {
           || relative.equals("usr/local/lib")
           || relative.equals("usr/local/lib/node_modules")
           || relative.equals("var/lib")
-          || SYSTEM.contains(relative)) throw new IOException("WORKSPACE_SYSTEM_ROOT");
+          || MaintenanceToolPaths.SYSTEM_ROOTS.contains(relative))
+        throw new IOException("WORKSPACE_SYSTEM_ROOT");
       if (destinations.values().stream()
           .anyMatch(
               value -> {
@@ -268,6 +302,22 @@ public final class MaintenanceDataSnapshot {
 
   public Map<String, Object> capture(String workdir, String appVersion, BackupControl control)
       throws IOException {
+    try {
+      return captureChecked(workdir, appVersion, control);
+    } catch (IOException error) {
+      throw parentLinkAtStage(error, "REBUILD_CAPTURE_PARENT_LINK");
+    }
+  }
+
+  private static IOException parentLinkAtStage(IOException error, String stage) {
+    String code = BackupErrorCode.from(error);
+    if (code.equals("PARENT_LINK") || code.equals("PARENT_LINK_OR_MISSING"))
+      return new IOException(stage, error);
+    return error;
+  }
+
+  private Map<String, Object> captureChecked(
+      String workdir, String appVersion, BackupControl control) throws IOException {
     select(workdir, control);
     // 本机凭据与设备授权原位保留，不受手动导出 API Key 选项影响。
     sources.add(
@@ -320,8 +370,16 @@ public final class MaintenanceDataSnapshot {
     return summary;
   }
 
-  @SuppressWarnings("unchecked")
   public void restore(File newRoot, BackupControl control) throws IOException {
+    try {
+      restoreChecked(newRoot, control);
+    } catch (IOException error) {
+      throw parentLinkAtStage(error, "REBUILD_RESTORE_PARENT_LINK");
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private void restoreChecked(File newRoot, BackupControl control) throws IOException {
     Map<String, Object> map =
         BackupJson.read(fs.small(mapping(), BackupLimits.MANIFEST), BackupLimits.MANIFEST);
     if (BackupJson.number(map, "version") != 1 || !(map.get("roots") instanceof Map))

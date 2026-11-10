@@ -7,9 +7,7 @@ public final class UiText {
   private UiText() {}
 
   /**
-   * 设置渲染语言。只接受<strong>生效语言</strong> zh/en：{@code system} 等偏好值会被
-   * 解析成当前系统语言，避免把"跟随系统"当成第三种语言塞进渲染层（那会让 choose()
-   * 永远走中文分支）。
+   * Render with a canonical supported locale. The saved system preference resolves before use.
    */
   public static void setLanguage(String value) {
     language = UiLanguagePreference.resolve(value, SystemLanguage.tag());
@@ -20,7 +18,18 @@ public final class UiText {
   }
 
   public static String choose(String chinese, String english) {
-    return "en".equals(language) ? english : chinese;
+    return choose(language, chinese, english);
+  }
+
+  public static String choose(String selectedLanguage, String chinese, String english) {
+    if (UiLanguagePreference.ZH.equals(selectedLanguage)) return chinese;
+    if (UiLanguagePreference.EN.equals(selectedLanguage)) return english;
+    String translated = UiMessages.forLanguage(selectedLanguage).get(chinese);
+    return translated == null ? english : translated;
+  }
+
+  public static boolean isRtl() {
+    return UiLanguagePreference.isRtl(language);
   }
 
   /** External/user text and protocol values must never be application translation keys. */
@@ -38,8 +47,8 @@ public final class UiText {
   }
 
   public static String text(String value) {
-    if (value == null || !"en".equals(language)) return value;
-    String translated = UiMessages.EN.get(value);
+    if (value == null || UiLanguagePreference.ZH.equals(language)) return value;
+    String translated = UiMessages.forLanguage(language).get(value);
     return translated == null ? value : translated;
   }
 
@@ -62,7 +71,8 @@ public final class UiText {
   /** 这些前缀仍用于内部状态识别；只在应用状态控件的边界翻译。 */
   public static String status(String value) {
     String translated = text(value);
-    if (value == null || !value.equals(translated) || !"en".equals(language)) return translated;
+    if (value == null || !value.equals(translated) || UiLanguagePreference.ZH.equals(language))
+      return translated;
     for (String prefix : new String[] {"环境任务进行中：", "环境任务进行中", "重置失败："})
       if (value.startsWith(prefix)) return text(prefix) + text(value.substring(prefix.length()));
     return value;
@@ -70,7 +80,7 @@ public final class UiText {
 
   /** 仅翻译内置工具状态首行，下面的命令、路径和模型内容保持原样。 */
   public static String toolStatus(String value) {
-    if (value == null || !"en".equals(language)) return value;
+    if (value == null || UiLanguagePreference.ZH.equals(language)) return value;
     int line = value.indexOf('\n');
     String head = line < 0 ? value : value.substring(0, line),
         tail = line < 0 ? "" : value.substring(line);

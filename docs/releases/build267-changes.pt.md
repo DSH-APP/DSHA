@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.3-20261102.0830-dsh0.2.1-rc.5 / build267
+
+- Experimental: correção de melhor esforço para o contentor ficar sem Internet depois de mudar para dados móveis. O DNS do contentor só era escrito no arranque com os servidores da rede da altura; ao passar do Wi-Fi para dados móveis, esses servidores deixavam de estar acessíveis e todas as resoluções expiravam até o Wi-Fi voltar. O DNS do contentor passa a ser atualizado automaticamente após uma mudança de rede; se uma resolução continuar a falhar, é feita mais uma vez pelo resolvedor de sistema do Android (só resolução, sem reenviar pedidos nem injetar DNS público). Acrescenta o diagnóstico só de leitura /app/net.
+- Esta correção é experimental e não é garantida para todas as combinações de dispositivo, sistema, operadora, VPN ou DNS privado; se o contentor continuar sem Internet depois de mudar de rede, envie a saída de /app/net.
+- Âmbito da verificação: apenas testes unitários e verificações de código locais; a mudança de rede não foi testada num dispositivo. versionCode elevado para 267 (com base no build266). A revisão DSHA mantém-se 0.2.1-rc.3 e o DSH incluído mantém-se 0.2.1-rc.5.

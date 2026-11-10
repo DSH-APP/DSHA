@@ -28,14 +28,23 @@ public final class BrowserTaskPolicy {
     return !restored && !taskRoot && mainAction && launcherCategory;
   }
 
+  /**
+   * 选回原生主页的任务：当前存活 Main 所在任务优先；其次是 Main 与网页同处的任务（单任务布局的常态），
+   * 在原任务里把 Main 移到前面，不另起任务、不清掉保留的网页；最后才是其它较新的 Main 任务（旧版本遗留）。
+   */
   public static int nativeTask(List<Task> tasks, int browserTask, int preferredTask) {
     int newest = -1;
+    int shared = -1;
     for (Task task : tasks) {
-      if (!task.nativeRoot() || task.id() < 0 || task.id() == browserTask) continue;
+      if (!task.nativeRoot() || task.id() < 0) continue;
       if (task.id() == preferredTask) return task.id();
+      if (task.id() == browserTask) {
+        shared = task.id();
+        continue;
+      }
       newest = Math.max(newest, task.id());
     }
-    return newest;
+    return shared >= 0 ? shared : newest;
   }
 
   /** Removing a whole task is safe only when its sole activity is the empty browser host. */

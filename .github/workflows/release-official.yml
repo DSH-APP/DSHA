@@ -1,0 +1,429 @@
+name: DSHA official release
+
+# 官方仓库（DSH-APP/DSHA）的正式成品发布：只在 main 上、显式 workflow_dispatch、绑定精确 commit。
+# 用仓库 Secrets 里的历史 E7E3 发布证书签名 dsh.android.client 正式包，核验证书后创建 tag + prerelease，
+# 并上传 APK、证据包、build-info.json 与 SHA256SUMS。签名密钥只进 build-signed；publish 不 checkout、不签名。
+#
+# 节点图（任一节点失败都不会签名或发布）：
+#   bind ─┬─► contracts ───────────┐
+#         ├─► java-format ─────────┤
+#         ├─► host-regression ─────┤
+#         └─► inputs ─┬─► unit ────┼─► build-signed ─► publish
+#                     └─► lint ────┘
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: New tag v<version>, e.g. v0.2.2-rc.1 (created at the verified commit)
+        required: true
+        type: string
+      expected_sha:
+        description: Exact 40-character source commit to verify and publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dsha-upstream-release-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+jobs:
+  bind:
+    name: Bind release request to exact source
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      && github.repository == 'DSH-APP/DSHA'
+      && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+    outputs:
+      apk_name: ${{ steps.bind.outputs.apk_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.expected_sha }}
+          persist-credentials: false
+      - name: Bind explicit release request to exact source and fixed inputs
+        id: bind
+        run: |
+          python3 - <<'PYCODE'
+          import importlib.util, json, os, re
+          expected = os.environ['EXPECTED_SHA']
+          if expected != os.environ['GITHUB_SHA'] or not re.fullmatch(r'[a-f0-9]{40}', expected):
+              raise SystemExit('RELEASE_COMMIT_MISMATCH')
+          tag = os.environ['RELEASE_TAG']
+          if not re.fullmatch(r'v[0-9]+\.[0-9]+\.[0-9]+(?:-rc\.[0-9]+)?', tag):
+              raise SystemExit('RELEASE_TAG_INVALID')
+          spec = importlib.util.spec_from_file_location('fixed_inputs', 'tools/sunset-ci-inputs.py')
+          helper = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(helper)
+          helper.resolve({})
+          spec = importlib.util.spec_from_file_location('release_identity', 'tools/release-identity.py')
+          resolver = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(resolver)
+          identity = resolver.check()['upstream']
+          if identity['packageName'] != 'dsh.android.client':
+              raise SystemExit('PACKAGE_IDENTITY_MISMATCH')
+          if identity['repository'] != os.environ['GITHUB_REPOSITORY'] or identity['ref'] != os.environ['GITHUB_REF']:
+              raise SystemExit('RELEASE_IDENTITY_NOT_UPSTREAM')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write('apk_name=dsha-' + expected[:8] + '.apk\n')
+          PYCODE
+      # 在任何构建前拒绝已存在的 tag；publish 节点创建前会再查一次。
+      - name: Refuse an existing release tag before building
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'release tag already exists'; exit 1
+          fi
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" >/dev/null 2>&1; then
+            echo 'git tag already exists'; exit 1
+          fi
+
+  contracts:
+    needs: bind
+    uses: ./.github/workflows/_node-contracts.yml
+    with:
+      ref: ${{ inputs.expected_sha }}
+
+  java-format:
+    needs: bind
+    uses: ./.github/workflows/_node-java-format.yml
+    with:
+      ref: ${{ inputs.expected_sha }}
+
+  host-regression:
+    name: Branch regression without fixed-input dependencies
+    needs: bind
+    uses: ./.github/workflows/_node-host-tests.yml
+    with:
+      ref: ${{ inputs.expected_sha }}
+      stage: fast
+      artifact: release-host-regression
+      only: >-
+        test-native-consent-transport.mjs
+        test-bridge-token-compat.mjs
+        test-bridge-token-transport.py
+        test-destructive-guard.mjs
+        test-destructive-full-access.mjs
+        test-vscreen-anchored.mjs
+        test-device-shell-policy.py
+        test-credential-paths.py
+        test-runtime-descriptor-inputs.py
+        test-runtime-descriptor-source.py
+        test-plugin-capabilities.py
+        test-plugin-transactions.py
+        test-plugin-delete-nofollow.py
+        test-architecture-boundaries.py
+        test-bridge-port.mjs
+        test-bridge-port.py
+        test-ci-assets.py
+        test-ci-package.py
+        test-ci-handoff.py
+        test-ci-workflows.py
+        test-release-identity.py
+        test-sunset-ci-inputs.py
+        test-release-names.py
+        test-release-layout.py
+        test-release-evidence.py
+        test-host-test-runner.py
+        test-dsh-runtime-packaging.py
+        test-generate-changelog.py
+        test-ui-language-catalog.py
+        test-terminal-home-i18n.py
+        test-format-java-tree.py
+
+  inputs:
+    needs: bind
+    uses: ./.github/workflows/_node-inputs.yml
+    with:
+      ref: ${{ inputs.expected_sha }}
+      rebuild_runtime: true
+      artifact: release-inputs
+
+  unit:
+    needs: inputs
+    uses: ./.github/workflows/_node-unit-tests.yml
+    with:
+      ref: ${{ inputs.expected_sha }}
+      mode: full
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      require_fixtures: true
+      forks: 1
+      artifact: release-unit-results
+
+  lint:
+    needs: inputs
+    uses: ./.github/workflows/_node-lint.yml
+    with:
+      ref: ${{ inputs.expected_sha }}
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      sunset_test: false
+      artifact: release-lint-results
+
+  build-signed:
+    name: Build and verify signed DSHA (upstream identity)
+    needs: [bind, contracts, java-format, host-regression, inputs, unit, lint]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      APK_NAME: ${{ needs.bind.outputs.apk_name }}
+      ASSET_SHA: ${{ needs.inputs.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.expected_sha }}
+          persist-credentials: false
+      # 持有签名 Secrets 的节点不写入任何共享缓存。
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          gradle-cache: 'false'
+      - uses: ./.github/actions/android-sdk
+        with:
+          ndk: 'true'
+      - uses: ./.github/actions/restore-handoff
+        with:
+          artifact: ${{ needs.inputs.outputs.artifact }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ needs.unit.outputs.artifact }}
+          path: .
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ needs.lint.outputs.artifact }}
+          path: app/build/reports
+      # unit 节点已经验证；这里对下载到的 XML 重新核对，回执只由本节点写出。
+      - name: Re-verify complete Standard unit-test results
+        run: python3 tools/verify-unit-results.py --mode full --require-fixtures --output out/full-unit-tests.json
+
+      - name: Prepare historical E7E3 release signing key from secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.DSHA_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.DSHA_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.DSHA_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.DSHA_KEY_ALIAS }}
+        run: |
+          set -eu
+          test -n "${KEYSTORE_B64:-}" || { echo 'DSHA_KEYSTORE_B64 secret is required'; exit 1; }
+          test -n "${STORE_PASSWORD:-}" || { echo 'DSHA_KEYSTORE_PASSWORD secret is required'; exit 1; }
+          echo "::add-mask::$STORE_PASSWORD"
+          echo "::add-mask::${KEY_PASSWORD:-$STORE_PASSWORD}"
+          case "${KEY_ALIAS:-}" in *[!A-Za-z0-9._-]* ) echo 'unsafe alias'; exit 1 ;; esac
+          umask 077
+          key="$RUNNER_TEMP/dsha-release-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.jks"
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$key"
+          test -s "$key"
+          {
+            printf 'DSHA_KEYSTORE=%s\n' "$key"
+            printf 'DSHA_KEYSTORE_PASSWORD=%s\n' "$STORE_PASSWORD"
+            printf 'DSHA_KEY_PASSWORD=%s\n' "${KEY_PASSWORD:-$STORE_PASSWORD}"
+            printf 'DSHA_KEY_ALIAS=%s\n' "${KEY_ALIAS:-androiddebugkey}"
+          } >> "$GITHUB_ENV"
+
+      - name: Build signed production APK
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleStandardRelease -Pdsha.identity=upstream --no-daemon --max-workers=2
+
+      - name: Verify production APK identity and signing certificate
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, re, subprocess
+          sdk = pathlib.Path(os.environ.get('ANDROID_HOME') or os.environ.get('ANDROID_SDK_ROOT') or '/usr/local/lib/android/sdk')
+          buildtools = subprocess.check_output(['python3', 'tools/ci-toolchain.py', '--field', 'buildTools'], text=True).strip()
+          apksigner = str(sdk / 'build-tools' / buildtools / 'apksigner')
+          aapt2 = str(sdk / 'build-tools' / buildtools / 'aapt2')
+          identity = json.load(open('ci/release-identity.upstream.json', encoding='utf-8'))
+          apk = pathlib.Path('app/build/outputs/apk/standard/release/app-standard-release.apk')
+          if not apk.is_file():
+              raise SystemExit('APK_MISSING')
+          badging = subprocess.check_output([aapt2, 'dump', 'badging', str(apk)], text=True)
+          if f"package: name='{identity['packageName']}'" not in badging:
+              raise SystemExit('APK_PACKAGE_MISMATCH')
+          if 'application-debuggable' in badging:
+              raise SystemExit('APK_DEBUGGABLE')
+          meta = json.load(open('app/build/outputs/apk/standard/release/output-metadata.json', encoding='utf-8'))['elements'][0]
+          version_code = int(re.search(r"versionCode='(\d+)'", badging).group(1))
+          version_name = re.search(r"versionName='([^']*)'", badging).group(1)
+          if version_code != meta['versionCode'] or version_name != meta['versionName']:
+              raise SystemExit('APK_VERSION_MISMATCH')
+          if version_name.endswith(('-test', '-SunsetTest', '-island')):
+              raise SystemExit('APK_TEST_OR_ISLAND_IDENTITY')
+          # aapt2 不同版本对最低 API 的键名不一致（sdkVersion / minSdkVersion），
+          # 只认其中一种会让正式包在校验阶段被误判为 minSdk 不符。
+          minimum = re.search(r"^(?:sdkVersion|minSdkVersion):'(\d+)'", badging, re.M)
+          if not minimum or int(minimum.group(1)) != 30:
+              raise SystemExit('APK_MINSDK_MISMATCH')
+          if "native-code: 'arm64-v8a'" not in badging:
+              raise SystemExit('APK_NATIVE_CODE_MISMATCH')
+          verify = subprocess.run([apksigner, 'verify', '--verbose', '--print-certs', str(apk)],
+                                  check=True, capture_output=True, text=True)
+          match = re.search(r'Signer #1 certificate SHA-256 digest: ([a-f0-9]{64})', verify.stdout)
+          if not match or match.group(1) != identity['certificateSha256']:
+              raise SystemExit('APK_CERTIFICATE_MISMATCH')
+          if f"application-label:'DSHA'" not in badging or identity['appName'] != 'DSHA':
+              raise SystemExit('APK_LABEL_MISMATCH')
+          pathlib.Path('out').mkdir(exist_ok=True)
+          pathlib.Path('out/apk-signature.txt').write_text(verify.stdout, encoding='utf-8')
+          pathlib.Path('out/apk-badging.txt').write_text(badging, encoding='utf-8')
+          print(json.dumps({
+              'packageName': identity['packageName'],
+              'versionCode': version_code,
+              'versionName': version_name,
+              'certificateSha256': match.group(1),
+              'apkSize': apk.stat().st_size,
+          }, indent=2))
+          PY
+
+      - name: Verify managed APK assets and pinned gh archive
+        run: python3 tools/verify-apk-managed-assets.py app/build/outputs/apk/standard/release/app-standard-release.apk
+
+      - name: Package commit-bound build evidence
+        run: |
+          python3 - <<'PYCODE'
+          import hashlib, json, os
+          from pathlib import Path
+          import zipfile
+          apk = Path('out') / (os.environ['APK_NAME'])
+          source = Path('app/build/outputs/apk/standard/release/app-standard-release.apk')
+          apk.write_bytes(source.read_bytes())
+          identity = json.load(open('ci/release-identity.upstream.json', encoding='utf-8'))
+          badging = (Path('out/apk-badging.txt')).read_text(encoding='utf-8')
+          meta = json.load(open('app/build/outputs/apk/standard/release/output-metadata.json', encoding='utf-8'))['elements'][0]
+          code = str(meta['versionCode'])
+          notes = Path('docs/releases/build' + code + '-changes.zh.md')
+          if not notes.is_file():
+              raise SystemExit('RELEASE_NOTES_MISSING: ' + str(notes))
+          cert = identity['certificateSha256']
+          value = {
+              'schema': 1,
+              'kind': 'dsha-upstream-release-apk',
+              'commit': os.environ['GITHUB_SHA'],
+              'runNumber': os.environ['GITHUB_RUN_NUMBER'],
+              'runId': os.environ['GITHUB_RUN_ID'],
+              'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'packageName': identity['packageName'],
+              'versionCode': meta['versionCode'],
+              'versionName': meta['versionName'],
+              'apkFile': os.environ['APK_NAME'],
+              'apkSize': apk.stat().st_size,
+              'apkSha256': hashlib.sha256(apk.read_bytes()).hexdigest(),
+              'certificateSha256': cert,
+              'signingSchemes': identity['schemes'],
+              'assetBundleSha256': os.environ['ASSET_SHA'],
+              'unitTests': json.load(open('out/full-unit-tests.json', encoding='utf-8')),
+              'note': 'Production DSHA (dsh.android.client) package. Verify SHA-256 and certificate before installing.',
+          }
+          Path('out/build-info.json').write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          files = [Path('out') / name for name in ['build-info.json', 'full-unit-tests.json', 'apk-signature.txt', 'apk-badging.txt', os.environ['APK_NAME']]]
+          files += sorted(path for path in Path('app/build/test-results/testStandardDebugUnitTest').rglob('TEST-*.xml'))
+          lint = Path('app/build/reports/lint-results-standardRelease.xml')
+          if lint.is_file():
+              files.append(lint)
+          if any(not path.is_file() or path.is_symlink() for path in files):
+              raise SystemExit('EVIDENCE_MISSING')
+          with zipfile.ZipFile('out/dsha-build-evidence.zip', 'x', zipfile.ZIP_DEFLATED) as archive:
+              for path in sorted(set(files)):
+                  archive.write(path, path.as_posix())
+          names = [os.environ['APK_NAME'], 'dsha-build-evidence.zip', 'build-info.json']
+          Path('out/SHA256SUMS').write_text(''.join(
+              hashlib.sha256((Path('out') / name).read_bytes()).hexdigest() + '  ' + name + '\n' for name in names),
+              encoding='utf-8')
+          Path('out/release-notes.md').write_text(
+              notes.read_text(encoding='utf-8')
+              + '\n\n## CI 构建与校验\n\n'
+              + f"- 源码 commit：`{os.environ['GITHUB_SHA']}`\n"
+              + f"- Actions run：`{os.environ['GITHUB_RUN_ID']}`（attempt {os.environ['GITHUB_RUN_ATTEMPT']}）\n"
+              + f"- APK：`{os.environ['APK_NAME']}`，{apk.stat().st_size} 字节，SHA-256 `{value['apkSha256']}`\n"
+              + f"- 包名 / versionCode / versionName：`{value['packageName']}` / {value['versionCode']} / `{value['versionName']}`\n"
+              + f"- 证书 SHA-256：`{cert}`（由 `apksigner` 从成品读取，与 ci/release-identity.upstream.json 一致）\n"
+              + f"- 固定输入 bundle SHA-256：`{os.environ['ASSET_SHA']}`\n"
+              + "- 完整单测、Lint、Java 格式与源码门禁均在本 run 内执行；安装前请先校验 SHA-256 与证书。\n",
+              encoding='utf-8')
+          Path('out/build-code.txt').write_text(code, encoding='utf-8')
+          print(apk.stat().st_size, value['apkSha256'])
+          PYCODE
+          echo "BUILD_CODE=$(cat out/build-code.txt)" >> "$GITHUB_ENV"
+          cat out/SHA256SUMS
+
+      - name: Remove release private key
+        if: always()
+        run: |
+          python3 - <<'PYCODE'
+          import os
+          from pathlib import Path
+          parent = Path(os.environ['RUNNER_TEMP']).resolve()
+          key = parent / ('dsha-release-' + os.environ['GITHUB_RUN_ID'] + '-' + os.environ['GITHUB_RUN_ATTEMPT'] + '.jks')
+          if key.is_symlink() or key.resolve().parent != parent:
+              raise SystemExit('UNEXPECTED_RELEASE_KEY_PATH')
+          key.unlink(missing_ok=True)
+          PYCODE
+
+      # 1 天保留：只交给同一 run 的 publish 节点，正式交付物以 Release 资产为准。
+      - name: Hand verified release bundle to publish
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-bundle
+          path: |
+            out/${{ needs.bind.outputs.apk_name }}
+            out/dsha-build-evidence.zip
+            out/build-info.json
+            out/SHA256SUMS
+            out/release-notes.md
+            out/build-code.txt
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish verified tag and prerelease
+    needs: [bind, build-signed]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      APK_NAME: ${{ needs.bind.outputs.apk_name }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-bundle
+          path: out
+      - name: Verify bundle checksums and commit binding
+        working-directory: out
+        run: |
+          set -eu
+          sha256sum -c SHA256SUMS
+          python3 - <<'PYCODE'
+          import json, os
+          info = json.load(open('build-info.json', encoding='utf-8'))
+          if info['commit'] != os.environ['EXPECTED_SHA'] or info['apkFile'] != os.environ['APK_NAME']:
+              raise SystemExit('BUNDLE_IDENTITY_MISMATCH')
+          if info['runId'] != os.environ['GITHUB_RUN_ID'] or info['runAttempt'] != os.environ['GITHUB_RUN_ATTEMPT']:
+              raise SystemExit('BUNDLE_RUN_MISMATCH')
+          if str(info['versionCode']) != open('build-code.txt', encoding='utf-8').read().strip():
+              raise SystemExit('BUNDLE_VERSION_MISMATCH')
+          PYCODE
+      - name: Publish verified tag and prerelease with direct Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          BUILD_CODE=$(cat out/build-code.txt)
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'release tag already exists'; exit 1
+          fi
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$EXPECTED_SHA" \
+            --prerelease --title "DSHA ${RELEASE_TAG#v} (build${BUILD_CODE})" --notes-file out/release-notes.md
+          gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            "out/$APK_NAME" out/dsha-build-evidence.zip out/build-info.json out/SHA256SUMS
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json tagName,isPrerelease,assets,url

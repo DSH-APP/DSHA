@@ -1,8 +1,12 @@
 # Ports and networking maintenance
 
+> Build191/1640 merge revision: the device bridge prefers3090 and, only on address-in-use, tries3091–3099. This installation's `.bridge_port`/environment discovery selects its current port while token and generation/port fences remain required. Web dynamic ports, LAN3081 and the independent recovery broker are separate services. The [current checks and unverified scope](releases/v0.2.1-rc.2-build191-sunset-merge-20261023.md) supersedes build190's fixed-bridge description below, without transferring old device evidence.
+
+> Fail-closed discovery: every guest bridge client (`bridge-port.cjs` and its plugin copies, `adb-shell.py`, `dns-compat.cjs`) accepts only this installation's published `/root/.dsh/.bridge_port` or an explicit `DSHA_BRIDGE_PORT`. When neither is readable (bridge stopped, bind failed or not yet published) it reports `BRIDGE_PORT_UNAVAILABLE` and sends no request or token; it never falls back to 3090. Any port in 3090–3099 may belong to another DSHA installation on the same device, so guessing would hand this installation's credential to another app.
+
 Verified: 2026-10-21. This page translates the build190 source review associated with the F10 documentation baseline. It explains how to use, diagnose, and maintain port handling. Current delivery identity and subsequent changes belong to the [release introduction](release-introduction.md).
 
-The application runs DSH 0.2.1-rc.2. See [runtime engines](runtime-engines.md) and [DNS configuration](dns-configuration.md) for those separate concerns. A port, authentication credentials, and a Web generation are three distinct fields; none proves either of the others.
+The application runs DSH 0.2.1-rc.5. See [runtime engines](runtime-engines.md) and [DNS configuration](dns-configuration.md) for those separate concerns. A port, authentication credentials, and a Web generation are three distinct fields; none proves either of the others.
 
 ## Identify the endpoint first
 
@@ -10,7 +14,7 @@ The application runs DSH 0.2.1-rc.2. See [runtime engines](runtime-engines.md) a
 |---|---|---|
 | DSH Web backend | `127.0.0.1:<actual port for this run>` | Automatic/manual Web port in Configuration |
 | DeepSeek OAuth callback | `/oauth/callback` at the origin recorded when login starts; a temporary route on the current DSH WebServer, forwarded through the proxy for LAN access | Official account login state machine |
-| Android capability bridge | `127.0.0.1:3090`, with an additional attempt at `::1:3090` | `HttpShellService` |
+| Android capability bridge | Prefer`127.0.0.1:3090`, then3091–3099 on address-in-use; additionally try`::1` at the same port. Guest discovery uses this installation's state | `HttpShellService` |
 | LAN Web proxy | `0.0.0.0:3081` | LAN access switch in Configuration |
 | Wireless ADB pairing | Temporary port shown by Android's pairing dialog | Device capability authorization / ADB pairing page |
 | Wireless ADB connection | Android's wireless debugging page and discovery results | ADB connection management |
@@ -95,7 +99,7 @@ After LAN is enabled, its proxy starts only with valid BrowserAuth for the curre
 
 LAN uses its own token/cookie and does not expose the DSH startup token or backend BrowserAuth to remote clients. The proxy authenticates internally using this run's in-memory BrowserAuth; stopping or changing generation invalidates old snapshots. Browser Host, Origin, Cookie, and related fields are rewritten for backend loopback semantics. Initial token-link redirection removes only the LAN token, preserving the path and other query parameters. Treat the complete LAN URL as sensitive.
 
-This is an HTTP proxy without TLS termination. Its use must match the network's trust boundary. Both HTTP and WebSocket pass authentication and current-generation checks. Only a verified 101 WebSocket handshake can open a bidirectional tunnel. Zero-length bodies, chunks/trailers, redirects, and long streams require their own framing; connection closure is not a universal boundary. Connection registration, short requests, long streams, and reverse pumps have separate limits; stopping closes this run's sockets. LAN Web access does not expose the 3090 Android capability bridge.
+This is an HTTP proxy without TLS termination. Its use must match the network's trust boundary. Both HTTP and WebSocket pass authentication and current-generation checks. Only a verified 101 WebSocket handshake can open a bidirectional tunnel. Zero-length bodies, chunks/trailers, redirects, and long streams require their own framing; connection closure is not a universal boundary. Connection registration, short requests, long streams, and reverse pumps have separate limits; stopping closes this run's sockets. LAN Web access does not expose this installation's current Android capability bridge port.
 
 The F11 changes retain unknown backend port `0` as not ready, without a hidden 3080 fallback. New authentication for a different actual port in the same generation replaces the old proxy target. A business 401/403 affects that request without automatically destroying the whole BrowserAuth session. Interface/address changes retire old connections while retaining the current token and listener; a fast network replacement with the same interface/address may be unobservable. See [LAN](lan.md) for operation, address candidates, and the limits of host verification.
 

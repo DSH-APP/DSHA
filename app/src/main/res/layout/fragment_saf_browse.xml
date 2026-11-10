@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- 跨应用文件访问 · 浏览页：只读列目录，点文件看文本预览。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/shell_bg"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/saf_browse_path"
+        style="@style/ShellStatusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/shell_page_pad"
+        android:paddingTop="8dp"
+        android:paddingEnd="@dimen/shell_page_pad"
+        android:textDirection="locale" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/shell_page_pad"
+        android:paddingEnd="@dimen/shell_page_pad">
+
+        <Button
+            android:id="@+id/saf_browse_up"
+            style="@style/ShellTextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp" />
+
+        <Button
+            android:id="@+id/saf_browse_refresh"
+            style="@style/ShellTextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/saf_browse_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="@null"
+        android:clipToPadding="false"
+        android:paddingStart="@dimen/shell_page_pad"
+        android:paddingEnd="@dimen/shell_page_pad" />
+
+    <TextView
+        android:id="@+id/saf_browse_status"
+        style="@style/ShellStatusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/shell_page_pad"
+        android:paddingTop="6dp"
+        android:paddingEnd="@dimen/shell_page_pad"
+        android:paddingBottom="12dp" />
+</LinearLayout>

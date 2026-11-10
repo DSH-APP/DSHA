@@ -1,6 +1,6 @@
 # Built-in plugins, protocols, permissions, and when changes take effect
 
-> Translation verified: 2026-10-21. Source baseline: released F10 `087724c`, with the current build190/F12 registry, generators, plugin entry points, and host readers checked against the Chinese guide and production sources. F11 is an unpublished local checkpoint, not another released version. Final identity and executed scope are in the [English README](../../README.en.md), [release introduction](release-introduction.md), and [F12 record](releases/v0.2.1-rc.2-build190-fix12-20261021.md). This page adds no software-test or device-acceptance result. Runtime hot-reload conclusions require matching bundled inputs and actual execution evidence; this translation and older audits do not prove Android validation.
+> Translation baseline: 2026-10-21, originally reviewed against the build190/F12 registry, generators, plugin entry points and host readers. Current publication identity is build356 / DSH 0.2.2-rc.1 / single Standard; F10–F13 records are historical, not this build's evidence. Final identity, software and APK results are in the [English README](../../README.en.md) and this CI / Release receipt. This page adds no device-acceptance result. Runtime hot-reload conclusions require matching bundled inputs and actual execution evidence; this page and older audits do not prove Android validation.
 
 ## Seven optional entries, eight signed entries, and a policy source
 
@@ -11,10 +11,12 @@
 | Visible | `dsh-device-shell-guide` 0.1.19 | Device-channel and bridge guide, `lib/index.js` |
 | Visible | `dsh-task-notifier` 0.2.0 | `/app/tasks/*` task state and notifications |
 | Visible | `dsh-status-overlay` 0.1.4 | `/app/overlay` streaming status |
-| Visible | `dsh-web-mobile` 3.2.1 | Mobile Web interface; upstream lock and local differences are recorded separately |
+| Visible | `dsh-web-mobile` 3.3.1 | Mobile Web interface (host 0.2.2 adaptation); upstream lock and local differences are recorded separately; [default-enabled again](plugins.md) from build336, device over-the-top acceptance pending |
 | Visible | `dsh-computer-use-android` 0.1.1 | MCP stdio `dsha-android`, 180-second call budget |
 | Visible | `dsh-tool-vscreen` 0.1.1 | MCP stdio `dsha-vscreen`, 60-second call budget |
 | Visible compatibility wrapper | `dsh-auto-review` 0.1.0 | Wrapper/alias; functionality comes from the locked official experimental Auto package, not the empty wrapper alone |
+| Visible, temporary fix | `dsh-fs-read-hint` 0.1.0 | Appends a same-name read-path hint to `FS_NOT_OBSERVED` errors; message only. Removal criteria in [its page](fs-read-hint-plugin.md) |
+| Visible, temporary fix | `dsh-fs-search-scope` 0.1.0 | glob skips nested git worktrees; keeps hidden/ignored files and DSHA required policy. Removal criteria in [its page](fs-search-scope-plugin.md) |
 | Internal | `dsh-app-integration` 1.2.3 | Activity heartbeat, temporary-plugin summaries, native back navigation, and browser-origin recovery |
 | Policy source | `dsh-destructive-guard` 0.1.0 | Outside the eight-entry registry; generates `destructive-policy` at build time rather than acting as a ninth ordinary removable plugin |
 

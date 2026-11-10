@@ -10,7 +10,8 @@ import java.util.ArrayList;
 
 /** Explicit old-origin recovery; it never takes an occupied port or changes browser credentials. */
 public final class BrowserOriginRestore {
-  public static final String QUIESCE = "dsh.android.client.ORIGIN_RESTORE_QUIESCE";
+  public static final String QUIESCE =
+      com.deepseekharness.app.util.AppIdentity.applicationId() + ".ORIGIN_RESTORE_QUIESCE";
   private static final Object GATE = new Object();
   private static final java.util.Set<String> PREVIEWS = new java.util.HashSet<>();
   private static String restoring;
@@ -63,7 +64,8 @@ public final class BrowserOriginRestore {
       throws Exception {
     long deadline = System.nanoTime() + 20_000_000_000L;
     synchronized (GATE) {
-      while (!PREVIEWS.isEmpty()) {
+      // 预览 Activity 之外，实验性 keeper 也可能持有已摘挂的页面；迁移前两者都必须关闭。
+      while (!PREVIEWS.isEmpty() || BrowserPageKeeper.hasKeptPage()) {
         if (!ticket.equals(restoring) || !current.getAsBoolean())
           throw new java.io.IOException("RESTORE_CANCELLED");
         if (System.nanoTime() >= deadline)
@@ -150,6 +152,10 @@ public final class BrowserOriginRestore {
       }
       restoring = ticket;
     }
+    // 先退役已摘挂的保活页面；仍附着在预览 Activity 的页面由 QUIESCE→finish→retire 收尾，
+    // awaitClosed 会同时等待 Activity 关闭与 keeper 页面销毁。
+    BrowserPageKeeper.forApplication(context)
+        .retireDetachedPage(BrowserPageKeeper.REASON_ORIGIN_RESTORE);
     context.sendBroadcast(new Intent(QUIESCE).setPackage(context.getPackageName()));
     try {
       context.startActivity(

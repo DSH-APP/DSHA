@@ -248,4 +248,21 @@ public final class DeviceGrantsTest {
     assertFalse(grants.screenPolicy().allows("com.bank.pay"));
     assertEquals(3, grants.screenPolicy().revision);
   }
+
+  @Test
+  public void privilegedExecutionIsOffByDefaultRevocableAndFailsClosedWhenUnreadable() {
+    var values = new HashMap<String, Object>();
+    var prefs = preferences(values);
+    var grants = new DeviceGrants(prefs, () -> {});
+    assertFalse(grants.privilegedExecutionAllowed());
+    assertTrue(grants.setPrivilegedExecutionAllowed(true));
+    assertTrue(grants.privilegedExecutionAllowed());
+    assertTrue(new DeviceGrants(prefs, () -> {}).privilegedExecutionAllowed());
+    assertTrue(grants.setPrivilegedExecutionAllowed(false));
+    assertFalse(grants.privilegedExecutionAllowed());
+    var unreadable = new java.util.concurrent.atomic.AtomicBoolean();
+    var failing = preferences(values, unreadable, new java.util.concurrent.atomic.AtomicBoolean());
+    unreadable.set(true);
+    assertFalse(new DeviceGrants(failing, () -> {}).privilegedExecutionAllowed());
+  }
 }

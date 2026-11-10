@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_label" formatted="false">"Contrôle d’écran DSH-A-Su"</string>
+    <string name="accessibility_desc" formatted="false">"Deux usages : lire automatiquement le code d’association du débogage sans fil et permettre à l’assistant IA de lire l’écran, toucher, saisir du texte, appuyer sur des touches et faire des captures pour contrôler le téléphone. DSH-A-Su n’enregistre jamais l’écran en arrière-plan ; l’écran actuel n’est lu que lorsque l’assistant le demande."</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 快捷键托盘：比纯黑输出区亮一档的底板 + 顶部 1dp 分隔线。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/terminal_key_tray_line" />
+        </shape>
+    </item>
+    <item android:top="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/terminal_key_tray" />
+        </shape>
+    </item>
+</layer-list>

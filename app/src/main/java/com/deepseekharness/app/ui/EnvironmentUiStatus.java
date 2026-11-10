@@ -37,9 +37,13 @@ final class EnvironmentUiStatus {
                   new Snapshot(
                       true,
                       ready,
-                      !ready
-                          || com.deepseekharness.app.core.MaintenanceCoordinator.pending(
-                              controller),
+                      // 受限提示与主界面入口同一判定：进行中的后台事务由维护横幅表达；
+                      // 补丁级覆盖后旧树仍“兼容”，但同样要留出回到维护页的入口。
+                      com.deepseekharness.app.util.RuntimeUpgradeState.maintenanceRequired(
+                              ready,
+                              com.deepseekharness.app.core.EnvironmentAccess.runtimeLatest(
+                                  controller))
+                          || MainEntryMaintenance.blocksEntry(controller),
                       com.deepseekharness.app.core.StartupRepairs.pending(app));
             } finally {
               synchronized (EnvironmentUiStatus.class) {

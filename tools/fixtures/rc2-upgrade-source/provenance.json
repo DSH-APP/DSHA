@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "kind": "retained-official-npm-canonical-source",
+  "description": "Exact official rc2 client source retained for historical recipe reconstruction only. Current rc3 source is checked independently; these files are never runtime inputs.",
+  "sourceLockSha256": "c67d0d3b6423db35faae8d91d6054e7d0fa7cb9e197bede42438326f123ca8a7",
+  "upstreamRepository": "https://github.com/deepseek-ai/deepseek-harness",
+  "files": [
+    {
+      "file": "dsh-client-ui-workspace.js",
+      "module": "@deepseek-ai/dsh-client-ui-workspace/lib/client.js",
+      "sha256": "52765aacb6c7f96327da5d8709d8cbb30dd2957d4744a42da04c18e07fe264e5",
+      "packageVersion": "0.2.1-rc.2",
+      "packageIntegrity": "sha512-v3ov7wH9/0npaqpACSCAnVIgc5ho8NofeU2k06xGFNmZwxM3//KPeKzHd17/rzl32agw6G2NV2+FbxMx6l3xJw==",
+      "packageResolved": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-workspace/-/dsh-client-ui-workspace-0.2.1-rc.2.tgz"
+    },
+    {
+      "file": "dsh-client-ui-agent-preset.js",
+      "module": "@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js",
+      "sha256": "6ecdf173de66fce620e588f10ed1e3b624725febab059fb867beefef9ae4ddb8",
+      "packageVersion": "0.2.1-rc.2",
+      "packageIntegrity": "sha512-Tp3CI/LpwykU3ttjG7MfLHk+5jep/qgwL982MAyYuoRHItuj/zvGLH/fXX0X8VAWW9OtRyv7gs/yFffkfXZ5dQ==",
+      "packageResolved": "https://registry.npmjs.org/@deepseek-ai/dsh-client-ui-agent-preset/-/dsh-client-ui-agent-preset-0.2.1-rc.2.tgz"
+    }
+  ]
+}

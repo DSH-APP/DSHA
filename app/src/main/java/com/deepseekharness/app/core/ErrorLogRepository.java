@@ -44,8 +44,8 @@ public final class ErrorLogRepository extends AndroidViewModel {
             false,
             uri.isEmpty()
                 ? com.deepseekharness.app.util.UiText.choose(
-                    "导出结构化状态、现有脱敏操作记录尾部及摘要。原始进程输出和完整异常链不在默认故障包中；可仅本次附加主动填写的说明。",
-                    "Export structured state, existing redacted operation tails and a summary. Raw process output and full exception chains are excluded. You may attach the context entered here for this export only.")
+                    "导出结构化状态、现有脱敏操作记录尾部及摘要。不主动采集业务正文，但自由格式错误可能包含业务内容，分享前请检查。可仅本次附加主动填写的说明。",
+                    "Export structured state, existing redacted operation tails and a summary. Business bodies are not actively collected, but free-form errors may contain business content; review before sharing. You may attach the context entered here for this export only.")
                 : com.deepseekharness.app.util.UiText.format("上次保存：%s（点按查看）", name),
             uri.isEmpty() ? null : Uri.parse(uri)));
   }
@@ -197,7 +197,7 @@ public final class ErrorLogRepository extends AndroidViewModel {
     entries.put(
         "operations-tail.jsonl",
         com.deepseekharness.app.backup.DiagnosticExportArchive.operationEvents(
-            DiagnosticLog.read(context)));
+            DiagnosticLog.readExportTail(context)));
     if (include)
       entries.put(
           "additional-context.txt", SensitiveData.redact(note).getBytes(StandardCharsets.UTF_8));
@@ -220,8 +220,10 @@ public final class ErrorLogRepository extends AndroidViewModel {
         "README.txt",
         ("DSHA diagnostics, not a data backup.\n"
                 + "manifest.json lists capture limits and the checksum of every included file.\n"
-                + "Existing operation messages are a bounded, possibly compacted tail; prior rotated records cannot be reconstructed.\n"
-                + "Raw process output, conversation bodies, credentials and complete exception chains are not collected by this exporter.\n"
+                + "Existing operation records are a bounded tail; prior rotated records cannot be reconstructed.\n"
+                + "Recognized parser failures are reduced to safe classifications and positions; unframed history and continuation bodies are omitted.\n"
+                + "Historical time/stage prefixes are not authenticated; text can imitate an operation record.\n"
+                + "The exporter does not independently read process logs or actively collect business bodies. Free-form errors may contain business content or sensitive values beyond known redaction patterns. Review before sharing.\n"
                 + "Additional context, when selected, is only the text entered for this action. Review before sharing.\n")
             .getBytes(StandardCharsets.UTF_8));
     try (OutputStream output = fs.create(archive)) {
@@ -230,13 +232,19 @@ public final class ErrorLogRepository extends AndroidViewModel {
           entries,
           java.util.Map.of(
               "operationHistory",
-              "BOUNDED_COMPACTED_TAIL",
+              "BOUNDED_OPERATION_TAIL",
               "rawProcessOutput",
               "NOT_INCLUDED",
               "fullExceptionChains",
               "NOT_RECONSTRUCTED",
               "businessBodies",
-              "NOT_COLLECTED",
+              "MAY_BE_PRESENT_IN_FREE_FORM_ERRORS",
+              "parserMessages",
+              "RECOGNIZED_PARSERS_SAFE_CLASSIFICATION",
+              "historicalRecordIdentity",
+              "NOT_AUTHENTICATED",
+              "unframedHistory",
+              "OMITTED",
               "additionalContextIncluded",
               include,
               "missingHistory",
@@ -256,7 +264,8 @@ public final class ErrorLogRepository extends AndroidViewModel {
     value.put("capturedAtMillis", System.currentTimeMillis());
     value.put("versionCode", (long) BuildConfig.VERSION_CODE);
     value.put("versionName", BuildConfig.VERSION_NAME);
-    value.put("flavor", BuildConfig.LOW_ANDROID ? "low" : "standard");
+    value.put("applicationId", context.getPackageName());
+    value.put("flavor", false ? "low" : "standard");
     value.put("configuredRuntime", config.isProroot() ? "proroot" : "proot");
     value.put("failureStage", category(config.getDiagnosticFailureStage()));
     value.put("failureRecorded", !config.getDiagnosticFailureReason().isEmpty());
@@ -295,7 +304,7 @@ public final class ErrorLogRepository extends AndroidViewModel {
         .append(" / ")
         .append(BuildConfig.VERSION_CODE)
         .append(
-            BuildConfig.LOW_ANDROID
+            false
                 ? com.deepseekharness.app.util.UiText.text(" / 兼容版\n")
                 : com.deepseekharness.app.util.UiText.text(" / 标准版\n"));
     text.append(com.deepseekharness.app.util.UiText.text("设备："))
@@ -352,8 +361,8 @@ public final class ErrorLogRepository extends AndroidViewModel {
           .append('\n');
     text.append(
         com.deepseekharness.app.util.UiText.choose(
-            "\n原始进程输出与完整异常链未进入此摘要；现有脱敏操作尾部单独保存在故障包中。缺失历史不能补回，分享前请检查内容。\n",
-            "\nRaw process output and full exception chains are excluded from this summary. Existing redacted operation tails are included separately in the bundle. Missing history cannot be reconstructed; review before sharing.\n"));
+            "\n不主动采集业务正文；现有操作尾部的自由格式错误仍可能包含业务内容。历史时间与阶段前缀未经认证，缺失历史不能补回。分享前请检查内容。\n",
+            "\nBusiness bodies are not actively collected, but existing free-form operation errors may contain business content. Historical time/stage prefixes are not authenticated and missing history cannot be reconstructed. Review before sharing.\n"));
     return SensitiveData.redact(text.toString());
   }
 

@@ -18,7 +18,11 @@ public final class WebPageScripts {
 
   public static String compatibility(Context context) {
     return "window.__DSHA_NATIVE_PLUGINS__=true;\n"
+        + read(context, "web-integration/safe-area.js")
+        + "\n"
         + language(context)
+        + "\n"
+        + theme(context)
         + "\n"
         + read(context, "web-integration/es-compat.js")
         + "\n"
@@ -41,12 +45,25 @@ public final class WebPageScripts {
         + gate.source();
   }
 
+  /**
+   * 原生亮暗偏好交给集成插件（dsha-native-theme-sync）；偏好值经 normalize 只可能是三个常量之一。
+   * 应急页不注入：应急 DSH 没有集成插件。
+   */
+  public static String theme(Context context) {
+    var config = new com.deepseekharness.app.core.ConfigStore(context);
+    return "window.__DSHA_THEME__={preference:'"
+        + config.getUiTheme()
+        + "',sync:"
+        + config.isWebThemeSync()
+        + "};window.dispatchEvent(new CustomEvent('dsha-theme'));";
+  }
+
   public static String language(Context context) {
     String id = new com.deepseekharness.app.core.ConfigStore(context).getUiLanguage();
     return "window.__DSHA_LANGUAGE__='"
         + id
         + "';window.dispatchEvent(new CustomEvent('dsha-language'));"
-        + "if(!window.__dshaLanguageSelectionBound){window.__dshaLanguageSelectionBound=true;window.addEventListener('dsha-language-selected',e=>{if(e.detail==='en'||e.detail==='zh')window.DshaLanguage?.postMessage(e.detail);});}";
+        + "if(!window.__dshaLanguageSelectionBound){window.__dshaLanguageSelectionBound=true;window.addEventListener('dsha-language-selected',e=>{if(['zh','zh-Hant','en','ru','ja','ko','ar','pt','la','fr'].includes(e.detail))window.DshaLanguage?.postMessage(e.detail);});}";
   }
 
   private static String read(Context context, String path) {
@@ -110,6 +127,32 @@ public final class WebPageScripts {
       throw new IllegalStateException(impossible);
     }
     return request;
+  }
+
+  /**
+   * 进入会话后把待答问题滚进可视区；没有选项时才聚焦回答框。
+   *
+   * <p>判据是提问卡里有没有实际选项行 {@code Mbwy4a_optionRow}。选项容器
+   * {@code Mbwy4a_options} 对每张提问卡都会渲染（选项为空时只剩空容器），用它判断会恒真，
+   * 任何问题都不会聚焦，不能作为判据。
+   *
+   * <p>有选项时不能抢焦点：软键盘弹起后提问卡的底部「提交」会被挤出可视区，用户点完
+   * 选项找不到提交，表现成“选项点不动”。卡片由网页侧插件渲染，类名带宿主哈希前缀，
+   * 因此按前缀匹配并轮询等待渲染完成。
+   */
+  public static String focusQuestion() {
+    return "(function(){var tries=0;function find(){"
+        + "var card=document.querySelector('[class*=\"Mbwy4a_frame\"]');"
+        + "if(!card)return null;"
+        + "if(!card.querySelector('[class*=\"Mbwy4a_body\"]'))return null;"
+        + "var field=card.querySelector('[class*=\"Mbwy4a_fieldInput\"]');"
+        + "if(!field)field=card.querySelector('[class*=\"Mbwy4a_body\"] textarea');"
+        + "if(!field)field=card.querySelector('[class*=\"Mbwy4a_body\"] input');"
+        + "return field?{card:card,field:field}:null;}"
+        + "function tick(){var hit=find();if(hit){try{hit.card.scrollIntoView({block:'center'});"
+        + "if(!hit.card.querySelector('[class*=\"Mbwy4a_optionRow\"]'))"
+        + "hit.field.focus({preventScroll:true});}catch(e){}return;}"
+        + "if(++tries<40)setTimeout(tick,250);}tick();})();";
   }
 
   /** 帧只携带几何与本页身份，不包含 URL、输入内容或模型资料。 */

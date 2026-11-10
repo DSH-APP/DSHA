@@ -5,14 +5,12 @@ import static org.junit.Assert.*;
 
 public class PermissionModeTest {
   @Test
-  public void preservesSupportedChoices() {
-    for (String value : new String[] {"read-only", "workspace-write", "danger-full-access"})
-      assertEquals(value, PermissionMode.normalize(value));
-  }
-
-  @Test
-  public void normalizesHistoricalAndInvalidValues() {
-    for (String value : new String[] {null, "", "default", "unknown", "READ-ONLY", "read-only\n"})
-      assertEquals("danger-full-access", PermissionMode.normalize(value));
+  public void formalWebUsesFullAccessWithoutTakingTheRetiredNativeChoice() {
+    for (String profile : new String[] {"web", "dsha-startup-safe"}) {
+      String command = WebLaunchCommand.build(true, "zh", profile, 0, 1);
+      assertTrue(command.contains("export DSH_PERMISSION_MODE='danger-full-access' && "));
+      assertFalse(command.contains("workspace-write"));
+      assertFalse(command.contains("read-only"));
+    }
   }
 }

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 悬浮助手发送：右向箭头；颜色运行时着色。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M4,11h11.2l-4.1,-4.1L12.5,5.5L19,12l-6.5,6.5l-1.4,-1.4l4.1,-4.1H4z" />
+</vector>
