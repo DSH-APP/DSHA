@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "runtimeId": "677486160e59e1d49077b2d57c94eb0f60d1b1c02416c40dbc1036b1c3f4f543",
+  "runtimeId": "1eb9fc80ba2f999f469edd8ba9e937bf79b0939447ee870dc6a5c66b1d70b627",
   "baseVersion": "10",
   "dshVersion": "0.2.2-rc.1",
   "launcherContract": "DSHA_ARM64_V2",
@@ -132,7 +132,7 @@
     "core/DeviceGrants.java": "04a697edf2be3fa939fc45cf4c629a3a01cdbd9f1e596e0938a4f8de169efc4b",
     "core/DiagnosticHistory.java": "fe88fcc19be89c55ad47389f00e3848f18662eaff437e8141d9df7135e0877ee",
     "core/DiagnosticLog.java": "5cf3f9e261ca1d07658981b7e51e34ba00fbad1d06da97dc270cf3e1cbff620b",
-    "core/HarnessController.java": "4db46c24ac63582e96bce3833ccdb7d02d129166e8bc3e5d1c8ec7fcc1323908",
+    "core/HarnessController.java": "d006e4b8e7f29b4642a972673999de29d4a2294df4c486a56a8a25ec2f306488",
     "core/HarnessSessionState.java": "30d03478801380619aee54219ff6434bdfa0f93e5c9d833c2506dcac9064222e",
     "core/HostConfigService.java": "f05576add7958e42e3d66efed66afa889393205c5df8ac1dec7d81fd168c65a3",
     "core/InstallRepository.java": "4aa70df01759e6f49f45f3e91eb57c1106935b30527d9764708a3d5663807fcc",

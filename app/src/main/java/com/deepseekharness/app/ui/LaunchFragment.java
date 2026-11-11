@@ -230,10 +230,14 @@ public class LaunchFragment extends Fragment {
                 refreshRunState();
                 refreshLanAddr();
                 // 启动前置停止失败时也给出可执行的强制结束入口（09:13 现场用户只能重启 App）。
+                com.deepseekharness.app.core.WebStopCoordinator.Result lastStop =
+                    controller.lastStopResult();
                 if (!startStatusMessage.isEmpty()
                     && startStatusMessage.equals(controller.lastStopError())
-                    && controller.forceStopAvailable())
-                  offerForceStop(activity, root, status, generation);
+                    && lastStop != null
+                    && lastStop.unconfirmedStop()
+                    && !controller.isStarting()
+                    && !controller.isStopping()) offerForceStop(activity, root, status, generation);
               });
         };
     refreshRunState();

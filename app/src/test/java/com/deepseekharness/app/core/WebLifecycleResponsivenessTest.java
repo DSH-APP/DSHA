@@ -160,6 +160,7 @@ public final class WebLifecycleResponsivenessTest {
   Boot boot;
   Screens screens;
   HarnessController controller;
+  WebLifecycleController lifecycle;
   HarnessSessionState state;
   Pending pending;
 
@@ -178,7 +179,8 @@ public final class WebLifecycleResponsivenessTest {
     controller = new HarnessController(app, boot);
     var web = HarnessController.class.getDeclaredField("web");
     web.setAccessible(true);
-    web.set(controller, new WebLifecycleController(controller, state, screens));
+    lifecycle = new WebLifecycleController(controller, state, screens);
+    web.set(controller, lifecycle);
   }
 
   @After
@@ -338,9 +340,9 @@ public final class WebLifecycleResponsivenessTest {
     state.lastStopResult =
         new WebStopCoordinator.Result(
             WebStopCoordinator.Status.UNCONFIRMED, "WEB_START_PENDING", "");
-    assertFalse(controller.forceStopAvailable());
+    assertFalse(lifecycle.forceStopAvailable());
     state.lifecycle.finishStart(running);
-    assertFalse(controller.forceStopAvailable());
+    assertFalse(lifecycle.forceStopAvailable());
     var refused =
         assertThrows(
             com.deepseekharness.app.util.WebStopException.class, controller::prepareForceStop);
@@ -351,14 +353,14 @@ public final class WebLifecycleResponsivenessTest {
     state.lastStopResult =
         new WebStopCoordinator.Result(
             WebStopCoordinator.Status.UNCONFIRMED, "WEB_START_STOP_UNCONFIRMED", "pending");
-    assertTrue(controller.forceStopAvailable());
+    assertTrue(lifecycle.forceStopAvailable());
     state.lastStopResult =
         new WebStopCoordinator.Result(
             WebStopCoordinator.Status.UNCONFIRMED, "WEB_PROCESS_EXIT_UNCONFIRMED", "pending");
-    assertTrue(controller.forceStopAvailable());
+    assertTrue(lifecycle.forceStopAvailable());
     state.lastStopResult =
         new WebStopCoordinator.Result(WebStopCoordinator.Status.STOPPED, "WEB_GUESTS_STOPPED", "");
-    assertFalse(controller.forceStopAvailable());
+    assertFalse(lifecycle.forceStopAvailable());
   }
 
   private void readyProfile() throws Exception {
