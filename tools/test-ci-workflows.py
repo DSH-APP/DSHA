@@ -153,10 +153,23 @@ class ReleaseGraph(unittest.TestCase):
                 self.assertEqual(needs(self.jobs[name]), {"bind"}, name)
         else:
             self.assertEqual(set(self.jobs), {"bind", "contracts", "java-format", "host-regression",
-                                              "inputs", "unit", "lint", "build-signed", "publish"})
-            self.assertEqual(needs(self.jobs["build-signed"]),
-                             {"bind", "contracts", "java-format", "host-regression", "inputs", "unit", "lint"})
-            self.assertEqual(needs(self.jobs["publish"]), {"bind", "build-signed"})
+                                              "inputs", "unit", "lint", "build-signed",
+                                              "test-packages", "publish"})
+            gates = {"bind", "contracts", "java-format", "host-regression", "inputs", "unit", "lint"}
+            self.assertEqual(needs(self.jobs["build-signed"]), gates)
+            self.assertEqual(needs(self.jobs["test-packages"]), gates)
+            self.assertEqual(needs(self.jobs["publish"]), {"bind", "build-signed", "test-packages"})
+            official_tests = self.jobs["test-packages"]
+            self.assertIn("uses: ./.github/workflows/_node-test-packages.yml", official_tests)
+            self.assertIn("release_identity: upstream", official_tests)
+            self.assertIn("require_configured_key: true", official_tests)
+            self.assertIn("require_pinned_cert: true", official_tests)
+            self.assertIn("artifact_prefix: release-test-package", official_tests)
+            self.assertIn("apk_name_prefix: dsha", official_tests)
+            self.assertIn("test_packages:", self.source)
+            self.assertIn("pattern: release-test-package-evidence-*", self.jobs["publish"])
+            self.assertIn("--apk-prefix dsha", self.jobs["publish"])
+            self.assertIn("test-package-assets.txt", self.jobs["publish"])
             for name in ("contracts", "java-format", "host-regression", "inputs"):
                 self.assertEqual(needs(self.jobs[name]), {"bind"}, name)
 

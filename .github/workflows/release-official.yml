@@ -26,6 +26,12 @@ on:
         required: false
         type: boolean
         default: true
+      test_packages:
+        description: Co-installable test packages attached to the Release
+        required: false
+        type: choice
+        options: [none, test+debug+dev, debug+dev, test, debug, dev]
+        default: none
 
 permissions:
   contents: read
@@ -331,6 +337,9 @@ jobs:
               'unitTests': json.load(open('out/full-unit-tests.json', encoding='utf-8')),
               'note': 'Production DSHA (dsh.android.client) package. Verify SHA-256 and certificate before installing.',
           }
+          tool = Path('tools/release-test-packages.py')
+          Path('out/release-test-packages.py').write_bytes(tool.read_bytes())
+          value['testPackageEvidenceToolSha256'] = hashlib.sha256(tool.read_bytes()).hexdigest()
           Path('out/build-info.json').write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           files = [Path('out') / name for name in ['build-info.json', 'full-unit-tests.json', 'apk-signature.txt', 'apk-badging.txt', os.environ['APK_NAME']]]
           files += sorted(path for path in Path('app/build/test-results/testStandardDebugUnitTest').rglob('TEST-*.xml'))
@@ -387,27 +396,65 @@ jobs:
             out/build-info.json
             out/SHA256SUMS
             out/release-notes.md
+            out/release-test-packages.py
             out/build-code.txt
           if-no-files-found: error
           retention-days: 1
 
+  test-packages:
+    name: Build and verify co-installable test packages
+    needs: [bind, contracts, java-format, host-regression, inputs, unit, lint]
+    # 与 build-signed 并行；任一前置门禁失败就不构建测试包。none 时整个 job 跳过，publish 仍发正式包。
+    if: ${{ inputs.test_packages != 'none' }}
+    uses: ./.github/workflows/_node-test-packages.yml
+    with:
+      ref: ${{ inputs.expected_sha }}
+      variants: ${{ inputs.test_packages }}
+      release_identity: upstream
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      fixture: true
+      asset_sha: ${{ needs.inputs.outputs.sha256 }}
+      asset_format: ${{ needs.inputs.outputs.format }}
+      unit_tests_run: true
+      patch_chains_run: false
+      # 正式 Release 的测试包必须用固定测试证书：与 ci/test-signing.json 钉住的指纹一致，否则失败。
+      require_configured_key: true
+      require_pinned_cert: true
+      artifact_prefix: release-test-package
+      apk_name_prefix: dsha
+      retention_days: 1
+    secrets:
+      SUNSET_TEST_KEYSTORE_B64: ${{ secrets.SUNSET_TEST_KEYSTORE_B64 }}
+      SUNSET_TEST_STORE_PASSWORD: ${{ secrets.SUNSET_TEST_STORE_PASSWORD }}
+
   publish:
     name: Publish verified tag and Release
-    needs: [bind, build-signed]
-    if: inputs.publish
+    needs: [bind, build-signed, test-packages]
+    if: >-
+      !cancelled()
+      && inputs.publish
+      && needs.build-signed.result == 'success'
+      && (needs.test-packages.result == 'success' || needs.test-packages.result == 'skipped')
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
       contents: write
     env:
       RELEASE_TAG: ${{ inputs.release_tag }}
       EXPECTED_SHA: ${{ inputs.expected_sha }}
       APK_NAME: ${{ needs.bind.outputs.apk_name }}
+      TEST_PACKAGES: ${{ inputs.test_packages }}
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: release-bundle
           path: out
+      - name: Download co-installable test packages
+        if: ${{ inputs.test_packages != 'none' }}
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: release-test-package-evidence-*
+          path: out/test-packages
       - name: Verify bundle checksums and commit binding
         working-directory: out
         run: |
@@ -423,7 +470,34 @@ jobs:
           if str(info['versionCode']) != open('build-code.txt', encoding='utf-8').read().strip():
               raise SystemExit('BUNDLE_VERSION_MISMATCH')
           PYCODE
-      - name: Publish verified tag and prerelease with direct Release assets
+      # publish 不 checkout：先按已核对的 build-info 摘要核对合并工具，再执行它把测试包并入发布证据。
+      - name: Merge co-installable test packages into the release bundle
+        if: ${{ inputs.test_packages != 'none' }}
+        working-directory: out
+        run: |
+          set -eu
+          python3 - <<'PYCODE'
+          import hashlib, json
+          from pathlib import Path
+          info = json.load(open('build-info.json', encoding='utf-8'))
+          expected = info.get('testPackageEvidenceToolSha256')
+          tool = Path('release-test-packages.py')
+          if not isinstance(expected, str) or not tool.is_file():
+              raise SystemExit('TEST_PACKAGE_TOOL_MISSING')
+          if hashlib.sha256(tool.read_bytes()).hexdigest() != expected:
+              raise SystemExit('TEST_PACKAGE_TOOL_TAMPERED')
+          PYCODE
+          python3 release-test-packages.py merge \
+            --bundle . \
+            --test-packages test-packages \
+            --artifact-prefix release-test-package-evidence- \
+            --apk-prefix dsha \
+            --requested "$TEST_PACKAGES"
+      - name: Re-verify merged release bundle checksums
+        if: ${{ inputs.test_packages != 'none' }}
+        working-directory: out
+        run: sha256sum -c SHA256SUMS
+      - name: Publish verified tag and Release with direct assets
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -434,6 +508,15 @@ jobs:
           fi
           gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$EXPECTED_SHA" \
             --title "DSHA ${RELEASE_TAG#v} (build${BUILD_CODE})" --latest --notes-file out/release-notes.md
-          gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
-            "out/$APK_NAME" out/dsha-build-evidence.zip out/build-info.json out/SHA256SUMS
+          shopt -s nullglob
+          assets=("out/$APK_NAME" out/dsha-build-evidence.zip out/build-info.json out/SHA256SUMS)
+          if [ "$TEST_PACKAGES" != none ]; then
+            test -s out/test-package-assets.txt
+            mapfile -t test_assets < out/test-package-assets.txt
+            if [ "${#test_assets[@]}" -lt 1 ]; then
+              echo 'test package assets missing'; exit 1
+            fi
+            assets+=("${test_assets[@]/#/out/}")
+          fi
+          gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" "${assets[@]}"
           gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json tagName,isPrerelease,assets,url
