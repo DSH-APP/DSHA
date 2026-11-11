@@ -7,14 +7,18 @@ name: DSH-A-Su production release
 # 只走 release-upstream.yml，且只在 ym2025szz/DSHA-prerelase 私有仓库运行。两个工作流在对方仓库直接跳过。
 #
 # 节点图（任一节点失败都不会签名或发布）：
-#   bind ─┬─► contracts ───────────────┐
-#         ├─► java-format ─────────────┤
-#         ├─► host-regression ─────────┤
-#         └─► inputs ─┬─► unit ────────┼─► build-signed ─┬─► publish
-#                     └─► lint ────────┘                 └─► test-packages（_node-test-packages）
+#   bind ─┬─► contracts ────────────────┐
+#         ├─► java-format ──────────────┤
+#         ├─► host-regression ──────────┤
+#         └─► inputs ─┬─► unit ─────────┤
+#                     ├─► lint ─────────┤
+#                     ├─► build-unsigned（无 Secrets，可读写共享缓存）
+#                     └─► test-packages-unsigned（无 Secrets，可读写共享缓存）
+#   门禁与两个 unsigned 构建并行 →（全部门禁通过后）sign-verify / test-packages 用各自的
+#   证书签名，两个签名节点都不写共享缓存 → publish 只合并已核对的证据。
 #   dry_run=true：publish 跳过（不建 tag/Release），改由 dry-run-summary 合并证据并打印发布计划。
-# 正式签名 Secrets 只进 build-signed；测试证书 Secrets（SUNSET_TEST_*）只进 test-packages，
-# 该节点同样不写 Gradle 共享缓存；只有 publish 拥有 contents: write，且不 checkout、不签名。
+# 正式签名 Secrets 只进 sign-verify；测试证书 Secrets（SUNSET_TEST_*）只进 test-packages；
+# 只有 publish 拥有 contents: write，且不 checkout、不签名。
 
 on:
   workflow_dispatch:
@@ -151,6 +155,7 @@ jobs:
         test-ci-handoff.py
         test-ci-workflows.py
         test-release-identity.py
+        test-release-signing.py
         test-sunset-ci-inputs.py
         test-release-names.py
         test-release-layout.py
@@ -191,13 +196,97 @@ jobs:
       sunset_test: false
       artifact: release-lint-results
 
-  build-signed:
-    name: Build and verify signed DSH-A-Su
-    needs: [bind, contracts, java-format, host-regression, inputs, unit, lint]
+  build-unsigned:
+    name: Build unsigned DSH-A-Su (no secrets)
+    # 只依赖 bind + inputs，与 unit / lint / 各门禁并行；本节点没有任何签名 Secrets，
+    # 因此可以读写共享 Gradle 缓存。正式私钥只出现在 sign-verify。
+    needs: [bind, inputs]
     runs-on: ubuntu-24.04
     timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.expected_sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          gradle-cache: 'true'
+      - uses: ./.github/actions/android-sdk
+        with:
+          ndk: 'true'
+      - uses: ./.github/actions/restore-handoff
+        with:
+          artifact: ${{ needs.inputs.outputs.artifact }}
+      - name: Build unsigned production APK
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleStandardRelease -Pdsha.identity=mod -Pdsha.unsignedPackage=true --no-daemon --max-workers=2
+      # 未签名阶段先核验清单、确实未签名和受管资产：签名只允许新增 META-INF/，
+      # sign-verify 会逐成员比对载荷，签名不会掩盖资产改名 / 摘要回归。
+      - name: Verify unsigned production APK manifest and managed assets
+        run: |
+          set -eu
+          shopt -s nullglob
+          apks=(app/build/outputs/apk/standard/release/*-unsigned.apk)
+          test "${#apks[@]}" -eq 1
+          mkdir -p out/unsigned-handoff
+          apk="out/unsigned-handoff/$(basename "${apks[0]}")"
+          cp "${apks[0]}" "$apk"
+          cp app/build/outputs/apk/standard/release/output-metadata.json out/unsigned-handoff/output-metadata.json
+          python3 tools/sign-release-apks.py --check-only --apk "$apk" --identity mod --metadata out/unsigned-handoff/output-metadata.json --receipt out/unsigned-handoff/unsigned-apk.json
+          python3 tools/verify-apk-managed-assets.py "$apk" > out/unsigned-handoff/apk-managed-assets.txt
+      - name: Bind unsigned handoff to this run and commit
+        run: |
+          python3 - <<'PYCODE'
+          import hashlib, json, os
+          from pathlib import Path
+          handoff = Path('out/unsigned-handoff')
+          apks = sorted(handoff.glob('*-unsigned.apk'))
+          if len(apks) != 1:
+              raise SystemExit('UNSIGNED_HANDOFF_APK_COUNT')
+          apk = apks[0]
+          receipt = json.load(open(handoff / 'unsigned-apk.json', encoding='utf-8'))
+          metadata = handoff / 'output-metadata.json'
+          managed = handoff / 'apk-managed-assets.txt'
+          if receipt.get('apkFile') != apk.name or receipt.get('schema') != 1:
+              raise SystemExit('UNSIGNED_HANDOFF_RECEIPT')
+          value = {
+              'schema': 1,
+              'kind': 'dsha-a-su-release-unsigned-handoff',
+              'commit': os.environ['GITHUB_SHA'],
+              'runId': os.environ['GITHUB_RUN_ID'],
+              'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'apkFile': apk.name,
+              'apkSize': apk.stat().st_size,
+              'apkSha256': hashlib.sha256(apk.read_bytes()).hexdigest(),
+              'metadataSha256': hashlib.sha256(metadata.read_bytes()).hexdigest(),
+              'managedAssetsSha256': hashlib.sha256(managed.read_bytes()).hexdigest(),
+              'packageName': receipt['packageName'],
+              'versionCode': receipt['versionCode'],
+              'versionName': receipt['versionName'],
+              'signed': False,
+          }
+          if value['apkSha256'] != receipt['apkSha256']:
+              raise SystemExit('UNSIGNED_HANDOFF_APK_SHA')
+          (handoff / 'unsigned-receipt.json').write_text(
+              json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(value, ensure_ascii=False, indent=2))
+          PYCODE
+      - name: Hand unsigned APK to the signing node
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-unsigned-apk
+          path: out/unsigned-handoff
+          if-no-files-found: error
+          retention-days: 1
+
+  sign-verify:
+    name: Sign and verify DSH-A-Su release
+    # 持正式签名 Secrets 的节点：不读也不写共享缓存，也不运行 Gradle（只用 build-tools + JDK）。
+    needs: [bind, contracts, java-format, host-regression, inputs, unit, lint, build-unsigned]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     env:
-      RELEASE_TAG: ${{ inputs.release_tag }}
       EXPECTED_SHA: ${{ inputs.expected_sha }}
       APK_NAME: ${{ needs.bind.outputs.apk_name }}
       ASSET_SHA: ${{ needs.inputs.outputs.sha256 }}
@@ -206,16 +295,16 @@ jobs:
         with:
           ref: ${{ inputs.expected_sha }}
           persist-credentials: false
-      # 持有签名 Secrets 的节点不写入任何共享缓存。
       - uses: ./.github/actions/setup-toolchain
         with:
           gradle-cache: 'false'
       - uses: ./.github/actions/android-sdk
         with:
-          ndk: 'true'
-      - uses: ./.github/actions/restore-handoff
+          ndk: 'false'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          artifact: ${{ needs.inputs.outputs.artifact }}
+          name: release-unsigned-apk
+          path: unsigned
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ${{ needs.unit.outputs.artifact }}
@@ -227,6 +316,32 @@ jobs:
       # unit 节点已经验证；这里对下载到的 XML 重新核对，回执只由本节点写出。
       - name: Re-verify complete Standard unit-test results
         run: python3 tools/verify-unit-results.py --mode full --require-fixtures --output out/full-unit-tests.json
+
+      - name: Verify unsigned handoff binding
+        run: |
+          python3 - <<'PYCODE'
+          import hashlib, json, os
+          from pathlib import Path
+          receipt = json.load(open('unsigned/unsigned-receipt.json', encoding='utf-8'))
+          apks = sorted(Path('unsigned').glob('*-unsigned.apk'))
+          if len(apks) != 1 or receipt.get('schema') != 1 or receipt.get('signed') is not False:
+              raise SystemExit('UNSIGNED_HANDOFF_INVALID')
+          apk = apks[0]
+          if receipt.get('commit') != os.environ['GITHUB_SHA'] \
+                  or receipt.get('runId') != os.environ['GITHUB_RUN_ID'] \
+                  or receipt.get('runAttempt') != os.environ['GITHUB_RUN_ATTEMPT']:
+              raise SystemExit('UNSIGNED_HANDOFF_NOT_THIS_RUN')
+          if receipt.get('apkFile') != apk.name or receipt.get('apkSize') != apk.stat().st_size \
+                  or receipt.get('apkSha256') != hashlib.sha256(apk.read_bytes()).hexdigest():
+              raise SystemExit('UNSIGNED_HANDOFF_APK_MISMATCH')
+          if receipt.get('metadataSha256') != hashlib.sha256(
+                  Path('unsigned/output-metadata.json').read_bytes()).hexdigest():
+              raise SystemExit('UNSIGNED_HANDOFF_METADATA_MISMATCH')
+          if receipt.get('managedAssetsSha256') != hashlib.sha256(
+                  Path('unsigned/apk-managed-assets.txt').read_bytes()).hexdigest():
+              raise SystemExit('UNSIGNED_HANDOFF_ASSETS_MISMATCH')
+          print(json.dumps(receipt, ensure_ascii=False, indent=2))
+          PYCODE
 
       - name: Prepare Mod release signing key from secrets
         env:
@@ -252,63 +367,16 @@ jobs:
             printf 'DSHA_KEY_ALIAS=%s\n' "${KEY_ALIAS:-dsha-a-su}"
           } >> "$GITHUB_ENV"
 
-      - name: Build signed production APK
+      - name: Sign unsigned production APK and verify identity
         run: |
-          chmod +x gradlew
-          ./gradlew :app:assembleStandardRelease -Pdsha.identity=mod --no-daemon --max-workers=2
-
-      - name: Verify production APK identity and signing certificate
-        run: |
-          python3 - <<'PY'
-          import json, os, pathlib, re, subprocess
-          sdk = pathlib.Path(os.environ.get('ANDROID_HOME') or os.environ.get('ANDROID_SDK_ROOT') or '/usr/local/lib/android/sdk')
-          buildtools = subprocess.check_output(['python3', 'tools/ci-toolchain.py', '--field', 'buildTools'], text=True).strip()
-          apksigner = str(sdk / 'build-tools' / buildtools / 'apksigner')
-          aapt2 = str(sdk / 'build-tools' / buildtools / 'aapt2')
-          identity = json.load(open('ci/release-identity.mod.json', encoding='utf-8'))
-          apk = pathlib.Path('app/build/outputs/apk/standard/release/app-standard-release.apk')
-          if not apk.is_file():
-              raise SystemExit('APK_MISSING')
-          badging = subprocess.check_output([aapt2, 'dump', 'badging', str(apk)], text=True)
-          if f"package: name='{identity['packageName']}'" not in badging:
-              raise SystemExit('APK_PACKAGE_MISMATCH')
-          if 'application-debuggable' in badging:
-              raise SystemExit('APK_DEBUGGABLE')
-          meta = json.load(open('app/build/outputs/apk/standard/release/output-metadata.json', encoding='utf-8'))['elements'][0]
-          version_code = int(re.search(r"versionCode='(\d+)'", badging).group(1))
-          version_name = re.search(r"versionName='([^']*)'", badging).group(1)
-          if version_code != meta['versionCode'] or version_name != meta['versionName']:
-              raise SystemExit('APK_VERSION_MISMATCH')
-          if version_name.endswith(('-test', '-SunsetTest', '-island')):
-              raise SystemExit('APK_TEST_OR_ISLAND_IDENTITY')
-          # aapt2 不同版本对最低 API 的键名不一致（sdkVersion / minSdkVersion），
-          # 只认其中一种会让正式包在校验阶段被误判为 minSdk 不符。
-          minimum = re.search(r"^(?:sdkVersion|minSdkVersion):'(\d+)'", badging, re.M)
-          if not minimum or int(minimum.group(1)) != 30:
-              raise SystemExit('APK_MINSDK_MISMATCH')
-          if "native-code: 'arm64-v8a'" not in badging:
-              raise SystemExit('APK_NATIVE_CODE_MISMATCH')
-          verify = subprocess.run([apksigner, 'verify', '--verbose', '--print-certs', str(apk)],
-                                  check=True, capture_output=True, text=True)
-          match = re.search(r'Signer #1 certificate SHA-256 digest: ([a-f0-9]{64})', verify.stdout)
-          if not match or match.group(1) != identity['certificateSha256']:
-              raise SystemExit('APK_CERTIFICATE_MISMATCH')
-          if f"application-label:'DSH-A-Su'" not in badging or identity['appName'] != 'DSH-A-Su':
-              raise SystemExit('APK_LABEL_MISMATCH')
-          pathlib.Path('out').mkdir(exist_ok=True)
-          pathlib.Path('out/apk-signature.txt').write_text(verify.stdout, encoding='utf-8')
-          pathlib.Path('out/apk-badging.txt').write_text(badging, encoding='utf-8')
-          print(json.dumps({
-              'packageName': identity['packageName'],
-              'versionCode': version_code,
-              'versionName': version_name,
-              'certificateSha256': match.group(1),
-              'apkSize': apk.stat().st_size,
-          }, indent=2))
-          PY
-
-      - name: Verify managed APK assets and pinned gh archive
-        run: python3 tools/verify-apk-managed-assets.py app/build/outputs/apk/standard/release/app-standard-release.apk
+          set -eu
+          shopt -s nullglob
+          unsigned=(unsigned/*-unsigned.apk)
+          test "${#unsigned[@]}" -eq 1
+          python3 tools/sign-release-apks.py --apk "${unsigned[0]}" --name "$APK_NAME" --output-dir out --identity mod --metadata unsigned/output-metadata.json
+          # 未签名阶段写出的受管资产回执随证据一起发布，便于离线复核。
+          cp unsigned/apk-managed-assets.txt out/apk-managed-assets.txt
+          cat out/apk-signing.json
 
       - name: Package commit-bound build evidence
         run: |
@@ -316,13 +384,14 @@ jobs:
           import hashlib, json, os
           from pathlib import Path
           import zipfile
-          apk = Path('out') / (os.environ['APK_NAME'])
-          source = Path('app/build/outputs/apk/standard/release/app-standard-release.apk')
-          apk.write_bytes(source.read_bytes())
+          apk = Path('out') / os.environ['APK_NAME']
+          signing = json.load(open('out/apk-signing.json', encoding='utf-8'))
           identity = json.load(open('ci/release-identity.json', encoding='utf-8'))
-          badging = (Path('out/apk-badging.txt')).read_text(encoding='utf-8')
-          meta = json.load(open('app/build/outputs/apk/standard/release/output-metadata.json', encoding='utf-8'))['elements'][0]
-          code = str(meta['versionCode'])
+          if not apk.is_file() or apk.is_symlink():
+              raise SystemExit('SIGNED_APK_MISSING')
+          if signing.get('apkFile') != apk.name or signing.get('certificateSha256') != identity['certificateSha256']:
+              raise SystemExit('SIGNED_APK_RECEIPT_MISMATCH')
+          code = str(signing['versionCode'])
           notes = Path('docs/releases/build' + code + '-changes.zh.md')
           if not notes.is_file():
               raise SystemExit('RELEASE_NOTES_MISSING: ' + str(notes))
@@ -335,8 +404,8 @@ jobs:
               'runId': os.environ['GITHUB_RUN_ID'],
               'runAttempt': os.environ['GITHUB_RUN_ATTEMPT'],
               'packageName': identity['packageName'],
-              'versionCode': meta['versionCode'],
-              'versionName': meta['versionName'],
+              'versionCode': signing['versionCode'],
+              'versionName': signing['versionName'],
               'apkFile': os.environ['APK_NAME'],
               'apkSize': apk.stat().st_size,
               'apkSha256': hashlib.sha256(apk.read_bytes()).hexdigest(),
@@ -351,7 +420,9 @@ jobs:
           Path('out/release-test-packages.py').write_bytes(tool.read_bytes())
           value['testPackageEvidenceToolSha256'] = hashlib.sha256(tool.read_bytes()).hexdigest()
           Path('out/build-info.json').write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-          files = [Path('out') / name for name in ['build-info.json', 'full-unit-tests.json', 'apk-signature.txt', 'apk-badging.txt', os.environ['APK_NAME']]]
+          # 证据包不再重复内嵌 APK（298 MB -> 约 13 MB）：APK 是独立 Release 资产，
+          # SHA256SUMS 与 build-info.json 的 apkSha256 共同绑定；单测 / Lint / 签名回执留在包内。
+          files = [Path('out') / name for name in ['build-info.json', 'full-unit-tests.json', 'apk-signature.txt', 'apk-badging.txt', 'apk-signing.json', 'apk-managed-assets.txt']]
           files += sorted(path for path in Path('app/build/test-results/testStandardDebugUnitTest').rglob('TEST-*.xml'))
           lint = Path('app/build/reports/lint-results-standardRelease.xml')
           if lint.is_file():
@@ -374,6 +445,7 @@ jobs:
               + f"- 包名 / versionCode / versionName：`{value['packageName']}` / {value['versionCode']} / `{value['versionName']}`\n"
               + f"- 证书 SHA-256：`{cert}`（由 `apksigner` 从成品读取，与 ci/release-identity.json 一致）\n"
               + f"- 固定输入 bundle SHA-256：`{os.environ['ASSET_SHA']}`\n"
+              + "- 证据包不重复内嵌 APK；APK 与证据包都由 `SHA256SUMS` 绑定，`build-info.json` 记录 APK SHA-256。\n"
               + "- 完整单测、Lint、Java 格式与源码门禁均在本 run 内执行；安装前请先校验 SHA-256 与证书。\n",
               encoding='utf-8')
           Path('out/build-code.txt').write_text(code, encoding='utf-8')
@@ -411,11 +483,35 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  test-packages:
-    name: Build and verify co-installable test packages
-    needs: [bind, contracts, java-format, host-regression, inputs, unit, lint]
-    # 与 build-signed 并行；不写 !cancelled()，让默认 success() 生效：任一前置门禁失败就不构建测试包。
+  test-packages-unsigned:
+    name: Build unsigned co-installable test packages
+    # 无 Secrets 的未签名编译：只依赖 bind + inputs，与 unit / lint 并行，可读写 Gradle 共享缓存。
+    needs: [bind, inputs]
     # none 时整个 job 跳过（skipped），publish 仍可发布正式包。
+    if: ${{ inputs.test_packages != 'none' }}
+    uses: ./.github/workflows/_node-test-packages.yml
+    with:
+      ref: ${{ inputs.expected_sha }}
+      variants: ${{ inputs.test_packages }}
+      release_identity: mod
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      # 夹具只服务签名节点的 verify-dsh-upgrade-apk，未签名编译不需要。
+      fixture: false
+      asset_sha: ${{ needs.inputs.outputs.sha256 }}
+      asset_format: ${{ needs.inputs.outputs.format }}
+      unit_tests_run: false
+      patch_chains_run: false
+      # 本模式不签名，也不需要任何证书 Secrets。
+      require_configured_key: false
+      artifact_prefix: release-test-unsigned
+      apk_name_prefix: dsha-a-su
+      retention_days: 1
+      unsigned_only: true
+
+  test-packages:
+    name: Sign and verify co-installable test packages
+    # 签名仍在全部门禁通过之后；只下载未签名产物，不再运行 Gradle。
+    needs: [bind, contracts, java-format, host-regression, inputs, unit, lint, test-packages-unsigned]
     if: ${{ inputs.test_packages != 'none' }}
     uses: ./.github/workflows/_node-test-packages.yml
     with:
@@ -435,19 +531,21 @@ jobs:
       artifact_prefix: release-test-package
       apk_name_prefix: dsha-a-su
       retention_days: 1
+      unsigned_artifact_prefix: release-test-unsigned
     secrets:
       SUNSET_TEST_KEYSTORE_B64: ${{ secrets.SUNSET_TEST_KEYSTORE_B64 }}
       SUNSET_TEST_STORE_PASSWORD: ${{ secrets.SUNSET_TEST_STORE_PASSWORD }}
 
   publish:
     name: Publish verified tag and prerelease
-    needs: [bind, build-signed, test-packages]
+    needs: [bind, sign-verify, test-packages]
     # dry_run=true 时不建 tag/Release；test_packages=none 时 test-packages 为 skipped，仍要发布正式包。
     if: >-
       !cancelled()
       && !inputs.dry_run
-      && needs.build-signed.result == 'success'
-      && (needs.test-packages.result == 'success' || needs.test-packages.result == 'skipped')
+      && needs.sign-verify.result == 'success'
+      && (needs.test-packages.result == 'success'
+          || (needs.test-packages.result == 'skipped' && inputs.test_packages == 'none'))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -537,13 +635,14 @@ jobs:
 
   dry-run-summary:
     name: Dry-run release plan (no tag or Release)
-    needs: [bind, build-signed, test-packages]
+    needs: [bind, sign-verify, test-packages]
     # dry_run=true 时 publish 跳过；这里把同一套证据合并并打印将要创建的 tag / 资产清单。
     if: >-
       !cancelled()
       && inputs.dry_run
-      && needs.build-signed.result == 'success'
-      && (needs.test-packages.result == 'success' || needs.test-packages.result == 'skipped')
+      && needs.sign-verify.result == 'success'
+      && (needs.test-packages.result == 'success'
+          || (needs.test-packages.result == 'skipped' && inputs.test_packages == 'none'))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:

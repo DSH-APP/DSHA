@@ -1,0 +1,10 @@
+状态：已结束
+分支：feat/test-package-matrix（基于 93cc677f）
+会话：cdcd3c65-f96f-469f-84e7-10bf5e5ce747
+开始：2026-11-10 23:05:00 UTC
+更新：2026-11-10 23:30:00 UTC
+内容：固定测试包签名（ci/test-signing.json + tools/test-signing.py）、补齐 test/debug/dev 变体矩阵、变体工作流增加 prerelease 发布
+当前阶段：已完成并合入 main（7d954ced、16c6fca0）；test 变体验证 run 42921229562 在跑
+占用文件：无
+合并：已合入 main（16c6fca0，直接推送）
+后台任务：test-package-variants run 42921229562（GitHub Actions，产物在 run 页面）

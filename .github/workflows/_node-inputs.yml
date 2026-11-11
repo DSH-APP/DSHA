@@ -88,10 +88,19 @@ jobs:
           args=(--url "$INPUT_URL" --sha256 "$INPUT_SHA")
           if [ "$INPUT_FORMAT" = source-archive ]; then args+=(--source-archive); fi
           python3 tools/ci-assets.py "${args[@]}"
+      # 受管 dsh 运行时按 npm lock 内容缓存：命中时 npm ci 直接读本地缓存，发布 run 的首个节点
+      # 从实测 40-65 s 降到约 20-30 s。缓存键只含 lock 哈希，与源码 / 发布身份无关；
+      # 缓存里的 tarball 仍由 npm 校验 integrity，不会绕过锁文件。
+      - name: Restore managed runtime npm cache
+        if: inputs.rebuild_runtime
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/dsha-npm-cache
+          key: dsha-dsh-runtime-npm-${{ runner.os }}-${{ hashFiles('tools/dsh-runtime/package-lock.json') }}
       - name: Rebuild current managed DSH runtime from the dependency lock
         if: inputs.rebuild_runtime
         run: |
-          python3 tools/prepare-dsh-runtime.py
+          python3 tools/prepare-dsh-runtime.py --cache "$RUNNER_TEMP/dsha-npm-cache"
           python3 tools/prepare-backup-assets.py --write
           python3 tools/prepare-runtime-descriptor.py --write
           python3 tools/verify-runtime-descriptor-source.py
