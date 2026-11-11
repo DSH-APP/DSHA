@@ -26,6 +26,15 @@ public final class WebStopBudget {
   /** 强停候选证据不可得时，向用户提供的“等待后重试”间隔。 */
   public static final long FORCE_RETRY_MILLIS = 15_000;
 
+  /** 优雅窗口结束后，对同一出生身份的受管 proroot bridge 先发 SIGQUIT 的确认窗口。 */
+  public static final long ESCALATION_QUIT_MILLIS = 1_500;
+
+  /** SIGQUIT 后仍存活时再发 SIGKILL 的确认窗口。 */
+  public static final long ESCALATION_KILL_MILLIS = 2_000;
+
+  /** 升级信号前后的双次核验间隔（给内核一个稳定的观察窗口，不改变身份判据）。 */
+  public static final long ESCALATION_VERIFY_PAUSE_MILLIS = 50;
+
   private WebStopBudget() {}
 
   /**

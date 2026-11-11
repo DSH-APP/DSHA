@@ -245,6 +245,24 @@ public final class WebProcSel {
         && webArguments(args, entry + 1);
   }
 
+  /**
+   * 停止升级判据：这条命令行是否为本安装受管的 proroot bridge（guest 侧）。
+   *
+   * <p>只用于“优雅退出窗口结束后，是否允许按同一出生身份升级一次信号”；不替代任何身份核验。
+   * proroot 的 bridge 进程会登记自己的 tracee，普通 SIGTERM 可能被忽略；SIGQUIT 才是它回收
+   * tracee 的约定信号。proot/proroot 容器启动器仍不在本判据范围内（启动器由持有 Process 句柄的
+   * 收尾路径按亲子身份处理）。
+   */
+  public static boolean prorootManagedBridge(String cmdline) {
+    if (cmdline == null || cmdline.isEmpty()) return false;
+    String[] args =
+        cmdline.indexOf('\0') >= 0 ? cmdline.split("\u0000") : cmdline.trim().split("\\s+");
+    args = directProrootPreloads(args);
+    return args.length > 0
+        && basename(args[0]).equals("libproroot-bridge.so")
+        && (isProrootWebPayload(args) || isProrootManagedWebShell(args));
+  }
+
   /** 返回严格直启命令绑定的隔离 profile；普通 Web、shell 包装和伪造参数均为空。 */
   public static String trialProfile(String cmdline) {
     if (cmdline == null || cmdline.isEmpty()) return "";

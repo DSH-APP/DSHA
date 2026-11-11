@@ -331,6 +331,36 @@ public final class WebLifecycleResponsivenessTest {
     assertEquals("explicit Start reaches readiness preflight", 1, boot.reads.get());
   }
 
+  @Test
+  public void healthyStartPlaceholderCannotOfferForceStop() throws Exception {
+    long running = state.lifecycle.beginStart(false, false);
+    // 正常启动每代次的占位结论：不是失败停止事实。
+    state.lastStopResult =
+        new WebStopCoordinator.Result(
+            WebStopCoordinator.Status.UNCONFIRMED, "WEB_START_PENDING", "");
+    assertFalse(controller.forceStopAvailable());
+    state.lifecycle.finishStart(running);
+    assertFalse(controller.forceStopAvailable());
+    var refused =
+        assertThrows(
+            com.deepseekharness.app.util.WebStopException.class, controller::prepareForceStop);
+    assertEquals(
+        com.deepseekharness.app.util.WebStopDiagnostic.Code.FORCE_REQUIRES_UNCONFIRMED_STOP,
+        refused.diagnostic().code());
+    // 真实失败停止事实（启动前置停止失败 / 用户停止未确认）才允许准备强停候选。
+    state.lastStopResult =
+        new WebStopCoordinator.Result(
+            WebStopCoordinator.Status.UNCONFIRMED, "WEB_START_STOP_UNCONFIRMED", "pending");
+    assertTrue(controller.forceStopAvailable());
+    state.lastStopResult =
+        new WebStopCoordinator.Result(
+            WebStopCoordinator.Status.UNCONFIRMED, "WEB_PROCESS_EXIT_UNCONFIRMED", "pending");
+    assertTrue(controller.forceStopAvailable());
+    state.lastStopResult =
+        new WebStopCoordinator.Result(WebStopCoordinator.Status.STOPPED, "WEB_GUESTS_STOPPED", "");
+    assertFalse(controller.forceStopAvailable());
+  }
+
   private void readyProfile() throws Exception {
     assertTrue(new File(boot.getRootfsDir(), "root/.dsh").mkdirs());
     boot.ready = true;

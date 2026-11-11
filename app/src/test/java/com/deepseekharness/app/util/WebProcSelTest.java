@@ -304,4 +304,34 @@ public class WebProcSelTest {
         WebProcSel.maySignalWeb(
             command.replace("dsha-recovery-0123456789abcdef", "dsha-recovery-invalid")));
   }
+
+  @Test
+  public void prorootManagedBridgeIsTheOnlyEscalationShape() {
+    String bridge =
+        "libproroot-bridge.so /data/app/pkg/lib/arm64/libproroot-linker.so --argv0 node "
+            + "--preload /data/app/pkg/lib/arm64/libproroot-runtime.so "
+            + "/data/data/com.dsh/files/linux/ubuntu/usr/local/bin/node "
+            + "/usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js web";
+    assertTrue(WebProcSel.prorootManagedBridge(bridge));
+    assertTrue(WebProcSel.maySignalWeb(bridge));
+    // 普通 proot node、容器启动器、无关命令都不能进入升级路径
+    assertFalse(
+        WebProcSel.prorootManagedBridge(
+            "node /usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js web"));
+    assertFalse(WebProcSel.prorootManagedBridge("libproroot.so " + bridge));
+    assertFalse(WebProcSel.prorootManagedBridge("libproot.so " + bridge));
+    assertFalse(WebProcSel.prorootManagedBridge(""));
+    assertFalse(WebProcSel.prorootManagedBridge(null));
+    // 受管 shell 形态（argv0 bash -c …）同样属于本安装的 bridge
+    String managed = WebLaunchCommand.build(true, "zh", "web", 0, 9);
+    String shell =
+        "libproroot-bridge.so\0/data/app/lib/libproroot-linker.so\0--argv0\0bash\0--preload\0"
+            + "/data/app/lib/libproroot-runtime.so\0"
+            + "/data/user/0/app/files/linux/ubuntu/bin/bash\0-c\0"
+            + managed
+            + "\0";
+    assertTrue(WebProcSel.prorootManagedBridge(shell));
+    assertFalse(
+        WebProcSel.prorootManagedBridge(shell.replace("--host 127.0.0.1", "--host 0.0.0.0")));
+  }
 }

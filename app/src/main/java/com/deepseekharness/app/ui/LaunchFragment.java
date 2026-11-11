@@ -229,6 +229,11 @@ public class LaunchFragment extends Fragment {
                 startStatusMessage = msg == null ? "" : msg;
                 refreshRunState();
                 refreshLanAddr();
+                // 启动前置停止失败时也给出可执行的强制结束入口（09:13 现场用户只能重启 App）。
+                if (!startStatusMessage.isEmpty()
+                    && startStatusMessage.equals(controller.lastStopError())
+                    && controller.forceStopAvailable())
+                  offerForceStop(activity, root, status, generation);
               });
         };
     refreshRunState();

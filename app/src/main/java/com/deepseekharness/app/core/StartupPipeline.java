@@ -231,7 +231,7 @@ final class StartupPipeline {
       boolean settled = false;
       if (com.deepseekharness.app.util.WebStopBudget.mayStillExit(pending))
         settled = timing.run("wait-prior-exit", () -> actions.awaitPriorExit(stopDeadline));
-      if (!settled) throw new StartupStopFailure(StartupStopText.unconfirmed(pending));
+      if (!settled) throw new StartupStopFailure(StartupStopText.unconfirmed(pending), pending);
     }
     if (!actions.current()) return null;
     actions.stage(com.deepseekharness.app.util.UiText.text("检查随包运行工具"));

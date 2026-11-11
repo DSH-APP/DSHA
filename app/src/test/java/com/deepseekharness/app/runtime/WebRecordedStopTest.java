@@ -24,6 +24,18 @@ public final class WebRecordedStopTest {
     return new WebProcessManager.ProcessState(kind, started < 0 ? null : birth(started), WEB);
   }
 
+  /** 09:13 真机现场的残留形态：本安装受管 proroot bridge（guest 侧）。 */
+  private static final String PROROOT_BRIDGE =
+      "libproroot-bridge.so /data/app/pkg/lib/arm64/libproroot-linker.so --argv0 node "
+          + "--preload /data/app/pkg/lib/arm64/libproroot-runtime.so "
+          + "/data/data/com.dsh/files/linux/ubuntu/usr/local/bin/node "
+          + "/usr/local/lib/node_modules/@deepseek-ai/dsh/lib/bin.js web";
+
+  private static WebProcessManager.ProcessState bridge(long started) {
+    return new WebProcessManager.ProcessState(
+        WebProcessManager.Kind.WEB, birth(started), PROROOT_BRIDGE);
+  }
+
   private static final class Io implements WebRecordedStop.Io {
     boolean root = true,
         trial,
@@ -31,15 +43,21 @@ public final class WebRecordedStopTest {
         interrupt,
         transientFailure,
         requireSavedBirth,
-        transientDuringWait;
+        transientDuringWait,
+        mayEscalate,
+        exitAfterQuit,
+        exitAfterKill;
     String record = "42", saved = "42 100";
     long clock;
     int sentinel, inspections, records, waitFailures;
     final List<Integer> terms = new ArrayList<>();
     final List<String> retired = new ArrayList<>();
+    final List<String> escalations = new ArrayList<>();
     final ArrayDeque<WebProcessManager.ProcessState> states = new ArrayDeque<>();
     WebProcessManager.ProcessState current = state(WebProcessManager.Kind.WEB, 100);
+    WebProcessManager.ProcessState afterTerm;
     WebRecordedStop.Signal signal = WebRecordedStop.Signal.SENT;
+    WebRecordedStop.Signal escalateSignal = WebRecordedStop.Signal.SENT;
     int recordChangeAt = -1;
 
     public boolean rootExists() {
@@ -87,8 +105,22 @@ public final class WebRecordedStopTest {
             new IOException("token=synthetic-secret"));
       if (transientDuringWait && !terms.isEmpty() && waitFailures-- > 0)
         throw new WebProcessManager.ProcessInspectionException(new IOException("exit-state"));
+      if (afterTerm != null && !terms.isEmpty()) return afterTerm;
+      if (!escalations.isEmpty()) {
+        boolean exited = escalations.contains("KILL") ? exitAfterKill : exitAfterQuit;
+        if (exited) return state(WebProcessManager.Kind.GONE, -1);
+      }
       if (!states.isEmpty()) return states.removeFirst();
       return exitAfterTerm && !terms.isEmpty() ? state(WebProcessManager.Kind.GONE, -1) : current;
+    }
+
+    public boolean mayEscalate() {
+      return mayEscalate;
+    }
+
+    public WebRecordedStop.Signal escalate(int pid, boolean kill) {
+      escalations.add(kill ? "KILL" : "QUIT");
+      return escalateSignal;
     }
 
     public void retire(String record) {
@@ -220,6 +252,65 @@ public final class WebRecordedStopTest {
     // 预算必须覆盖 dsh 自身 5s 的强制退出上限；3s 会把正常关闭判成未确认。
     assertEquals(com.deepseekharness.app.util.WebStopBudget.EXIT_CONFIRM_MILLIS, io.clock);
     assertTrue(io.clock >= 6_000 && io.clock <= 8_000);
+  }
+
+  @Test
+  public void ignoredTermOnManagedProrootBridgeEscalatesQuitThenKill() {
+    Io io = new Io();
+    io.current = bridge(100);
+    io.mayEscalate = true;
+    io.exitAfterKill = true;
+    assertNull(WebRecordedStop.run(io));
+    assertEquals(List.of("QUIT", "KILL"), io.escalations);
+    assertEquals(List.of("42"), io.retired);
+    assertTrue(io.clock >= com.deepseekharness.app.util.WebStopBudget.EXIT_CONFIRM_MILLIS);
+  }
+
+  @Test
+  public void quitThatLetsTheBridgeExitNeedsNoKill() {
+    Io io = new Io();
+    io.current = bridge(100);
+    io.mayEscalate = true;
+    io.exitAfterQuit = true;
+    assertNull(WebRecordedStop.run(io));
+    assertEquals(List.of("QUIT"), io.escalations);
+    assertEquals(List.of("42"), io.retired);
+  }
+
+  @Test
+  public void escalationIsNeverAppliedToNonProrootOrTrialStops() {
+    Io normal = new Io();
+    normal.mayEscalate = true; // 普通 proot node：即使允许升级也不匹配 bridge 判据
+    assertEquals(Code.EXIT_UNCONFIRMED, WebRecordedStop.run(normal).code());
+    assertTrue(normal.escalations.isEmpty());
+    Io trial = new Io();
+    trial.current = bridge(100);
+    trial.mayEscalate = false; // 隔离试运行 / 强杀路径
+    assertEquals(Code.EXIT_UNCONFIRMED, WebRecordedStop.run(trial).code());
+    assertTrue(trial.escalations.isEmpty());
+  }
+
+  @Test
+  public void nonBridgeStateAfterTermIsRefusedBeforeAnyEscalation() {
+    Io io = new Io();
+    io.current = bridge(100);
+    io.mayEscalate = true;
+    io.afterTerm = new WebProcessManager.ProcessState(WebProcessManager.Kind.OTHER, null, "");
+    assertEquals(Code.IDENTITY_CHANGED, WebRecordedStop.run(io).code());
+    assertTrue(io.escalations.isEmpty());
+    assertTrue(io.retired.isEmpty());
+  }
+
+  @Test
+  public void escalationWriteDeniedKeepsTheRecordWithoutPretendingExit() {
+    Io io = new Io();
+    io.current = bridge(100);
+    io.mayEscalate = true;
+    io.escalateSignal = WebRecordedStop.Signal.DENIED;
+    WebStopDiagnostic error = WebRecordedStop.run(io);
+    assertEquals(Code.SIGNAL_DENIED, error.code());
+    assertEquals(List.of("QUIT"), io.escalations);
+    assertTrue(io.retired.isEmpty());
   }
 
   @Test

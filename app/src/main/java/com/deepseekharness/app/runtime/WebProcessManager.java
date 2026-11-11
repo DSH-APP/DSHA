@@ -108,35 +108,67 @@ public class WebProcessManager {
   private final ProotBootstrap proot;
   private final File records;
 
+  /**
+   * 停止扫描保留的双核验残留 Web 事实（09:13 现场：PID/identity 文件已被退休，但 bridge 仍存活）。
+   *
+   * <p>只作为强停候选的兜底来源；真正发信号前还会重新双核验一次，任一不符即拒绝。字段不含凭据，
+   * 命令原文只用于 `maySignalWeb` 判据、不直接展示（界面展示用 {@link WebProcSel#commandDigest}）。
+   */
+  static final class Residual {
+    final int pid;
+    final com.deepseekharness.app.util.WebPidIdentity identity;
+    final int uid;
+    final String command;
+
+    Residual(
+        int pid, com.deepseekharness.app.util.WebPidIdentity identity, int uid, String command) {
+      this.pid = pid;
+      this.identity = identity;
+      this.uid = uid;
+      this.command = command;
+    }
+  }
+
+  private volatile Residual retainedResidual;
+
   public static final class ForceCandidate {
     private final com.deepseekharness.app.util.WebForceStop.Candidate proof;
     private final com.deepseekharness.app.util.WebSessionProof.Saved recorded;
+    private final Residual residual;
     private final boolean retirePreviousLauncher;
 
     private ForceCandidate(com.deepseekharness.app.util.WebForceStop.Candidate proof) {
-      this(proof, null, false);
+      this(proof, null, null, false);
     }
 
     private ForceCandidate(
         com.deepseekharness.app.util.WebSessionProof.Saved recorded,
         boolean retirePreviousLauncher) {
-      this(null, recorded, retirePreviousLauncher);
+      this(null, recorded, null, retirePreviousLauncher);
+    }
+
+    private ForceCandidate(Residual residual) {
+      this(null, null, residual, false);
     }
 
     private ForceCandidate(
         com.deepseekharness.app.util.WebForceStop.Candidate proof,
         com.deepseekharness.app.util.WebSessionProof.Saved recorded,
+        Residual residual,
         boolean retirePreviousLauncher) {
       this.proof = proof;
       this.recorded = recorded;
+      this.residual = residual;
       this.retirePreviousLauncher = retirePreviousLauncher;
     }
 
     public int pid() {
+      if (residual != null) return residual.pid;
       return recorded != null ? recorded.webPid() : proof.pid();
     }
 
     public String generation() {
+      if (residual != null) return "";
       return recorded != null ? Long.toString(recorded.generation()) : proof.generation();
     }
 
@@ -153,10 +185,59 @@ public class WebProcessManager {
     try {
       return new ForceCandidate(
           com.deepseekharness.app.util.WebForceStop.prepare(this, this::forceEvidence));
-    } catch (IOException failure) {
+    } catch (IOException fileEvidenceUnavailable) {
+      // 09:13 现场：PID/identity 文件已被退休或不可读，但停止扫描保留的残留事实仍能双核验同一 Web。
+      ForceCandidate residual = residualCandidateChecked();
+      if (residual != null) return residual;
       throw new WebStopException(
-          WebStopDiagnostic.failure(Code.FORCE_EVIDENCE_UNCONFIRMED, failure), failure);
+          WebStopDiagnostic.failure(Code.FORCE_EVIDENCE_UNCONFIRMED, fileEvidenceUnavailable),
+          fileEvidenceUnavailable);
     }
+  }
+
+  /**
+   * 证据兜底：用停止扫描里经双次内核核验的残留 Web 事实准备强停候选。
+   *
+   * <p>只读、不发信号；发信号前 {@link #forceResidualStop} 会再双核验一次。没有残留事实、或现在
+   * 的 PID 出生身份 / 命令已与保留事实不符时拒绝（返回 null / 抛类型化失败），绝不返回可被重放的
+   * 裸 PID 候选。
+   */
+  ForceCandidate residualCandidateChecked() throws IOException {
+    Residual residual = retainedResidual;
+    if (residual == null) return null;
+    ProcessState first = inspect(residual.pid);
+    pauseForSecondInspection();
+    ProcessState second = inspect(residual.pid);
+    if (!residualMatches(residual, first) || !residualMatches(residual, second))
+      throw new WebStopException(residualChanged(residual), null);
+    return new ForceCandidate(residual);
+  }
+
+  /** 双次核验之间的短暂停顿；Thread.sleep 在 JVM 与 Android 上一致，便于单测覆盖。 */
+  private static void pauseForSecondInspection() {
+    try {
+      Thread.sleep(com.deepseekharness.app.util.WebStopBudget.ESCALATION_VERIFY_PAUSE_MILLIS);
+    } catch (InterruptedException interrupted) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  /** 残留事实与当前内核身份/命令/UID 一致；任一不符都不能发信号。 */
+  private boolean residualMatches(Residual residual, ProcessState state) {
+    return state.kind == Kind.WEB
+        && state.identity != null
+        && residual.identity.sameProcess(state.identity)
+        && state.command.equals(residual.command)
+        && WebProcSel.maySignalWeb(state.command)
+        && residual.uid == recoveryHostUid();
+  }
+
+  private static WebStopDiagnostic residualChanged(Residual residual) {
+    return WebStopDiagnostic.of(
+        Code.FORCE_EVIDENCE_UNCONFIRMED,
+        "PID=" + residual.pid,
+        "命令摘要=" + WebProcSel.commandDigest(residual.command),
+        "未通过=残留 Web 身份已变化");
   }
 
   /** Only explicit user confirmation may call this; it never signals a launcher or process group. */
@@ -281,6 +362,8 @@ public class WebProcessManager {
       throw new WebStopException(Code.FORCE_EVIDENCE_UNCONFIRMED, "TRIAL_FORBIDDEN");
     if (candidate != null && candidate.recorded != null)
       return forceRecordedStop(candidate.recorded, candidate.retirePreviousLauncher);
+    if (candidate != null && candidate.residual != null)
+      return forceResidualStop(candidate.residual);
     try {
       sentinel();
       com.deepseekharness.app.util.WebForceStop.signal(
@@ -300,6 +383,75 @@ public class WebProcessManager {
     } catch (IOException failure) {
       throw new WebStopException(
           WebStopDiagnostic.failure(Code.FORCE_EVIDENCE_UNCONFIRMED, failure), failure);
+    }
+  }
+
+  /**
+   * 用停止扫描保留的双核验残留事实执行强制结束。
+   *
+   * <p>发信号前再双核验一次；先 SIGQUIT（proroot bridge 的约定回收信号），短暂等待后仍存活再
+   * SIGKILL。任何一次核验不符都不发信号；结束仍以普通 stopAll 屏障确认，不以信号回执替代。
+   * 09:13 现场：PID/identity 文件已被退休，这条路是用户不必重启 App 的兜底。
+   */
+  private StopResult forceResidualStop(Residual residual) throws IOException {
+    try {
+      sentinel();
+      requireResidual(residual);
+      WebRecordedStop.Signal quit = signal(residual.pid, OsConstants.SIGQUIT);
+      if (quit == WebRecordedStop.Signal.DENIED)
+        throw new WebStopException(Code.SIGNAL_DENIED, "残留 Web 拒绝 SIGQUIT");
+      if (quit == WebRecordedStop.Signal.SENT) {
+        boolean exited =
+            awaitResidualExit(
+                residual, com.deepseekharness.app.util.WebStopBudget.ESCALATION_QUIT_MILLIS);
+        if (!exited) {
+          requireResidual(residual);
+          WebRecordedStop.Signal kill = signal(residual.pid, OsConstants.SIGKILL);
+          if (kill == WebRecordedStop.Signal.DENIED)
+            throw new WebStopException(Code.SIGNAL_DENIED, "残留 Web 拒绝 SIGKILL");
+          if (kill == WebRecordedStop.Signal.SENT)
+            awaitResidualExit(
+                residual, com.deepseekharness.app.util.WebStopBudget.ESCALATION_KILL_MILLIS);
+        }
+      }
+      StopResult barrier = result(stopAll());
+      if (barrier.stopped()) retainedResidual = null;
+      if (barrier.stopped()) return barrier;
+      java.util.List<WebStopDiagnostic> facts = new java.util.ArrayList<>();
+      facts.add(
+          WebStopDiagnostic.of(
+              Code.EXIT_UNCONFIRMED, residual.pid, "已按残留事实升级 SIGQUIT/SIGKILL 仍未退出"));
+      facts.addAll(barrier.diagnostics());
+      return new StopResult(
+          StopStatus.UNCONFIRMED, "WEB_RESIDUAL_STOP_UNCONFIRMED", facts, proot.hostPorts());
+    } catch (IOException failure) {
+      throw new WebStopException(
+          WebStopDiagnostic.failure(Code.FORCE_EVIDENCE_UNCONFIRMED, failure), failure);
+    }
+  }
+
+  /** 发信号前双核验残留事实；任何不符抛类型化失败，绝不发信号。 */
+  private void requireResidual(Residual residual) throws IOException {
+    ProcessState first = inspect(residual.pid);
+    pauseForSecondInspection();
+    ProcessState second = inspect(residual.pid);
+    if (!residualMatches(residual, first) || !residualMatches(residual, second))
+      throw new WebStopException(residualChanged(residual), null);
+  }
+
+  /** 有界等待残留 Web 退出；读不了不等于退出，继续等到窗口尽头。 */
+  private boolean awaitResidualExit(Residual residual, long millis) {
+    long deadline = android.os.SystemClock.elapsedRealtime() + millis;
+    while (true) {
+      try {
+        ProcessState current = inspect(residual.pid);
+        if (current.kind == Kind.GONE || !residualMatches(residual, current)) return true;
+      } catch (IOException unavailable) {
+        // 读不了不等于退出；继续等到窗口尽头。
+      }
+      long now = android.os.SystemClock.elapsedRealtime();
+      if (now >= deadline) return false;
+      android.os.SystemClock.sleep(Math.min(50, deadline - now));
     }
   }
 
@@ -685,6 +837,20 @@ public class WebProcessManager {
       if (globalScanUnconfirmed(state.kind, state.differentUid, owner, appUid)) {
         // A denied read still blocks maintenance, but it is not proof that a Web is running.
         if (state.kind == Kind.DENIED) throw new WebStopException(Code.OWNED_WEB_SCAN_UNCONFIRMED);
+        // 09:13 现场：残留可能是 proroot bridge，而 PID/identity 文件已被退休。保留双次核验一致的
+        // 残留事实供强停兜底（真正发信号前还会再核验）；两次结论不一致就不保留任何候选。
+        ProcessState again = inspect(pid);
+        retainedResidual =
+            state.identity != null
+                    && again.kind == Kind.WEB
+                    && again.identity != null
+                    && state.identity.sameProcess(again.identity)
+                    && state.command.equals(again.command)
+                    && WebProcSel.maySignalWeb(state.command)
+                    && owner != null
+                    && owner == appUid
+                ? new Residual(pid, state.identity, owner, state.command)
+                : null;
         return java.util.List.of(
             WebStopDiagnostic.of(
                 Code.OWNED_WEB_REMAINS,
@@ -692,6 +858,7 @@ public class WebProcessManager {
                 "命令摘要=" + WebProcSel.commandDigest(state.command)));
       }
     }
+    retainedResidual = null;
     return java.util.List.of();
   }
 
@@ -1291,6 +1458,21 @@ public class WebProcessManager {
 
       public WebRecordedStop.Signal term(int pid) throws IOException {
         return signal(pid, force ? OsConstants.SIGKILL : OsConstants.SIGTERM);
+      }
+
+      public boolean mayEscalate() {
+        // 只给生产主 Web 的普通停止；强杀路径与隔离试运行保持原语义。
+        return records == null && !force;
+      }
+
+      public WebRecordedStop.Signal escalate(int pid, boolean kill) throws IOException {
+        WebRecordedStop.Signal sent = signal(pid, kill ? OsConstants.SIGKILL : OsConstants.SIGQUIT);
+        if (proot != null && proot.ctx != null)
+          com.deepseekharness.app.core.DiagnosticLog.record(
+              proot.ctx,
+              "WEB_STOP_ESCALATION",
+              "level=" + (kill ? "SIGKILL" : "SIGQUIT") + " pid=" + pid + " result=" + sent.name());
+        return sent;
       }
     };
   }

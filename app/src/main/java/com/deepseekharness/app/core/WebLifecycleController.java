@@ -1043,6 +1043,12 @@ final class WebLifecycleController {
                 : state.startProtection.beginStart(protection, stopSentinelPresent);
         if (generation < 0) return StartAdmission.REJECTED;
         startedGeneration = generation;
+        // 新代次不得继承上一代的停止失败结论：强制结束必须绑定“本代已收口的失败事实”。
+        // 本代前置停止若失败，startWeb 的 catch 会重新记录 WEB_START_STOP_UNCONFIRMED。
+        state.lastStopResult =
+            new WebStopCoordinator.Result(
+                WebStopCoordinator.Status.UNCONFIRMED, "WEB_START_PENDING", "");
+        state.lastStopError = "";
         boolean priorCompatible = state.currentRun != null && state.currentRun.compatible;
         if (state.currentRun != null && state.currentRun.registration != null)
           state.currentRun.registration.revoke();
@@ -1233,8 +1239,20 @@ final class WebLifecycleController {
         failure = ConfigStore.credentialMessage(unreadable);
       } else if (e instanceof StartupStopFailure) {
         // 启动前置停止的结论已含“发生了什么/影响/下一步 + 已核验残留”，不再套内部前缀。
+        StartupStopFailure stopFailure = (StartupStopFailure) e;
         Log.w("DSHA", "startWeb blocked by prior stop");
         failure = e.getMessage();
+        synchronized (lifecycle) {
+          if (lifecycle.isCurrent(generation)) {
+            // 同一代次保留这次的停止结论：启动页据此提供“强制结束”入口，不必重启 App。
+            state.lastStopResult =
+                new WebStopCoordinator.Result(
+                    WebStopCoordinator.Status.UNCONFIRMED,
+                    "WEB_START_STOP_UNCONFIRMED",
+                    stopFailure.facts());
+            state.lastStopError = failure;
+          }
+        }
       } else {
         Log.e("DSHA", "startWeb failed", e);
         failure = com.deepseekharness.app.util.UiText.format("启动失败：%s", e.getMessage());
@@ -1543,16 +1561,29 @@ final class WebLifecycleController {
     }
   }
 
+  /**
+   * 强制结束的准入：本代次已经有一次“未确认退出”的停止结论（显式白名单）。
+   *
+   * <p>来源可以是普通停止（用户已停止）或启动前置停止失败（09:13 现场：用户想启动，却被残留
+   * bridge 阻塞）。不再要求 lifecycle.userStopped，但必须由 {@link WebStopCoordinator.Result
+   * #unconfirmedStop()} 判定为真实失败事实——初始占位/新代次占位不允许开强停入口。
+   */
   static boolean forceStopAllowed(
       WebLifecycle lifecycle, WebStopCoordinator.Result lastResult, long expectedGeneration) {
     synchronized (lifecycle) {
       return expectedGeneration > 0
           && lifecycle.generation() == expectedGeneration
-          && lifecycle.isUserStopped()
           && !lifecycle.isStarting()
           && !lifecycle.isStopping()
           && lastResult != null
-          && !lastResult.stopped();
+          && lastResult.unconfirmedStop();
+    }
+  }
+
+  /** 当前代次是否有可用于准备强制结束候选的失败停止事实。 */
+  public boolean forceStopAvailable() {
+    synchronized (lifecycle) {
+      return forceStopAllowed(lifecycle, state.lastStopResult, lifecycle.generation());
     }
   }
 

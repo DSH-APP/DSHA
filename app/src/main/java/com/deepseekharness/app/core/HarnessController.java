@@ -125,6 +125,11 @@ public class HarnessController {
     return web.stopProgressText();
   }
 
+  /** 当前代次是否有失败停止事实可用于准备强制结束候选（含启动前置停止失败）。 */
+  public boolean forceStopAvailable() {
+    return web.forceStopAvailable();
+  }
+
   public int getWebPort() {
     return web.getWebPort();
   }

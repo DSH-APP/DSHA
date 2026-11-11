@@ -48,6 +48,23 @@ final class WebRecordedStop {
     void retire(String record) throws IOException;
 
     Signal term(int pid) throws IOException;
+
+    /**
+     * 本次停止是否允许在优雅窗口结束后升级一次信号。
+     *
+     * <p>只有生产主 Web 的普通停止打开；强杀路径与隔离试运行保持原语义，不参与升级。
+     */
+    default boolean mayEscalate() {
+      return false;
+    }
+
+    /**
+     * 升级信号（{@code kill=false} 为 SIGQUIT，{@code true} 为 SIGKILL）。调用方已按出生身份
+     * 双次核验；实现仍按同一套 PID / UID 守卫发送。默认拒绝。
+     */
+    default Signal escalate(int pid, boolean kill) throws IOException {
+      return Signal.DENIED;
+    }
   }
 
   private WebRecordedStop() {}
@@ -107,7 +124,15 @@ final class WebRecordedStop {
           return null;
         }
         if (signal == Signal.DENIED) return WebStopDiagnostic.of(Code.SIGNAL_DENIED);
-        return awaitExit(io, pid, state.identity, record);
+        WebStopDiagnostic pending = awaitExit(io, pid, state.identity, record);
+        // 09:13 真机现场：proroot bridge 在 SIGTERM 后 8s 仍存活。优雅窗口结束仍能双次核验是
+        // 同一出生身份、同一受管 proroot bridge 时，只升级一次 SIGQUIT，必要时再 SIGKILL。
+        if (pending != null
+            && pending.code() == Code.EXIT_UNCONFIRMED
+            && io.mayEscalate()
+            && WebProcSel.prorootManagedBridge(state.command))
+          return escalate(io, pid, state.identity, record);
+        return pending;
       } catch (WebProcessManager.ProcessInspectionException error) {
         if (io.now() >= retryUntil) return WebStopDiagnostic.failure(Code.STOP_FAILED, error);
         try {
@@ -137,7 +162,19 @@ final class WebRecordedStop {
   private static WebStopDiagnostic awaitExit(
       Io io, int pid, com.deepseekharness.app.util.WebPidIdentity identity, String record)
       throws IOException, InterruptedException {
-    long deadline = io.now() + com.deepseekharness.app.util.WebStopBudget.EXIT_CONFIRM_MILLIS;
+    return awaitExitUntil(
+        io, pid, identity, record, com.deepseekharness.app.util.WebStopBudget.EXIT_CONFIRM_MILLIS);
+  }
+
+  /** 同 {@link #awaitExit}，等待窗口由调用方指定（升级信号的确认窗口更短）。 */
+  private static WebStopDiagnostic awaitExitUntil(
+      Io io,
+      int pid,
+      com.deepseekharness.app.util.WebPidIdentity identity,
+      String record,
+      long windowMillis)
+      throws IOException, InterruptedException {
+    long deadline = io.now() + windowMillis;
     WebStopDiagnostic pending = WebStopDiagnostic.of(Code.EXIT_UNCONFIRMED, pid, "仍在运行");
     while (true) {
       try {
@@ -164,5 +201,81 @@ final class WebRecordedStop {
       if (now >= deadline) return pending;
       io.pause(Math.min(50, deadline - now));
     }
+  }
+
+  /**
+   * 对“同一出生身份 + 本安装受管 proroot bridge”做一次受控升级：SIGQUIT →（必要时）SIGKILL。
+   *
+   * <p>每次发信号前都重新读两次内核身份，两次结论必须一致且仍是同一 bridge；任一不符立即收口，
+   * 不再发信号。升级只在普通停止的优雅窗口耗尽后发生，且 pid 记录必须仍是同一条记录。
+   */
+  private static WebStopDiagnostic escalate(
+      Io io, int pid, com.deepseekharness.app.util.WebPidIdentity identity, String record)
+      throws IOException, InterruptedException {
+    WebStopDiagnostic refused = beforeEscalation(io, pid, identity, record);
+    if (refused != null) return refused;
+    Signal quit = io.escalate(pid, false);
+    if (quit == Signal.GONE || quit == Signal.FOREIGN_UID) {
+      io.retire(record);
+      return null;
+    }
+    if (quit == Signal.DENIED) return WebStopDiagnostic.of(Code.SIGNAL_DENIED, pid, "SIGQUIT");
+    WebStopDiagnostic afterQuit =
+        awaitExitUntil(
+            io,
+            pid,
+            identity,
+            record,
+            com.deepseekharness.app.util.WebStopBudget.ESCALATION_QUIT_MILLIS);
+    if (afterQuit == null) return null;
+    if (afterQuit.code() != Code.EXIT_UNCONFIRMED) return afterQuit;
+    // SIGQUIT 后仍存活：再双核验一次，然后升级 SIGKILL。
+    refused = beforeEscalation(io, pid, identity, record);
+    if (refused != null) return refused;
+    Signal kill = io.escalate(pid, true);
+    if (kill == Signal.GONE || kill == Signal.FOREIGN_UID) {
+      io.retire(record);
+      return null;
+    }
+    if (kill == Signal.DENIED) return WebStopDiagnostic.of(Code.SIGNAL_DENIED, pid, "SIGKILL");
+    WebStopDiagnostic afterKill =
+        awaitExitUntil(
+            io,
+            pid,
+            identity,
+            record,
+            com.deepseekharness.app.util.WebStopBudget.ESCALATION_KILL_MILLIS);
+    return afterKill == null ? null : withEscalationFact(afterKill);
+  }
+
+  /** 双次核验升级前提；返回非空表示已收口（身份变化 / 记录被替换），不得再发信号。 */
+  private static WebStopDiagnostic beforeEscalation(
+      Io io, int pid, com.deepseekharness.app.util.WebPidIdentity identity, String record)
+      throws IOException, InterruptedException {
+    WebProcessManager.ProcessState first = io.inspect(pid);
+    io.pause(com.deepseekharness.app.util.WebStopBudget.ESCALATION_VERIFY_PAUSE_MILLIS);
+    WebProcessManager.ProcessState second = io.inspect(pid);
+    if (!sameManagedBridge(identity, first)
+        || !sameManagedBridge(identity, second)
+        || !record.equals(io.pidRecord())) return WebStopDiagnostic.of(Code.IDENTITY_CHANGED, pid);
+    return null;
+  }
+
+  private static boolean sameManagedBridge(
+      com.deepseekharness.app.util.WebPidIdentity identity, WebProcessManager.ProcessState state) {
+    return state.kind == WebProcessManager.Kind.WEB
+        && state.identity != null
+        && identity.sameProcess(state.identity)
+        && WebProcSel.prorootManagedBridge(state.command)
+        && WebProcSel.maySignalWeb(state.command);
+  }
+
+  /** 失败回执写明已用信号级别；成功由停止结果承载，不伪造额外诊断。 */
+  private static WebStopDiagnostic withEscalationFact(WebStopDiagnostic pending) {
+    if (pending.code() != Code.EXIT_UNCONFIRMED) return pending;
+    java.util.List<Object> facts = new java.util.ArrayList<>();
+    facts.addAll(pending.arguments());
+    facts.add("已升级 SIGQUIT+SIGKILL 仍未退出");
+    return WebStopDiagnostic.of(Code.EXIT_UNCONFIRMED, facts.toArray());
   }
 }

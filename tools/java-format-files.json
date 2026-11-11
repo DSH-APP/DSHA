@@ -1188,6 +1188,7 @@
     "app/src/test/java/com/deepseekharness/app/runtime/WebOverwriteRetireTest.java",
     "app/src/test/java/com/deepseekharness/app/runtime/WebProcessScanPolicyTest.java",
     "app/src/test/java/com/deepseekharness/app/runtime/WebRecordedStopTest.java",
+    "app/src/test/java/com/deepseekharness/app/runtime/WebResidualForceCandidateTest.java",
     "app/src/test/java/com/deepseekharness/app/runtime/WebSessionEvidenceAttestTest.java",
     "app/src/test/java/com/deepseekharness/app/runtime/WebSessionExitEvidenceTest.java",
     "app/src/test/java/com/deepseekharness/app/runtime/WebSessionKernelEvidenceTest.java",
