@@ -3352,6 +3352,21 @@
       "timeoutSeconds": 60,
       "environment": {},
       "reason": "proroot git SIGSEGV guard: rc=139 and '[proroot] SIGSEGV' stderr fail loudly with empty stdout, one execution and no retry; normal rc=0 and ordinary failures keep their behavior; module API, CLI and process exit are exercised with a simulated git and no device."
+    },
+    {
+      "path": "tools/test-signing.py",
+      "stage": "fast",
+      "requires": [
+        "python39"
+      ],
+      "args": [
+        "--check-pem",
+        "docs/test-signing/test-cert.pem",
+        "--require-pinned"
+      ],
+      "timeoutSeconds": 30,
+      "environment": {},
+      "reason": "Fixed test signing: ci/test-signing.json pins the test certificate digest; the committed public certificate must match and must differ from both production certificates"
     }
   ]
 }
