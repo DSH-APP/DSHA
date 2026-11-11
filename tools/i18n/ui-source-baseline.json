@@ -8,7 +8,7 @@
       "kind": "translated_choose_fragment_concat",
       "file": "app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java",
       "signature": "UiText.choose(\"环境重建完成，数据逐文件核验与运行试验通过。\\n\",\"Environment rebuilt; data verification and the runtime trial passed.\\n\")+",
-      "sourceSha256": "4fa5f53dafb5e4b7a31cc5da4be7a8b26a20dec559a747ec8f53cb2c15d8ced0",
+      "sourceSha256": "abab4df8ec32842b203e6ed520fd7c02af2c0f2c21633a7830c1cb4e7bfb11fa",
       "occurrences": 1,
       "classification": "independent_complete_paragraph_join",
       "reason": "The complete translated rebuild-result sentence ends with a newline. The separately assembled cleanup outcome is either its own complete static result or registered complete error templates preserving raw error arguments. Joining these paragraphs is intentional.",

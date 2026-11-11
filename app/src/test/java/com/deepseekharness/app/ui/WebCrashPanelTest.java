@@ -128,6 +128,21 @@ public final class WebCrashPanelTest {
   }
 
   @Test
+  public void routeBlankPanelShowsDiagnosticsCopyAndOpensSummary() {
+    panel.show(
+        WebCrashReport.Kind.PAGE_BLANK,
+        null,
+        null,
+        new WebCrashReport.Facts(),
+        "diagnostic summary",
+        true);
+    assertEquals("复制诊断", text(R.id.web_error_copy));
+    assertEquals("诊断摘要", text(R.id.web_error_details_title));
+    assertEquals(View.VISIBLE, root.findViewById(R.id.web_error_details_box).getVisibility());
+    assertEquals("diagnostic summary", text(R.id.web_error_details_text));
+  }
+
+  @Test
   public void secondaryAndBackReportActions() {
     panel.show(WebCrashReport.Kind.VERIFY, null, null, null, "", false);
     root.findViewById(R.id.web_error_secondary).performClick();

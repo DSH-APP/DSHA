@@ -100,6 +100,19 @@ final class WebCrashPanel {
     this.kind = kind;
     spec = WebCrashReport.spec(kind);
     technical = technicalText == null ? "" : technicalText;
+    boolean diagnostics = kind == WebCrashReport.Kind.PAGE_BLANK;
+    TextView copyLabel = text(R.id.web_error_copy);
+    if (copyLabel != null)
+      copyLabel.setText(
+          diagnostics
+              ? UiText.choose("复制诊断", "Copy diagnostics")
+              : UiText.choose("复制详情", "Copy details"));
+    TextView detailsHead = text(R.id.web_error_details_title);
+    if (detailsHead != null)
+      detailsHead.setText(
+          diagnostics
+              ? UiText.choose("诊断摘要", "Diagnostic summary")
+              : UiText.choose("技术详情", "Technical details"));
     String[] copy = copy(kind);
     boolean useOverride =
         kind == WebCrashReport.Kind.GENERIC || kind == WebCrashReport.Kind.INVALID_ADDRESS;
@@ -119,6 +132,15 @@ final class WebCrashPanel {
     renderRows(WebCrashReport.rows(kind, facts == null ? new WebCrashReport.Facts() : facts));
     TextView tech = text(R.id.web_error_details_text);
     if (tech != null) UiMotion.crossFadeText(tech, UiText.raw(technical));
+    // 局部空白现场需要把复制诊断放在一层可见位置：默认展开摘要，而不是藏在「技术详情」里。
+    if (diagnostics) {
+      detailsOpen = true;
+      visible(R.id.web_error_details_box, true);
+      View chevron = find.apply(R.id.web_error_details_chevron);
+      if (chevron != null) chevron.setRotation(90f);
+      View row = find.apply(R.id.web_error_details_row);
+      if (row != null) row.setStateDescription(UiText.choose("已展开", "Expanded"));
+    }
     boolean browserUsable = browserAvailable && !spec.serviceDown;
     View browser = find.apply(R.id.web_error_browser);
     if (browser != null) {
@@ -553,6 +575,13 @@ final class WebCrashPanel {
         return new String[] {UiText.text("系统 WebView 无法启动"), UiText.text("请更新系统 WebView 后重试")};
       case INVALID_ADDRESS:
         return new String[] {UiText.text("对话地址无效"), UiText.text("请返回启动页，重新进入对话。")};
+      case PAGE_BLANK:
+        return new String[] {
+          UiText.choose("页面没有渲染出来", "The page did not render"),
+          UiText.choose(
+              "页面已经加载，但路由挂载点没有内容。可以重新打开、用安全模式重试，或复制诊断摘要。",
+              "The page loaded but its route mount stayed empty. Reopen, retry in safe mode, or copy the diagnostic summary.")
+        };
       default:
         return new String[] {
           UiText.choose("暂时无法显示对话", "The conversation cannot be shown"),
@@ -575,6 +604,8 @@ final class WebCrashPanel {
         return UiText.text("在系统浏览器中打开");
       case RECOVERY:
         return UiText.choose("查看原因与修复", "Review and repair");
+      case SAFE_START:
+        return UiText.choose("安全模式重试", "Retry in safe mode");
       case LOGS:
         return UiText.text("下载错误日志");
       case WAIT:
@@ -646,6 +677,8 @@ final class WebCrashPanel {
         return UiText.choose("已关闭，需重新打开", "Closed; reopen needed");
       case PAGE_LOAD_FAILED:
         return UiText.text("加载失败");
+      case PAGE_ROUTE_BLANK:
+        return UiText.choose("路由空白", "Route blank");
       case PAGE_NOT_OPENED:
         return UiText.choose("尚未打开", "Not opened yet");
       case CONNECTION_NOT_APPLICABLE:

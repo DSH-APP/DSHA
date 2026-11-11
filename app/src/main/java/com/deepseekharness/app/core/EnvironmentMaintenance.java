@@ -223,20 +223,44 @@ public final class EnvironmentMaintenance {
             files,
             transaction.directory(),
             android.os.Environment.getExternalStorageDirectory().getCanonicalFile());
-    var control = maintenanceControl(progress);
+    final long[] counters = {0, 0};
+    final long[] progressAt = {android.os.SystemClock.elapsedRealtime()};
+    var control =
+        maintenanceControl(
+            progress,
+            (entries, bytes) -> {
+              counters[0] = entries;
+              counters[1] = bytes;
+              progressAt[0] = android.os.SystemClock.elapsedRealtime();
+            });
     long expanded = controller.proot().expandedEnvironmentBytes();
     var space =
         new MaintenanceSpaceTrace(
             files::getUsableSpace,
             sample -> DiagnosticLog.record(controller.context(), "REBUILD_SPACE", sample.record()));
-    requireSpace(space.sample(Stage.PREFLIGHT, Math.addExact(expanded, 64L * 1024 * 1024)));
+    String workdir = controller.config().getWorkdir();
+    // 保护阶段前的有界预估：只读元数据，不足时在切换旧树之前失败并给出可行动原因。
+    long estimated;
+    try {
+      estimated = data.estimateBytes(workdir, control);
+    } catch (IOException unreadable) {
+      String hint = maintenanceFailureHint(unreadable);
+      throw new IOException(hint.isEmpty() ? unreadable.getMessage() : hint, unreadable);
+    }
+    requireSpace(
+        space.sample(
+            Stage.PREFLIGHT,
+            com.deepseekharness.app.util.MaintenanceSpaceRequirement.preflight(
+                expanded, estimated)));
     boolean began = false;
+    long startedAt = android.os.SystemClock.elapsedRealtime();
+    progressAt[0] = startedAt;
+    java.util.Timer heartbeat = maintenanceHeartbeat(progress, counters, progressAt, startedAt);
     try {
       progress.accept(
           com.deepseekharness.app.util.UiText.choose(
               "正在由 Android 保护应用数据与个人目录；不执行旧环境…",
               "Android is protecting application data and personal folders without executing the old environment…"));
-      String workdir = controller.config().getWorkdir();
       space.sample(Stage.SNAPSHOT_START, 0);
       var snapshot =
           data.capture(workdir, com.deepseekharness.app.BuildConfig.VERSION_NAME, control);
@@ -253,8 +277,8 @@ public final class EnvironmentMaintenance {
       requireSpace(
           space.sample(
               Stage.SNAPSHOT_READY,
-              Math.addExact(
-                  Math.addExact(expanded, Math.multiplyExact(bytes, 2L)), 64L * 1024 * 1024)));
+              com.deepseekharness.app.util.MaintenanceSpaceRequirement.snapshotReady(
+                  expanded, bytes)));
       transaction.prepare(archiveHash, mappingHash);
       control.check();
       // begin() records switching before moving the old tree. Its later
@@ -342,11 +366,15 @@ public final class EnvironmentMaintenance {
         } catch (Exception retained) {
           failure.addSuppressed(retained);
         }
+      String hint = maintenanceFailureHint(failure);
       throw new IOException(
-          com.deepseekharness.app.util.UiText.format(
-              "环境重建未完成，原件及宿主数据副本已保留：\n%s\n%s",
-              transaction.directory(), BackupManager.safeError(failure)),
+          (hint.isEmpty() ? "" : hint + "\n")
+              + com.deepseekharness.app.util.UiText.format(
+                  "环境重建未完成，原件及宿主数据副本已保留：\n%s\n%s",
+                  transaction.directory(), BackupManager.safeError(failure)),
           failure);
+    } finally {
+      heartbeat.cancel();
     }
   }
 
@@ -364,15 +392,52 @@ public final class EnvironmentMaintenance {
       throw new IOException(
           com.deepseekharness.app.util.UiText.format(
               "可用空间不足：本阶段预计需要 %s，当前可用 %s。原环境保持原位，请释放空间后重试。",
-              Fmt.bytes(required), Fmt.bytes(available)));
+              Fmt.bytes(required), Fmt.bytes(available)),
+          new IOException("NO_SPACE"));
+  }
+
+  /** 维护失败的可行动说明：只使用稳定原因码与逻辑根名，不拼宿主路径或异常原文。 */
+  private static String maintenanceFailureHint(Throwable failure) {
+    String code = com.deepseekharness.app.backup.BackupErrorCode.from(failure);
+    com.deepseekharness.app.util.MaintenanceDiagnostics.Failure kind =
+        com.deepseekharness.app.util.MaintenanceDiagnostics.classify(code);
+    String target = "";
+    java.util.Set<Throwable> seen =
+        java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+    for (Throwable at = failure; at != null && seen.add(at) && seen.size() <= 8; at = at.getCause())
+      if (at
+          instanceof com.deepseekharness.app.backup.MaintenanceDataSnapshot.SourceFailure source) {
+        target = com.deepseekharness.app.util.MaintenanceDiagnostics.target(source.target);
+        break;
+      }
+    String root =
+        target.isEmpty() ? "" : com.deepseekharness.app.util.UiText.format("（目录：%s）", target);
+    return switch (kind) {
+      case NO_SPACE -> com.deepseekharness.app.util.UiText.text("可用空间不足：请释放空间后重试，原环境与已保护副本保持原位。");
+      case ROOT_UNREADABLE ->
+          com.deepseekharness.app.util.UiText.format("无法读取需要保护的数据%s：请检查存储状态或先停止占用后重试。", root);
+      case SOURCE_CHANGED ->
+          com.deepseekharness.app.util.UiText.text("数据在保护过程中发生变化：已停止并保留原件，请停止写入后重试。");
+      case SERVICE_UNAVAILABLE ->
+          com.deepseekharness.app.util.UiText.text("系统前台服务不可用：请保持应用在前台后重试，原环境保持原位。");
+      case ENTRY_LIMIT ->
+          com.deepseekharness.app.util.UiText.text("数据条目超过维护快照上限：请清理大目录后重试，原环境保持原位。");
+      default -> "";
+    };
   }
 
   private static com.deepseekharness.app.backup.BackupControl maintenanceControl(
       Consumer<String> progress) {
+    return maintenanceControl(progress, null);
+  }
+
+  private static com.deepseekharness.app.backup.BackupControl maintenanceControl(
+      Consumer<String> progress, java.util.function.BiConsumer<Long, Long> observedCounters) {
     final long[] last = {0};
     final String[] previousStage = {""};
     return BackupTask.currentControl(
         (stage, entries, bytes) -> {
+          if (observedCounters != null) observedCounters.accept(entries, bytes);
           long now = android.os.SystemClock.elapsedRealtime();
           if (now - last[0] < 600
               && stage.equals(previousStage[0])
@@ -386,10 +451,47 @@ public final class EnvironmentMaintenance {
                       "proroot has stopped; verifying once with proot compatibility mode…")
                   : stage.startsWith("TRIAL_")
                       ? trialProgress(stage)
-                      : com.deepseekharness.app.util.UiText.choose(
-                          "正在核验受管文件…", "Verifying managed files…");
-          progress.accept(title + (bytes > 0 ? " " + Fmt.bytes(bytes) : ""));
+                      : stage.startsWith("CAPTURING")
+                          ? com.deepseekharness.app.util.UiText.choose(
+                              "正在保护应用数据与个人目录…", "Protecting application data and personal folders…")
+                          : com.deepseekharness.app.util.UiText.choose(
+                              "正在核验受管文件…", "Verifying managed files…");
+          progress.accept(
+              title
+                  + (bytes > 0 ? " " + Fmt.bytes(bytes) : "")
+                  + (entries > 0
+                      ? com.deepseekharness.app.util.UiText.format("（%s 项）", entries)
+                      : ""));
         });
+  }
+
+  /** 停滞提示：只在连续无字节进度达到阈值后提醒一次/每轮，正常慢启动不提示。 */
+  private static java.util.Timer maintenanceHeartbeat(
+      Consumer<String> progress, long[] counters, long[] lastProgressAt, long startedAt) {
+    java.util.Timer timer = new java.util.Timer("environment-maintenance-heartbeat", true);
+    timer.schedule(
+        new java.util.TimerTask() {
+          @Override
+          public void run() {
+            try {
+              long now = android.os.SystemClock.elapsedRealtime();
+              long idle = now - lastProgressAt[0];
+              if (!com.deepseekharness.app.util.MaintenanceDiagnostics.stalled(idle)) return;
+              progress.accept(
+                  com.deepseekharness.app.util.UiText.format(
+                      "正在保护应用数据与个人目录：%s 项 / %s，已用时 %s 秒；已 %s 分钟没有新的字节进度。可继续等待，或取消后复制诊断再重试。",
+                      counters[0],
+                      Fmt.bytes(counters[1]),
+                      Math.max(0, now - startedAt) / 1000,
+                      idle / 60_000));
+            } catch (RuntimeException ignored) {
+              // 心跳只是辅助信息，不能影响保护任务。
+            }
+          }
+        },
+        30_000L,
+        30_000L);
+    return timer;
   }
 
   private static String trialProgress(String stage) {

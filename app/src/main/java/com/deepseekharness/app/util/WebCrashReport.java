@@ -47,6 +47,8 @@ public final class WebCrashReport {
     WEBVIEW_INIT,
     /** 对话地址无效。 */
     INVALID_ADDRESS,
+    /** 页面已加载但已知挂载点仍为空：局部路由没有渲染（onPageFinished 探针）。 */
+    PAGE_BLANK,
     /** 其它未分类错误：保留调用方原有标题与说明。 */
     GENERIC
   }
@@ -70,6 +72,8 @@ public final class WebCrashReport {
     BROWSER,
     /** 打开启动恢复页。 */
     RECOVERY,
+    /** 安全模式重启 Web（复用启动页的安全启动）。 */
+    SAFE_START,
     /** 导出错误日志。 */
     LOGS,
     /** 等待中，按钮不可点。 */
@@ -118,6 +122,8 @@ public final class WebCrashReport {
     PAGE_KEPT,
     PAGE_CLOSED,
     PAGE_LOAD_FAILED,
+    /** 页面已完成加载，但路由挂载点没有内容。 */
+    PAGE_ROUTE_BLANK,
     PAGE_NOT_OPENED,
     CONNECTION_NOT_APPLICABLE,
     CONNECTION_REFUSED,
@@ -235,6 +241,8 @@ public final class WebCrashReport {
         return new Spec(Tone.BAD, Action.STORE, Action.BROWSER, false);
       case INVALID_ADDRESS:
         return new Spec(Tone.WARN, Action.HOME, Action.RELOAD, true);
+      case PAGE_BLANK:
+        return new Spec(Tone.WARN, Action.RELOAD, Action.SAFE_START, false);
       case GENERIC:
       default:
         return new Spec(Tone.WARN, Action.RELOAD, Action.HOME, false);
@@ -336,6 +344,8 @@ public final class WebCrashReport {
       case WEBVIEW_OUTDATED:
       case GENERIC:
         return row(Layer.PAGE, Level.WARN, Value.PAGE_LOAD_FAILED);
+      case PAGE_BLANK:
+        return row(Layer.PAGE, Level.WARN, Value.PAGE_ROUTE_BLANK);
       default:
         return row(Layer.PAGE, Level.IDLE, Value.PAGE_NOT_OPENED);
     }

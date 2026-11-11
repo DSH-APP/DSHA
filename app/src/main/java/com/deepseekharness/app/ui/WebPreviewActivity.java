@@ -79,6 +79,15 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
   private boolean geckoFallbackAttempted;
   private Retained retained;
 
+  /** 子资源失败留痕：按页面代次重置；去重与限流避免坏资源刷满有界事件文件。 */
+  private final com.deepseekharness.app.util.WebSubresourceDiagnostic.Limiter subresourceLimiter =
+      com.deepseekharness.app.util.WebSubresourceDiagnostic.Limiter.defaults();
+
+  /** 最近一次 WEB_ROUTE_BLANK 的路径与时间，防止同一路径的重复探针连续弹卡。 */
+  private String lastRouteBlank = "";
+
+  private long lastRouteBlankAt;
+
   /** 实验性页面保活：应用作用域单页 keeper，Activity 只借阅、不拥有。 */
   private BrowserPageKeeper browserKeeper;
 
@@ -1132,6 +1141,8 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
       retained.ready = false;
       refreshPictureInPicture();
       pageFailed = false;
+      subresourceLimiter.reset();
+      lastRouteBlank = "";
       errorPanel.setVisibility(View.GONE);
       progress.setProgress(0);
       setProgressVisible(true);
@@ -1197,11 +1208,26 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
                     null);
             }
           });
+      installRouteProbe(view);
+    }
+
+    @Override
+    public void doUpdateVisitedHistory(WebView view, String url, boolean isReload) {
+      if (!isCurrentPage(view)
+          || pageFailed
+          || url == null
+          || !WebPreviewPolicy.sameService(baseUrl, url)) return;
+      // SPA 路由切换不一定重新触发 onPageFinished；同一文档内再跑一次一次性探针。
+      installRouteProbe(view);
     }
 
     @Override
     public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-      if (!isCurrentPage(view) || !request.isForMainFrame()) return;
+      if (!isCurrentPage(view)) return;
+      if (!request.isForMainFrame()) {
+        recordSubresource("RESOURCE", error.getErrorCode(), request.getUrl());
+        return;
+      }
       com.deepseekharness.app.util.WebCrashReport.Facts facts =
           new com.deepseekharness.app.util.WebCrashReport.Facts();
       facts.errorCode = error.getErrorCode();
@@ -1217,7 +1243,11 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
     @Override
     public void onReceivedHttpError(
         WebView view, WebResourceRequest request, WebResourceResponse response) {
-      if (!isCurrentPage(view) || !request.isForMainFrame()) return;
+      if (!isCurrentPage(view)) return;
+      if (!request.isForMainFrame()) {
+        recordSubresource("HTTP", response.getStatusCode(), request.getUrl());
+        return;
+      }
       int code = response.getStatusCode();
       if ((code == 401 || code == 403) && !authRetried) {
         authRetried = true;
@@ -1368,6 +1398,10 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
               });
         } catch (Exception ignored) {
         }
+        return true;
+      }
+      if (message.message().startsWith(com.deepseekharness.app.util.WebRouteProbe.PREFIX)) {
+        handleRouteProbe(message.message());
         return true;
       }
       if (message.messageLevel() == android.webkit.ConsoleMessage.MessageLevel.ERROR) {
@@ -1569,6 +1603,80 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
             authUrl != null);
   }
 
+  /** 子资源失败只留固定字段：错误码 + 去 query/fragment 的路径；限流后写入有界事件文件。 */
+  private void recordSubresource(String phase, int code, android.net.Uri url) {
+    try {
+      String path = com.deepseekharness.app.util.WebSubresourceDiagnostic.path(String.valueOf(url));
+      if (!subresourceLimiter.accept(path, android.os.SystemClock.elapsedRealtime())) return;
+      com.deepseekharness.app.core.DiagnosticLog.record(
+          this,
+          "WEB_SUBRESOURCE",
+          com.deepseekharness.app.util.WebSubresourceDiagnostic.describe(phase, code, path));
+    } catch (RuntimeException ignored) {
+      // 诊断写入失败不能影响页面加载。
+    }
+  }
+
+  /** 注入一次性路由探针；脚本自身按 location.href 去重，重复调用不会重复上报。 */
+  private void installRouteProbe(WebView view) {
+    if (view == null || pageFailed || isFinishing() || isDestroyed()) return;
+    try {
+      view.evaluateJavascript(com.deepseekharness.app.util.WebRouteProbe.script(), null);
+    } catch (RuntimeException unavailable) {
+      // 内核拒绝执行脚本时保持页面可用；探针只做诊断增强。
+    }
+  }
+
+  /** 路由探针结果：空白才记录并显示兜底卡片；非空白只留事件行，不影响正常页面。 */
+  private void handleRouteProbe(String message) {
+    if (pageFailed || isFinishing() || isDestroyed()) return;
+    final var result = com.deepseekharness.app.util.WebRouteProbe.parse(message);
+    if (result == null || !result.readable() || result.probe != 2) return;
+    if (!result.blank()) {
+      com.deepseekharness.app.core.DiagnosticLog.record(this, "WEB_ROUTE", result.record());
+      return;
+    }
+    long now = android.os.SystemClock.elapsedRealtime();
+    if (result.path.equals(lastRouteBlank) && now - lastRouteBlankAt < 30_000L) return;
+    lastRouteBlank = result.path;
+    lastRouteBlankAt = now;
+    com.deepseekharness.app.core.DiagnosticLog.record(
+        this, com.deepseekharness.app.util.WebRouteProbe.ROUTE_BLANK, result.record());
+    final long navigation = retained == null ? -1 : retained.pageNavigation;
+    // 摘要需要读版本/运行时/事件文件，放到后台收集后再回主线程显示。
+    new Thread(
+            () -> {
+              String digest;
+              try {
+                digest = com.deepseekharness.app.core.DiagnosticDigest.build(this);
+              } catch (RuntimeException unavailable) {
+                digest = "unavailable";
+              }
+              final String summary = digest;
+              runOnUiThread(
+                  () -> {
+                    if (isFinishing()
+                        || isDestroyed()
+                        || pageFailed
+                        || retained == null
+                        || retained.pageNavigation != navigation
+                        || webView == null
+                        || !WebPreviewPolicy.sameService(baseUrl, webView.getUrl())) return;
+                    showError(
+                        com.deepseekharness.app.util.WebCrashReport.Kind.PAGE_BLANK,
+                        com.deepseekharness.app.util.UiText.choose(
+                            "页面没有渲染出来", "The page did not render"),
+                        com.deepseekharness.app.util.UiText.choose(
+                            "页面已经加载，但路由挂载点没有内容。可以重新打开、用安全模式重试，或复制诊断。",
+                            "The page loaded but its route mount stayed empty. Reopen, retry in safe mode, or copy diagnostics."),
+                        summary + "\nroute=" + result.record(),
+                        null);
+                  });
+            },
+            "web-route-diagnostic")
+        .start();
+  }
+
   /** 就绪身份消失、且旧页面未被接回保留时决定是否停在面板上；返回 false 表示照常收尾窗口。 */
   private boolean showEndedRuntime(PreviewPageSession.Identity obsolete) {
     if (isFinishing() || isDestroyed() || conversationHidden()) return false;
@@ -1656,6 +1764,22 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
         startActivity(new Intent(this, StartupRecoveryActivity.class));
         leavePreview();
         break;
+      case SAFE_START:
+        {
+          boolean safe =
+              com.deepseekharness.app.core.HarnessController.get(this)
+                  .startWebSafely(msg -> runOnUiThread(this::synchronizeWebSession));
+          if (safe) leavePreview();
+          else
+            Toast.makeText(
+                    this,
+                    com.deepseekharness.app.util.UiText.choose(
+                        "当前无法切换安全模式，请返回启动页重试。",
+                        "Safe mode cannot start right now. Return to the start page and retry."),
+                    Toast.LENGTH_LONG)
+                .show();
+          break;
+        }
       case LOGS:
         startActivity(DiagnosticActivity.downloadLogs(this));
         break;

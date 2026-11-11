@@ -33,6 +33,16 @@ public final class MaintenanceDataSnapshot {
             List.of(new File(files, "user-data-v5"), new File(publicRoot, "Documents/dshdata")));
   }
 
+  /** 数据源在保护前/保护中不可用；target 是逻辑根名（不是宿主绝对路径），供界面指出具体目录。 */
+  public static final class SourceFailure extends IOException {
+    public final String target;
+
+    public SourceFailure(String target, String code) {
+      super(code == null || code.isEmpty() ? "MAINTENANCE_SOURCE_MISSING" : code);
+      this.target = target == null ? "" : target;
+    }
+  }
+
   public File archive() {
     return new File(task, "data.dshdata");
   }
@@ -148,7 +158,7 @@ public final class MaintenanceDataSnapshot {
             : new GuestDataResolver.Resolved(source.getAbsoluteFile(), "DIRECT");
     boolean outside = !GuestDataResolver.within(rootfs, actual.file);
     if (fs.stat(actual.file).type.equals("MISSING"))
-      throw new IOException("MAINTENANCE_SOURCE_MISSING");
+      throw new SourceFailure(target, "MAINTENANCE_SOURCE_MISSING");
     sources.add(
         new FileBackupSource(
             fs,
@@ -298,6 +308,39 @@ public final class MaintenanceDataSnapshot {
       }
     }
     add(relative, source, false, false);
+  }
+
+  /**
+   * 保护阶段前的有界空间预估：只遍历目录/文件元数据，不读取任何文件内容。
+   *
+   * <p>不可读或缺失的数据源直接以 {@link SourceFailure} 指出逻辑根，让维护在复制前失败；条目与字节
+   * 上限沿用快照自身的限制，避免预估本身成为新的无界扫描。
+   */
+  public long estimateBytes(String workdir, BackupControl control) throws IOException {
+    select(workdir, control);
+    long[] total = {0};
+    int[] entries = {0};
+    for (BackupSource source : sources) {
+      final String target = targetOf(source.id());
+      source.walk(
+          item -> {
+            control.check();
+            if (++entries[0] > BackupLimits.ENTRIES) throw new IOException("ENTRY_LIMIT");
+            if (item.kind.equals("MISSING") || item.kind.equals("UNREADABLE"))
+              throw new SourceFailure(
+                  target, item.reason.isEmpty() ? item.kind + "_SOURCE" : item.reason);
+            if (item.kind.equals("FILE"))
+              total[0] = BackupLimits.add(total[0], item.size, BackupLimits.BYTES);
+          },
+          control);
+    }
+    return total[0];
+  }
+
+  private String targetOf(String id) {
+    Object row = destinations.get(id);
+    if (row instanceof Map<?, ?> map && map.get("target") instanceof String target) return target;
+    return "";
   }
 
   public Map<String, Object> capture(String workdir, String appVersion, BackupControl control)

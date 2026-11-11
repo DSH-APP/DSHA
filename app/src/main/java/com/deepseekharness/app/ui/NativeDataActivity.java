@@ -128,11 +128,23 @@ public final class NativeDataActivity extends AppCompatActivity {
               return;
             }
             pending.exportPrepared = false;
-            if (!jobs.export(pending.selection, uri, pending.filename, pending.rescue))
+            byte[] diagnostics = null;
+            if (pending.rescue) {
+              try {
+                diagnostics =
+                    com.deepseekharness.app.core.DiagnosticDigest.build(this)
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+              } catch (RuntimeException unavailable) {
+                // 诊断正文只是附加信息：生成失败时照常导出，不谎称包内已附带。
+              }
+            }
+            NativeBackupJobs.ExportRefusal refusal =
+                jobs.exportWithReason(
+                    pending.selection, uri, pending.filename, pending.rescue, diagnostics);
+            if (refusal != NativeBackupJobs.ExportRefusal.NONE)
               status.setText(
-                  t(
-                      "已有任务或无法创建私有作业，请检查状态。",
-                      "A task is already running or private storage is unavailable."));
+                  com.deepseekharness.app.util.BackupExportGuidance.message(
+                      refusal.name(), pending.rescue));
             pending.clear();
           });
   private final ActivityResultLauncher<Uri> projectPicker =
@@ -1627,6 +1639,19 @@ public final class NativeDataActivity extends AppCompatActivity {
             t(
                 "可用空间不足。请释放空间后重试，原件与已验证副本保留。",
                 "Not enough free space. Free up space and retry; originals and verified copies are retained.");
+        break;
+      case "FOREGROUND_SERVICE_UNAVAILABLE":
+        message =
+            t(
+                "系统前台服务不可用：请保持应用在前台、确认通知权限后重试。原件保留。",
+                "The foreground service is unavailable. Keep the app in the foreground, allow notifications and retry. Originals are retained.");
+        break;
+      case "HOST_BACKUP_BUSY":
+      case "HOST_BACKUP_OWNER_CHANGED":
+        message =
+            t(
+                "已有数据任务正在运行或刚刚变化，请等待其结束后重试。",
+                "Another data task is running or changed. Wait for it to finish and retry.");
         break;
       case "CREDENTIAL_TEMPORARILY_UNAVAILABLE":
         message =

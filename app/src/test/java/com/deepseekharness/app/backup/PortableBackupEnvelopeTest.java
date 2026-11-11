@@ -135,6 +135,40 @@ public class PortableBackupEnvelopeTest {
   }
 
   @Test
+  public void rescueDiagnosticsMemberIsBoundedAndIgnoredOnImport() throws Exception {
+    byte[] inner = BackupArchiveTest.archive();
+    File input = save("portable.dshbak", inner);
+    byte[] diagnostics = "DSHA diagnostic summary\nversion=test\n".getBytes(StandardCharsets.UTF_8);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    PortableBackupEnvelope.writeUnencrypted(
+        fs, input, BackupArchive.hex(BackupArchive.sha().digest(inner)), out, control, diagnostics);
+    File restored = unwrap(out.toByteArray());
+    assertArrayEquals(inner, Files.readAllBytes(restored.toPath()));
+    // 附加成员有长度上限：超过 64 KiB 的 diagnostics 不进入合法导出。
+    File tooLarge = save("portable.dshbak", inner);
+    assertThrows(
+        IOException.class,
+        () ->
+            PortableBackupEnvelope.writeUnencrypted(
+                fs,
+                tooLarge,
+                BackupArchive.hex(BackupArchive.sha().digest(inner)),
+                new ByteArrayOutputStream(),
+                control,
+                new byte[64 * 1024 + 1]));
+    // 手工构造的超大成员在导入侧同样拒绝。
+    byte[] payload = entry("portable.dshbak", '0', inner),
+        readme = entry("README.txt", '0', new byte[0]),
+        big = entry("diagnostics.txt", '0', new byte[64 * 1024 + 1]);
+    File malformed = save("malformed.tar.gz", members(payload, readme, big));
+    assertThrows(
+        IOException.class,
+        () ->
+            PortableBackupEnvelope.unwrapIfPresent(
+                fs, malformed, new File(malformed.getParentFile(), "payload"), control));
+  }
+
+  @Test
   public void legacyArchivesAreRoutedWithoutCreatingAnEnvelopePayload() throws Exception {
     byte[] old = LegacyTarReaderTest.gzip(entry(".dsh/sessions/a", '0', new byte[3]));
     File input = save("DSHA-backup-old.tar.gz", old),

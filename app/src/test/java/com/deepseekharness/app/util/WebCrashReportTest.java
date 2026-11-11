@@ -72,6 +72,18 @@ public final class WebCrashReportTest {
   }
 
   @Test
+  public void routeBlankKeepsServiceUpAndOffersSafeStart() {
+    WebCrashReport.Spec spec = WebCrashReport.spec(WebCrashReport.Kind.PAGE_BLANK);
+    assertEquals(WebCrashReport.Action.RELOAD, spec.primary);
+    assertEquals(WebCrashReport.Action.SAFE_START, spec.secondary);
+    assertFalse(spec.serviceDown);
+    List<WebCrashReport.Row> rows =
+        WebCrashReport.rows(WebCrashReport.Kind.PAGE_BLANK, new WebCrashReport.Facts());
+    assertEquals(WebCrashReport.Value.SERVICE_RUNNING, rows.get(0).value);
+    assertEquals(WebCrashReport.Value.PAGE_ROUTE_BLANK, rows.get(3).value);
+  }
+
+  @Test
   public void autoRecoveryFollowsTheControllerSwitch() {
     WebCrashReport.Facts facts = new WebCrashReport.Facts();
     assertEquals(
