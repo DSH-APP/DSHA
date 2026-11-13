@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-ui-chat/lib/client.js",
+  "patches": [
+    {
+      "before": "\"message.think\": \"Подумайте\"",
+      "after": "\"message.think\": \"Размышление\""
+    },
+    {
+      "before": "\"command.running\": \"Бег…\"",
+      "after": "\"command.running\": \"Выполняется…\""
+    },
+    {
+      "before": "\"row.running\": \"Бег\"",
+      "after": "\"row.running\": \"Выполняется\""
+    }
+  ]
+}

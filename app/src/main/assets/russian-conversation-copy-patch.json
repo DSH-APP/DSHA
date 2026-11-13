@@ -10,6 +10,234 @@
     {
       "before": "\"tool.autoReviewReasonFallback\": \"Auto review не санкционировал это действие\"",
       "after": "\"tool.autoReviewReasonFallback\": \"Автопроверка не разрешила это действие\""
+    },
+    {
+      "before": "\"detail.status.running\": \"Бег\"",
+      "after": "\"detail.status.running\": \"Выполняется\""
+    },
+    {
+      "before": "\"bash.running\": \"Бег\"",
+      "after": "\"bash.running\": \"Выполняется\""
+    },
+    {
+      "before": "\"row.running\": \"Бег\"",
+      "after": "\"row.running\": \"Выполняется\""
+    },
+    {
+      "before": "\"terminal.running\": \"Бег\"",
+      "after": "\"terminal.running\": \"Выполняется\""
+    },
+    {
+      "before": "\"tool.title.write\": \"Написать\"",
+      "after": "\"tool.title.write\": \"Запись\""
+    },
+    {
+      "before": "\"tool.title.edit\": \"Редактировать\"",
+      "after": "\"tool.title.edit\": \"Редактирование\""
+    },
+    {
+      "before": "\"tool.title.applyPatch\": \"Применить патч\"",
+      "after": "\"tool.title.applyPatch\": \"Применение патча\""
+    },
+    {
+      "before": "\"tool.title.pwsh\": \"Пшш\"",
+      "after": "\"tool.title.pwsh\": \"PowerShell\""
+    },
+    {
+      "before": "\"tool.title.webFetch\": \"Получить\"",
+      "after": "\"tool.title.webFetch\": \"Загрузка страницы\""
+    },
+    {
+      "before": "\"tool.title.subagent\": \"Создать субагент\"",
+      "after": "\"tool.title.subagent\": \"Создание субагента\""
+    },
+    {
+      "before": "\"tool.title.sendMessage\": \"Отправить сообщение\"",
+      "after": "\"tool.title.sendMessage\": \"Отправка сообщения\""
+    },
+    {
+      "before": "\"tool.title.interruptAgent\": \"Агент прерываний\"",
+      "after": "\"tool.title.interruptAgent\": \"Прерывание агента\""
+    },
+    {
+      "before": "\"tool.title.read\": \"Читать\",\n\t\t\t\"tool.title.bash\": \"Баш\"",
+      "after": "\"tool.title.read\": \"Чтение\",\n\t\t\t\"tool.title.bash\": \"Bash\""
+    },
+    {
+      "before": "\"tool.title.readImage\": \"Читать изображение\",\n\t\t\t\"tool.title.grep\": \"Греп\",\n\t\t\t\"tool.title.glob\": \"Глоб\"",
+      "after": "\"tool.title.readImage\": \"Чтение изображения\",\n\t\t\t\"tool.title.grep\": \"Grep\",\n\t\t\t\"tool.title.glob\": \"Glob\""
+    },
+    {
+      "before": "\"tool.title.createGoal\": \"Создать цель\"",
+      "after": "\"tool.title.createGoal\": \"Создание цели\""
+    },
+    {
+      "before": "\"tool.title.getGoal\": \"Посмотреть цель\"",
+      "after": "\"tool.title.getGoal\": \"Просмотр цели\""
+    },
+    {
+      "before": "\"tool.title.updateGoal\": \"Обновить цель\"",
+      "after": "\"tool.title.updateGoal\": \"Обновление цели\""
+    },
+    {
+      "before": "\"tool.title.createSchedule\": \"Создать задачу автоматизации\"",
+      "after": "\"tool.title.createSchedule\": \"Создание задачи автоматизации\""
+    },
+    {
+      "before": "\"tool.title.listSchedules\": \"Показать задачи автоматизации\"",
+      "after": "\"tool.title.listSchedules\": \"Список задач автоматизации\""
+    },
+    {
+      "before": "\"tool.title.deleteSchedule\": \"Удалить задачу автоматизации\"",
+      "after": "\"tool.title.deleteSchedule\": \"Удаление задачи автоматизации\""
+    },
+    {
+      "before": "\"tool.title.updateSchedule\": \"Обновить задачу автоматизации\"",
+      "after": "\"tool.title.updateSchedule\": \"Обновление задачи автоматизации\""
+    },
+    {
+      "before": "\"tool.title.queryRuntime\": \"Время выполнения запроса\"",
+      "after": "\"tool.title.queryRuntime\": \"Запрос состояния среды\""
+    },
+    {
+      "before": "\"tool.title.inspectPlugins\": \"Проверьте плагины\"",
+      "after": "\"tool.title.inspectPlugins\": \"Проверка плагинов\""
+    },
+    {
+      "before": "\"tool.title.workflow\": \"Запустить рабочий процесс\"",
+      "after": "\"tool.title.workflow\": \"Запуск рабочего процесса\""
+    },
+    {
+      "before": "\"tool.title.ralph\": \"Запустить цикл Ральфа\"",
+      "after": "\"tool.title.ralph\": \"Запуск цикла Ralph\""
+    },
+    {
+      "before": "\"tool.title.traceEvent\": \"Отследить событие\"",
+      "after": "\"tool.title.traceEvent\": \"Трассировка события\""
+    },
+    {
+      "before": "\"tool.title.killJob\": \"Отменить фоновое задание\"",
+      "after": "\"tool.title.killJob\": \"Отмена фонового задания\""
+    },
+    {
+      "before": "\"tool.title.openTerminal\": \"Открыть терминал\"",
+      "after": "\"tool.title.openTerminal\": \"Открытие терминала\""
+    },
+    {
+      "before": "\"tool.title.signalTerminal\": \"Сигнальный терминал\"",
+      "after": "\"tool.title.signalTerminal\": \"Отправка сигнала терминалу\""
+    },
+    {
+      "before": "\"tool.title.closeTerminal\": \"Закрыть терминал\"",
+      "after": "\"tool.title.closeTerminal\": \"Закрытие терминала\""
+    },
+    {
+      "before": "\"tool.title.lsp\": \"Символы кода запроса\"",
+      "after": "\"tool.title.lsp\": \"Запрос символов кода (LSP)\""
+    },
+    {
+      "before": "\"tool.title.findDefinition\": \"Найти определение\"",
+      "after": "\"tool.title.findDefinition\": \"Поиск определения\""
+    },
+    {
+      "before": "\"tool.title.findReferences\": \"Найдите ссылки\"",
+      "after": "\"tool.title.findReferences\": \"Поиск ссылок\""
+    },
+    {
+      "before": "\"tool.title.findImplementation\": \"Найти реализацию\"",
+      "after": "\"tool.title.findImplementation\": \"Поиск реализации\""
+    },
+    {
+      "before": "\"tool.title.hoverSymbol\": \"Символ проверки\"",
+      "after": "\"tool.title.hoverSymbol\": \"Просмотр символа\""
+    },
+    {
+      "before": "\"tool.title.spawnTeammate\": \"Создать товарища по команде\"",
+      "after": "\"tool.title.spawnTeammate\": \"Создание участника команды\""
+    },
+    {
+      "before": "\"tool.title.createTeamTask\": \"Создать командную задачу\"",
+      "after": "\"tool.title.createTeamTask\": \"Создание задачи команды\""
+    },
+    {
+      "before": "\"tool.title.getTeamTask\": \"Прочитать командное задание\"",
+      "after": "\"tool.title.getTeamTask\": \"Чтение задачи команды\""
+    },
+    {
+      "before": "\"tool.title.updateTeamTask\": \"Обновить групповую задачу\"",
+      "after": "\"tool.title.updateTeamTask\": \"Обновление задачи команды\""
+    },
+    {
+      "before": "\"tool.title.listTeamTasks\": \"Перечислить командные задачи\"",
+      "after": "\"tool.title.listTeamTasks\": \"Список задач команды\""
+    },
+    {
+      "before": "\"tool.title.waitAgent\": \"Подождите субагента\"",
+      "after": "\"tool.title.waitAgent\": \"Ожидание субагента\""
+    },
+    {
+      "before": "\"tool.title.code\": \"Код\"",
+      "after": "\"tool.title.code\": \"Выполнение кода\""
+    },
+    {
+      "before": "\"tool.title.runCordis\": \"Запустите плагин Cordis\"",
+      "after": "\"tool.title.runCordis\": \"Запуск плагина Cordis\""
+    },
+    {
+      "before": "\"tool.title.stopCordis\": \"Остановить плагин Cordis\"",
+      "after": "\"tool.title.stopCordis\": \"Остановка плагина Cordis\""
+    },
+    {
+      "before": "\"tool.title.removeCordis\": \"Удалить плагин Cordis\"",
+      "after": "\"tool.title.removeCordis\": \"Удаление плагина Cordis\""
+    },
+    {
+      "before": "\"tool.title.webSearch\": \"Поиск\"",
+      "after": "\"tool.title.webSearch\": \"Поиск в интернете\""
+    },
+    {
+      "before": "\"tool.title.viewSchedule\": \"Посмотреть задачу автоматизации\"",
+      "after": "\"tool.title.viewSchedule\": \"Просмотр задачи автоматизации\""
+    },
+    {
+      "before": "\"tool.title.editSchedule\": \"Изменить задачу автоматизации\"",
+      "after": "\"tool.title.editSchedule\": \"Редактирование задачи автоматизации\""
+    },
+    {
+      "before": "\"detail.agents.count\": \"{count} агенты\"",
+      "after": "\"detail.agents.count\": \"Агентов: {count}\""
+    },
+    {
+      "before": "\"detail.jobs.count\": \"{count} фоновые задания\"",
+      "after": "\"detail.jobs.count\": \"Фоновых заданий: {count}\""
+    },
+    {
+      "before": "\"detail.terminals.count\": \"Клеммы {count}\"",
+      "after": "\"detail.terminals.count\": \"Терминалов: {count}\""
+    },
+    {
+      "before": "\"detail.tasks.count\": \"{count} командные задачи\"",
+      "after": "\"detail.tasks.count\": \"Задач команды: {count}\""
+    },
+    {
+      "before": "\"detail.locations.count\": \"{count} локации\"",
+      "after": "\"detail.locations.count\": \"Расположений: {count}\""
+    },
+    {
+      "before": "\"detail.wait.title\": \"Субагентская деятельность\"",
+      "after": "\"detail.wait.title\": \"Действия субагентов\""
+    },
+    {
+      "before": "\"detail.receipt.started\": \"Началось\"",
+      "after": "\"detail.receipt.started\": \"Запущено\""
+    },
+    {
+      "before": "\"detail.weekday.7\": \"Солнце\"",
+      "after": "\"detail.weekday.7\": \"Вс\""
+    },
+    {
+      "before": "\"detail.field.bestMatch\": \"Лучший матч\"",
+      "after": "\"detail.field.bestMatch\": \"Лучшее совпадение\""
     }
   ]
 }

@@ -221,7 +221,12 @@ try {
     const assembly = await ctx.systemPrompt.assemble();
     const text = assembly.sections.find(section => section.name === 'dsh:device-shell-guide').text;
     assert(text.includes(`DSHA current response language: ${selected} (`), selected);
-    assert(text.includes('custom prompt or user-owned AGENTS.md language instruction takes priority'));
+    assert(text.includes('Explicit user requests, custom prompts and user-owned AGENTS.md override'));
+    assert(text.includes('progress/tool descriptions, task/subagent labels'));
+    assert(text.includes('pass it to subagents'));
+    assert(text.includes('Bash/Grep/Glob/PowerShell/UI/API'));
+    assert(text.includes('raw output and tool IDs'));
+    assert(text.includes('never translate executable content'));
     assert(text.includes('android_get_state') && text.includes('android_screenshot') && text.includes('android_node'));
     assert(text.includes('android_control({action:"begin"})') && text.includes('android_control({action:"finish"})'));
     assert(text.includes('普通讨论、引用、翻译') && text.includes('不取消模型对话'));

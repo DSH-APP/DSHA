@@ -153,7 +153,13 @@
     "russian-plugin-settings-shell-patch.json",
     "russian-loading-copy-patch.json",
     "russian-permission-copy-patch.json",
-    "mobile-team-panel-layout-patch.json"
+    "mobile-team-panel-layout-patch.json",
+    "mobile-subagent-catalog-patch.json",
+    "russian-chat-activity-copy-patch.json",
+    "russian-jobs-activity-copy-patch.json",
+    "russian-workspace-activity-copy-patch.json",
+    "russian-workflow-run-activity-copy-patch.json",
+    "russian-cordis-activity-copy-patch.json"
   ],
   "packagedTrees": [
     "app-integration",

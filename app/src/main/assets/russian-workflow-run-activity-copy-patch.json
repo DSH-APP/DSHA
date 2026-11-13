@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-ui-workflow-run/lib/client.js",
+  "patches": [
+    {
+      "before": "\"status.running\": \"Бег\"",
+      "after": "\"status.running\": \"Выполняется\""
+    }
+  ]
+}

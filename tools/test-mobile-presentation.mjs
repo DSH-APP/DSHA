@@ -53,6 +53,36 @@ try{
   await f.page.keyboard.press('Escape');await f.page.waitForSelector('[data-team-panel]',{state:'detached'});
   await f.page.evaluate(key=>mountPresentation(key,'tools'),'tools'+cases);await f.page.waitForSelector(`[data-case="tools${cases}"] .test-start`);assert.equal(await f.page.locator('[data-sidebar-opener]:visible').count(),0);await f.page.locator('.test-start').click();assert.equal(await f.page.evaluate(()=>startClicks),1);cases++;
  }
+ // 子智能体目录独立于团队弹层；实际 portal、条目导航与 Escape 不能被居中规则破坏。
+ await f.page.setViewportSize({width:393,height:820});
+ const catalogRecipe=JSON.parse(fs.readFileSync('app/src/main/assets/mobile-subagent-catalog-patch.json','utf8'));
+ await f.load('dsh-client-ui-subagent',[{...catalogRecipe,patches:catalogRecipe.patches.slice(1)}],'module.exports.audit={SubagentCatalogAction,ru};');
+ await f.page.evaluate(()=>{
+  const R=auditModules.react,{SubagentCatalogAction:C,ru}=auditExports['@deepseek-ai/dsh-client-ui-subagent'].audit;
+  const entries=[{id:'child-a',label:'Client UI plugin feasibility',mode:'continuable'},{id:'child-b',label:'Host API and package reuse feasibility',mode:'continuable'}];
+  const state={byId:{lead:{origin:'root'},'child-a':{title:'Ты — исследователь',running:true},'child-b':{title:'Исследование API',running:true}},projectionsBySession:{lead:{state:'idle',values:{subagentCatalog:entries}},'child-a':{state:'idle',values:{subagentCatalog:[]}},'child-b':{state:'idle',values:{subagentCatalog:[]}}}};
+  window.mountCatalog=key=>{window.childOpened=window.asideOpened=null;presentationRoot.render(R.createElement('div',{'data-catalog-case':key,style:{position:'absolute',right:'40px',top:'80px'}},R.createElement(C,{sessionId:'lead',useSessions:fn=>fn(state),useSessionStatus:fn=>fn(new Map()),openChild:value=>childOpened=value,openChildAside:value=>asideOpened=value,refreshProjection:()=>{},t:(k,a={})=>Object.entries(a).reduce((s,[k,v])=>s.replace('{'+k+'}',v),ru[k]||k)})));};mountCatalog('original');
+ });
+ await f.page.locator('.ZKlsPq_trigger').click();await f.page.waitForSelector('.ZKlsPq_menu');
+ const catalogBounds=()=>f.page.locator('.ZKlsPq_menu').evaluate(e=>{const r=e.getBoundingClientRect();return {left:r.left,right:innerWidth-r.right,scroll:e.scrollWidth,width:e.clientWidth};});
+ const offset=await catalogBounds();assert.ok(Math.abs(offset.left-offset.right)>5,JSON.stringify(offset));
+ await f.page.keyboard.press('Escape');
+ const cssRule=catalogRecipe.patches[0].after.slice(0,-catalogRecipe.patches[0].before.length);await f.page.addStyleTag({content:cssRule});
+ let catalogCases=0;
+ for(const width of [320,360,393,480,800])for(const scale of [1,1.3]){
+  await f.page.setViewportSize({width,height:820});await f.page.evaluate(k=>mountCatalog(k),String(catalogCases));
+  await f.page.waitForSelector(`[data-catalog-case="${catalogCases}"]`);await f.page.locator('.ZKlsPq_trigger').click();await f.page.waitForSelector('.ZKlsPq_menu');
+  await f.page.locator('.ZKlsPq_menu').evaluate((e,s)=>{const sizes=[e,...e.querySelectorAll('*')].map(x=>[x,parseFloat(getComputedStyle(x).fontSize)]);for(const [x,size] of sizes)x.style.fontSize=size*s+'px';},scale);
+  assert.match(await f.page.locator('.ZKlsPq_menu').innerText(),/Работает/);
+  const b=await catalogBounds();assert.ok(Math.abs(b.left-b.right)<1&&b.left>=16&&b.scroll<=b.width+1,JSON.stringify(b));
+  assert.equal(await f.page.getByRole('treeitem').count(),2);
+  if(width===393&&scale===1.3&&process.env.DSHA_CATALOG_SCREENSHOT)await f.page.screenshot({path:process.env.DSHA_CATALOG_SCREENSHOT});
+  await f.page.getByRole('treeitem').first().press('Enter');await f.page.waitForSelector('.ZKlsPq_menu',{state:'detached'});assert.equal(await f.page.evaluate(()=>childOpened.childSessionId),'child-a');
+  await f.page.locator('.ZKlsPq_trigger').click();await f.page.waitForSelector('.ZKlsPq_menu');await f.page.locator('.ZKlsPq_sidebarButton').first().click();await f.page.waitForSelector('.ZKlsPq_menu',{state:'detached'});assert.equal(await f.page.evaluate(()=>asideOpened.childSessionId),'child-a');
+  await f.page.locator('.ZKlsPq_trigger').click();await f.page.waitForSelector('.ZKlsPq_menu');await f.page.keyboard.press('Escape');await f.page.waitForSelector('.ZKlsPq_menu',{state:'detached'});catalogCases++;
+ }
+ await f.page.setViewportSize({width:1280,height:820});await f.page.locator('.ZKlsPq_trigger').click();await f.page.waitForSelector('.ZKlsPq_menu');const desktop=await catalogBounds();assert.ok(Math.abs(desktop.width-336)<1&&Math.abs(desktop.left-desktop.right)>100,JSON.stringify(desktop));await f.page.keyboard.press('Escape');
+ console.log(`PASS actual subagent catalog: original offset, ${catalogCases} phone/tablet/font cases, child/sidebar navigation, Escape, desktop trigger alignment`);
  // 原生容器一次扩容的恢复必须立即发布；普通浏览器仍由上游两帧稳定策略负责。
  const growth=await f.page.evaluate(async()=>{
   const root=document.documentElement;let h=800;const viewport=new EventTarget();viewport.height=800;viewport.offsetTop=0;Object.defineProperty(window,'innerHeight',{configurable:true,get:()=>h});Object.defineProperty(window,'visualViewport',{configurable:true,value:viewport});root.setAttribute('data-dsha-safe-top','native');

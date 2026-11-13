@@ -345,6 +345,24 @@
     },
     {
       "asset": "mobile-team-panel-layout-patch.json"
+    },
+    {
+      "asset": "mobile-subagent-catalog-patch.json"
+    },
+    {
+      "asset": "russian-chat-activity-copy-patch.json"
+    },
+    {
+      "asset": "russian-jobs-activity-copy-patch.json"
+    },
+    {
+      "asset": "russian-workspace-activity-copy-patch.json"
+    },
+    {
+      "asset": "russian-workflow-run-activity-copy-patch.json"
+    },
+    {
+      "asset": "russian-cordis-activity-copy-patch.json"
     }
   ],
   "specialized": [

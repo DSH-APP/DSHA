@@ -6,6 +6,10 @@
     {
       "before": ".VoX2oq_root{position:relative}",
       "after": ".VoX2oq_root{position:relative}@media(max-width:1023px) and (pointer:coarse){[data-team-panel]{left:16px!important;right:16px!important;width:auto!important;max-width:500px!important;margin-inline:auto!important;box-sizing:border-box;overflow-wrap:anywhere}}"
+    },
+    {
+      "before": "\"memberStatus.running\": \"Бег\"",
+      "after": "\"memberStatus.running\": \"Работает\""
     }
   ]
 }

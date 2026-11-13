@@ -3441,6 +3441,20 @@
         "DSHA_TEST_RUNTIME": "{raw}"
       },
       "reason": "Pinned sticky conversation and full mobile viewport effect; delayed visualViewport open/hide geometry and ordinary browser fallback."
+    },
+    {
+      "path": "tools/test-action-language.mjs",
+      "stage": "runtime",
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "args": [],
+      "timeoutSeconds": 60,
+      "environment": {
+        "DSHA_TEST_RUNTIME": "{raw}"
+      },
+      "reason": "Actual locked prompt assembly and child scope preserve selected language, explicit custom/complete overrides and technical text; no model calls."
     }
   ]
 }

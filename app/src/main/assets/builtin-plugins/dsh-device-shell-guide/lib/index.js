@@ -4,7 +4,7 @@ import * as fs from 'node:fs';
 import { createUserMessage } from '@deepseek-ai/dsh-llm';
 export const name = 'dsh-device-shell-guide';
 const sectionName = 'dsh:device-shell-guide';
-const guideVersion = '3';
+const guideVersion = '4';
 const languages = Object.freeze({ zh: 'Simplified Chinese', 'zh-Hant': 'Traditional Chinese', en: 'English',
   ru: 'Russian', ja: 'Japanese', ko: 'Korean', ar: 'Arabic', pt: 'Portuguese', la: 'Latin', fr: 'French' });
 const supported = value => typeof value === 'string' && Object.hasOwn(languages, value);
@@ -51,11 +51,11 @@ export async function selectedLanguage(signal) {
 
 export function languageInstruction(language) {
   return (supported(language)
-    ? `DSHA current response language: ${language} (${languages[language]}). Use this language for replies and explanations by default.`
-    : 'Use the language requested by the user, otherwise follow the language of the current conversation.')
-    + ' An explicit user request, custom prompt or user-owned AGENTS.md language instruction takes priority. '
-    + 'This current DSHA default supersedes earlier DSHA built-in language defaults, including old Chinese-only guide snapshots; '
-    + 'it does not replace user instructions. Keep quoted text, code, paths and tool identifiers in their original form.';
+    ? `DSHA current response language: ${language} (${languages[language]}).`
+    : 'Follow the current conversation language.')
+    + ' Use it for replies, visible progress/tool descriptions, task/subagent labels and displayed summaries; pass it to subagents. '
+    + 'Explicit user requests, custom prompts and user-owned AGENTS.md override this and older DSHA defaults. '
+    + 'Preserve technical names (Bash/Grep/Glob/PowerShell/UI/API), quotes, code, paths, arguments, raw output and tool IDs; never translate executable content.';
 }
 
 /**
