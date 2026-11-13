@@ -62,7 +62,12 @@ window.__dshaNativePresentation = window.__dshaNativePresentation || (function (
         value = 'rgba(' + rgba[0] + ',' + rgba[1] + ',' + rgba[2] + ',' + rgba[3]/255 + ')';
       }
     } catch (_) {}
-    if (value !== lastColor) { lastColor = value; send('theme-color', {color:value}); }
+    if (value !== lastColor) {
+      lastColor = value;
+      // body 的主题变量不向 html 反向继承；补齐 IME 动画露出的根画布底色。
+      document.documentElement.style.setProperty('background-color', value, 'important');
+      send('theme-color', {color:value});
+    }
   };
   const schedule = (invalidate = true) => {
     if (invalidate) lastCandidate = '';

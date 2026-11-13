@@ -321,6 +321,48 @@
       "markers": [
         "DSHA_FIRST_CONNECT_SILENT_V1"
       ]
+    },
+    {
+      "asset": "russian-plugin-ui-patch.json"
+    },
+    {
+      "asset": "russian-model-ui-patch.json"
+    },
+    {
+      "asset": "russian-conversation-copy-patch.json"
+    },
+    {
+      "asset": "russian-plugin-settings-layout-patch.json"
+    },
+    {
+      "asset": "russian-plugin-settings-shell-patch.json"
+    },
+    {
+      "asset": "russian-loading-copy-patch.json"
+    },
+    {
+      "asset": "russian-permission-copy-patch.json"
+    },
+    {
+      "asset": "mobile-team-panel-layout-patch.json"
+    },
+    {
+      "asset": "mobile-subagent-catalog-patch.json"
+    },
+    {
+      "asset": "russian-chat-activity-copy-patch.json"
+    },
+    {
+      "asset": "russian-jobs-activity-copy-patch.json"
+    },
+    {
+      "asset": "russian-workspace-activity-copy-patch.json"
+    },
+    {
+      "asset": "russian-workflow-run-activity-copy-patch.json"
+    },
+    {
+      "asset": "russian-cordis-activity-copy-patch.json"
     }
   ],
   "specialized": [

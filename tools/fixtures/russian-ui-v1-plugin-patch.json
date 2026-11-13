@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js",
+  "patches": [
+    {
+      "before": "function packageText(pkg, resolveText) {",
+      "after": "function dshaBuiltinRu(name, value) {\n if (value === undefined || value === null) return value;\n const key=String(name).replace(/\\/client$/, \"\");\n const copy={\"dsh-app-integration\": \"Фоновое выполнение задач DSHA, возврат из веб-интерфейса и восстановление черновиков.\", \"dsh-computer-use-android\": \"Управление Android через мост DSHA с проверкой авторизации.\", \"dsh-device-shell-guide\": \"Выполнение защищённых команд устройства через root, Shizuku или ADB.\", \"dsh-fs-read-hint\": \"Если изменение отклонено, потому что файл ещё не прочитан, плагин подскажет путь к одноимённому файлу, уже прочитанному в этой сессии (например, в основной копии репозитория или рабочем дереве). Меняется только подсказка: требование прочитать файл перед изменением сохраняется. Временное исправление до решения обсуждения #11977 в исходном проекте.\", \"dsh-fs-search-scope\": \"Поиск glob пропускает вложенные рабочие деревья Git (.agents/worktrees и связанные рабочие деревья внутри области поиска), если путь не указывает прямо на одно из них. Использует разбор запросов, ripgrep и результаты dsh-tool-fs-search, сохраняя обязательные проверки DSHA. Временное исправление до появления такого поведения в исходном проекте.\", \"dsh-launch-target\": \"Выбор экрана при запуске по значку приложения: главный экран или веб-интерфейс. Отключение плагина сохраняет выбранный режим.\", \"dsh-status-overlay\": \"Выводит ответ ИИ на плавающую панель вверху экрана и показывает понятные статусы вызовов инструментов.\", \"dsh-task-notifier\": \"Показывает фактический ход выполнения задачи и позволяет однократно отменить её через авторизованный мост приложения.\", \"dsh-tool-vscreen\": \"Инструменты автоматизации виртуального экрана DSHA.\", \"dsh-web-mobile\": \"Адаптирует веб-интерфейс DSH для узких сенсорных экранов: боковая навигация, нижние панели, безопасные отступы и удобное поле ввода. На компьютере ничего не меняет.\", \"dsh-destructive-guard\": \"Требует явного подтверждения пользователя для разрушительных команд контейнера, включая rm.\", \"dsh-auto-review\": \"Добавляет экспериментальный режим автоматической проверки разрешений без его включения по умолчанию.\", \"@deepseek-ai/dsh-experimental-auto-review\": \"Проверка разрешения каждого инструмента с помощью языковой модели для автоматического профиля DeepSeek Harness.\"};\n if (!Object.prototype.hasOwnProperty.call(copy,key)) return value;\n return typeof value === \"string\" ? {en:value,ru:copy[key]} : {...value,ru:copy[key]};\n}\nfunction dshaBuiltinTitle(name,value) {\n if (name !== \"dsh-web-mobile\" && name !== \"dsh-web-mobile/client\") return value;\n if (value === \"Mobile adaptation\") return {en:value,ru:\"Мобильная адаптация\"};\n return value && value.en === \"Mobile adaptation\" ? {...value,ru:\"Мобильная адаптация\"} : value;\n}\n\nfunction packageText(pkg, resolveText) {"
+    },
+    {
+      "before": "resolveText(pkg.meta.description)",
+      "after": "resolveText(dshaBuiltinRu(pkg.name, pkg.meta.description))"
+    },
+    {
+      "before": "resolveText(row.meta.description)",
+      "after": "resolveText(dshaBuiltinRu(row.moduleName, row.meta.description))"
+    },
+    {
+      "before": "resolveText(pkg.meta.title)",
+      "after": "resolveText(dshaBuiltinTitle(pkg.name, pkg.meta.title))"
+    },
+    {
+      "before": "resolveText(row.meta.title)",
+      "after": "resolveText(dshaBuiltinTitle(row.moduleName, row.meta.title))"
+    },
+    {
+      "before": "rowPhaseActive: \"Бег\",",
+      "after": "rowPhaseActive: \"Работает\","
+    },
+    {
+      "before": "terminalRunning: \"Бег\",",
+      "after": "terminalRunning: \"Выполняется\","
+    }
+  ]
+}

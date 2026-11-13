@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-ui-settings-plugin-inventory/lib/client.js",
+  "patches": [
+    {
+      "before": ".qSYn7G_section{width:100%;max-width:760px;",
+      "after": ".qSYn7G_section{box-sizing:border-box;min-width:0;width:100%;max-width:760px;"
+    },
+    {
+      "before": "@media (pointer:coarse){.qSYn7G_search input{font-size:16px}}",
+      "after": "@media (pointer:coarse){.qSYn7G_search input{font-size:16px}}.qSYn7G_section *{box-sizing:border-box}.qSYn7G_catalog,.qSYn7G_group,.qSYn7G_groupBody,.qSYn7G_search{min-width:0;max-width:100%}.qSYn7G_groupTitleRow{flex-wrap:wrap}.qSYn7G_headerEnd{min-width:0;max-width:100%}.qSYn7G_switcher{min-width:0;max-width:100%;height:auto;min-height:36px;white-space:normal}.qSYn7G_switcherLabel{min-width:0;white-space:normal;overflow-wrap:anywhere}.qSYn7G_groupToggle{min-width:0;flex-shrink:1}.qSYn7G_groupTitle{overflow-wrap:anywhere}@container qSYn7G_plugin-inventory (width<=520px){.qSYn7G_headerEnd{width:100%;margin-left:0}.qSYn7G_switcher{width:100%;justify-content:space-between}.qSYn7G_switcherLabel{max-width:none;text-align:left}}"
+    },
+    {
+      "before": "active: \"Бег\",",
+      "after": "active: \"Работает\","
+    }
+  ]
+}

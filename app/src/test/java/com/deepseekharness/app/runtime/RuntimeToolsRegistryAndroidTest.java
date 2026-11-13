@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.res.AssetManager;
+import com.deepseekharness.app.backup.*;
 import com.deepseekharness.app.util.Constants;
 import java.io.File;
 import java.io.IOException;
@@ -25,9 +26,8 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
-import org.robolectric.annotation.Implements;
 import org.robolectric.annotation.Implementation;
-import com.deepseekharness.app.backup.*;
+import org.robolectric.annotation.Implements;
 
 /** Real Android AssetManager -> production RuntimeTools admission, no guest or user data. */
 @RunWith(RobolectricTestRunner.class)
@@ -208,8 +208,8 @@ public final class RuntimeToolsRegistryAndroidTest {
     Context context = apkAssets(Map.of());
     JSONObject registry = RuntimeTools.readPatchRegistry(context);
     var groups = RuntimeTools.readPatchChains(context, registry, Constants.DSH_VERSION);
-    assertEquals(46, groups.size());
-    assertEquals(61, groups.values().stream().mapToInt(java.util.List::size).sum());
+    assertEquals(54, groups.size());
+    assertEquals(75, groups.values().stream().mapToInt(java.util.List::size).sum());
     assertEquals(
         "web-fetch-http-surrogate-patch.json",
         groups.get("@deepseek-ai/dsh-web-fetch-http/lib/index.js").get(0).id());
@@ -420,8 +420,10 @@ public final class RuntimeToolsRegistryAndroidTest {
     assertEquals("PATCH_MODULE_PATH", error.getMessage());
   }
 
-  /** Only adapts Linux descriptor syscalls to real NOFOLLOW host files on Windows.
-   * Production patch methods, AssetManager, path authority and atomic flow are unchanged. */
+  /**
+   * Only adapts Linux descriptor syscalls to real NOFOLLOW host files on Windows. Production patch
+   * methods, AssetManager, path authority and atomic flow are unchanged.
+   */
   @Implements(value = AndroidBackupFileSystem.class, isInAndroidSdk = false)
   public static class HostFileSystem {
     private final JvmBackupFileSystem fs = new JvmBackupFileSystem();

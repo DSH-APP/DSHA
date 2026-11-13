@@ -16058,5 +16058,2103 @@
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
     ]
+  },
+  {
+    "id": "ru20261112_1980",
+    "zh": "维护记录",
+    "en": "Record",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ExtractFooter.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1981",
+    "zh": "复制给支持",
+    "en": "Copy for support",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1982",
+    "zh": "复制本机环境摘要给支持",
+    "en": "Copy device summary for support",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ExtractFooter.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1983",
+    "zh": "维护中",
+    "en": "Maintaining",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1984",
+    "zh": "进入受限主界面",
+    "en": "Limited interface",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ExtractFooter.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1985",
+    "zh": "点此查看",
+    "en": "View details",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCapsule.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1986",
+    "zh": "%1$s：%2$s，点按查看详情",
+    "en": "%1$s: %2$s. Tap for details",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCapsule.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_1987",
+    "zh": "%1$s：%2$s，%3$s，点按查看详情",
+    "en": "%1$s: %2$s, %3$s. Tap for details",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCapsule.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_1988",
+    "zh": "无法打开终端页面，会话未改变",
+    "en": "Could not open the terminal page; sessions were not changed",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1989",
+    "zh": "跨应用文件访问",
+    "en": "Cross-app files",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SafAccessFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1990",
+    "zh": "浏览文件夹",
+    "en": "Browse folder",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1991",
+    "zh": "扩展你的工作方式",
+    "en": "Extend how you work",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1992",
+    "zh": "偏好与管理",
+    "en": "Preferences & management",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1993",
+    "zh": "本机终端",
+    "en": "Local terminal",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1994",
+    "zh": "本机环境",
+    "en": "Device environment",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceSupportProbe.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1995",
+    "zh": "Shizuku / Stellar",
+    "en": "Shizuku / Stellar",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionPanel.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1996",
+    "zh": "刷新状态",
+    "en": "Refresh",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionChannelCard.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1997",
+    "zh": "gh 默认申请作用域：repo、read:org、gist。",
+    "en": "gh requests these scopes by default: repo, read:org, gist.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1998",
+    "zh": "复制命令",
+    "en": "Copy command",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_1999",
+    "zh": "已复制命令",
+    "en": "Command copied",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2000",
+    "zh": "两种方式任选：复制命令到任意终端执行，或直接点「打开终端」自动执行。",
+    "en": "Two ways: copy the command into any terminal, or open the built-in terminal to run it.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2001",
+    "zh": "复制授权链接",
+    "en": "Copy link",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2002",
+    "zh": "已复制链接",
+    "en": "Link copied",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2003",
+    "zh": "1. 终端显示一次性验证码。\n2. 用手机浏览器打开下方授权链接，输入验证码并授权 GitHub CLI。\n3. 回到本页，状态会自动刷新。",
+    "en": "1. The terminal shows a one-time code.\n2. Open the authorization link below in your phone browser, enter the code and approve GitHub CLI.\n3. Come back here; the status refreshes automatically.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2004",
+    "zh": "当前 gh 无法完成 TLS 校验（CA 路径失效），终端会显示真实错误；修复运行环境后再试。",
+    "en": "gh cannot verify TLS right now (CA path is broken); the terminal will show the real error. Repair the runtime and retry.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2005",
+    "zh": "无障碍",
+    "en": "Accessibility",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2006",
+    "zh": "通知",
+    "en": "Notifications",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2007",
+    "zh": "悬浮窗",
+    "en": "Overlay",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2008",
+    "zh": "电池优化",
+    "en": "Battery optimization",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2009",
+    "zh": "你选的用途不需要授权，可直接继续。",
+    "en": "Nothing is required for your choices.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionPanel.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2010",
+    "zh": "更多授权 · %d 项",
+    "en": "More · %d",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionPanel.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2011",
+    "zh": "收起更多授权",
+    "en": "Hide more permissions",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionPanel.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2012",
+    "zh": "展开更多授权，共 %d 项",
+    "en": "Show %d more permissions",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionPanel.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2013",
+    "zh": "推荐 %1$d / %2$d",
+    "en": "Recommended %1$d / %2$d",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionPanel.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2014",
+    "zh": "已开启 %1$d / %2$d",
+    "en": "%1$d / %2$d enabled",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2015",
+    "zh": "已关闭省电模式",
+    "en": "Eco mode turned off",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2016",
+    "zh": "已关闭屏幕常亮",
+    "en": "Keep screen on turned off",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2017",
+    "zh": "特权执行（实验）",
+    "en": "Privileged input (experimental)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2018",
+    "zh": "读剪贴板",
+    "en": "Read clipboard",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2019",
+    "zh": "读剪贴板：允许助手读取系统剪贴板内容",
+    "en": "Read clipboard: let the assistant read system clipboard content",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2020",
+    "zh": "每次询问",
+    "en": "Ask each time",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2021",
+    "zh": "预授权",
+    "en": "Pre-authorized",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2022",
+    "zh": "关闭，读取会被阻止",
+    "en": "Off, reads are blocked",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2023",
+    "zh": "每次读取前询问",
+    "en": "Ask before each read",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2024",
+    "zh": "直接读取，可随时撤销",
+    "en": "Read directly, revocable at any time",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2025",
+    "zh": "助手和插件可读取当前系统剪贴板内容。DSHA 不把内容写入桥日志，但剪贴板本身可能含有密码、验证码或私人信息。之后可在此页撤销。",
+    "en": "The assistant and plugins may read the system clipboard. DSHA does not write the content to bridge logs, but the clipboard may contain passwords, codes, or private data. Revoke this here at any time.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2026",
+    "zh": "预授权读取",
+    "en": "Pre-authorize reads",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2027",
+    "zh": "已预授权 · 可随时撤销",
+    "en": "Pre-authorized · revocable",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2028",
+    "zh": "已授权 %d 个，%d 个已失效：点此处理",
+    "en": "%d granted, %d expired: tap to review",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2029",
+    "zh": "已授权 %d 个文件夹（可写 %d 个）：点此管理",
+    "en": "%d folders granted (%d writable): tap to manage",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2030",
+    "zh": "只更新 dsh 与内置插件，个人数据保留",
+    "en": "Updates only dsh and built-in plugins; personal data stays",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployTaskSheet.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2031",
+    "zh": "部署内置 Ubuntu 与运行组件",
+    "en": "Deploys the bundled Ubuntu and runtime",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployTaskSheet.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2032",
+    "zh": "先保护个人数据，再重建内置环境",
+    "en": "Protects personal data, then rebuilds the environment",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployTaskSheet.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2033",
+    "zh": "环境维护在后台进行",
+    "en": "Environment maintenance runs in the background",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployTaskSheet.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2034",
+    "zh": "相同基础环境只更新 dsh 与内置插件，个人目录、会话和配置保持原位；验证失败回切原运行时。",
+    "en": "With the same base environment, only dsh and built-in plugins are updated; personal folders, sessions and settings stay in place. If verification fails, the original runtime is restored.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployTaskSheet.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2035",
+    "zh": "内置 Ubuntu 与运行组件部署到应用私有目录。可以继续完成引导，部署期间屏幕保持常亮。",
+    "en": "The bundled Ubuntu and runtime components are deployed to the app's private storage. You can keep going through setup; the screen stays on while deploying.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployTaskSheet.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2036",
+    "zh": "内置 Ubuntu 与运行组件部署到应用私有目录，部署在后台进行，期间屏幕保持常亮。",
+    "en": "The bundled Ubuntu and runtime components are deployed to the app's private storage in the background; the screen stays on while deploying.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployTaskSheet.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2037",
+    "zh": "先保护对话、配置、插件与个人项目，再重建内置环境；数据保护失败不切换环境，重建失败保留原环境。",
+    "en": "Conversations, settings, plugins and personal projects are protected first, then the bundled environment is rebuilt. If protection fails nothing is switched; if the rebuild fails the original environment is kept.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployTaskSheet.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2038",
+    "zh": "环境维护在后台进行；完成并通过就绪检查后，Web、终端与插件才会恢复。",
+    "en": "Environment maintenance runs in the background. Web, terminals and plugins return after it finishes and passes the readiness check.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployTaskSheet.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2039",
+    "zh": "最后记录阶段：%1$s\n\n%2$s",
+    "en": "Last recorded stage: %1$s\n\n%2$s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployTaskSheet.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2040",
+    "zh": "通知栏会同步显示进度。",
+    "en": "Progress is also shown in the notification shade.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployTaskSheet.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2041",
+    "zh": "开启通知后，可在通知栏查看进度。",
+    "en": "Allow notifications to follow progress in the notification shade.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployTaskSheet.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2042",
+    "zh": "允许通知",
+    "en": "Allow notifications",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2043",
+    "zh": "未开始",
+    "en": "Not started",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2044",
+    "zh": "点「开始部署」后在后台部署，期间可以继续完成引导。",
+    "en": "After you tap Start deployment, setup runs in the background and you can keep going.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCard.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2045",
+    "zh": "阶段与维护记录",
+    "en": "Stages and maintenance log",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCard.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2046",
+    "zh": "%1$s：%2$s。%3$s。点按查看阶段与维护记录",
+    "en": "%1$s: %2$s. %3$s. Tap for stages and the maintenance log",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCard.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2047",
+    "zh": "已更新",
+    "en": "Updated",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCard.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2048",
+    "zh": "未通过",
+    "en": "Not passed",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCard.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2049",
+    "zh": "待恢复",
+    "en": "Needs recovery",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCard.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2050",
+    "zh": "第 %1$d / %2$d 步 · %3$s",
+    "en": "Step %1$d of %2$d · %3$s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCard.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2051",
+    "zh": "新版运行时已通过隔离试运行。",
+    "en": "The new runtime passed its isolated trial.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCard.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2052",
+    "zh": "运行环境已部署并通过检查。",
+    "en": "The runtime is deployed and passed its checks.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCard.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2053",
+    "zh": "维护步骤已结束，但环境就绪检查未通过。",
+    "en": "Maintenance ended, but the readiness check did not pass.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCard.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2054",
+    "zh": "上次维护未完成，请先恢复原环境。",
+    "en": "The last maintenance did not finish. Recover the original environment first.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeployCard.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2055",
+    "zh": "虚拟识屏",
+    "en": "Virtual screen",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/ScreenModeFeedback.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2056",
+    "zh": "可开启",
+    "en": "Enable",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2057",
+    "zh": "不启用",
+    "en": "Off",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ScreenOperationFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2058",
+    "zh": "移出",
+    "en": "Remove",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ScreenOperationFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2059",
+    "zh": "输入包名",
+    "en": "Enter package name",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ScreenOperationFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2060",
+    "zh": "加载中",
+    "en": "Loading",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2061",
+    "zh": "处理中",
+    "en": "Working",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2062",
+    "zh": "临时",
+    "en": "Temporary",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2063",
+    "zh": "异常",
+    "en": "Error",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2064",
+    "zh": "返回上一步",
+    "en": "Back to the previous step",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2065",
+    "zh": "授权全部可选，可随时在 设置 → 设备能力授权 中修改。",
+    "en": "All permissions are optional and can be changed anytime in Settings → Device permissions.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2066",
+    "zh": "欢迎",
+    "en": "Welcome",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2067",
+    "zh": "用途",
+    "en": "Purpose",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2068",
+    "zh": "当前步骤",
+    "en": "Current step",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2069",
+    "zh": "第 %1$d 步：%2$s，%3$s",
+    "en": "Step %1$d: %2$s, %3$s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2070",
+    "zh": "第 %1$d 步，共 %2$d 步",
+    "en": "Step %1$d of %2$d",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2071",
+    "zh": "首次引导 · %1$d / %2$d",
+    "en": "Setup · %1$d / %2$d",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2072",
+    "zh": "第 %1$d 步，共 %2$d 步：%3$s",
+    "en": "Step %1$d of %2$d: %3$s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2073",
+    "zh": "无法打开主界面，请重试。",
+    "en": "Could not open the home screen. Please try again.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2074",
+    "zh": "部署前检查",
+    "en": "Pre-deployment check",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2075",
+    "zh": "可用空间不足：部署约需 %1$s，当前可用 %2$s。清理空间后点「重新检查」。",
+    "en": "Not enough free space: deployment needs about %1$s and %2$s is available. Free up space, then tap Check again.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2076",
+    "zh": "内置 Ubuntu 与运行组件将部署到应用私有目录。部署在后台进行，期间可以继续完成引导。",
+    "en": "Ubuntu and runtime components are deployed to the app’s private storage in the background, so you can keep going.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2077",
+    "zh": "无法部署",
+    "en": "Cannot deploy",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2078",
+    "zh": "开始部署",
+    "en": "Start deployment",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/RuntimeMaintenanceStarter.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2079",
+    "zh": "打开 WebView 设置",
+    "en": "Open WebView settings",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2080",
+    "zh": "打不开系统 WebView 设置。",
+    "en": "Could not open WebView settings.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2081",
+    "zh": "已复制本机环境摘要。",
+    "en": "Copied the device summary.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2082",
+    "zh": "Android %s",
+    "en": "Android %s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2083",
+    "zh": "支持结论",
+    "en": "Support",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2084",
+    "zh": "可用空间不足，点此查看详情",
+    "en": "Not enough space. Tap for details.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2085",
+    "zh": "点此查看架构、空间与网页内核",
+    "en": "Tap for architecture, space and WebView.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2086",
+    "zh": "可用空间不足：部署约需 %1$s，当前可用 %2$s。",
+    "en": "Not enough free space: deployment needs about %1$s and %2$s is available.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2087",
+    "zh": "内置 Ubuntu 与运行组件将部署到应用私有目录。部署在后台进行。",
+    "en": "Ubuntu and runtime components are deployed to the app’s private storage in the background.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2088",
+    "zh": "权限由你决定，数据有处可寻",
+    "en": "Your permissions, your data",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2089",
+    "zh": "可用空间仍不足。",
+    "en": "There is still not enough free space.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2090",
+    "zh": "空间检查已通过。",
+    "en": "The space check passed.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2091",
+    "zh": "运行环境部署已开始",
+    "en": "Runtime deployment started",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2092",
+    "zh": "部署没有重新启动：可能已在进行或已尝试过。可在第 4 步查看结果。",
+    "en": "Deployment was not restarted: it may already be running or was attempted. Check step 4 for the result.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2093",
+    "zh": "第 2 步 · 用途",
+    "en": "Step 2 · Purpose",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2094",
+    "zh": "你想用 DSHA 做什么？",
+    "en": "What will you use DSHA for?",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2095",
+    "zh": "可多选。只用来推荐下一步的授权，不会自动申请任何权限。",
+    "en": "Choose any. This only recommends permissions on the next step; nothing is requested automatically.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2096",
+    "zh": "用途（可多选）",
+    "en": "Purposes (multiple choice)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2097",
+    "zh": "对话、写代码、用终端",
+    "en": "Chat, code and use the terminal",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2098",
+    "zh": "无需任何设备授权",
+    "en": "No device permission needed",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2099",
+    "zh": "读写手机里的文件",
+    "en": "Work with files on the phone",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2100",
+    "zh": "推荐：存储读写",
+    "en": "Recommended: storage access",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2101",
+    "zh": "让 AI 操作手机屏幕",
+    "en": "Let AI operate the screen",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2102",
+    "zh": "推荐：无障碍 · 悬浮窗 · 通知",
+    "en": "Recommended: accessibility · overlay · notifications",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2103",
+    "zh": "执行设备命令",
+    "en": "Run device commands",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2104",
+    "zh": "推荐：Stellar（Shizuku 兼容层）",
+    "en": "Recommended: Stellar (Shizuku compatibility layer)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2105",
+    "zh": "长时间在后台运行",
+    "en": "Keep running in the background",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2106",
+    "zh": "推荐：电池优化 · 通知",
+    "en": "Recommended: battery optimization · notifications",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2107",
+    "zh": "运行环境正在后台部署，左侧可查看进度。",
+    "en": "The runtime is deploying in the background; see progress on the left.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2108",
+    "zh": "运行环境正在后台部署，点顶部胶囊可查看进度。",
+    "en": "The runtime is deploying in the background; tap the top capsule for progress.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2109",
+    "zh": "无需授权，下一步",
+    "en": "No permissions needed · Next",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2110",
+    "zh": "仍然查看可选授权",
+    "en": "Review optional permissions",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2111",
+    "zh": "下一步：开启 %d 项推荐授权",
+    "en": "Next: enable %d recommended permissions",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2112",
+    "zh": "跳过授权，稍后在设置中开启",
+    "en": "Skip permissions for now",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2113",
+    "zh": "%1$s，%2$s",
+    "en": "%1$s, %2$s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2114",
+    "zh": "第 3 步 · 授权",
+    "en": "Step 3 · Permissions",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2115",
+    "zh": "全部可选，之后可在设置中修改。",
+    "en": "All optional. Change later in Settings.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2116",
+    "zh": "授权状态暂时无法读取，可稍后在 设置 → 设备能力授权 中开启。",
+    "en": "Permission status is unavailable. You can enable permissions later in Settings → Device permissions.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2117",
+    "zh": "下一步 · 已开启 %1$d / %2$d",
+    "en": "Next · %1$d of %2$d on",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2118",
+    "zh": "完成授权",
+    "en": "Done",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2119",
+    "zh": "暂不授权，继续",
+    "en": "Skip for now",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2120",
+    "zh": "马上就好",
+    "en": "Almost there",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2121",
+    "zh": "运行环境还在部署，完成后即可进入主界面并自动启动 Web。也可以先进入受限主界面查看配置和日志。",
+    "en": "The runtime is still deploying. When it finishes you can open the home screen and Web starts automatically. You can also enter the limited interface to view settings and logs.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2122",
+    "zh": "准备就绪",
+    "en": "All set",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2123",
+    "zh": "运行环境已部署并通过检查。进入主界面后会自动启动 Web。",
+    "en": "The runtime is deployed and passed its checks. Web starts automatically on the home screen.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2124",
+    "zh": "部署未完成",
+    "en": "Deployment incomplete",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2125",
+    "zh": "部署没有完成，本页不会自动覆盖环境。请按下方原因处理后重试。",
+    "en": "Deployment did not finish. This page will not overwrite the environment automatically. Fix the cause below, then retry.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2126",
+    "zh": "需要处理环境",
+    "en": "The environment needs attention",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2127",
+    "zh": "还未开始部署",
+    "en": "Deployment has not started",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2128",
+    "zh": "回到第 1 步开始部署。",
+    "en": "Go back to step 1 to start deployment.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2129",
+    "zh": "第 4 步 · 完成",
+    "en": "Step 4 · Finish",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2130",
+    "zh": "回到第 1 步",
+    "en": "Back to step 1",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2131",
+    "zh": "未完成的操作：%1$s\n最后记录阶段：%2$s\n\n%3$s",
+    "en": "Unfinished operation: %1$s\nLast recorded stage: %2$s\n\n%3$s",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2132",
+    "zh": "%s：已开启",
+    "en": "%s: enabled",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2133",
+    "zh": "%s：未开启",
+    "en": "%s: not enabled",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2134",
+    "zh": "按你选的用途，还建议开启：%s。不开也能先进入主界面。",
+    "en": "For the uses you picked, consider enabling: %s. You can enter the home screen without them.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2135",
+    "zh": "授权可随时在 设置 → 设备能力授权 中修改或撤销。",
+    "en": "Permissions can be changed or revoked anytime in Settings → Device permissions.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2136",
+    "zh": "返回授权",
+    "en": "Back to permissions",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2137",
+    "zh": "重试部署",
+    "en": "Retry deployment",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/RuntimeMaintenanceStarter.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2138",
+    "zh": "无法开始重试，请查看维护记录。",
+    "en": "Could not start the retry. Check the maintenance record.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/OnboardingActivity.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2139",
+    "zh": "文件夹",
+    "en": "Folder",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SafBrowseFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2140",
+    "zh": "未验证",
+    "en": "Unverified",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceChannelsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2141",
+    "zh": "未启用",
+    "en": "Not enabled",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceChannelsFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2142",
+    "zh": "在通知栏显示部署进度、更新下载和手机任务的停止按钮。",
+    "en": "Shows deployment progress, update downloads and the phone-task stop button.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2143",
+    "zh": "部署进度",
+    "en": "Progress",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2144",
+    "zh": "任务停止按钮",
+    "en": "Stop button",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2145",
+    "zh": "在系统通知设置中允许 DSH-A-Su。",
+    "en": "Allow DSH-A-Su in system notification settings.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2146",
+    "zh": "会弹出系统权限框。",
+    "en": "Android will show a permission prompt.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2147",
+    "zh": "系统通知设置",
+    "en": "Notification settings",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2148",
+    "zh": "去系统通知设置",
+    "en": "Open notification settings",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2149",
+    "zh": "系统不再弹框，需在系统设置中开启",
+    "en": "Android won't ask again; enable in settings",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2150",
+    "zh": "通知已关闭，需在系统设置中开启",
+    "en": "Notifications are off; enable in settings",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2151",
+    "zh": "减少系统在后台结束 Web 和终端。",
+    "en": "Android stops Web and the terminal less often in the background.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2152",
+    "zh": "后台更稳",
+    "en": "Steadier in background",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2153",
+    "zh": "不受限制",
+    "en": "Unrestricted",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2154",
+    "zh": "已允许后台",
+    "en": "Background allowed",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2155",
+    "zh": "后台受限",
+    "en": "Restricted",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2156",
+    "zh": "长时间运行建议在电池页改为“不受限制”。",
+    "en": "For long runs, set it to Unrestricted on the battery page.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2157",
+    "zh": "会打开应用详情。ColorOS 点「耗电管理」→「完全允许后台行为」。",
+    "en": "Opens App info. On ColorOS: Battery usage → Allow all background activity.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2158",
+    "zh": "打开应用详情",
+    "en": "Open app info",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2159",
+    "zh": "打开耗电管理",
+    "en": "Open battery usage",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2160",
+    "zh": "后台受限，可能被系统结束",
+    "en": "Restricted; may be stopped",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2161",
+    "zh": "存储读写",
+    "en": "Storage access",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2162",
+    "zh": "读写 /sdcard 下的项目和文件。不开也能用，仅限私有目录。",
+    "en": "Read and write projects under /sdcard. Without it, only private folders work.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2163",
+    "zh": "读写 /sdcard",
+    "en": "Use /sdcard",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2164",
+    "zh": "在「所有文件访问」中允许 DSH-A-Su。",
+    "en": "Allow DSH-A-Su under All files access.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2165",
+    "zh": "已在运行的 Web 与终端重启后生效。",
+    "en": "Restart a running Web session or terminal to apply.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2166",
+    "zh": "去开启所有文件访问",
+    "en": "Allow all files access",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2167",
+    "zh": "让助手读屏、点按和输入，用于手机任务。",
+    "en": "Lets the assistant read the screen, tap and type for phone tasks.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2168",
+    "zh": "读屏与点按",
+    "en": "Read and tap",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2169",
+    "zh": "无障碍设置",
+    "en": "Accessibility settings",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2170",
+    "zh": "已开启，等待系统连接",
+    "en": "On, waiting for the system",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2171",
+    "zh": "重新打开无障碍设置",
+    "en": "Reopen accessibility settings",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2172",
+    "zh": "无法确认",
+    "en": "Unknown",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2173",
+    "zh": "查看",
+    "en": "Check",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2174",
+    "zh": "暂时无法确认状态",
+    "en": "Status unavailable",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2175",
+    "zh": "在无障碍设置中开启「%s」。提示“受限设置”时，先在应用详情右上角菜单中允许。",
+    "en": "Turn on “%s” in accessibility settings. If restricted settings are reported, allow them from the app-info menu first.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ],
+    "androidFormat": true
+  },
+  {
+    "id": "ru20261112_2176",
+    "zh": "显示悬浮条、命令批准和手机任务状态窗。",
+    "en": "Shows the floating bar, command approvals and the phone-task window.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2177",
+    "zh": "悬浮条与状态窗",
+    "en": "Floating bar",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2178",
+    "zh": "未允许",
+    "en": "Not allowed",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2179",
+    "zh": "在“显示在其他应用上层”中允许 DSH-A-Su。",
+    "en": "Allow DSH-A-Su under Display over other apps.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2180",
+    "zh": "悬浮条开关在 设置 → 悬浮条。",
+    "en": "Turn on the floating bar in Settings → Floating status.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2181",
+    "zh": "去允许悬浮窗",
+    "en": "Allow overlay",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2182",
+    "zh": "去允许",
+    "en": "Allow",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/PermissionCards.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2183",
+    "zh": "从桌面图标直接进入 Web",
+    "en": "Open Web from the app icon",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2184",
+    "zh": "开启后点击桌面图标或常驻通知先显示加载页，Web 就绪即进入；在 Web 里返回到底会回到桌面。应用被系统回收后，离开前停在 Web 就回到 Web。环境需要维护或启动失败时仍进入主界面。也可在 Web 的「设置 → 启动目标」中修改；禁用 dsh-launch-target 插件不会改变这里的选择。",
+    "en": "When on, the app icon and the ongoing notification show a loading screen and open Web once it is ready; going back from the first Web page returns to the home screen. After the system reclaims the app, it returns to Web if you left from Web. Maintenance or startup failures still open the main screen. You can also change this in Web under Settings → Launch target; disabling the dsh-launch-target plugin keeps this choice.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2185",
+    "zh": "开启后从图标直接进入 Web，返回回到桌面",
+    "en": "Open Web straight from the icon; Back returns to home",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2186",
+    "zh": "启动目标未能保存，请重试",
+    "en": "The launch target was not saved. Try again.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2187",
+    "zh": "已关闭（默认）",
+    "en": "Off (default): follow individual DSHA confirmation rules",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/FullPermissionControls.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2188",
+    "zh": "开启后，已获准能力的操作不再弹出 DSHA 安全确认；关闭后恢复。此开关仅保存在本机，不随备份迁移；各系统权限仍按各自授权独立生效。",
+    "en": "When on, authorized capabilities skip DSHA safety confirmations; turning it off restores them. This choice stays on this device, is excluded from backups, and leaves each system permission on its own grant.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/FullPermissionControls.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2189",
+    "zh": "开启后无法在执行前拦下单次操作",
+    "en": "When on, a single action cannot be stopped before it runs",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/FullPermissionControls.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2190",
+    "zh": "只影响 DSHA 确认，不改系统权限",
+    "en": "Affects DSHA confirmations only, not system permissions",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/FullPermissionControls.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2191",
+    "zh": "打开虚拟识屏页",
+    "en": "Open virtual screen",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenOverlayController.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2192",
+    "zh": "收起预览",
+    "en": "Hide preview",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2193",
+    "zh": "准备部署",
+    "en": "Prepare deployment",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2194",
+    "zh": "核对并提交安装文件",
+    "en": "Verify and publish installation files",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2195",
+    "zh": "检查启动配置与隔离试运行",
+    "en": "Startup check and isolated trial",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2196",
+    "zh": "运行环境部署",
+    "en": "Runtime deployment",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2197",
+    "zh": "运行时更新",
+    "en": "Runtime update",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2198",
+    "zh": "运行环境重建",
+    "en": "Runtime rebuild",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2199",
+    "zh": "重建中",
+    "en": "Rebuilding",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2200",
+    "zh": "环境已就绪",
+    "en": "Environment ready",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2201",
+    "zh": "运行时已更新",
+    "en": "Runtime updated",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2202",
+    "zh": "环境已重建",
+    "en": "Environment rebuilt",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2203",
+    "zh": "维护已完成",
+    "en": "Maintenance done",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2204",
+    "zh": "更新未完成",
+    "en": "Update incomplete",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2205",
+    "zh": "重建未完成",
+    "en": "Rebuild incomplete",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2206",
+    "zh": "环境检查未通过",
+    "en": "Readiness check failed",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2207",
+    "zh": "上次维护未完成",
+    "en": "Previous maintenance incomplete",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/util/DeployStages.java"
+    ]
+  },
+  {
+    "id": "ru20261112_2208",
+    "zh": "已保存（内容不显示）",
+    "en": "Saved (contents hidden)",
+    "files": []
+  },
+  {
+    "id": "ru20261112_2209",
+    "zh": "未保存",
+    "en": "Not saved",
+    "files": []
+  },
+  {
+    "id": "ru20261112_2210",
+    "zh": "Token 失效",
+    "en": "Token expired",
+    "files": []
+  },
+  {
+    "id": "ru20261112_2211",
+    "zh": "跳过",
+    "en": "Skipped",
+    "files": []
+  },
+  {
+    "id": "ru20261112_2212",
+    "zh": "无法校验",
+    "en": "Cannot verify",
+    "files": []
+  },
+  {
+    "id": "ru20261112_2213",
+    "zh": "未取得",
+    "en": "Not obtained",
+    "files": []
+  },
+  {
+    "id": "ru20261112_2214",
+    "zh": "已保存（账号未知）",
+    "en": "Saved (account unknown)",
+    "files": []
+  },
+  {
+    "id": "ru20261112_2215",
+    "zh": "其他主机",
+    "en": "Other hosts",
+    "files": []
+  },
+  {
+    "id": "ru20261112_2216",
+    "zh": "离开后从最近任务移除；系统保留当前卡片时不显示内容",
+    "en": "Remove from recents on exit; hide retained card content",
+    "files": []
+  },
+  {
+    "id": "ru20261112_2217",
+    "zh": "系统 WebView",
+    "en": "System WebView",
+    "files": []
+  },
+  {
+    "id": "ru20261112_2218",
+    "zh": "华为 WebView",
+    "en": "Huawei WebView",
+    "files": []
+  },
+  {
+    "id": "ru20261112_2219",
+    "zh": "荣耀 WebView",
+    "en": "Honor WebView",
+    "files": []
+  },
+  {
+    "id": "ru20261112_meta_2220",
+    "zh": "DSHA builtin plugin: stream the agent's output to a floating bar at the top of the phone screen (lyric-style), and turn tool calls into human-readable status lines",
+    "en": "DSHA builtin plugin: stream the agent's output to a floating bar at the top of the phone screen (lyric-style), and turn tool calls into human-readable status lines",
+    "files": []
+  },
+  {
+    "id": "ru20261112_meta_2221",
+    "zh": "Expose the official experimental Auto review choice without selecting it by default",
+    "en": "Expose the official experimental Auto review choice without selecting it by default",
+    "files": []
+  },
+  {
+    "id": "ru20261112_meta_2222",
+    "zh": "DSHA builtin plugin: Settings > Launch target chooses whether the app icon opens the main screen or Web next time; disabling the plugin keeps the chosen target",
+    "en": "DSHA builtin plugin: Settings > Launch target chooses whether the app icon opens the main screen or Web next time; disabling the plugin keeps the chosen target",
+    "files": []
+  },
+  {
+    "id": "ru20261112_meta_2223",
+    "zh": "DSHA builtin plugin: destructive container commands (rm and friends) always require an explicit user confirmation",
+    "en": "DSHA builtin plugin: destructive container commands (rm and friends) always require an explicit user confirmation",
+    "files": []
+  },
+  {
+    "id": "ru20261112_meta_2224",
+    "zh": "DSHA builtin fix plugin: when an edit is refused because the file has not been read, names the same-named file this session did read at another path (e.g. main checkout vs worktree). Message only; the read-before-edit guard is unchanged. Temporary until upstream discussion #11977 is resolved",
+    "en": "DSHA builtin fix plugin: when an edit is refused because the file has not been read, names the same-named file this session did read at another path (e.g. main checkout vs worktree). Message only; the read-before-edit guard is unchanged. Temporary until upstream discussion #11977 is resolved",
+    "files": []
+  },
+  {
+    "id": "ru20261112_meta_2225",
+    "zh": "DSHA virtual display automation tools",
+    "en": "DSHA virtual display automation tools",
+    "files": []
+  },
+  {
+    "id": "ru20261112_meta_2226",
+    "zh": "DSHA builtin fix plugin: the glob tool skips nested git worktrees (.agents/worktrees and linked worktrees inside the search root) unless path points into one. Reuses upstream dsh-tool-fs-search for parsing, ripgrep and results, and keeps DSHA required policy checks. Temporary until upstream glob prunes nested worktrees",
+    "en": "DSHA builtin fix plugin: the glob tool skips nested git worktrees (.agents/worktrees and linked worktrees inside the search root) unless path points into one. Reuses upstream dsh-tool-fs-search for parsing, ripgrep and results, and keeps DSHA required policy checks. Temporary until upstream glob prunes nested worktrees",
+    "files": []
+  },
+  {
+    "id": "ru20261112_meta_2227",
+    "zh": "DSHA builtin plugin: protected device commands through root, Shizuku or ADB",
+    "en": "DSHA builtin plugin: protected device commands through root, Shizuku or ADB",
+    "files": []
+  },
+  {
+    "id": "ru20261112_meta_2228",
+    "zh": "Android Computer Use through the authenticated DSHA device bridge",
+    "en": "Android Computer Use through the authenticated DSHA device bridge",
+    "files": []
+  },
+  {
+    "id": "ru20261112_meta_2229",
+    "zh": "DSHA builtin server plugin: actual task progress and one-shot cancellation via authenticated native bridge",
+    "en": "DSHA builtin server plugin: actual task progress and one-shot cancellation via authenticated native bridge",
+    "files": []
+  },
+  {
+    "id": "ru20261112_meta_2230",
+    "zh": "DSHA 后台任务、网页返回和草稿恢复适配",
+    "en": "DSHA 后台任务、网页返回和草稿恢复适配",
+    "files": []
+  },
+  {
+    "id": "ru20261112_meta_2231",
+    "zh": "Per-tool LLM authorization review for the DeepSeek Harness Auto permission preset",
+    "en": "Per-tool LLM authorization review for the DeepSeek Harness Auto permission preset",
+    "files": []
+  },
+  {
+    "id": "ru20261112_followup_0",
+    "zh": "导出反馈日志（测试包）",
+    "en": "Export feedback logs (test build)",
+    "files": []
+  },
+  {
+    "id": "ru20261112_followup_1",
+    "zh": "本应用与 DSH 日志、启动与维护记录、设备信息；有界、脱敏",
+    "en": "This app and DSH logs, startup and maintenance records, device info; bounded and redacted",
+    "files": []
+  },
+  {
+    "id": "ru20261112_followup_2",
+    "zh": "已就绪 · 等待进入",
+    "en": "Ready · waiting to enter",
+    "files": []
+  },
+  {
+    "id": "ru20261112_followup_10",
+    "zh": "第 %s 秒已就绪",
+    "en": "Ready after %s seconds",
+    "files": [],
+    "uiFormat": true
+  },
+  {
+    "id": "ru20261112_followup_15",
+    "zh": "正在后台检测已安装插件…",
+    "en": "Checking installed plugins in the background…",
+    "files": []
+  },
+  {
+    "id": "ru20261112_followup_16",
+    "zh": "正在进入对话…",
+    "en": "Opening conversation…",
+    "files": []
+  },
+  {
+    "id": "ru20261112_followup_17",
+    "zh": "历史审计测试数据",
+    "en": "Historical audit test data",
+    "files": []
+  },
+  {
+    "id": "ru20261112_followup_18",
+    "zh": "一次性采集本进程 logcat（仅自己的 pid）、本应用与 DSH 日志尾部、最近启动 / 维护 / 运行时健康 / 插件安装记录与设备环境信息。单文件 ≤256 KB、总量 ≤8 MB，所有文本按现有规则脱敏；不采集账号、设备标识或 API Key，不自动上传。日志仍可能包含个人信息，分享前请检查。",
+    "en": "Collects this process's logcat (own pid only), this app's and DSH log tails, recent startup, maintenance, runtime-health and plugin-install records, and device environment. Each file ≤256 KB and ≤8 MB in total; all text is redacted with existing rules. No account, device identifiers or API keys are collected and nothing is uploaded. Logs may still contain personal information; review before sharing.",
+    "files": []
+  },
+  {
+    "id": "ru20261112_installfix_0",
+    "zh": "重试部署？",
+    "en": "Retry deployment?",
+    "files": []
+  },
+  {
+    "id": "ru20261112_installfix_1",
+    "zh": "将在应用私有目录重新部署内置 Ubuntu 与运行组件，并完成启动检查与隔离试运行；已有数据按维护规则保留。",
+    "en": "The bundled Ubuntu and runtime components will be deployed again to the app's private storage, followed by startup checks and an isolated trial. Existing data is retained under the maintenance rules.",
+    "files": []
+  },
+  {
+    "id": "ru20261112_installfix_2",
+    "zh": "另存为…",
+    "en": "Save as…",
+    "files": []
+  },
+  {
+    "id": "ru20261112_installfix_3",
+    "zh": "反馈日志已保存到所选位置",
+    "en": "Feedback logs saved to the selected location",
+    "files": []
+  },
+  {
+    "id": "ru20261112_installfix_4",
+    "zh": "正在收集并保存反馈日志…",
+    "en": "Collecting and saving feedback logs…",
+    "files": []
+  },
+  {
+    "id": "ru20261112_installfix_5",
+    "zh": "正在收集反馈日志…",
+    "en": "Collecting feedback logs…",
+    "files": []
+  },
+  {
+    "id": "ru20261112_installfix_6",
+    "zh": "请选择分享目标",
+    "en": "Choose a sharing destination",
+    "files": []
+  },
+  {
+    "id": "ru20261112_installfix_7",
+    "zh": "没有可用的分享目标",
+    "en": "No sharing destinations available",
+    "files": []
+  },
+  {
+    "id": "ru20261112_installfix_8",
+    "zh": "收集失败：%s",
+    "en": "Collection failed: %s",
+    "files": [],
+    "uiFormat": true
   }
 ]

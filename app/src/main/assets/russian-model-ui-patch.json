@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-ui-settings-models/lib/client.js",
+  "patches": [
+    {
+      "before": "welcomeContinue: \"Продолжить\",",
+      "after": "welcomeContinue: \"Продолжить\",\nwelcomeWaiting: \"Сохранение ещё не завершено. Можно подождать, вернуться к уведомлению или войти только на этот раз. Выход из ожидания не отменяет запрос: он может завершиться позже.\",\nwelcomeWaitLeft: \"Вы вышли из ожидания. Запрос сохранения не отменён и может завершиться позже. Можно повторить сохранение или войти только на этот раз.\",\nwelcomeSessionHint: \"При входе только на этот раз подтверждение не сохраняется. После обновления страницы уведомление появится снова, если сохранение не успеет завершиться.\",\nwelcomeDiagnostics: \"Диагностика сохранения\",\nwelcomeReturn: \"Вернуться к уведомлению\",\nwelcomeSessionOnly: \"Я прочитал(а). Войти на этот раз без сохранения\",\nwelcomeSaving: \"Сохранение…\",\nwelcomeRetry: \"Повторить сохранение\",\n"
+    },
+    {
+      "before": ".zGbnIq_addModes{flex-direction:column;align-items:flex-start;gap:8px;display:flex}",
+      "after": ".zGbnIq_addModes{flex-direction:column;align-items:flex-start;gap:8px;display:flex}.zGbnIq_section,.zGbnIq_addBlock,.zGbnIq_addCard,.zGbnIq_addModes{min-width:0;max-width:100%;box-sizing:border-box}.zGbnIq_addModes>[role=tablist]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;min-width:0;max-width:100%;box-sizing:border-box}.zGbnIq_addModes [role=tab]{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.4;height:auto;min-height:44px;box-sizing:border-box}"
+    }
+  ]
+}

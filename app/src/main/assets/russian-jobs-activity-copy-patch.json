@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-ui-jobs/lib/client.js",
+  "patches": [
+    {
+      "before": "\"section.live\": \"Бег\"",
+      "after": "\"section.live\": \"Выполняются\""
+    },
+    {
+      "before": "\"status.running\": \"бег\"",
+      "after": "\"status.running\": \"Выполняется\""
+    },
+    {
+      "before": "\"terminal.running\": \"бег\"",
+      "after": "\"terminal.running\": \"Выполняется\""
+    }
+  ]
+}

@@ -53,6 +53,22 @@ window.__ModuleLoader__.load({ id: 'dsh-launch-target', factory: (require) => {
     retry: 'Retry'
   };
 
+  const ru = {
+  "nav": "Экран запуска",
+  "title": "Открывать по значку приложения",
+  "hint": "Настройка действует при следующем запуске по значку приложения. При выборе веб-интерфейса сначала появится экран загрузки, затем откроется веб-интерфейс. Возврат с первой веб-страницы ведёт на рабочий стол. При обслуживании среды или ошибке запуска откроется главный экран приложения.",
+  "pluginNote": "Чтобы вернуться к главному экрану, выберите его здесь. Отключать плагин не нужно. Отключение dsh-launch-target убирает эту панель, сохраняя выбранный режим запуска.",
+  "main": "Главный экран",
+  "web": "Веб-интерфейс",
+  "loading": "Загрузка…",
+  "saving": "Сохранение…",
+  "saved": "Сохранено. Настройка вступит в силу при следующем запуске по значку приложения.",
+  "unsupported": "Эта версия приложения не поддерживает настройку. Обновите DSHA.",
+  "denied": "Срок действия сеанса истёк. Обновите страницу и повторите попытку.",
+  "failed": "Не удалось прочитать или сохранить настройку. Предыдущее значение сохранено. Повторите попытку или измените параметр в приложении: Настройки → Настройки среды.",
+  "retry": "Повторить"
+};
+
   const NARROW = '.dshaLt_row{flex-direction:column;align-items:stretch}'
     + '.dshaLt_label,.dshaLt_control{flex:0 0 auto;min-width:0}'
     + '.dshaLt_control .dshaLt_segments{display:grid;width:100%;box-sizing:border-box}';
@@ -193,7 +209,7 @@ window.__ModuleLoader__.load({ id: 'dsh-launch-target', factory: (require) => {
   const inject = ['slots', 'locale'];
   function apply(ctx) {
     const t = ctx.locale.bind(NS);
-    ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-launch-target: dictionaries');
+    ctx.effect(() => ctx.locale.register(NS, { zh, en, ru }), 'dsh-launch-target: dictionaries');
     ctx.effect(() => ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({
       name: 'plugins.bundle.config',
       key: KEY,

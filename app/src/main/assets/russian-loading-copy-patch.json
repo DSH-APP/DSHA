@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-web-frontend/dist/assets/index-BgUyXZcc.js",
+  "patches": [
+    {
+      "before": "\"Loading plugins…\"",
+      "after": "(/^ru(?:-|$)/i.test(globalThis.__DSHA_LANGUAGE__||document.documentElement.lang||\"\")?\"Загрузка плагинов…\":\"Loading plugins…\")"
+    },
+    {
+      "before": "\"Failed to load plugins\"",
+      "after": "(/^ru(?:-|$)/i.test(globalThis.__DSHA_LANGUAGE__||document.documentElement.lang||\"\")?\"Не удалось загрузить плагины\":\"Failed to load plugins\")"
+    }
+  ]
+}

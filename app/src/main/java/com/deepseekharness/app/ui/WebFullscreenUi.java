@@ -3,7 +3,6 @@ package com.deepseekharness.app.ui;
 import android.app.Activity;
 import android.view.View;
 import android.view.ViewTreeObserver;
-
 import androidx.core.graphics.Insets;
 import androidx.core.view.OnApplyWindowInsetsListener;
 import androidx.core.view.ViewCompat;
@@ -11,20 +10,24 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsAnimationCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
-
 import com.deepseekharness.app.R;
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Set;
-import java.lang.ref.WeakReference;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 /** 两种网页内核共用安全显示区；系统栏、挖孔和输入法都不能覆盖正文。 */
 public final class WebFullscreenUi {
   /** 避免全局页面边距处理覆盖网页的全屏设置。 */
   public interface Host {
+    /** 系统 WebView 直接跟随原生输入法尺寸，不等待网页逐帧确认。 */
+    default boolean nativeImeResize() {
+      return false;
+    }
+
     default Object imeBridgeIdentity() {
       return null;
     }
@@ -87,6 +90,7 @@ public final class WebFullscreenUi {
     private ViewTreeObserver focusObserver;
     private Insets safe = Insets.NONE;
     private int keyboard;
+    private int finalKeyboard;
     private boolean attached;
     private int committedKeyboard;
     private boolean expanded;
@@ -98,12 +102,15 @@ public final class WebFullscreenUi {
     private int observedWidth;
 
     ContentInsets(Activity activity, View content) {
-      super(DISPATCH_MODE_STOP);
+      super(
+          activity instanceof Host host && host.nativeImeResize()
+              ? DISPATCH_MODE_CONTINUE_ON_SUBTREE
+              : DISPATCH_MODE_STOP);
       this.activity = activity;
       this.content = content;
       IME.put(activity, new WeakReference<>(this));
-      // Core 1.9 先调用同一 View 的 API21 动画适配，再派发普通边距监听。
-      // 此处消费仍保留兼容动画，并避免 WebView 再扣一次输入法边距。
+      // 原生处理后的类型归零再继续向子树派发；CONSUMED 会阻断通知，
+      // 让 Chromium 保留旧的 IME / safe-area 缓存，形成键盘消失后的空白占位。
       ViewCompat.setWindowInsetsAnimationCallback(content, this);
       ViewCompat.setOnApplyWindowInsetsListener(content, this);
       content.addOnAttachStateChangeListener(this);
@@ -118,9 +125,34 @@ public final class WebFullscreenUi {
           && !PictureInPictureActivity.showing(activity);
     }
 
+    private boolean nativeResize() {
+      return activity instanceof Host host && host.nativeImeResize();
+    }
+
+    private static int handledTypes() {
+      return WindowInsetsCompat.Type.systemBars()
+          | WindowInsetsCompat.Type.displayCutout()
+          | WindowInsetsCompat.Type.ime();
+    }
+
+    private WindowInsetsCompat childInsets(WindowInsetsCompat insets) {
+      if (!nativeResize()) return WindowInsetsCompat.CONSUMED;
+      // 必须是未被消费的零值通知，不能仅在父容器吃掉：WebView 需要它退休旧状态。
+      // IME 不支持 getInsetsIgnoringVisibility；只为系统栏与挖孔清除稳定边距。
+      return new WindowInsetsCompat.Builder(insets)
+          .setInsets(handledTypes(), Insets.NONE)
+          .setInsetsIgnoringVisibility(
+              WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(),
+              Insets.NONE)
+          .setVisible(handledTypes(), false)
+          .setDisplayCutout(null)
+          .build();
+    }
+
     private void forgetKeyboard() {
       imeAnimations.clear();
       keyboard = 0;
+      finalKeyboard = 0;
       committedKeyboard = 0;
       expanded = false;
       cancelFrame();
@@ -133,11 +165,13 @@ public final class WebFullscreenUi {
       if (!ownsKeyboard()) forgetKeyboard();
       // prepare 与 start 之间的 onApply 已是终态；先保留当前输入法高度，
       // 等 progress 提供实际起始或中间帧，不能提前跳到终点。
-      else if (imeAnimations.isEmpty())
-        keyboard = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+      else {
+        finalKeyboard = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+        if (imeAnimations.isEmpty()) keyboard = finalKeyboard;
+      }
       render();
       if (ownsKeyboard()) offerFrame(imeAnimations.isEmpty() ? "end" : "frame");
-      return WindowInsetsCompat.CONSUMED;
+      return childInsets(insets);
     }
 
     @Override
@@ -146,11 +180,20 @@ public final class WebFullscreenUi {
         forgetKeyboard();
         render();
       } else if ((animation.getTypeMask() & WindowInsetsCompat.Type.ime()) != 0) {
+        finalKeyboard = keyboard;
         imeAnimations.add(animation);
         expanded |= bridgeSupported && inFlight == 0 && pendingFrame == null;
         render();
         offerFrame("frame");
       }
+    }
+
+    @Override
+    public WindowInsetsAnimationCompat.BoundsCompat onStart(
+        WindowInsetsAnimationCompat animation, WindowInsetsAnimationCompat.BoundsCompat bounds) {
+      if (nativeResize() && (animation.getTypeMask() & handledTypes()) != 0)
+        return new WindowInsetsAnimationCompat.BoundsCompat(Insets.NONE, Insets.NONE);
+      return bounds;
     }
 
     @Override
@@ -163,15 +206,16 @@ public final class WebFullscreenUi {
         keyboard = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
         offerFrame("frame");
       }
-      // 动画帧只更新绝对可见区域；不逐帧改变浏览器尺寸或整体平移网页。
-      if (!ownsKeyboard()) render();
-      return WindowInsetsCompat.CONSUMED;
+      // WebView 与聊天正文使用同一原生尺寸；不把 composer 交给异步 IPC 单独移动。
+      if (!ownsKeyboard() || nativeResize()) render();
+      return childInsets(insets);
     }
 
     @Override
     public void onEnd(WindowInsetsAnimationCompat animation) {
       if (imeAnimations.remove(animation) && imeAnimations.isEmpty() && attached) {
         expanded = false;
+        if (nativeResize()) keyboard = finalKeyboard;
         render();
         offerFrame("end");
         // 取消也会结束动画；请求窗口当前边距，不重放先前缓存的终态。
@@ -219,7 +263,8 @@ public final class WebFullscreenUi {
     }
 
     private void render() {
-      int nativeKeyboard = imeAnimations.isEmpty() ? keyboard : expanded ? 0 : committedKeyboard;
+      int nativeKeyboard =
+          nativeResize() || imeAnimations.isEmpty() ? keyboard : expanded ? 0 : committedKeyboard;
       if (imeAnimations.isEmpty()) committedKeyboard = keyboard;
       Insets padding =
           PictureInPictureActivity.showing(activity)
@@ -243,6 +288,7 @@ public final class WebFullscreenUi {
     }
 
     private void offerFrame(String phase) {
+      if (nativeResize()) return;
       if (!(activity instanceof Host host)) return;
       Object identity = host.imeBridgeIdentity();
       if (identity != bridgeIdentity) {
@@ -355,6 +401,7 @@ public final class WebFullscreenUi {
         activity instanceof PictureInPictureActivity host
             ? host.browserThemeColor()
             : activity.getColor(R.color.surface);
+    activity.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(color));
     View content = activity.findViewById(android.R.id.content);
     if (content != null) {
       int left = content.getPaddingLeft(), top = content.getPaddingTop();

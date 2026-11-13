@@ -209,5 +209,20 @@ for (const [locale, dict] of dictionaries) disposers.push(ctx.locale.register("t
         self.assertEqual('web-integration/language.js', rescue['patches'][0]['prependAsset'])
 
 
+class RussianStatusSemanticsTest(unittest.TestCase):
+    def test_dismiss_pending_and_backup_status_are_distinct(self):
+        root = HERE.parent
+        base = json.loads((HERE / 'i18n/translations/ru.json').read_text(encoding='utf-8'))
+        extra = json.loads((HERE / 'i18n/translations-extra/ru.json').read_text(encoding='utf-8'))
+        self.assertEqual('Закрыть', base['m0343'])
+        self.assertEqual('Остановка…', base['m0330'])
+        self.assertEqual('Проверка', extra['termhome0070'])
+        self.assertEqual('Включено', extra['data248w32'])
+        resources = (root / 'app/src/main/res/values-ru/ui_strings.xml').read_text(encoding='utf-8')
+        import xml.etree.ElementTree as ET
+        close = ET.fromstring(resources).find("string[@name='about_close_button']")
+        self.assertEqual('"Закрыть"', close.text)
+
+
 if __name__ == '__main__':
     unittest.main()

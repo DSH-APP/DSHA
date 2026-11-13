@@ -46,7 +46,8 @@ window.__dshaIme = window.__dshaIme || (() => {
     const found = input?.closest?.('[class*="_composerSeat"]');
     if (seat?.isConnected && found === seat && (!hero || context(seat).key === hero.key)) return true;
     restore();
-    if (!binding || !found || !found.closest('[data-mobile-nav="frame"]')
+    if (document.documentElement.getAttribute('data-dsha-ime-mode') === 'resize'
+        || !binding || !found || !found.closest('[data-mobile-nav="frame"]')
         || !input.closest('[data-composer-input]')
         || typeof CSS === 'undefined' || !CSS.supports('translate', '0 1px')) return false;
     const css = getComputedStyle(found);

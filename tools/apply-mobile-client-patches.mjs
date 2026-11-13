@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { applyFileTransferClient } from './file-transfer/client-mobile.mjs';
+import { applyMobilePresentationFixes } from './mobile-presentation-fixes.mjs';
 import { applyMobileSafeArea } from './mobile-safe-area.mjs';
 import { applyMobileLocaleBundlePatch, applyMobileLocaleSourcePatch, mobileLocaleSourceFiles } from './mobile-locales.mjs';
 const project = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -139,7 +140,7 @@ function createDrawerQuickSettingsTask(ctx) {`);
                 if (wrap.dataset.mobileNavQuickFit !== fit) wrap.dataset.mobileNavQuickFit = fit;
             }
             syncMenuEntry(target, gearVisible);`);
-  return applyMobileSafeArea(applyFileTransferClient(applyMobileLocaleBundlePatch(source)));
+  return applyMobilePresentationFixes(applyMobileSafeArea(applyFileTransferClient(applyMobileLocaleBundlePatch(source))));
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const [input, action = '--check'] = process.argv.slice(2);

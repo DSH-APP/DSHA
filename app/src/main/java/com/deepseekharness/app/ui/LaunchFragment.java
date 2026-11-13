@@ -566,7 +566,7 @@ public class LaunchFragment extends Fragment {
       EnvironmentUiStatus.Snapshot environment = EnvironmentUiStatus.get(requireContext());
       boolean needsRecovery = environment.recovery;
       ((TextView) root.findViewById(R.id.launch_environment))
-          .setText(environment.ready ? "READY" : "—");
+          .setText(environment.ready ? UiText.text("就绪") : "—");
       // 副标题只留一句；恢复核对的完整结论与下一步在折叠卡里展开（异常默认展开，B1/B4）。
       TextView subtitle = root.findViewById(R.id.launch_subtitle);
       String hint = getString(R.string.ui2_launch_hint);

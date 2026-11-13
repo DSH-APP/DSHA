@@ -52,6 +52,8 @@
     "app/src/main/assets/language-patch.json": "4ca37acf25289984e0eee8e4f686e9c5f2cb30abbe4c1fd1530d3feb2f79c4e5",
     "app/src/main/assets/mcp-image-base64-patch.json": "263285afca6ba6137ef782f979c33e099ce1a1226695a8eba501c155508018ef",
     "app/src/main/assets/mcp-version-negotiation-patch.json": "282927655079b75366cde9556f8fb3c17aefe769756685b88f9f43dee643f0df",
+    "app/src/main/assets/mobile-subagent-catalog-patch.json": "161dd543bcfb75f42c353f603eae4b98d1d3c65feefc10f5add5c9d76f1389d8",
+    "app/src/main/assets/mobile-team-panel-layout-patch.json": "a5613a7e58e61577c232254c1416f5fed49860767d10024ac3423308cf38c5bb",
     "app/src/main/assets/office-fonts-patch.json": "77a40970e69fc7fa100d15d943cac12e497d9144b37e2aecd2260cee4f26f242",
     "app/src/main/assets/permission-full-access-patch.json": "a3d3b83d17ff12fef91ad133c90a6c734283cd9b6cc196859e82855ba5f4c96f",
     "app/src/main/assets/persona-compat-patch.json": "48e2e6f75a1508bcc23564a7aeab3be0daab1ebd699d77920fea071134a33e74",
@@ -72,7 +74,19 @@
     "app/src/main/assets/retire-guarded-preset-patch.json": "7a5b0361c97bc745a72388ee5cc9873f8eb9044d40e3758f2bdf8f51dd7ae33e",
     "app/src/main/assets/retired-market-catalog-patch.json": "49d2aef262c86bf3e74bd0d1014a3e38b5d33ae44dd862ccc7e73ae57be0ab14",
     "app/src/main/assets/retired-market-optional-patch.json": "1ee36d857b05b811cb60ed4ba80e1a4b472cc0642dc9a8f3ebca4d0a26774599",
-    "app/src/main/assets/runtime-patches.json": "625fcf127e30b993932dc2f31248cc0fa9cc8b565eb1d0dfbbedb19c4f59177e",
+    "app/src/main/assets/runtime-patches.json": "fec8d92b4ea36882379e1cf5f3c72518ce837ec210391131926ba26aa7fed317",
+    "app/src/main/assets/russian-chat-activity-copy-patch.json": "e36bcb7d973c9114913a91bfb779d77fd4ed966a3f7778f2454a3b8bc951e2e9",
+    "app/src/main/assets/russian-conversation-copy-patch.json": "94ac68d9f186e490b30ef48be4da449d861fab27fc63f50752696157cd4393ac",
+    "app/src/main/assets/russian-cordis-activity-copy-patch.json": "2b4996f55512e2914b28687e01e46aa932557ededc385ad3a8461fdc2fd310c3",
+    "app/src/main/assets/russian-jobs-activity-copy-patch.json": "d0e005dc79e37b0bbfd81d02635dbcbe7be7d951916951e3eb8ca47c4edcc119",
+    "app/src/main/assets/russian-loading-copy-patch.json": "1f648b5a4d628e3242e94ce7fde31d5f30dfd1923f992ccb5b09aab23d352395",
+    "app/src/main/assets/russian-model-ui-patch.json": "a7445724d8d546d01c62af65604bf441d11539f492521658cf90d323ebbcbd1b",
+    "app/src/main/assets/russian-permission-copy-patch.json": "8a99031ee386cd43f7d73aeb00cf25b25ecbc6d9eecd13e3cde8006af006a43f",
+    "app/src/main/assets/russian-plugin-settings-layout-patch.json": "d42c029cff0b914304b9b86d9937ff30663c30a97e12aa181b34728a69389da9",
+    "app/src/main/assets/russian-plugin-settings-shell-patch.json": "5dd69707d41647cb22b7bda9e7312233fa458ceffde07febe8cb701bb559089e",
+    "app/src/main/assets/russian-plugin-ui-patch.json": "d359d6442a0834731a08fb5c2393a2ce1ea3b24e5b13f66f14d09059ae8bd012",
+    "app/src/main/assets/russian-workflow-run-activity-copy-patch.json": "e48c7a00cde8b4305595b773e54c1893b4f982d81d581178b07df99374a82587",
+    "app/src/main/assets/russian-workspace-activity-copy-patch.json": "307872f2bfd2184978e763d64a6f9f7a61651c5da930df4ed058f040ea957817",
     "app/src/main/assets/session-interaction-patch.json": "27880ee94d3952ab697cc7d75cab69bae074d9c1d74fe6ce9e36de51432ff687",
     "app/src/main/assets/sidebar-layout-recovery-patch.json": "4e9c1d996a5f457e465288af5488dcadae60c20695a208334e52af940682d8af",
     "app/src/main/assets/startup-mcp-timing-patch.json": "6b4e85c89b6a78e037eb9687c1ff1f9661088e73a4822b133e201eafb47865f0",
@@ -93,5 +107,5 @@
     "tools/runtime_stable_patches.py": "a3f8a612f433cc024e6495bb180bbff8d7206482019c5710065f3c4cdc175873",
     "tools/runtime_input_contract.py": "1924d38cc7c6e7a26cbaeee1cab66d36f983a82588a7408b2acb17b25eebe3aa"
   },
-  "archive_sha256": "c1bd68330a10776f304a92a19d8f82c184c1abf523275a9e28dbb2c2e764e4fe"
+  "archive_sha256": "a57aced5e09c6c8c2ba44c1dd616eaa763731c19061f8680e12b40d803e4f210"
 }

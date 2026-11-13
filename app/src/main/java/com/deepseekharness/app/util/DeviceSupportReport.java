@@ -48,6 +48,15 @@ public final class DeviceSupportReport {
     return UiText.choose(hintZh, hintEn);
   }
 
+  /** 仅翻译内置显示名称；原始包名、版本和诊断保持不变。 */
+  public String displayWebViewLabel() {
+    for (String name : new String[] {"系统 WebView", "华为 WebView", "荣耀 WebView", "系统未提供版本信息"}) {
+      if (webViewLabel.equals(name) || webViewLabel.startsWith(name + " "))
+        return UiText.text(name) + webViewLabel.substring(name.length());
+    }
+    return webViewLabel;
+  }
+
   public boolean blocksDeploy() {
     return gate == Gate.BLOCK;
   }
