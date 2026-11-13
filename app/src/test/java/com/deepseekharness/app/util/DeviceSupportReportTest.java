@@ -144,4 +144,16 @@ public class DeviceSupportReportTest {
             1);
     assertEquals(DeviceSupportReport.Gate.RISK, r.gate);
   }
+
+  @Test
+  public void webViewDisplayChangesLanguageWithoutChangingDiagnosticIdentity() {
+    DeviceSupportReport r =
+        report(36, new String[] {"arm64-v8a"}, "Xiaomi", "com.google.android.webview", "141.0.0.0");
+    String original = r.webViewLabel;
+    UiText.setLanguage("ru");
+    assertEquals("Системный WebView 141.0.0.0", r.displayWebViewLabel());
+    UiText.setLanguage("en");
+    assertEquals("System WebView 141.0.0.0", r.displayWebViewLabel());
+    assertEquals(original, r.webViewLabel);
+  }
 }

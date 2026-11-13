@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-ui-settings-plugins/lib/client.js",
+  "patches": [
+    {
+      "before": ".pbvGtq_section{max-width:760px;",
+      "after": ".pbvGtq_section{box-sizing:border-box;min-width:0;width:100%;max-width:760px;"
+    }
+  ]
+}

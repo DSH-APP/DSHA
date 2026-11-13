@@ -145,7 +145,15 @@
     "welcome-notice-patch.json",
     "workspace-directory-policy-patch.json",
     "user-only-skill-approval-patch.json",
-    "external-tool-proof.json"
+    "external-tool-proof.json",
+    "russian-plugin-ui-patch.json",
+    "russian-model-ui-patch.json",
+    "russian-conversation-copy-patch.json",
+    "russian-plugin-settings-layout-patch.json",
+    "russian-plugin-settings-shell-patch.json",
+    "russian-loading-copy-patch.json",
+    "russian-permission-copy-patch.json",
+    "mobile-team-panel-layout-patch.json"
   ],
   "packagedTrees": [
     "app-integration",

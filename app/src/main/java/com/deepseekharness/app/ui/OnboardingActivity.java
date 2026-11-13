@@ -825,7 +825,7 @@ public final class OnboardingActivity extends AppCompatActivity {
     checks.addView(
         tile(
             UiText.choose("网页内核", "Browser engine"),
-            support.webViewLabel,
+            support.displayWebViewLabel(),
             blocked || warn || advise));
     checks.addView(tile(UiText.choose("支持结论", "Support"), support.conclusion(), blocked || warn));
     return checks;
@@ -848,7 +848,7 @@ public final class OnboardingActivity extends AppCompatActivity {
                     UiText.choose("Android %s", "Android %s"),
                     android.os.Build.VERSION.RELEASE)
                 + " · "
-                + support.webViewLabel,
+                + support.displayWebViewLabel(),
             14.5f,
             blocked
                 ? R.color.shell_bad

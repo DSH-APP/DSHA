@@ -22,12 +22,10 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.util.Constants;
 import com.deepseekharness.app.util.PreviewPageSession;
@@ -43,15 +41,17 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
   private static final String STATE_PAGE_URL = "browser-auth-url";
   // 检查真实页面能力，包括上游 polyfill 的结果，不凭伪装 UA 判断。
   private static final String CAPABILITY_CHECK =
-      "(function(){var m=[];"
-          + "if(!('noModule' in document.createElement('script')))m.push('JavaScript modules');"
-          + "['Promise','fetch','WebSocket','TextEncoder','ReadableStream','AbortController']"
-          + ".forEach(function(k){if(typeof window[k]==='undefined')m.push(k);});"
-          + "if(typeof AbortSignal==='undefined'||typeof AbortSignal.any!=='function')m.push('AbortSignal.any');"
-          + "if(typeof AbortSignal==='undefined'||typeof AbortSignal.timeout!=='function')m.push('AbortSignal.timeout');"
-          + "if(typeof Promise==='undefined'||typeof Promise.withResolvers!=='function')m.push('Promise.withResolvers');"
-          + "if(typeof Iterator==='undefined'||typeof Iterator.from!=='function'||typeof Iterator.prototype.filter!=='function')m.push('Iterator');"
-          + "return m.join(', ');})()";
+      "(function(){var m=[];if(!('noModule' in document.createElement('script')))m.push('JavaScript"
+          + " modules');"
+          + "['Promise','fetch','WebSocket','TextEncoder','ReadableStream','AbortController'].forEach(function(k){if(typeof"
+          + " window[k]==='undefined')m.push(k);});if(typeof AbortSignal==='undefined'||typeof"
+          + " AbortSignal.any!=='function')m.push('AbortSignal.any');if(typeof"
+          + " AbortSignal==='undefined'||typeof"
+          + " AbortSignal.timeout!=='function')m.push('AbortSignal.timeout');if(typeof"
+          + " Promise==='undefined'||typeof"
+          + " Promise.withResolvers!=='function')m.push('Promise.withResolvers');if(typeof"
+          + " Iterator==='undefined'||typeof Iterator.from!=='function'||typeof"
+          + " Iterator.prototype.filter!=='function')m.push('Iterator');return m.join(', ');})()";
 
   private FrameLayout container;
   private View errorPanel;
@@ -627,6 +627,11 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
 
   private PreviewPageSession.Identity currentWebIdentity() {
     return com.deepseekharness.app.core.HarnessController.get(this).getReadyWebPageIdentity();
+  }
+
+  @Override
+  public boolean nativeImeResize() {
+    return true;
   }
 
   @Override
@@ -1411,7 +1416,7 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
                 WebPreviewActivity.this,
                 com.deepseekharness.app.util.UiText.choose(
                     "未获得文件访问授权：网页暂不能打开手机文件。请先在“设备授权”页允许文件访问。",
-                    "File access is not granted, so the web page cannot open phone files. Allow file access on the device grants page first."),
+                    "File access is not granted. Allow it on the device grants page first."),
                 Toast.LENGTH_LONG)
             .show();
         return true;
@@ -1478,8 +1483,8 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
   }
 
   /**
-   * 实验性尽力修复：从容器进入 DSH 时，鉴权刷新、WebView 首帧与网页脚本下载解析期间页面为空，
-   * 显示为长白屏。这里先盖与 DSH 网页启动画面同款的原生加载页，页面完成、出错或挂起时收起。
+   * 实验性尽力修复：从容器进入 DSH 时，鉴权刷新、WebView 首帧与网页脚本下载解析期间页面为空， 显示为长白屏。这里先盖与 DSH
+   * 网页启动画面同款的原生加载页，页面完成、出错或挂起时收起。
    */
   private void showPageBoot() {
     if (pageBoot != null
@@ -1540,8 +1545,8 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
   }
 
   /**
-   * 显示错误面板（实验性，docs/design/web-crash-20261102）。title/detail 为原有文案，仍写入诊断记录；
-   * 面板标题与说明按 kind 选择，technicalDetail 为不翻译的协议原文，进入「技术详情」。
+   * 显示错误面板（实验性，docs/design/web-crash-20261102）。title/detail 为原有文案，仍写入诊断记录； 面板标题与说明按 kind
+   * 选择，technicalDetail 为不翻译的协议原文，进入「技术详情」。
    */
   private void showError(
       com.deepseekharness.app.util.WebCrashReport.Kind kind,
@@ -1819,8 +1824,8 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
   }
 
   /**
-   * 把页面从 Activity 摘下但保留 WebView：清掉 Activity 级客户端与上下文，只留 renderer 退出桩。
-   * 视图摘除由本方法完成，keeper.detach 只负责所有权与诊断。
+   * 把页面从 Activity 摘下但保留 WebView：清掉 Activity 级客户端与上下文，只留 renderer 退出桩。 视图摘除由本方法完成，keeper.detach
+   * 只负责所有权与诊断。
    */
   private void detachPageView() {
     WebView detached = webView;
@@ -2009,6 +2014,8 @@ public class WebPreviewActivity extends PictureInPictureActivity implements WebF
                 value.optString("color"), getColor(R.color.surface));
         if (color != null) {
           retained.themeColor = color;
+          // 输入法收起时 WebView 的合成空隙也必须使用当前网页底色。
+          if (webView != null) webView.setBackgroundColor(color);
           // 已核验页面在上报主题：网页自身已接手显示，收起原生加载页。
           hidePageBoot();
           WebFullscreenUi.applyThemeColor(this, color);

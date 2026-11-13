@@ -99,7 +99,7 @@
     <string name="ui2_diagnostics_sub" formatted="false">"Проверки среды и диагностические журналы"</string>
     <string name="ui2_display" formatted="false">"Отображение и запуск"</string>
     <string name="ui2_dns" formatted="false">"Политика DNS"</string>
-    <string name="ui2_environment" formatted="false">"Рабочая среда"</string>
+    <string name="ui2_environment" formatted="false">"Среда выполнения"</string>
     <string name="ui2_environment_page" formatted="false">"Установка и среда"</string>
     <string name="ui2_environment_recovery" formatted="false">"Восстановление среды"</string>
     <string name="ui2_environment_recovery_sub" formatted="false">"Зависимости и обслуживание"</string>

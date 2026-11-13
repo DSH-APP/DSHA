@@ -1,0 +1,78 @@
+[
+  {
+    "asset": "russian-conversation-copy-patch.json",
+    "module": "@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
+    "patches": [
+      {
+        "before": "\"tool.autoReviewRejected\": \"Отклонено Auto review\"",
+        "after": "\"tool.autoReviewRejected\": \"Отклонено автопроверкой\""
+      },
+      {
+        "before": "\"tool.autoReviewReasonFallback\": \"Auto review не санкционировал это действие\"",
+        "after": "\"tool.autoReviewReasonFallback\": \"Автопроверка не разрешила это действие\""
+      }
+    ]
+  },
+  {
+    "asset": "russian-plugin-settings-layout-patch.json",
+    "module": "@deepseek-ai/dsh-client-ui-settings-plugin-inventory/lib/client.js",
+    "patches": [
+      {
+        "before": ".qSYn7G_section{width:100%;max-width:760px;",
+        "after": ".qSYn7G_section{box-sizing:border-box;min-width:0;width:100%;max-width:760px;"
+      },
+      {
+        "before": "@media (pointer:coarse){.qSYn7G_search input{font-size:16px}}",
+        "after": "@media (pointer:coarse){.qSYn7G_search input{font-size:16px}}.qSYn7G_section *{box-sizing:border-box}.qSYn7G_catalog,.qSYn7G_group,.qSYn7G_groupBody,.qSYn7G_search{min-width:0;max-width:100%}.qSYn7G_groupTitleRow{flex-wrap:wrap}.qSYn7G_headerEnd{min-width:0;max-width:100%}.qSYn7G_switcher{min-width:0;max-width:100%;height:auto;min-height:36px;white-space:normal}.qSYn7G_switcherLabel{min-width:0;white-space:normal;overflow-wrap:anywhere}.qSYn7G_groupToggle{min-width:0;flex-shrink:1}.qSYn7G_groupTitle{overflow-wrap:anywhere}@container qSYn7G_plugin-inventory (width<=520px){.qSYn7G_headerEnd{width:100%;margin-left:0}.qSYn7G_switcher{width:100%;justify-content:space-between}.qSYn7G_switcherLabel{max-width:none;text-align:left}}"
+      },
+      {
+        "before": "active: \"Бег\",",
+        "after": "active: \"Работает\","
+      }
+    ]
+  },
+  {
+    "asset": "russian-plugin-settings-shell-patch.json",
+    "module": "@deepseek-ai/dsh-client-ui-settings-plugins/lib/client.js",
+    "patches": [
+      {
+        "before": ".pbvGtq_section{max-width:760px;",
+        "after": ".pbvGtq_section{box-sizing:border-box;min-width:0;width:100%;max-width:760px;"
+      }
+    ]
+  },
+  {
+    "asset": "russian-loading-copy-patch.json",
+    "module": "@deepseek-ai/dsh-web-frontend/dist/assets/index-BgUyXZcc.js",
+    "patches": [
+      {
+        "before": "\"Loading plugins…\"",
+        "after": "(/^ru(?:-|$)/i.test(globalThis.__DSHA_LANGUAGE__||document.documentElement.lang||\"\")?\"Загрузка плагинов…\":\"Loading plugins…\")"
+      },
+      {
+        "before": "\"Failed to load plugins\"",
+        "after": "(/^ru(?:-|$)/i.test(globalThis.__DSHA_LANGUAGE__||document.documentElement.lang||\"\")?\"Не удалось загрузить плагины\":\"Failed to load plugins\")"
+      }
+    ]
+  },
+  {
+    "asset": "russian-permission-copy-patch.json",
+    "module": "@deepseek-ai/dsh-client-ui-permission-presets/lib/client.js",
+    "patches": [
+      {
+        "before": "{\n\t\t\t\"mode\": \"Режим доступа, текущий: {name}\",\n\t\t\t\"close\": \"Закрыть\",\n\t\t\t\"preset.readOnly\": \"Только чтение\",\n\t\t\t\"preset.workspaceWrite\": \"Запись в рабочей области\",\n\t\t\t\"preset.fullAccess\": \"Полный доступ\",\n\t\t\t\"confirm.title\": \"Включить полный доступ?\",\n\t\t\t\"confirm.description\": \"Полный доступ сокращает количество шагов подтверждения и позволяет агенту напрямую выполнять больше действий, включая конфиденциальные операции, изменения файлов или внешние команды. Используйте его только в том случае, если вы доверяете текущей задаче.\",\n\t\t\t\"confirm.acknowledge\": \"Я понимаю риски и хочу продолжить\",\n\t\t\t\"confirm.cancel\": \"Отмена\",\n\t\t\t\"confirm.enable\": \"Включить полный доступ\",\n\t\t\t\"auto.label\": \"Auto review\",\n\t\t\t\"auto.badge\": \"EXP\",\n\t\t\t\"auto.description\": \"Запуск без песочницы после экспериментальной проверки одной и той же модели каждого вызова встроенного инструмента и внутреннего вызова PTC.\",\n\t\t\t\"auto.confirm.title\": \"Включить Auto review (экспериментально)?\",\n\t\t\t\"auto.confirm.description\": \"Auto review работает без песочницы. Перед каждым вызовом собственного инструмента и внутренним вызовом PTC та же модель, что и текущий агент, проверяет, разрешить ли это; вы одобряете или отклоняете каждый вызов, который он отклоняет. Эта функция является экспериментальной, может ошибочно разрешать или запрещать действия и использует дополнительные токены.\",\n\t\t\t\"auto.confirm.acknowledge\": \"Я понимаю эти риски и хочу продолжить\",\n\t\t\t\"auto.confirm.enable\": \"Включить Auto review\"\n\t\t}",
+        "after": "{\n\t\t\t\"mode\": \"Режим доступа, текущий: {name}\",\n\t\t\t\"close\": \"Закрыть\",\n\t\t\t\"preset.readOnly\": \"Только чтение\",\n\t\t\t\"preset.workspaceWrite\": \"Запись в рабочей области\",\n\t\t\t\"preset.fullAccess\": \"Полный доступ\",\n\t\t\t\"confirm.title\": \"Включить полный доступ?\",\n\t\t\t\"confirm.description\": \"Полный доступ сокращает количество шагов подтверждения и позволяет агенту напрямую выполнять больше действий, включая конфиденциальные операции, изменения файлов или внешние команды. Используйте его только в том случае, если вы доверяете текущей задаче.\",\n\t\t\t\"confirm.acknowledge\": \"Я понимаю риски и хочу продолжить\",\n\t\t\t\"confirm.cancel\": \"Отмена\",\n\t\t\t\"confirm.enable\": \"Включить полный доступ\",\n\t\t\t\"auto.label\": \"Автопроверка\",\n\t\t\t\"auto.badge\": \"ЭКСП.\",\n\t\t\t\"auto.description\": \"Запуск без песочницы после экспериментальной проверки одной и той же модели каждого вызова встроенного инструмента и внутреннего вызова PTC.\",\n\t\t\t\"auto.confirm.title\": \"Включить автопроверку (экспериментально)?\",\n\t\t\t\"auto.confirm.description\": \"Автопроверка работает без песочницы. Перед каждым вызовом собственного инструмента и внутренним вызовом PTC та же модель, что и текущий агент, проверяет, разрешить ли это; вы одобряете или отклоняете каждый вызов, который он отклоняет. Эта функция является экспериментальной, может ошибочно разрешать или запрещать действия и использует дополнительные токены.\",\n\t\t\t\"auto.confirm.acknowledge\": \"Я понимаю эти риски и хочу продолжить\",\n\t\t\t\"auto.confirm.enable\": \"Включить автопроверку\"\n\t\t}"
+      }
+    ]
+  },
+  {
+    "asset": "mobile-team-panel-layout-patch.json",
+    "module": "@deepseek-ai/dsh-experimental-client-ui-agent-team/lib/client.js",
+    "patches": [
+      {
+        "before": ".VoX2oq_root{position:relative}",
+        "after": ".VoX2oq_root{position:relative}@media(max-width:1023px) and (pointer:coarse){[data-team-panel]{left:16px!important;right:16px!important;width:auto!important;max-width:500px!important;margin-inline:auto!important;box-sizing:border-box;overflow-wrap:anywhere}}"
+      }
+    ]
+  }
+]

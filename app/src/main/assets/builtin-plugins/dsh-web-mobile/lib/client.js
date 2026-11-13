@@ -733,6 +733,9 @@ exports.LAYOUT_CSS = `
     padding-top: var(--dsha-safe-area-inset-top, env(safe-area-inset-top, 0px)) !important;
     padding-bottom: var(--dsha-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) !important;
   }
+  html[data-dsha-ime-mode="resize"] [data-mobile-nav="frame"] {
+    height: 100% !important;
+  }
   [data-mobile-nav="frame"] > [class*="_centerCol"] {
     grid-area: 1 / 1 / 2 / 2 !important;
   }
@@ -764,6 +767,7 @@ exports.LAYOUT_CSS = `
   [data-mobile-nav="frame"]:not([data-sidebar-collapsed]) > [class*="_sidebarCol"] {
     transform: none !important;
   }
+  html [data-mobile-nav="frame"] [data-sidebar-opener],
   html [data-mobile-nav="frame"] [class*="hHd-Xa_toggle"]:is([aria-label*="sidebar" i], [aria-label*="侧边栏"]),
   html [data-mobile-nav="frame"] [data-conversation-header-leading] button[aria-label*="sidebar" i],
   html [data-mobile-nav="frame"] [data-conversation-header-leading] button[aria-label*="侧边栏"],
@@ -1234,7 +1238,7 @@ exports.LAYOUT_CSS = `
   [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [data-mobile-nav="toggle"] {
     position: absolute !important;
     left: 8px !important;
-    top: auto !important;
+    top: 6px !important;
     bottom: auto !important;
     z-index: 2 !important;
   }
@@ -1482,7 +1486,7 @@ exports.LAYOUT_CSS = `
     }
     html [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="_titleRow"] {
       height: auto !important;
-      min-height: 0 !important;
+      min-height: 40px !important;
     }
     [data-mobile-nav="frame"] [data-phase] header:has([class*="_headerLeading"]) [class*="_titleCluster"] {
       margin-right: 34px !important;
@@ -8814,9 +8818,10 @@ function syncStableViewportHeight() {
         const height = window.innerHeight;
         const width = window.innerWidth;
         const visible = window.visualViewport;
-        const available = Math.max(1, Math.min(height, visible?.height ?? height));
+        const nativeViewport = root.getAttribute("data-dsha-safe-top") === "native";
+        const available = Math.max(1, nativeViewport ? height : Math.min(height, visible?.height ?? height));
         const visibleValue = `${available}px`;
-        const topValue = `${visible?.offsetTop ?? 0}px`;
+        const topValue = `${nativeViewport ? 0 : visible?.offsetTop ?? 0}px`;
         // Only publish the band height once it STOPS MOVING (two consecutive frames
         // agree). The shell is sized from this variable, and a custom property on
         // :root invalidates style for the whole document — following the keyboard's
@@ -8832,7 +8837,7 @@ function syncStableViewportHeight() {
         const atRest = pendingVisibleFrames >= 2;
         pendingVisibleFrames = visibleValue === pendingVisible ? pendingVisibleFrames + 1 : 0;
         pendingVisible = visibleValue;
-        if ((atRest || pendingVisibleFrames >= 2) &&
+        if ((nativeViewport || atRest || pendingVisibleFrames >= 2) &&
             root.style.getPropertyValue('--dsha-mobile-visible-vh') !== visibleValue)
             publishVisible(visibleValue);
         // The keyboard stops without announcing it: the last resize event still sees

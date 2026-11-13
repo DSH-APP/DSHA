@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
+  "patches": [
+    {
+      "before": "\"tool.autoReviewRejected\": \"Отклонено Auto review\"",
+      "after": "\"tool.autoReviewRejected\": \"Отклонено автопроверкой\""
+    },
+    {
+      "before": "\"tool.autoReviewReasonFallback\": \"Auto review не санкционировал это действие\"",
+      "after": "\"tool.autoReviewReasonFallback\": \"Автопроверка не разрешила это действие\""
+    }
+  ]
+}

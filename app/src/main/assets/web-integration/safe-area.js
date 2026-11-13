@@ -8,6 +8,7 @@
     var root = document.documentElement;
     if (!root) return false;
     root.setAttribute('data-dsha-safe-top', 'native');
+    root.setAttribute('data-dsha-ime-mode', 'resize');
     ['top', 'right', 'bottom', 'left'].forEach(function (side) {
       root.style.setProperty('--dsha-safe-area-inset-' + side, '0px');
     });

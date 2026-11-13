@@ -3367,6 +3367,80 @@
       "timeoutSeconds": 30,
       "environment": {},
       "reason": "Fixed test signing: ci/test-signing.json pins the test certificate digest; the committed public certificate must match and must differ from both production certificates"
+    },
+    {
+      "path": "tools/test-russian-layout.mjs",
+      "stage": "runtime",
+      "requires": [
+        "node24",
+        "raw",
+        "browser"
+      ],
+      "args": [],
+      "timeoutSeconds": 180,
+      "environment": {
+        "DSHA_TEST_RUNTIME": "{raw}"
+      },
+      "reason": "Russian display regression: real pinned modules, narrow layouts and metadata boundaries; no Android device access."
+    },
+    {
+      "path": "tools/test-russian-followup.mjs",
+      "stage": "runtime",
+      "requires": [
+        "node24",
+        "raw",
+        "browser"
+      ],
+      "args": [],
+      "timeoutSeconds": 180,
+      "environment": {
+        "DSHA_TEST_RUNTIME": "{raw}"
+      },
+      "reason": "Russian display regression: real pinned modules, narrow layouts and metadata boundaries; no Android device access."
+    },
+    {
+      "path": "tools/test-russian-copy.mjs",
+      "stage": "runtime",
+      "requires": [
+        "node24",
+        "raw"
+      ],
+      "args": [],
+      "timeoutSeconds": 180,
+      "environment": {
+        "DSHA_TEST_RUNTIME": "{raw}"
+      },
+      "reason": "Russian display regression: real pinned modules, narrow layouts and metadata boundaries; no Android device access."
+    },
+    {
+      "path": "tools/test-mobile-presentation.mjs",
+      "stage": "runtime",
+      "requires": [
+        "node24",
+        "raw",
+        "browser"
+      ],
+      "args": [],
+      "timeoutSeconds": 180,
+      "environment": {
+        "DSHA_TEST_RUNTIME": "{raw}"
+      },
+      "reason": "Pinned sidebar and Team controls with original duplicate/position negative controls, narrow screen geometry, native viewport restoration and theme canvas."
+    },
+    {
+      "path": "tools/test-native-ime-viewport.mjs",
+      "stage": "runtime",
+      "requires": [
+        "node24",
+        "raw",
+        "browser"
+      ],
+      "args": [],
+      "timeoutSeconds": 180,
+      "environment": {
+        "DSHA_TEST_RUNTIME": "{raw}"
+      },
+      "reason": "Pinned sticky conversation and full mobile viewport effect; delayed visualViewport open/hide geometry and ordinary browser fallback."
     }
   ]
 }

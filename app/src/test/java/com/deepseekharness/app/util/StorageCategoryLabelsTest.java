@@ -23,4 +23,19 @@ public final class StorageCategoryLabelsTest {
     assertEquals("user custom 文件", StorageCategoryLabels.label("user custom 文件", true));
     assertEquals("", StorageCategoryLabels.label("", true));
   }
+
+  @Test
+  public void historicalAuditLabelUsesDisplayLanguageAndPreservesUnknownKeys() {
+    try {
+      UiText.setLanguage("ru");
+      assertEquals(
+          "Данные прежних проверок", StorageCategoryLabels.label("historical-audit-fixtures"));
+      assertEquals("user custom 文件", StorageCategoryLabels.label("user custom 文件"));
+      assertEquals(
+          "Historical audit test data",
+          StorageCategoryLabels.label("historical-audit-fixtures", true));
+    } finally {
+      UiText.setLanguage("zh");
+    }
+  }
 }
