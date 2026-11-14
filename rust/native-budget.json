@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "purpose": "Rust 旁路 .so 的 APK 体积预算（R0 骨架；首次 Android 实测后按评审调整）",
+  "baselineNativeBytes": 1157940,
+  "baselineNativeFiles": 14,
+  "rustArtifactBytes": 524288,
+  "rustWarnBytes": 393216,
+  "apkGrowthWarnBytes": 262144,
+  "allowedRustName": "libdsha_rs.so",
+  "abi": "arm64-v8a"
+}

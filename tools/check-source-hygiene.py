@@ -47,6 +47,10 @@ descriptor = json.loads((ROOT / "app/src/main/assets/runtime-descriptor.json").r
 binary = {".so", ".bin", ".jar", ".aar", ".gz", ".tgz", ".zip", ".png", ".jpg", ".webp", ".pdf", ".keystore"}
 for name in names:
     path = ROOT / name
+    # Rust vendor 是上游原始字节树（行尾由 .cargo-checksum.json 绑定），不参与 CRLF 规范化检查；
+    # 许可证副本按 vendor 精确字节保存，同样豁免。
+    if name.startswith('rust/vendor/') or name.startswith('app/src/main/assets/licenses/rust/'):
+        continue
     if not path.is_file() or path.suffix in binary or name.startswith('tools/history/') or name in byte_pinned or name in history_fixture_pins or name in language_generator_pins or name in language_source_pins:
         continue
     value = path.read_bytes()

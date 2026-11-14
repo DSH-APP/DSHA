@@ -1,0 +1,23 @@
+[package]
+name = "dsha-core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "DSHA 首期旁路封闭纯函数（R0：ABI 探针与模块骨架，无生产调用点）"
+
+[lib]
+# 产物名固定为 libdsha_rs.so（System.loadLibrary("dsha_rs")），符号名由 JNI 类决定。
+name = "dsha_rs"
+crate-type = ["cdylib"]
+
+[lints]
+workspace = true
+
+[dependencies]
+# 首期依赖集与 vendor/Cargo.lock 锁定（方案 §0.2.1，16 个 registry crate）。
+# R0 只编译依赖、不调用业务实现；R1–R3 才在 digest/gzip/plan 模块里使用它们。
+flate2 = { version = "=1.1.11", default-features = false, features = ["rust_backend"] }
+sha1 = "=0.10.7"
+sha2 = "=0.10.9"

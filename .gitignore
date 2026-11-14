@@ -4,6 +4,7 @@
 .pnpm-store/
 build/
 app/build/
+rust/target/
 captures/
 *.apk
 *.aab

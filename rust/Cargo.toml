@@ -1,0 +1,27 @@
+[workspace]
+members = ["crates/dsha-core"]
+resolver = "2"
+
+# R0 只锁定首期依赖集与 vendor 字节，deposit 到模块骨架；R1–R3 才调用业务实现。
+# Cargo 1.100 的 manifest lint 会把“已声明未使用”当警告；这里显式 allow 并在评审中
+# 记录理由，而不是删掉依赖让 Cargo.lock/vendor 与冻结清单漂移。R1 引入真实调用后应移除。
+[workspace.lints.cargo]
+unused_dependencies = "allow"
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.100.0"
+license = "MIT"
+publish = false
+
+# R0 锁定（ADR-0004 决定四 / 方案 §0.2.3）：Android 上 abort 会杀整个 App 进程，
+# 因此 dev 与 release 都禁止 panic=abort；release 以体积为目标，不承诺性能倍数。
+[profile.dev]
+panic = "unwind"
+
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+panic = "unwind"          # 禁止 abort：Android 上 abort 会杀整个 App 进程
+strip = "symbols"

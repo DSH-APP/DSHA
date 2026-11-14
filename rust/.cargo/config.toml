@@ -1,0 +1,6 @@
+# 只做 vendor 源替换；linker / RUSTFLAGS 由 tools/rust/build.py 按机器与目标设置。
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"
