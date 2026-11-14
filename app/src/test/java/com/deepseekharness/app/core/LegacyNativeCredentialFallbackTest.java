@@ -37,7 +37,7 @@ public final class LegacyNativeCredentialFallbackTest {
       delegate.stopLan();
     }
 
-    public String stopWeb() throws IOException {
+    public List<com.deepseekharness.app.util.WebStopDiagnostic> stopWeb() throws IOException {
       return delegate.stopWeb();
     }
 

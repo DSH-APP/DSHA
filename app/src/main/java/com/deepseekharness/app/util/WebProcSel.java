@@ -270,6 +270,27 @@ public final class WebProcSel {
     return profile.matches("dsha-recovery-[0-9a-f]{16}") ? profile : "";
   }
 
+  /**
+   * 供界面展示的命令摘要：只保留可执行文件名与前几个参数（最多 160 字符）。
+   *
+   * <p>这不是信号判据，也不能替代任何内核核验；仅用于停止失败时告诉用户“已核验到哪个残留进程”。
+   * 值会在 {@link WebStopDiagnostic} 中再次脱敏；控制字符换成问号，避免把内核命令行原文直接塞进界面。
+   */
+  public static String commandDigest(String cmdline) {
+    if (cmdline == null || cmdline.isEmpty()) return "";
+    java.util.List<String> parts = new java.util.ArrayList<>();
+    for (String raw : cmdline.split("\u0000", -1)) {
+      String token = raw == null ? "" : raw.trim();
+      if (token.isEmpty()) continue;
+      if (parts.isEmpty()) token = basename(token);
+      parts.add(token);
+      if (parts.size() >= 8) break;
+    }
+    if (parts.isEmpty()) return "";
+    String digest = String.join(" ", parts).replaceAll("[\\p{Cntrl}]", "?");
+    return digest.length() <= 160 ? digest : digest.substring(0, 157) + "…";
+  }
+
   private static boolean webArguments(String[] args, int index) {
     return args[index].equals("web")
         || (index + 1 < args.length

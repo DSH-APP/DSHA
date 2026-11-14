@@ -361,27 +361,54 @@ public class WebProcessManager {
   }
 
   private com.deepseekharness.app.util.WebForceStop.Evidence forceEvidence() throws IOException {
-    if (records != null) throw new IOException("WEB_FORCE_TRIAL_FORBIDDEN");
+    if (records != null)
+      throw new com.deepseekharness.app.util.WebStopException(
+          Code.FORCE_EVIDENCE_UNCONFIRMED, "未通过=隔离试运行不允许强制结束");
     File physical = RuntimeAssetFiles.root(proot.ctx, proot.getRootfsDir());
     var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
     File home = fs.child(physical, "root");
     File pidPath = fs.child(home, ".dsha-web.pid"), bornPath = fs.child(home, ".dsha-web.identity");
-    String record = new String(fs.small(pidPath, 32), StandardCharsets.US_ASCII);
-    String born = new String(fs.small(bornPath, 128), StandardCharsets.US_ASCII);
+    String record;
+    try {
+      record = new String(fs.small(pidPath, 32), StandardCharsets.US_ASCII);
+    } catch (IOException unreadable) {
+      // 证据不足时也把已看到的部分交给界面：用户需要知道是“没有 PID 记录”而不是“程序坏了”。
+      throw forceUnconfirmed("未通过=PID 记录不可读", null, null, unreadable);
+    }
     int pid = WebProcSel.parsePid(record);
-    ProcessState state = inspect(pid);
+    if (pid < 0) throw forceUnconfirmed("未通过=PID 记录无效", null, null, null);
+    String born;
+    try {
+      born = new String(fs.small(bornPath, 128), StandardCharsets.US_ASCII);
+    } catch (IOException unreadable) {
+      throw forceUnconfirmed("未通过=出生身份记录不可读", pid, null, unreadable);
+    }
+    ProcessState state;
+    try {
+      state = inspect(pid);
+    } catch (IOException unavailable) {
+      throw forceUnconfirmed("未通过=进程核验失败", pid, null, unavailable);
+    }
+    String command = WebProcSel.commandDigest(state.command);
     Integer uid = processOwner(pid);
+    if (state.identity == null) throw forceUnconfirmed("未通过=出生身份不可读", pid, command, null);
+    if (uid == null) throw forceUnconfirmed("未通过=UID 不可读", pid, command, null);
+    if (uid != android.os.Process.myUid())
+      throw forceUnconfirmed("未通过=进程不属于本应用", pid, command, null);
+    if (state.kind != Kind.WEB) throw forceUnconfirmed("未通过=进程不是可识别的 Web", pid, command, null);
+    if (state.signalProbeForbidden)
+      throw forceUnconfirmed("未通过=系统拒绝向该 PID 发信号", pid, command, null);
+    if (!state.identity.matches(born)) throw forceUnconfirmed("未通过=出生身份与记录不符", pid, command, null);
     String generation = null;
-    for (String entry : readProcessFile(pid, "environ").split("\u0000"))
-      if (entry.startsWith("DSHA_WEB_GENERATION=")) {
-        if (generation != null) throw new IOException("WEB_FORCE_GENERATION_DUPLICATE");
-        generation = entry.substring("DSHA_WEB_GENERATION=".length());
-      }
-    if (state.identity == null
-        || uid == null
-        || state.kind != Kind.WEB
-        || state.signalProbeForbidden
-        || !state.identity.matches(born)) throw new IOException("WEB_FORCE_EVIDENCE_UNCONFIRMED");
+    try {
+      for (String entry : readProcessFile(pid, "environ").split("\u0000"))
+        if (entry.startsWith("DSHA_WEB_GENERATION=")) {
+          if (generation != null) throw forceUnconfirmed("未通过=代次记录重复", pid, command, null);
+          generation = entry.substring("DSHA_WEB_GENERATION=".length());
+        }
+    } catch (IOException unreadable) {
+      throw forceUnconfirmed("未通过=代次不可读", pid, command, unreadable);
+    }
     return new com.deepseekharness.app.util.WebForceStop.Evidence(
         pid,
         state.identity.started,
@@ -392,6 +419,20 @@ public class WebProcessManager {
         generation,
         state.command,
         true);
+  }
+
+  /**
+   * 证据不足时抛出的类型化结论：只带已核对到的 PID 与脱敏命令摘要，供界面展示“为什么不能强停”。
+   * 参数由 {@link WebStopDiagnostic} 统一脱敏与截断；这里不发送任何信号。
+   */
+  private static com.deepseekharness.app.util.WebStopException forceUnconfirmed(
+      String reason, Integer pid, String command, Throwable cause) {
+    java.util.List<Object> facts = new java.util.ArrayList<>();
+    if (pid != null && pid > 1) facts.add("PID=" + pid);
+    if (command != null && !command.isEmpty()) facts.add("命令摘要=" + command);
+    facts.add(reason);
+    return new com.deepseekharness.app.util.WebStopException(
+        WebStopDiagnostic.of(Code.FORCE_EVIDENCE_UNCONFIRMED, facts.toArray()), cause);
   }
 
   public WebProcessManager(ProotBootstrap proot) {
@@ -613,6 +654,14 @@ public class WebProcessManager {
 
   /** 只读确认同 UID 可控进程；绝不按名称批量停止，也不依赖端口反查。 */
   boolean hasOwnedWeb() throws IOException {
+    return !ownedWebFacts().isEmpty();
+  }
+
+  /**
+   * 残留 Web 的可核对事实（首个命中即止）：用于停止结论与启动失败文案展示 PID / 命令摘要。
+   * 只读，不发送信号；无法读全的同 UID 进程仍按原有 fail-closed 规则阻塞。
+   */
+  java.util.List<WebStopDiagnostic> ownedWebFacts() throws IOException {
     String[] entries = recoveryProcessEntries();
     if (entries == null) throw new WebStopException(Code.OWNED_WEB_SCAN_UNCONFIRMED);
     int appUid = recoveryHostUid();
@@ -636,10 +685,29 @@ public class WebProcessManager {
       if (globalScanUnconfirmed(state.kind, state.differentUid, owner, appUid)) {
         // A denied read still blocks maintenance, but it is not proof that a Web is running.
         if (state.kind == Kind.DENIED) throw new WebStopException(Code.OWNED_WEB_SCAN_UNCONFIRMED);
-        return true;
+        return java.util.List.of(
+            WebStopDiagnostic.of(
+                Code.OWNED_WEB_REMAINS,
+                "PID=" + pid,
+                "命令摘要=" + WebProcSel.commandDigest(state.command)));
       }
     }
-    return false;
+    return java.util.List.of();
+  }
+
+  /**
+   * 只读读取同 UID 进程的命令摘要（供启动前置停止展示残留信息）；读不到或不属于本应用时返回空串。
+   * 从不据此发送信号，也不绕过任何 PID / 出生身份核验。
+   */
+  public String processCommandDigest(int pid) {
+    if (pid <= 1) return "";
+    try {
+      Integer owner = processOwner(pid);
+      if (owner == null || owner != recoveryHostUid()) return "";
+      return WebProcSel.commandDigest(inspect(pid).command);
+    } catch (IOException | RuntimeException unavailable) {
+      return "";
+    }
   }
 
   /**
@@ -1130,9 +1198,8 @@ public class WebProcessManager {
       }
     if (!errors.isEmpty()) return java.util.List.copyOf(errors);
     try {
-      return hasOwnedWeb()
-          ? java.util.List.of(WebStopDiagnostic.of(Code.OWNED_WEB_REMAINS))
-          : java.util.List.of();
+      // 残留事实带 PID 与命令摘要：启动前置停止失败时界面要能说清“还剩哪个已核验进程”。
+      return ownedWebFacts();
     } catch (IOException failure) {
       return java.util.List.of(WebStopDiagnostic.failure(Code.OWNED_WEB_SCAN_UNCONFIRMED, failure));
     }

@@ -13,7 +13,11 @@ public class StartupPipelineTest {
     final List<String> messages = new ArrayList<>();
     boolean current = true;
     String failure = "";
-    String staleAt = "", stopError = "";
+    String staleAt = "";
+    List<com.deepseekharness.app.util.WebStopDiagnostic> stopFacts = List.of();
+    List<com.deepseekharness.app.util.WebStopDiagnostic> priorFacts = List.of();
+    boolean awaitPriorExit;
+    long clock = 1_000;
     String casReceipt = receipt(false, 0, "");
     BoundedProcessRunner.Result casOutcome;
     boolean pluginScopeClosed;
@@ -32,9 +36,9 @@ public class StartupPipelineTest {
       calls.add("lan-stop");
     }
 
-    public String stopWeb() throws IOException {
+    public List<com.deepseekharness.app.util.WebStopDiagnostic> stopWeb() throws IOException {
       step("stop");
-      return stopError;
+      return stopFacts;
     }
 
     public void tools() throws Exception {
@@ -111,8 +115,19 @@ public class StartupPipelineTest {
 
     public void status(String value) {}
 
-    public void releasePrior() {
+    public List<com.deepseekharness.app.util.WebStopDiagnostic> releasePrior() {
       calls.add("release-prior");
+      return priorFacts;
+    }
+
+    public boolean awaitPriorExit(long deadlineMs) {
+      calls.add("wait-prior-exit");
+      assertTrue(deadlineMs >= clock);
+      return awaitPriorExit;
+    }
+
+    public long now() {
+      return clock;
     }
 
     public void recoverData() throws Exception {
@@ -287,11 +302,18 @@ public class StartupPipelineTest {
   }
 
   @Test
-  public void stopFailureOrObsoleteGenerationCannotMaterializeOrUnlock() throws Exception {
+  public void hardStopFailureDoesNotWaitOrMaterializeOrUnlock() throws Exception {
     Fixture stopped = new Fixture();
-    stopped.stopError = "old guest exit unconfirmed";
-    assertThrows(
-        IOException.class, () -> new StartupPipeline(stopped, stopped).prepare(1, false, stopped));
+    stopped.stopFacts =
+        List.of(
+            com.deepseekharness.app.util.WebStopDiagnostic.of(
+                com.deepseekharness.app.util.WebStopDiagnostic.Code.IDENTITY_CHANGED));
+    StartupStopFailure failure =
+        assertThrows(
+            StartupStopFailure.class,
+            () -> new StartupPipeline(stopped, stopped).prepare(1, false, stopped));
+    assertTrue(failure.getMessage().contains("发生了什么"));
+    assertFalse(stopped.calls.contains("wait-prior-exit"));
     assertFalse(stopped.calls.contains("cas-copy"));
     assertFalse(stopped.calls.contains("unlock"));
     Fixture stale = new Fixture();
@@ -299,6 +321,50 @@ public class StartupPipelineTest {
     assertNull(new StartupPipeline(stale, stale).prepare(1, false, stale));
     assertFalse(stale.calls.contains("cas-copy"));
     assertFalse(stale.calls.contains("unlock"));
+  }
+
+  @Test
+  public void inProgressStopWaitsInTheSameWindowInsteadOfFailingImmediately() throws Exception {
+    Fixture f = new Fixture();
+    f.stopFacts =
+        List.of(
+            com.deepseekharness.app.util.WebStopDiagnostic.of(
+                com.deepseekharness.app.util.WebStopDiagnostic.Code.OWNED_WEB_REMAINS,
+                "PID=42",
+                "命令摘要=node bin.js web"));
+    f.priorFacts =
+        List.of(
+            com.deepseekharness.app.util.WebStopDiagnostic.of(
+                com.deepseekharness.app.util.WebStopDiagnostic.Code.OWNED_LAUNCHER_PENDING));
+    f.awaitPriorExit = true;
+    assertEquals("web", new StartupPipeline(f, f).prepare(1, false, f));
+    // stop-web 非空时旧实现会在 10ms 内抛错；现在必须先给启动器同样的窗口，再只读复核。
+    assertTrue(f.calls.indexOf("stop") < f.calls.indexOf("release-prior"));
+    assertTrue(f.calls.indexOf("release-prior") < f.calls.indexOf("wait-prior-exit"));
+    assertTrue(f.calls.indexOf("wait-prior-exit") < f.calls.indexOf("tools"));
+  }
+
+  @Test
+  public void stillExitingAtDeadlineReportsThreeElementsWithVerifiedResidual() {
+    Fixture f = new Fixture();
+    f.stopFacts =
+        List.of(
+            com.deepseekharness.app.util.WebStopDiagnostic.of(
+                com.deepseekharness.app.util.WebStopDiagnostic.Code.OWNED_WEB_REMAINS,
+                "PID=42",
+                "命令摘要=node bin.js web"));
+    f.awaitPriorExit = false;
+    StartupStopFailure failure =
+        assertThrows(
+            StartupStopFailure.class, () -> new StartupPipeline(f, f).prepare(9, false, f));
+    String text = failure.getMessage();
+    assertTrue(text.contains("发生了什么"));
+    assertTrue(text.contains("影响"));
+    assertTrue(text.contains("下一步"));
+    assertTrue(text.contains("PID=42"));
+    assertTrue(text.contains("命令摘要=node bin.js web"));
+    assertTrue(f.calls.contains("wait-prior-exit"));
+    assertFalse(f.calls.contains("cas-copy"));
   }
 
   @Test
@@ -470,11 +536,11 @@ public class StartupPipelineTest {
       throws Exception {
     try (PriorSession session = new PriorSession()) {
       session.confirmed = false;
-      assertThrows(IOException.class, session.actions::releasePrior);
+      assertFalse(session.actions.releasePrior().isEmpty());
       assertEquals(1, session.confirmations[0]);
       assertArrayEquals(new int[] {0, 0}, session.released);
       session.confirmed = true;
-      session.actions.releasePrior();
+      assertTrue(session.actions.releasePrior().isEmpty());
       assertEquals(2, session.confirmations[0]);
       assertArrayEquals(new int[] {1, 0}, session.released);
     }
@@ -511,7 +577,7 @@ public class StartupPipelineTest {
               destroyed[0]++;
             }
           };
-      assertThrows(IOException.class, session.actions::releasePrior);
+      assertFalse(session.actions.releasePrior().isEmpty());
       assertEquals(0, destroyed[0]);
       assertEquals(0, session.confirmations[0]);
       assertArrayEquals(new int[] {0, 0}, session.released);
@@ -522,7 +588,7 @@ public class StartupPipelineTest {
   public void obsoleteOrInterruptedPriorAdapterCannotAdvancePreparation() throws Exception {
     try (PriorSession session = new PriorSession()) {
       session.state.lifecycle.beginStop();
-      session.actions.releasePrior();
+      assertTrue(session.actions.releasePrior().isEmpty());
       assertEquals(0, session.confirmations[0]);
       assertArrayEquals(new int[] {0, 0}, session.released);
     }

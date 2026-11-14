@@ -287,6 +287,30 @@ public final class WebLifecycleResponsivenessTest {
   }
 
   @Test
+  public void duplicateStopExplainsTheWaitButDeliversOneConclusionOnly() throws Exception {
+    List<String> first = new CopyOnWriteArrayList<>(), second = new CopyOnWriteArrayList<>();
+    controller.stopWeb(first::add);
+    controller.stopWeb(second::add);
+    assertEquals(1, pending.queued.size());
+    assertEquals(1, second.size());
+    assertTrue(second.get(0).contains("停止中"));
+    assertEquals(0, first.size());
+    // 停止阶段 + 已用预算可解释，不暴露内部调用串。
+    assertTrue(controller.stopProgressText().contains("停止中"));
+    Thread worker = new Thread(pending.queued.remove(0), "fixture-duplicate-stop-worker");
+    worker.start();
+    assertTrue(screens.closeEntered.await(2, TimeUnit.SECONDS));
+    screens.releaseClose.countDown();
+    worker.join(2000);
+    assertFalse(worker.isAlive());
+    // 同一个停止请求只发一次结论；重复点击只收到进行中的解释。
+    assertEquals(1, first.size());
+    assertEquals(1, second.size());
+    assertFalse(controller.isStopping());
+    assertTrue(controller.stopProgressText().isEmpty());
+  }
+
+  @Test
   public void staleQueuedManualAndAutomaticRequestsRejectBeforePreflight() throws Exception {
     long old = controller.getWebGeneration();
     state.lifecycle.beginStop();

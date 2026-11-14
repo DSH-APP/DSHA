@@ -12,7 +12,9 @@ final class WebSessionRecovery {
     RESTORED,
     UNKNOWN,
     STALE,
-    EXITED
+    EXITED,
+    /** 用户已停止：旧实例正在退出或退出尚未确认；不是版本不兼容，也不能被当成可接回。 */
+    STOPPED_PENDING
   }
 
   /** reason / stage 只含稳定非敏感码；attempts 是实际调用 authenticate 的次数。 */
@@ -29,6 +31,14 @@ final class WebSessionRecovery {
     boolean current();
 
     boolean compatible(StoredWebSession.Record record) throws Exception;
+
+    /**
+     * 用户已经请求停止（停止哨兵存在）。这是独立的停止意图，不得再借 compatible() 混入
+     * “版本不兼容”；恢复器会改为只读确认退出，不接回也不鉴权。
+     */
+    default boolean stopInProgress() {
+      return false;
+    }
 
     /** 仅为旧调用及测试兼容；生产实现必须覆盖 observe，false 不能作为退出证明。 */
     default boolean verify(StoredWebSession.Record record) throws Exception {
@@ -75,6 +85,8 @@ final class WebSessionRecovery {
       var saved = ports.read();
       if (!ports.current()) return outcome(ports, Result.STALE, "STALE", attempts, stage);
       if (saved == null) return outcome(ports, Result.NONE, "NO_RECORD", attempts, stage);
+      // 用户已停止优先于兼容性/鉴权：先独立确认退出，避免“停止哨兵”被当作版本不兼容。
+      if (ports.stopInProgress()) return stoppedPending(ports, saved, attempts);
       for (int attempt = 1; attempt <= MAX_AUTH_ATTEMPTS; attempt++) {
         if (!ports.current()) return outcome(ports, Result.STALE, "STALE", attempts, stage);
         if (Thread.currentThread().isInterrupted())
@@ -192,9 +204,57 @@ final class WebSessionRecovery {
     throw new IllegalArgumentException("INVALID_RETRY_ATTEMPT");
   }
 
+  /**
+   * 用户已停止、旧实例仍在退出/尚未确认时的独立结论。
+   *
+   * <p>停止哨兵表示用户意图，不是“版本不兼容”；这里不鉴权、不接回原实例，只确认 guest 与启动器
+   * 是否已经退出并各自给出稳定原因。确认退出才退休记录并返回 {@link Result#EXITED}。
+   */
+  private static Outcome stoppedPending(Ports ports, StoredWebSession.Record saved, int attempts) {
+    String stage = "STOP_CHECK";
+    try {
+      if (!ports.current()) return outcome(ports, Result.STALE, "STALE", attempts, stage);
+      if (Thread.currentThread().isInterrupted())
+        return stoppedOutcome(ports, "USER_STOPPED_EXIT_UNCONFIRMED", attempts, stage);
+      SessionObservation observed = ports.observe(saved);
+      if (!ports.current()) return outcome(ports, Result.STALE, "STALE", attempts, stage);
+      if (observed != SessionObservation.EXITED)
+        return stoppedOutcome(
+            ports,
+            observed == SessionObservation.LIVE
+                ? "STOP_IN_PROGRESS"
+                : "USER_STOPPED_EXIT_UNCONFIRMED",
+            attempts,
+            stage);
+      stage = "LAUNCHER_EXIT";
+      if (!ports.launcherExited(saved))
+        return stoppedOutcome(ports, "STOP_IN_PROGRESS", attempts, stage);
+      stage = "RETIRE";
+      if (!ports.current()) return outcome(ports, Result.STALE, "STALE", attempts, stage);
+      if (ports.retire(saved))
+        return outcome(ports, Result.EXITED, "EXIT_CONFIRMED", attempts, stage);
+      return stoppedOutcome(ports, "USER_STOPPED_EXIT_UNCONFIRMED", attempts, stage);
+    } catch (InterruptedException interrupted) {
+      Thread.currentThread().interrupt();
+      reportUnavailable(ports, stage, interrupted);
+      return stoppedOutcome(ports, "USER_STOPPED_EXIT_UNCONFIRMED", attempts, stage);
+    } catch (Exception unavailable) {
+      reportUnavailable(ports, stage, unavailable);
+      return stoppedOutcome(ports, "USER_STOPPED_EXIT_UNCONFIRMED", attempts, stage);
+    }
+  }
+
+  private static Outcome stoppedOutcome(Ports ports, String reason, int attempts, String stage) {
+    return outcome(ports, Result.STOPPED_PENDING, reason, attempts, stage);
+  }
+
   private static Outcome failure(Ports ports, String reason, int attempts, String stage) {
     try {
       if (!ports.current()) return outcome(ports, Result.STALE, "STALE", attempts, stage);
+      // 用户已停止时，记录/身份读取失败是“停止后的退出尚未确认”，不是版本不兼容；保持独立结论，
+      // 避免重启 App 时把停止意图重新显示成“原实例不兼容/身份无法确认”。
+      if (ports.stopInProgress())
+        return stoppedOutcome(ports, "USER_STOPPED_EXIT_UNCONFIRMED", attempts, stage);
     } catch (RuntimeException unavailable) {
       reason = "CURRENT_UNAVAILABLE";
     }

@@ -49,10 +49,6 @@ public class HarnessController {
     return proot;
   }
 
-  public ProotBootstrap getProot() {
-    return proot;
-  }
-
   public RuntimeHostPorts runtimeHostPorts() {
     return proot.hostPorts();
   }
@@ -122,6 +118,11 @@ public class HarnessController {
 
   public WebStopCoordinator.Result lastStopResult() {
     return web.lastStopResult();
+  }
+
+  /** 停止阶段与已用预算的展示文本；空串表示不在停止中。 */
+  public String stopProgressText() {
+    return web.stopProgressText();
   }
 
   public int getWebPort() {

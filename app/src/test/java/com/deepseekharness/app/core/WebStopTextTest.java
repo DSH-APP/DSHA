@@ -109,4 +109,32 @@ public class WebStopTextTest {
     assertTrue(result.detail().contains("已知 Web 启动器未能确认退出"));
     assertEquals(java.util.List.of(denied, changed, pending), result.diagnostics());
   }
+
+  @Test
+  public void residualFactsAreShownWithPidAndCommandWhenPresent() {
+    var guest =
+        WebStopDiagnostic.of(
+            WebStopDiagnostic.Code.OWNED_WEB_REMAINS, "PID=42", "命令摘要=node bin.js web");
+    assertTrue(WebStopText.render(guest).contains("PID=42"));
+    assertTrue(WebStopText.render(guest).contains("命令摘要=node bin.js web"));
+    var launcher =
+        WebStopDiagnostic.of(WebStopDiagnostic.Code.OWNED_LAUNCHER_PENDING, "PID=43", "旧容器启动器");
+    assertTrue(WebStopText.render(launcher).contains("PID=43"));
+    // 无参数保持原有短文案（维护页等旧调用）。
+    assertEquals(
+        "已知 Web 启动器未能确认退出",
+        WebStopText.render(WebStopDiagnostic.of(WebStopDiagnostic.Code.OWNED_LAUNCHER_PENDING)));
+  }
+
+  @Test
+  public void stopProgressNamesTheStageAndElapsedSeconds() {
+    assertTrue(WebStopText.progress("stopping-guest", 1_200).contains("已等待 1 秒"));
+    assertTrue(WebStopText.progress("stopping-launcher", 7_000).contains("停止旧容器启动器"));
+    assertTrue(WebStopText.progress("confirming-exit", 0).contains("核验进程与启动器均已退出"));
+    assertTrue(WebStopText.progress(null, -5).contains("正在停止"));
+    UiText.setLanguage("en");
+    String english = WebStopText.progress("stopping-guest", 3_000);
+    assertTrue(english.contains("Stopping"));
+    assertTrue(english.contains("3 s"));
+  }
 }

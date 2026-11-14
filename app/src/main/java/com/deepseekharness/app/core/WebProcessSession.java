@@ -152,7 +152,7 @@ final class WebProcessSession {
 
   java.util.List<com.deepseekharness.app.util.WebStopDiagnostic> stopOwnedLauncherFacts() {
     loadStopEvidence();
-    boolean pending = false;
+    Integer pendingPid = null;
     for (WebRun run : state.runs.values()) {
       Process process = run.launcher;
       if (process == null || !Compat.isAlive(process)) {
@@ -161,14 +161,35 @@ final class WebProcessSession {
       } else if (Compat.requestGracefulStop(process, 4_000)) {
         if (run.launcher == process) run.launcher = null;
         prune(run);
-      } else pending = true;
+      } else pendingPid = launcherPid(process);
     }
+    boolean pending = pendingPid != null;
     pending |= hasLiveLaunchers();
-    return pending
-        ? java.util.List.of(
-            com.deepseekharness.app.util.WebStopDiagnostic.of(
-                com.deepseekharness.app.util.WebStopDiagnostic.Code.OWNED_LAUNCHER_PENDING))
-        : java.util.List.of();
+    if (!pending) return java.util.List.of();
+    // 启动前置停止的失败文案需要“已核验残留 PID + 命令摘要”；这里只读取，不发信号。
+    java.util.List<Object> facts = new java.util.ArrayList<>();
+    if (pendingPid != null) {
+      facts.add("PID=" + pendingPid);
+      String digest = manager.processCommandDigest(pendingPid);
+      if (!digest.isEmpty()) facts.add("命令摘要=" + digest);
+      facts.add("旧容器启动器");
+    }
+    return java.util.List.of(
+        com.deepseekharness.app.util.WebStopDiagnostic.of(
+            com.deepseekharness.app.util.WebStopDiagnostic.Code.OWNED_LAUNCHER_PENDING,
+            facts.toArray()));
+  }
+
+  /** PID 只用于展示，读不到也不影响待确认结论（Android 的 Process 没有公开 pid 访问器）。 */
+  private static Integer launcherPid(Process process) {
+    try {
+      int pid =
+          com.deepseekharness.app.util.ProcessIdentity.androidPid(
+              process.getClass().getName(), process.toString());
+      return pid > 1 ? pid : null;
+    } catch (RuntimeException unavailable) {
+      return null;
+    }
   }
 
   String stopOwnedLaunchers() {

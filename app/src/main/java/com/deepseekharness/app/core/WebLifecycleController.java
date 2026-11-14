@@ -210,8 +210,15 @@ final class WebLifecycleController {
                           && r.descriptor().equals(proot.expectedRuntimeDescriptor().id())
                           && installed != null
                           && r.descriptor().equals(installed.id())
-                          && !hasStopSentinel()
                           && !MaintenanceCoordinator.pending(owner);
+                    }
+
+                    /**
+                     * 用户已停止是独立结论：不再借 compatible() 的“版本不兼容”通道，
+                     * 恢复器改为只读确认退出，不接回也不鉴权。
+                     */
+                    public boolean stopInProgress() {
+                      return hasStopSentinel();
                     }
 
                     public WebProcessManager.SessionObservation observe(
@@ -298,7 +305,11 @@ final class WebLifecycleController {
             state.restoreReason = outcome.reason();
             state.restoreAttempts = outcome.attempts();
             state.restoreNotice =
-                result == WebSessionRecovery.Result.EXITED ? WebSessionRestoreText.exited() : "";
+                result == WebSessionRecovery.Result.EXITED
+                    ? WebSessionRestoreText.exited()
+                    : result == WebSessionRecovery.Result.STOPPED_PENDING
+                        ? WebSessionRestoreText.stopped(outcome.reason())
+                        : "";
           }
           DiagnosticLog.record(
               ctx,
@@ -371,6 +382,17 @@ final class WebLifecycleController {
             requestStart(
                 pending.status(), false, 0, pending.safe(), pending.generation(), pending.ticket());
         if (admission == StartAdmission.REJECTED) {
+          closePendingTicket(pending);
+          notifyPendingStart(pending, WebSessionRestoreText.continuationBlocked());
+        }
+        return;
+      case STOPPED_PENDING:
+        // 用户已停止不是“不兼容”：继续这次已请求的启动，由启动前置停止在同一窗口内等旧实例退出。
+        notifyPendingStart(pending, WebSessionRestoreText.continuingAfterStop());
+        StartAdmission stoppedAdmission =
+            requestStart(
+                pending.status(), false, 0, pending.safe(), pending.generation(), pending.ticket());
+        if (stoppedAdmission == StartAdmission.REJECTED) {
           closePendingTicket(pending);
           notifyPendingStart(pending, WebSessionRestoreText.continuationBlocked());
         }
@@ -1209,6 +1231,10 @@ final class WebLifecycleController {
         var unreadable = ((com.deepseekharness.app.util.CredentialRead.Unavailable) e).result;
         Log.w("DSHA", "credential read: " + unreadable.reason.name());
         failure = ConfigStore.credentialMessage(unreadable);
+      } else if (e instanceof StartupStopFailure) {
+        // 启动前置停止的结论已含“发生了什么/影响/下一步 + 已核验残留”，不再套内部前缀。
+        Log.w("DSHA", "startWeb blocked by prior stop");
+        failure = e.getMessage();
       } else {
         Log.e("DSHA", "startWeb failed", e);
         failure = com.deepseekharness.app.util.UiText.format("启动失败：%s", e.getMessage());
@@ -1499,6 +1525,24 @@ final class WebLifecycleController {
     if (generation > 0) enqueueStop(null, null, null, generation);
   }
 
+  /** 停止阶段与已用预算的展示文本（空串表示不在停止中）；只解释等待，不参与任何判定。 */
+  public String stopProgressText() {
+    long started;
+    String stage;
+    synchronized (lifecycle) {
+      if (!lifecycle.isStopping()) return "";
+      started = state.stopStartedAtMs;
+      stage = state.stopStage;
+    }
+    return WebStopText.progress(stage, android.os.SystemClock.elapsedRealtime() - started);
+  }
+
+  private void recordStopStage(long generation, String stage) {
+    synchronized (lifecycle) {
+      if (lifecycle.isCurrent(generation) && lifecycle.isStopping()) state.stopStage = stage;
+    }
+  }
+
   static boolean forceStopAllowed(
       WebLifecycle lifecycle, WebStopCoordinator.Result lastResult, long expectedGeneration) {
     synchronized (lifecycle) {
@@ -1679,7 +1723,16 @@ final class WebLifecycleController {
       if (expectedGeneration >= 0 && !lifecycle.isCurrent(expectedGeneration)) return null;
       if (protection == null) state.startProtection.cancelAll();
       if (protection != null && !state.startProtection.canAdmit(protection)) return null;
-      if (lifecycle.isStopping()) return state.stopTask;
+      if (lifecycle.isStopping()) {
+        // 重复点击停止在同一个停止请求上合并：给本次点击一个可解释的状态，但结论回调只发一次，
+        // 避免“停止中…”无反馈导致连点、每个回调又各自准备一次强停候选。
+        reportStatus(
+            lifecycle.generation(),
+            onStatus,
+            WebStopText.progress(
+                state.stopStage, android.os.SystemClock.elapsedRealtime() - state.stopStartedAtMs));
+        return state.stopTask;
+      }
       long previous = lifecycle.generation();
       long generation =
           protection == null
@@ -1688,6 +1741,9 @@ final class WebLifecycleController {
       if (generation < 0) return null;
       state.diagnostics.completed(previous, "stopped", "");
       state.lastStopError = "";
+      // 停止阶段与已用预算：页面每秒刷新时显示“在等什么、已经等了几秒”。
+      state.stopStartedAtMs = android.os.SystemClock.elapsedRealtime();
+      state.stopStage = "stopping-guest";
       // 新的停止意图优先：已确认退出的提示与待续接的启动都不再适用于这一代。
       state.restoreNotice = "";
       state.pendingStart = null;
@@ -1734,6 +1790,7 @@ final class WebLifecycleController {
 
                               public java.util.List<com.deepseekharness.app.util.WebStopDiagnostic>
                                   stopGuestFacts() throws IOException {
+                                recordStopStage(generation, "stopping-guest");
                                 return (forcedCandidate == null
                                         ? webProc.stopResult()
                                         : webProc.forceStopResult(forcedCandidate))
@@ -1746,10 +1803,12 @@ final class WebLifecycleController {
 
                               public java.util.List<com.deepseekharness.app.util.WebStopDiagnostic>
                                   stopOwnedLauncherFacts() {
+                                recordStopStage(generation, "stopping-launcher");
                                 return processes.stopOwnedLauncherFacts();
                               }
 
                               public boolean confirm() throws IOException {
+                                recordStopStage(generation, "confirming-exit");
                                 return processes.confirmStopped();
                               }
                             });

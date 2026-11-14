@@ -59,4 +59,9 @@ public final class HarnessSessionState {
   volatile WebStopCoordinator.Result lastStopResult =
       new WebStopCoordinator.Result(
           WebStopCoordinator.Status.UNCONFIRMED, "WEB_STOP_NOT_REQUESTED", "");
+
+  /** 本次停止的开始时刻与稳定阶段码；只用于界面解释等待，不参与任何判定。 */
+  volatile long stopStartedAtMs;
+
+  volatile String stopStage = "";
 }

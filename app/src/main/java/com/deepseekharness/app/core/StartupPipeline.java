@@ -17,7 +17,18 @@ final class StartupPipeline {
 
     void status(String status);
 
-    void releasePrior() throws IOException;
+    /** 结束已知旧启动器并确认退出；返回非空表示仍未确认，由调用方在同一窗口内等待。 */
+    java.util.List<com.deepseekharness.app.util.WebStopDiagnostic> releasePrior()
+        throws IOException;
+
+    /**
+     * 在停止开始后的同一预算窗口内只读复核旧 guest 与启动器退出；确认后完成释放。
+     * 返回 true 表示已确认退出，启动可以继续。
+     */
+    boolean awaitPriorExit(long deadlineMs) throws InterruptedException;
+
+    /** 单调时钟毫秒值；仅用于计算同一停止窗口，不参与任何退出判定。 */
+    long now();
 
     void recoverData() throws Exception;
 
@@ -37,7 +48,8 @@ final class StartupPipeline {
 
     void stopLan();
 
-    String stopWeb() throws IOException;
+    /** 停止旧 Web；返回仍无法确认的停止事实（空表示已确认停止）。 */
+    java.util.List<com.deepseekharness.app.util.WebStopDiagnostic> stopWeb() throws IOException;
 
     void tools() throws Exception;
 
@@ -111,8 +123,9 @@ final class StartupPipeline {
             com.deepseekharness.app.LanProxyService.stop();
           }
 
-          public String stopWeb() throws IOException {
-            return WebStopText.renderAll(webProc.stopResult().diagnostics());
+          public java.util.List<com.deepseekharness.app.util.WebStopDiagnostic> stopWeb()
+              throws IOException {
+            return webProc.stopResult().diagnostics();
           }
 
           public void tools() throws Exception {
@@ -201,14 +214,25 @@ final class StartupPipeline {
     }
     runtime.stopLan();
     actions.stage(com.deepseekharness.app.util.UiText.text("停止旧 Web 进程"));
-    String stopError = timing.run("stop-web", runtime::stopWeb);
-    if (!stopError.isEmpty()) throw new java.io.IOException(stopError);
-    timing.run(
-        "retire-prior-launchers",
-        () -> {
-          actions.releasePrior();
-          return null;
-        });
+    long stopDeadline =
+        actions.now() + com.deepseekharness.app.util.WebStopBudget.STARTUP_EXIT_MILLIS;
+    java.util.List<com.deepseekharness.app.util.WebStopDiagnostic> stopFacts =
+        timing.run("stop-web", runtime::stopWeb);
+    // 旧 guest 报告“正在退出”时，已知启动器仍要先拿到同样的优雅退出窗口；旧实现一旦
+    // stop-web 非空就立刻抛出，导致 10ms 的扫描把一次正常退出判成启动失败。
+    java.util.List<com.deepseekharness.app.util.WebStopDiagnostic> priorFacts =
+        timing.run("retire-prior-launchers", actions::releasePrior);
+    if (!stopFacts.isEmpty() || !priorFacts.isEmpty()) {
+      // 已被新的停止/启动意图取代时不再等待：等待只属于仍然有效的这一代启动。
+      if (!actions.current()) return null;
+      java.util.List<com.deepseekharness.app.util.WebStopDiagnostic> pending =
+          new java.util.ArrayList<>(stopFacts);
+      pending.addAll(priorFacts);
+      boolean settled = false;
+      if (com.deepseekharness.app.util.WebStopBudget.mayStillExit(pending))
+        settled = timing.run("wait-prior-exit", () -> actions.awaitPriorExit(stopDeadline));
+      if (!settled) throw new StartupStopFailure(StartupStopText.unconfirmed(pending));
+    }
     if (!actions.current()) return null;
     actions.stage(com.deepseekharness.app.util.UiText.text("检查随包运行工具"));
     timing.run(

@@ -19,6 +19,7 @@ public final class WebSessionRecoveryTest {
     final List<Integer> pauses = new ArrayList<>();
     final List<String> failures = new ArrayList<>();
     boolean current = true, compatible = true, valid = true, authenticated = true, deny;
+    boolean stopping;
     int probes, authCalls;
     StoredWebSession.Record record = new StoredWebSession.Record(null, "", "", "", "", false, "");
 
@@ -29,6 +30,10 @@ public final class WebSessionRecoveryTest {
 
     public boolean current() {
       return current;
+    }
+
+    public boolean stopInProgress() {
+      return stopping;
     }
 
     public boolean compatible(StoredWebSession.Record r) throws Exception {
@@ -753,5 +758,67 @@ public final class WebSessionRecoveryTest {
       assertFalse(server.isAlive());
       if (failure.get() != null) throw new AssertionError(failure.get());
     }
+  }
+
+  @Test
+  public void userStopSentinelIsNotIncompatibleAndNeverAuthenticatesOrAdopts() {
+    ObservedFixture f = new ObservedFixture();
+    f.stopping = true;
+    f.observed = SessionObservation.LIVE;
+    WebSessionRecovery.Outcome outcome = WebSessionRecovery.recoverDetailed(f);
+    assertOutcome(WebSessionRecovery.Result.STOPPED_PENDING, "STOP_IN_PROGRESS", 0, outcome);
+    // 停止哨兵独立于版本兼容性：不能走 compatible() 的 INCOMPATIBLE 通道，也不能鉴权/接回。
+    assertFalse(f.calls.contains("compatible"));
+    assertFalse(f.calls.contains("http"));
+    assertFalse(f.calls.contains("adopt"));
+    assertFalse(f.calls.contains("retire"));
+  }
+
+  @Test
+  public void userStopWithUnreadableIdentityStaysStoppedPendingNotUnknown() {
+    ObservedFixture f = new ObservedFixture();
+    f.stopping = true;
+    f.observed = SessionObservation.UNKNOWN;
+    WebSessionRecovery.Outcome outcome = WebSessionRecovery.recoverDetailed(f);
+    assertOutcome(
+        WebSessionRecovery.Result.STOPPED_PENDING, "USER_STOPPED_EXIT_UNCONFIRMED", 0, outcome);
+    assertFalse(f.calls.contains("http"));
+    assertFalse(f.calls.contains("adopt"));
+  }
+
+  @Test
+  public void userStopWithUnreadableRecordStaysStoppedPendingNotUnknown() {
+    ObservedFixture f = new ObservedFixture();
+    f.stopping = true;
+    f.failAt = "read";
+    WebSessionRecovery.Outcome outcome = WebSessionRecovery.recoverDetailed(f);
+    assertOutcome(
+        WebSessionRecovery.Result.STOPPED_PENDING, "USER_STOPPED_EXIT_UNCONFIRMED", 0, outcome);
+    assertFalse(f.calls.contains("http"));
+  }
+
+  @Test
+  public void userStopAfterConfirmedExitRetiresWithoutHttp() {
+    ObservedFixture f = new ObservedFixture();
+    f.stopping = true;
+    f.observed = SessionObservation.EXITED;
+    f.launcherGone = true;
+    f.retired = true;
+    WebSessionRecovery.Outcome outcome = WebSessionRecovery.recoverDetailed(f);
+    assertOutcome(WebSessionRecovery.Result.EXITED, "EXIT_CONFIRMED", 0, outcome);
+    assertEquals(1, f.retireCalls);
+    assertFalse(f.calls.contains("http"));
+    assertFalse(f.calls.contains("compatible"));
+  }
+
+  @Test
+  public void userStopWithLauncherPendingRemainsStoppedPending() {
+    ObservedFixture f = new ObservedFixture();
+    f.stopping = true;
+    f.observed = SessionObservation.EXITED;
+    f.launcherGone = false;
+    WebSessionRecovery.Outcome outcome = WebSessionRecovery.recoverDetailed(f);
+    assertOutcome(WebSessionRecovery.Result.STOPPED_PENDING, "STOP_IN_PROGRESS", 0, outcome);
+    assertEquals(0, f.retireCalls);
   }
 }

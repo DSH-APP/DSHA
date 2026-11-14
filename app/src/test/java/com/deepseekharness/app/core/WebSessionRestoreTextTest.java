@@ -63,4 +63,30 @@ public final class WebSessionRestoreTextTest {
         "Reconnecting to the existing Web instance…",
         WebSessionRestoreText.progress("AUTHENTICATING", 1));
   }
+
+  @Test
+  public void userStopReasonsNeverClaimVersionIncompatibility() {
+    String exiting = WebSessionRestoreText.stopped("STOP_IN_PROGRESS");
+    String unconfirmed = WebSessionRestoreText.stopped("USER_STOPPED_EXIT_UNCONFIRMED");
+    assertTrue(exiting.contains("已停止"));
+    assertTrue(exiting.contains("正在退出"));
+    assertTrue(unconfirmed.contains("尚未确认"));
+    assertFalse(exiting.contains("不兼容"));
+    assertFalse(unconfirmed.contains("不兼容"));
+    assertNotEquals(exiting, unconfirmed);
+    // 短标题与下一步也各自可达，且不落到“版本不兼容”。
+    assertEquals("已停止，旧实例退出中", WebSessionRestoreText.state("STOP_IN_PROGRESS"));
+    assertEquals("已停止，退出待确认", WebSessionRestoreText.state("USER_STOPPED_EXIT_UNCONFIRMED"));
+    assertFalse(
+        WebSessionRestoreText.unresolved("USER_STOPPED_EXIT_UNCONFIRMED").contains("版本不兼容"));
+    assertTrue(WebSessionRestoreText.continuingAfterStop().contains("继续这次启动"));
+  }
+
+  @Test
+  public void stopReasonsFollowLanguage() {
+    UiText.setLanguage("en");
+    assertTrue(WebSessionRestoreText.stopped("STOP_IN_PROGRESS").contains("still exiting"));
+    assertEquals(
+        "Stopped; exit unconfirmed", WebSessionRestoreText.state("USER_STOPPED_EXIT_UNCONFIRMED"));
+  }
 }

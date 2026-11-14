@@ -53,6 +53,9 @@ public final class WebSessionRestoreText {
       case "LAUNCHER_UNKNOWN" -> UiText.choose("启动器状态未知", "Launcher state unknown");
       case "RETIRE_UNAVAILABLE" -> UiText.choose("旧实例记录未清理", "Old instance record not cleared");
       case "INCOMPATIBLE" -> UiText.choose("原实例版本不兼容", "Instance version incompatible");
+      case "STOP_IN_PROGRESS" -> UiText.choose("已停止，旧实例退出中", "Stopped; old instance exiting");
+      case "USER_STOPPED_EXIT_UNCONFIRMED" ->
+          UiText.choose("已停止，退出待确认", "Stopped; exit unconfirmed");
       case "RECORD_UNAVAILABLE" -> UiText.choose("实例记录不可读", "Instance record unreadable");
       case "INTERRUPTED" -> UiText.choose("恢复核对被中断", "Recovery check interrupted");
       default -> UiText.choose("原实例待确认", "Previous instance unconfirmed");
@@ -86,6 +89,14 @@ public final class WebSessionRestoreText {
           UiText.choose(
               "原实例来自不兼容的应用版本，未自动接回；确认旧进程退出后可启动。",
               "The existing instance belongs to an incompatible app version and was not reattached. Start after confirming its exit.");
+      case "STOP_IN_PROGRESS" ->
+          UiText.choose(
+              "你已停止原 Web，旧实例正在退出；点「启动」会先等它退出再启动，点「停止」可重试确认。",
+              "You stopped the previous Web and it is still exiting. Start waits for it to exit first; Stop rechecks the exit.");
+      case "USER_STOPPED_EXIT_UNCONFIRMED" ->
+          UiText.choose(
+              "你已停止原 Web，旧实例退出尚未确认；点「启动」会先重新核验旧实例，确认退出后才启动，点「停止」可重试确认。",
+              "You stopped the previous Web, but its exit is unconfirmed. Start re-verifies the old instance first; Stop rechecks the exit.");
       case "RECORD_UNAVAILABLE" ->
           UiText.choose(
               "原实例记录不可读，现场已保留；可查看诊断。",
@@ -120,6 +131,24 @@ public final class WebSessionRestoreText {
   public static String continuingAfterNoRecord() {
     return UiText.choose(
         "没有待恢复的旧实例，正在继续这次启动…", "There is no previous instance to recover; continuing this start…");
+  }
+
+  /** 用户已停止、旧实例尚未确认退出：已请求的启动会先等旧实例退出。 */
+  public static String continuingAfterStop() {
+    return UiText.choose(
+        "保留了你之前的停止请求；正在继续这次启动，会先等待旧实例退出…",
+        "Your earlier stop is kept; continuing this start and waiting for the old instance to exit first…");
+  }
+
+  /** 停止哨兵带来的独立结论：不再显示成“版本不兼容”，只说明停止意图与退出核对状态。 */
+  public static String stopped(String reason) {
+    if ("STOP_IN_PROGRESS".equals(reason))
+      return UiText.choose(
+          "你已停止原 Web，旧实例正在退出；点「启动」会先等旧实例退出再启动，点「停止」可重试确认。",
+          "You stopped the previous Web and it is still exiting. Start waits for it to exit first; Stop rechecks the exit.");
+    return UiText.choose(
+        "你已停止原 Web，旧实例退出尚未确认；点「启动」会先重新核验旧实例，确认退出后才启动，点「停止」可重试确认。",
+        "You stopped the previous Web, but its exit is unconfirmed. Start re-verifies the old instance first; Stop rechecks the exit.");
   }
 
   public static String continuationBlocked() {

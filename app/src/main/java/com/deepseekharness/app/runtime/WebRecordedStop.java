@@ -62,7 +62,7 @@ final class WebRecordedStop {
 
   static WebStopDiagnostic run(Io io) {
     if (!io.rootExists()) return null;
-    long retryUntil = io.now() + 3000;
+    long retryUntil = io.now() + com.deepseekharness.app.util.WebStopBudget.INSPECTION_RETRY_MILLIS;
     while (true) {
       try {
         io.sentinel();
@@ -107,18 +107,7 @@ final class WebRecordedStop {
           return null;
         }
         if (signal == Signal.DENIED) return WebStopDiagnostic.of(Code.SIGNAL_DENIED);
-        long deadline = io.now() + 3000;
-        do {
-          WebProcessManager.ProcessState current = io.inspect(pid);
-          if (mayRetire(current, state.identity.record())) {
-            io.retire(record);
-            return null;
-          }
-          if (current.kind != WebProcessManager.Kind.WEB || current.identity == null)
-            return WebStopDiagnostic.of(Code.EXIT_UNCONFIRMED, current.kind);
-          io.pause(50);
-        } while (io.now() < deadline);
-        return WebStopDiagnostic.of(Code.PENDING_EXIT);
+        return awaitExit(io, pid, state.identity, record);
       } catch (WebProcessManager.ProcessInspectionException error) {
         if (io.now() >= retryUntil) return WebStopDiagnostic.failure(Code.STOP_FAILED, error);
         try {
@@ -133,6 +122,47 @@ final class WebRecordedStop {
       } catch (Exception error) {
         return WebStopDiagnostic.failure(Code.STOP_FAILED, error);
       }
+    }
+  }
+
+  /**
+   * SIGTERM 之后按同一出生身份继续核验到预算尽头，绝不在 3 秒处提前收口。
+   *
+   * <p>内置 dsh 自己在收到 SIGTERM 后的优雅退出强制上限是 5 秒；宿主只等 3 秒必然把正常关闭
+   * 判成“退出未确认”，随后的启动前置停止又会把这段“正在退出”当成失败。这里的结论分开处理：
+   * 进程消失或编号已被复用 → 退休原记录并返回 {@code null}；身份/命令行在等待中变化 → 返回
+   * {@link Code#IDENTITY_CHANGED} 且不再发任何信号；仍可核验存活或暂时不可读 → 到预算尽头才报
+   * {@link Code#EXIT_UNCONFIRMED}。等待在调用线程（dsh-io）进行，不会占用主线程。
+   */
+  private static WebStopDiagnostic awaitExit(
+      Io io, int pid, com.deepseekharness.app.util.WebPidIdentity identity, String record)
+      throws IOException, InterruptedException {
+    long deadline = io.now() + com.deepseekharness.app.util.WebStopBudget.EXIT_CONFIRM_MILLIS;
+    WebStopDiagnostic pending = WebStopDiagnostic.of(Code.EXIT_UNCONFIRMED, pid, "仍在运行");
+    while (true) {
+      try {
+        WebProcessManager.ProcessState current = io.inspect(pid);
+        // 消失、换 UID 或编号被新进程复用都是退出证明；只有同一出生身份仍存活才继续等。
+        if (mayRetire(current, identity.record())) {
+          io.retire(record);
+          return null;
+        }
+        if (current.kind == WebProcessManager.Kind.WEB
+            && current.identity != null
+            && (!identity.sameProcess(current.identity)
+                || !WebProcSel.maySignalWeb(current.command)))
+          return WebStopDiagnostic.of(Code.IDENTITY_CHANGED, pid);
+        pending =
+            current.kind == WebProcessManager.Kind.DENIED
+                ? WebStopDiagnostic.of(Code.EXIT_UNCONFIRMED, pid, "身份暂不可读")
+                : WebStopDiagnostic.of(Code.EXIT_UNCONFIRMED, pid, "仍在运行");
+      } catch (WebProcessManager.ProcessInspectionException transientState) {
+        // 退出瞬间 /proc 读取可能短暂失败；读不了不等于退出，继续等到预算尽头。
+        pending = WebStopDiagnostic.failure(Code.EXIT_UNCONFIRMED, transientState, pid);
+      }
+      long now = io.now();
+      if (now >= deadline) return pending;
+      io.pause(Math.min(50, deadline - now));
     }
   }
 }

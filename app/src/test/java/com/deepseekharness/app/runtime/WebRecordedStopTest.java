@@ -25,10 +25,16 @@ public final class WebRecordedStopTest {
   }
 
   private static final class Io implements WebRecordedStop.Io {
-    boolean root = true, trial, exitAfterTerm, interrupt, transientFailure, requireSavedBirth;
+    boolean root = true,
+        trial,
+        exitAfterTerm,
+        interrupt,
+        transientFailure,
+        requireSavedBirth,
+        transientDuringWait;
     String record = "42", saved = "42 100";
     long clock;
-    int sentinel, inspections, records;
+    int sentinel, inspections, records, waitFailures;
     final List<Integer> terms = new ArrayList<>();
     final List<String> retired = new ArrayList<>();
     final ArrayDeque<WebProcessManager.ProcessState> states = new ArrayDeque<>();
@@ -79,6 +85,8 @@ public final class WebRecordedStopTest {
       if (transientFailure)
         throw new WebProcessManager.ProcessInspectionException(
             new IOException("token=synthetic-secret"));
+      if (transientDuringWait && !terms.isEmpty() && waitFailures-- > 0)
+        throw new WebProcessManager.ProcessInspectionException(new IOException("exit-state"));
       if (!states.isEmpty()) return states.removeFirst();
       return exitAfterTerm && !terms.isEmpty() ? state(WebProcessManager.Kind.GONE, -1) : current;
     }
@@ -205,10 +213,58 @@ public final class WebRecordedStopTest {
   @Test
   public void termTimeoutHasNoForcePathAndKeepsTheRecord() {
     Io io = new Io();
-    assertNotNull(WebRecordedStop.run(io));
+    WebStopDiagnostic error = WebRecordedStop.run(io);
+    assertNotNull(error);
     assertEquals(List.of(42), io.terms);
     assertTrue(io.retired.isEmpty());
-    assertEquals(3000, io.clock);
+    // 预算必须覆盖 dsh 自身 5s 的强制退出上限；3s 会把正常关闭判成未确认。
+    assertEquals(com.deepseekharness.app.util.WebStopBudget.EXIT_CONFIRM_MILLIS, io.clock);
+    assertTrue(io.clock >= 6_000 && io.clock <= 8_000);
+  }
+
+  @Test
+  public void stillAliveAtDeadlineReportsUnconfirmedInsteadOfPendingExit() {
+    Io io = new Io();
+    WebStopDiagnostic error = WebRecordedStop.run(io);
+    assertNotNull(error);
+    assertEquals(Code.EXIT_UNCONFIRMED, error.code());
+    assertNotEquals(Code.PENDING_EXIT, error.code());
+    assertEquals("42", error.arguments().get(0));
+    assertEquals(List.of(42), io.terms);
+    assertTrue(io.retired.isEmpty());
+  }
+
+  @Test
+  public void identityChangeDuringExitWaitStopsWithoutAnotherSignal() {
+    Io io = new Io();
+    // 两次发信号前核验都读同一出生身份；SIGTERM 之后命令行变成非 Web 命令。
+    io.states.add(state(WebProcessManager.Kind.WEB, 100));
+    io.states.add(state(WebProcessManager.Kind.WEB, 100));
+    io.states.add(
+        new WebProcessManager.ProcessState(
+            WebProcessManager.Kind.WEB,
+            com.deepseekharness.app.util.WebPidIdentity.parse(
+                "42 (node) S 1 1 1 " + "0 ".repeat(15) + "100 0 0", 42),
+            "sleep 1"));
+    WebStopDiagnostic error = WebRecordedStop.run(io);
+    assertNotNull(error);
+    assertEquals(Code.IDENTITY_CHANGED, error.code());
+    assertEquals(List.of(42), io.terms);
+    assertTrue(io.retired.isEmpty());
+    assertTrue(io.clock < com.deepseekharness.app.util.WebStopBudget.EXIT_CONFIRM_MILLIS);
+  }
+
+  @Test
+  public void transientInspectionFailuresDuringExitWaitStillWaitOutTheBudget() {
+    Io io = new Io();
+    io.transientDuringWait = true;
+    io.waitFailures = 2;
+    WebStopDiagnostic error = WebRecordedStop.run(io);
+    assertNotNull(error);
+    assertEquals(Code.EXIT_UNCONFIRMED, error.code());
+    assertEquals(com.deepseekharness.app.util.WebStopBudget.EXIT_CONFIRM_MILLIS, io.clock);
+    assertTrue(io.retired.isEmpty());
+    assertFalse(error.debug().contains("token"));
   }
 
   @Test

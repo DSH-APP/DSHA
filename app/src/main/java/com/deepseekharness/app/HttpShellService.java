@@ -499,7 +499,7 @@ public final class HttpShellService {
     if (c == null) return null;
     try {
       HarnessController hc = HarnessController.get(c);
-      if (hc != null && hc.getProot() != null && hc.getProot().getRootfsDir() != null) {
+      if (hc != null && hc.proot() != null && hc.proot().getRootfsDir() != null) {
         var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
         String authority = c.getApplicationInfo().dataDir;
         if (authority == null) return null;
@@ -2823,7 +2823,7 @@ public final class HttpShellService {
       String sharedCanonical = null;
       String mediaCanonical = null;
       try {
-        rootfs = HarnessController.get(ctx).getProot().getRootfsDir().getCanonicalFile();
+        rootfs = HarnessController.get(ctx).proot().getRootfsDir().getCanonicalFile();
         rootfsCanonical = rootfs.getPath();
       } catch (Throwable ignored) {
         // Without a rootfs identity, private host paths remain forbidden.
@@ -3478,7 +3478,7 @@ public final class HttpShellService {
       java.io.File rootfs = null;
       String rootfsCanonical = null, sharedCanonical = null, mediaCanonical = null;
       try {
-        rootfs = HarnessController.get(ctx).getProot().getRootfsDir().getCanonicalFile();
+        rootfs = HarnessController.get(ctx).proot().getRootfsDir().getCanonicalFile();
         rootfsCanonical = rootfs.getPath();
       } catch (Throwable ignored) {
         // 无法确认正式 rootfs 时，只可能接受已确认当前用户的共享存储域。
@@ -4192,7 +4192,7 @@ public final class HttpShellService {
       rootfs =
           safRootfsFixture != null
               ? safRootfsFixture.getCanonicalPath()
-              : HarnessController.get(ctx).getProot().getRootfsDir().getCanonicalPath();
+              : HarnessController.get(ctx).proot().getRootfsDir().getCanonicalPath();
     } catch (Throwable ignored) {
       // 取不到 rootfs 时按拒绝处理（deniedGuestView(null) 为 true），不放过未验证路径。
     }
@@ -4211,7 +4211,7 @@ public final class HttpShellService {
     java.io.File rootfs =
         safRootfsFixture != null
             ? safRootfsFixture
-            : HarnessController.get(ctx).getProot().getRootfsDir().getCanonicalFile();
+            : HarnessController.get(ctx).proot().getRootfsDir().getCanonicalFile();
     String root = rootfs.getCanonicalPath();
     java.io.File file = new java.io.File(rootfs, value.substring(1)).getCanonicalFile();
     if (!file.getPath().equals(root) && !file.getPath().startsWith(root + java.io.File.separator))
@@ -4270,7 +4270,7 @@ public final class HttpShellService {
           HarnessController hc = HarnessController.get(ctx);
           java.io.File guess =
               new java.io.File(
-                  hc.getProot().getRootfsDir(), src.startsWith("/") ? src.substring(1) : src);
+                  hc.proot().getRootfsDir(), src.startsWith("/") ? src.substring(1) : src);
           if (guess.isFile()) f = guess;
         } catch (Throwable ignored) {
         }
@@ -4327,7 +4327,7 @@ public final class HttpShellService {
       String canonical = file.getCanonicalPath();
       String rootfs = null;
       try {
-        rootfs = HarnessController.get(ctx).getProot().getRootfsDir().getCanonicalPath();
+        rootfs = HarnessController.get(ctx).proot().getRootfsDir().getCanonicalPath();
       } catch (Throwable ignored) {
       }
       return com.deepseekharness.app.util.BridgePathPolicy.deniedGuestView(canonical, rootfs);

@@ -13,7 +13,10 @@ public final class WebStopText {
 
   public static String render(WebStopDiagnostic diagnostic) {
     return switch (diagnostic.code()) {
-      case OWNED_LAUNCHER_PENDING -> UiText.text("已知 Web 启动器未能确认退出");
+      case OWNED_LAUNCHER_PENDING ->
+          diagnostic.arguments().isEmpty()
+              ? UiText.text("已知 Web 启动器未能确认退出")
+              : UiText.format("已知 Web 启动器未能确认退出：%s", facts(diagnostic));
       case FORCE_REQUIRES_UNCONFIRMED_STOP -> UiText.text("请先完成普通停止；只有退出尚未确认时才能准备强制停止候选");
       case FORCE_REQUEST_CHANGED -> UiText.text("Web 停止请求已变化，请重新检查当前状态");
       case ROOT_LINK -> UiText.text("Web 根目录是链接，未终止任何进程");
@@ -50,7 +53,10 @@ public final class WebStopText {
       case STOP_FAILED -> UiText.format("停止 Web 未完成：%s", facts(diagnostic));
       case TRIAL_STOP_FAILED -> UiText.format("隔离验证停止未完成：%s", facts(diagnostic));
       case TRIAL_UNCONFIRMED -> UiText.text("隔离验证进程退出尚未确认，原现场保留");
-      case OWNED_WEB_REMAINS -> UiText.text("本应用仍有未退出的 Web，原环境保留");
+      case OWNED_WEB_REMAINS ->
+          diagnostic.arguments().isEmpty()
+              ? UiText.text("本应用仍有未退出的 Web，原环境保留")
+              : UiText.format("本应用仍有未退出的 Web（%s），原环境保留", facts(diagnostic));
       case OWNED_WEB_SCAN_UNCONFIRMED -> UiText.format("本应用进程清单尚未确认，原环境保留：%s", facts(diagnostic));
       case FORCE_EVIDENCE_UNCONFIRMED ->
           UiText.format("无法核验本次 Web 停止候选，未终止任何进程：%s", facts(diagnostic));
@@ -65,6 +71,28 @@ public final class WebStopText {
     return diagnostics.stream()
         .map(WebStopText::render)
         .collect(java.util.stream.Collectors.joining("\n"));
+  }
+
+  /**
+   * 停止阶段 + 已用时间的单行说明，把“停止中…”的黑洞变成可解释的等待。
+   *
+   * @param stage 稳定阶段码（stopping-guest / stopping-launcher / confirming-exit）
+   * @param elapsedMs 从本次停止开始算起的毫秒数；负数按 0 处理
+   */
+  public static String progress(String stage, long elapsedMs) {
+    String label =
+        switch (stage == null ? "" : stage) {
+          case "stopping-guest" -> UiText.choose("确认 Web 进程退出", "confirming the Web process exit");
+          case "stopping-launcher" ->
+              UiText.choose("停止旧容器启动器", "stopping the old container launcher");
+          case "confirming-exit" ->
+              UiText.choose("核验进程与启动器均已退出", "verifying process and launcher exit");
+          default -> UiText.choose("正在停止", "stopping");
+        };
+    return UiText.format(
+        UiText.choose("停止中…（%s · 已等待 %s 秒）", "Stopping… (%s · %s s)"),
+        label,
+        Math.max(0, elapsedMs) / 1000);
   }
 
   private static String argument(WebStopDiagnostic diagnostic, int index) {
