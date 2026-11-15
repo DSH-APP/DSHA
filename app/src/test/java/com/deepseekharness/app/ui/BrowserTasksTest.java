@@ -273,7 +273,6 @@ public final class BrowserTasksTest {
     assertFalse(Shadow.<ShadowAppTask>extract(shared).isFinishedAndRemoved());
   }
 
-
   @Test
   public void explicitHomeReordersExistingNativeTaskWithoutClearingWeb() {
     var nativeTask = task(3, MainActivity.class, 2);
