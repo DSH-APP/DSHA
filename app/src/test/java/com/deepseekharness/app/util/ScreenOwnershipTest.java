@@ -231,16 +231,21 @@ public class ScreenOwnershipTest {
                 () ->
                     serial.execute(
                         () -> {
+                          // 每个请求取得容量后停在首轮检查，避免重复回调提前耗尽计数。
                           entered.countDown();
-                          return true;
+                          try {
+                            release.await();
+                            return true;
+                          } catch (InterruptedException interrupted) {
+                            Thread.currentThread().interrupt();
+                            return false;
+                          }
                         },
                         () -> 100,
                         10_000,
-                        () -> {
-                          assertTrue(release.await(2, TimeUnit.SECONDS));
-                          return writes.incrementAndGet();
-                        })));
-      assertTrue(entered.await(2, TimeUnit.SECONDS));
+                        writes::incrementAndGet)));
+      assertTrue(entered.await(10, TimeUnit.SECONDS));
+      assertEquals(0, writes.get());
       try {
         serial.execute(() -> true, () -> 100, 10_000, writes::incrementAndGet);
         fail("queue overflow ran");
@@ -248,7 +253,7 @@ public class ScreenOwnershipTest {
         assertEquals("SCREEN_QUEUE_FULL", refused.code);
       }
       release.countDown();
-      for (var future : futures) future.get(2, TimeUnit.SECONDS);
+      for (var future : futures) future.get(10, TimeUnit.SECONDS);
       assertEquals(16, writes.get());
     } finally {
       release.countDown();

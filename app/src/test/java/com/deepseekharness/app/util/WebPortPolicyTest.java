@@ -62,6 +62,30 @@ public class WebPortPolicyTest {
   }
 
   @Test
+  public void everyNativeAndLanPortIsExcludedWithoutProbingOrAuthenticating() throws Exception {
+    String token = "a".repeat(43);
+    for (int port :
+        new int[] {3081, 3082, 3090, 3091, 3092, 3093, 3094, 3095, 3096, 3097, 3098, 3099}) {
+      assertTrue(WebPortPolicy.reserved(port));
+      assertEquals(
+          0,
+          WebPortPolicy.choose(
+                  port,
+                  port,
+                  candidate -> {
+                    throw new AssertionError("reserved port probed");
+                  })
+              .listen);
+      assertNull(
+          WebPortPolicy.authentication(
+              "dsh web: http://127.0.0.1:" + port + "/?token=" + token, 0));
+    }
+    assertFalse(WebPortPolicy.reserved(3080));
+    assertFalse(WebPortPolicy.reserved(3083));
+    assertFalse(WebPortPolicy.reserved(3100));
+  }
+
+  @Test
   public void bindsWithoutConnectingToOrDisturbingOccupiedListener() throws Exception {
     try (ServerSocket owner = new ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"))) {
       assertFalse(WebPortPolicy.available(owner.getLocalPort()));

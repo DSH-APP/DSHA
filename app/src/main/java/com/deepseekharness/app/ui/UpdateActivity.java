@@ -3,6 +3,7 @@ package com.deepseekharness.app.ui;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -12,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.deepseekharness.app.BuildConfig;
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.core.UpdateRepository;
+import com.deepseekharness.app.util.CurrentReleaseNotes;
 import com.deepseekharness.app.util.UpdatePolicy;
 
 /** 更新由用户选择通道和确认安装；下载任务不依赖页面生命周期。 */
@@ -19,47 +21,44 @@ public final class UpdateActivity extends AppCompatActivity {
   private UpdateRepository repository;
   private boolean resumeInstall;
   private boolean installDispatchReady;
+  private boolean versionExpanded;
+  // 平板横屏右栏标签页；手机与平板竖屏为 null。
+  private RadioGroup paneTabs;
+  private boolean paneChosen;
+  private boolean selectingPane;
 
   @Override
   protected void onCreate(Bundle saved) {
     super.onCreate(saved);
     setContentView(R.layout.activity_update);
+    PressFeedback.attachButtons(findViewById(android.R.id.content));
     repository = new ViewModelProvider(this).get(UpdateRepository.class);
     resumeInstall = saved != null && saved.getBoolean("resumeInstall");
     repository.restoreInterruptedInstall(saved != null && saved.getBoolean("installPending"));
+    versionExpanded = saved != null && saved.getBoolean("versionExpanded");
+    paneChosen = saved != null && saved.getBoolean("paneChosen");
     ((TextView) findViewById(R.id.update_current)).setText(BuildConfig.VERSION_NAME);
     ((TextView) findViewById(R.id.update_code)).setText(String.valueOf(BuildConfig.VERSION_CODE));
+    String buildLabel =
+        getString(
+            R.string.ui134_changelog_sub,
+            CurrentReleaseNotes.versionLabel(BuildConfig.VERSION_NAME),
+            BuildConfig.VERSION_CODE);
+    ((TextView) findViewById(R.id.update_changelog_summary)).setText(buildLabel);
+    ((TextView) findViewById(R.id.update_version_line)).setText(buildLabel);
     ((TextView) findViewById(R.id.update_edition))
-        .setText(
-            BuildConfig.LOW_ANDROID
-                ? com.deepseekharness.app.util.UiText.choose("兼容版", "Compatibility")
-                : com.deepseekharness.app.util.UiText.choose("标准版", "Standard"));
+        .setText(com.deepseekharness.app.util.UiText.choose("标准版", "Standard"));
+    bindVersionDetails();
     RadioGroup channels = findViewById(R.id.update_channels);
     channels.check(
         UpdatePolicy.PREVIEW.equals(repository.channel())
             ? R.id.update_preview
             : R.id.update_stable);
+    // 切换通道即重新检查（UpdateEngine.setChannel）；检查中切换会作废旧检查，下载 / 校验时由 UpdateUi 锁定两段按钮。
     channels.setOnCheckedChangeListener(
         (g, id) ->
             repository.setChannel(
                 id == R.id.update_preview ? UpdatePolicy.PREVIEW : UpdatePolicy.STABLE));
-    DshaSelectView channel = findViewById(R.id.update_channel_choice);
-    channel.setPrompt(getString(R.string.ui2_update_channel));
-    channel.setAdapter(
-        new android.widget.ArrayAdapter<>(
-            this,
-            R.layout.item_data_choice,
-            new String[] {getString(R.string.ui_m0173), getString(R.string.ui_m0215)}));
-    channel.setSelection(UpdatePolicy.PREVIEW.equals(repository.channel()) ? 1 : 0);
-    channel.setOnItemSelectedListener(
-        new android.widget.AdapterView.OnItemSelectedListener() {
-          public void onNothingSelected(android.widget.AdapterView<?> parent) {}
-
-          public void onItemSelected(
-              android.widget.AdapterView<?> parent, android.view.View view, int position, long id) {
-            channels.check(position == 1 ? R.id.update_preview : R.id.update_stable);
-          }
-        });
     findViewById(R.id.update_back).setOnClickListener(v -> finish());
     ((TextView) findViewById(R.id.update_dsh))
         .setText(com.deepseekharness.app.util.Constants.DSH_VERSION);
@@ -67,32 +66,41 @@ public final class UpdateActivity extends AppCompatActivity {
     findViewById(R.id.update_runtime_rollback)
         .setOnClickListener(v -> RuntimeRecoveryUi.show(this));
 
+    paneTabs = findViewById(R.id.update_pane_tabs);
+    if (paneTabs != null) bindPane(saved);
+    else centerColumn();
     findViewById(R.id.update_changelog)
         .setOnClickListener(
-            v -> CardSheet.show(this, getString(R.string.ui134_changelog), bundledChangelog()));
+            v -> {
+              if (paneTabs != null) choosePane(R.id.update_pane_current);
+              else CardSheet.show(this, getString(R.string.ui134_changelog), bundledChangelog());
+            });
     findViewById(R.id.update_release_detail)
         .setOnClickListener(
             v -> {
               UpdateRepository.State state = repository.state().getValue();
-              if (state != null && state.release != null)
-                CardSheet.show(
-                    this,
-                    getString(R.string.ui134_candidate),
-                    ((TextView) findViewById(R.id.update_notes)).getText().toString());
+              if (state == null || state.release == null) return;
+              if (paneTabs != null) choosePane(R.id.update_pane_candidate);
+              else showRelease(state.release);
             });
     findViewById(R.id.update_check).setOnClickListener(v -> repository.check());
-    findViewById(R.id.update_download)
-        .setOnClickListener(
-            v -> {
-              if (android.os.Build.VERSION.SDK_INT >= 33
-                  && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
-                      != android.content.pm.PackageManager.PERMISSION_GRANTED)
-                requestPermissions(
-                    new String[] {android.Manifest.permission.POST_NOTIFICATIONS}, 104);
-              else repository.download();
-            });
-    findViewById(R.id.update_cancel).setOnClickListener(v -> repository.cancel());
-    findViewById(R.id.update_install).setOnClickListener(v -> install());
+    UpdateProgressButton action = findViewById(R.id.update_action);
+    action.setOnClickListener(
+        v -> {
+          switch (action.action().command) {
+            case CHECK:
+              repository.check();
+              break;
+            case DOWNLOAD:
+              download();
+              break;
+            case INSTALL:
+              install();
+              break;
+            default:
+              break;
+          }
+        });
     findViewById(R.id.update_browser)
         .setOnClickListener(
             v -> {
@@ -174,20 +182,176 @@ public final class UpdateActivity extends AppCompatActivity {
         if (output.size() + count > 16384) throw new java.io.IOException("CHANGELOG_LIMIT");
         output.write(block, 0, count);
       }
-      return "DSHA " + BuildConfig.VERSION_NAME + "\n\n" + output.toString("UTF-8");
+      String notes = output.toString("UTF-8");
+      if (!CurrentReleaseNotes.matches(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE, notes))
+        com.deepseekharness.app.core.DiagnosticLog.record(
+            this, "changelog", "Bundled notes do not match the installed build");
+      return currentChangelog(notes);
     } catch (java.io.IOException | android.content.res.Resources.NotFoundException failure) {
       com.deepseekharness.app.core.DiagnosticLog.record(this, "changelog", failure.toString());
-      return "DSHA " + BuildConfig.VERSION_NAME;
+      return currentChangelog(null);
     }
+  }
+
+  private String currentChangelog(String notes) {
+    return CurrentReleaseNotes.render(
+        BuildConfig.VERSION_NAME,
+        BuildConfig.VERSION_CODE,
+        notes,
+        com.deepseekharness.app.util.UiText.language());
+  }
+
+  /** 版本一行可展开完整版本、版本码与 DSH；展开块里可复制。 */
+  private void bindVersionDetails() {
+    View toggle = findViewById(R.id.update_version_toggle);
+    toggle.setOnClickListener(
+        v -> {
+          versionExpanded = !versionExpanded;
+          applyVersionExpanded();
+        });
+    toggle.setAccessibilityDelegate(
+        new View.AccessibilityDelegate() {
+          @Override
+          public void onInitializeAccessibilityNodeInfo(
+              View host, android.view.accessibility.AccessibilityNodeInfo info) {
+            super.onInitializeAccessibilityNodeInfo(host, info);
+            info.addAction(
+                versionExpanded
+                    ? android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction
+                        .ACTION_COLLAPSE
+                    : android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction
+                        .ACTION_EXPAND);
+          }
+
+          @Override
+          public boolean performAccessibilityAction(View host, int action, Bundle args) {
+            if (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_EXPAND
+                || action == android.view.accessibility.AccessibilityNodeInfo.ACTION_COLLAPSE) {
+              host.performClick();
+              return true;
+            }
+            return super.performAccessibilityAction(host, action, args);
+          }
+        });
+    findViewById(R.id.update_copy_version)
+        .setOnClickListener(
+            v -> {
+              android.content.ClipboardManager clipboard =
+                  getSystemService(android.content.ClipboardManager.class);
+              if (clipboard == null) return;
+              clipboard.setPrimaryClip(
+                  android.content.ClipData.newPlainText(
+                      "DSHA",
+                      BuildConfig.VERSION_NAME
+                          + " / build"
+                          + BuildConfig.VERSION_CODE
+                          + " / DSH "
+                          + com.deepseekharness.app.util.Constants.DSH_VERSION));
+              Toast.makeText(
+                      this, com.deepseekharness.app.util.UiText.text("已复制版本信息"), Toast.LENGTH_SHORT)
+                  .show();
+            });
+    applyVersionExpanded();
+  }
+
+  private void applyVersionExpanded() {
+    findViewById(R.id.update_version_details)
+        .setVisibility(versionExpanded ? View.VISIBLE : View.GONE);
+    findViewById(R.id.update_version_chevron).setRotation(versionExpanded ? 180f : 0f);
+  }
+
+  /** 平板横屏右栏：候选版本 / 本版本两个标签页；有候选时默认看候选，用户切过之后不再自动切换。 */
+  private void bindPane(Bundle saved) {
+    String current = bundledChangelog();
+    int split = current.indexOf('\n');
+    ((TextView) findViewById(R.id.update_pane_current_title))
+        .setText(split > 0 ? current.substring(0, split).trim() : current.trim());
+    ((TextView) findViewById(R.id.update_pane_current_notes))
+        .setText(split > 0 ? current.substring(split + 1).trim() : "");
+    int initial =
+        saved != null
+            ? saved.getInt("pane", R.id.update_pane_candidate)
+            : R.id.update_pane_candidate;
+    // 左栏两行与右栏内容对应：选中行用 activated 软底，卡片按圆角裁切。
+    for (int id : new int[] {R.id.update_release_detail, R.id.update_changelog}) {
+      View row = findViewById(id);
+      row.setBackgroundResource(R.drawable.bg_update_pane_row);
+      ((View) row.getParent()).setClipToOutline(true);
+    }
+    paneTabs.check(initial);
+    applyPane(initial);
+    paneTabs.setOnCheckedChangeListener(
+        (group, id) -> {
+          if (!selectingPane) paneChosen = true;
+          applyPane(id);
+        });
+  }
+
+  private void choosePane(int id) {
+    paneChosen = true;
+    paneTabs.check(id);
+  }
+
+  private void autoPane(int id) {
+    if (paneChosen || paneTabs.getCheckedRadioButtonId() == id) return;
+    selectingPane = true;
+    paneTabs.check(id);
+    selectingPane = false;
+  }
+
+  private void applyPane(int id) {
+    boolean candidate = id != R.id.update_pane_current;
+    findViewById(R.id.update_pane_candidate_body)
+        .setVisibility(candidate ? View.VISIBLE : View.GONE);
+    findViewById(R.id.update_pane_current_body).setVisibility(candidate ? View.GONE : View.VISIBLE);
+    findViewById(R.id.update_release_detail).setActivated(candidate);
+    findViewById(R.id.update_changelog).setActivated(!candidate);
+  }
+
+  /** 平板竖屏（600–839dp）：单栏收成居中约 640dp，不随屏宽拉满。 */
+  private void centerColumn() {
+    View scroll = findViewById(R.id.update_scroll);
+    View content = findViewById(R.id.update_content);
+    int base = content.getPaddingStart();
+    scroll.addOnLayoutChangeListener(
+        (v, l, t, r, b, ol, ot, or, ob) -> {
+          int column = Math.round(640 * getResources().getDisplayMetrics().density);
+          int side = Math.max(base, (v.getWidth() - column) / 2);
+          if (side != content.getPaddingStart())
+            v.post(
+                () ->
+                    content.setPaddingRelative(
+                        side, content.getPaddingTop(), side, content.getPaddingBottom()));
+        });
+  }
+
+  private void showRelease(UpdatePolicy.Release release) {
+    String notes = release.notes == null ? "" : release.notes.trim();
+    CardSheet.show(
+        this,
+        UpdateUi.releaseTitle(this, release),
+        UpdateUi.releaseMeta(release) + (notes.isEmpty() ? "" : "\n\n" + notes));
+  }
+
+  private void download() {
+    if (android.os.Build.VERSION.SDK_INT >= 33
+        && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+            != android.content.pm.PackageManager.PERMISSION_GRANTED)
+      requestPermissions(new String[] {android.Manifest.permission.POST_NOTIFICATIONS}, 104);
+    else repository.download();
   }
 
   private void renderState(UpdateRepository.State state) {
     if (state == null) return;
-    findViewById(R.id.update_channel_choice)
-        .setEnabled(!state.busy && !repository.installationPending());
     UpdateRepository.InstallState install = repository.installation().getValue();
     UpdateUi.render(
-        findViewById(android.R.id.content), state, install.pending(), install.verifying);
+        findViewById(android.R.id.content),
+        state,
+        install.pending(),
+        install.verifying,
+        install.error != null);
+    if (paneTabs != null)
+      autoPane(state.release != null ? R.id.update_pane_candidate : R.id.update_pane_current);
     if (install.pending()) {
       ((TextView) findViewById(R.id.update_status))
           .setText(
@@ -198,9 +362,7 @@ public final class UpdateActivity extends AppCompatActivity {
       ((TextView) findViewById(R.id.update_status))
           .setText(
               com.deepseekharness.app.util.UiText.format(
-                  "%s\n%s",
-                  com.deepseekharness.app.util.UiStateText.render(state.message),
-                  com.deepseekharness.app.util.UiStateText.render(install.error)));
+                  "%s\n%s", UpdateUi.status(state.message), UpdateUi.status(install.error)));
     }
   }
 
@@ -242,8 +404,11 @@ public final class UpdateActivity extends AppCompatActivity {
   }
 
   private void showInstallError(Exception error) {
+    com.deepseekharness.app.core.DiagnosticLog.record(this, "APP_UPDATE_INSTALL", error.toString());
     repository.installFailed(
-        com.deepseekharness.app.util.UiText.format("无法安装：%s；可重试", error.getMessage()));
+        com.deepseekharness.app.util.UiText.choose(
+            "无法打开系统安装器，请重试或在浏览器下载安装。",
+            "Unable to open the system installer. Retry or download in the browser."));
     Toast.makeText(this, repository.installation().getValue().error, Toast.LENGTH_LONG).show();
   }
 
@@ -257,6 +422,9 @@ public final class UpdateActivity extends AppCompatActivity {
   protected void onSaveInstanceState(Bundle saved) {
     saved.putBoolean("resumeInstall", resumeInstall);
     saved.putBoolean("installPending", repository.installationPending());
+    saved.putBoolean("versionExpanded", versionExpanded);
+    saved.putBoolean("paneChosen", paneChosen);
+    if (paneTabs != null) saved.putInt("pane", paneTabs.getCheckedRadioButtonId());
     super.onSaveInstanceState(saved);
   }
 

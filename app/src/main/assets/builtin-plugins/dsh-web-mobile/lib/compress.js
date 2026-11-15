@@ -75,6 +75,13 @@ export function installResponseCompression({ matches = () => true } = {}) {
         finally { nativeBody.delete(res); }
     }
     function belongs(res) {
+        // rc3's WebServer gzip middleware owns per-response writeHead/write/end
+        // wrappers. In particular, on-headers requires writeHead to commit
+        // headers synchronously: deferring it makes compression.end call it a
+        // second time and throw ERR_HTTP_HEADERS_SENT even for a tiny JSON body.
+        // Leave any response already owned by middleware on its native path;
+        // the carrier's wrapper keeps its compression and streaming semantics.
+        if (['writeHead', 'write', 'end', 'flushHeaders'].some(name => Object.hasOwn(res, name))) return false;
         try { return matches(res.req, res) === true; }
         catch { return false; }
     }

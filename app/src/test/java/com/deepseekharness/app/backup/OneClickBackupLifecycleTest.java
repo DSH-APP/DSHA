@@ -112,12 +112,12 @@ public final class OneClickBackupLifecycleTest {
   }
 
   @Test
-  @Config(sdk = BuildConfig.LOW_ANDROID ? 23 : 34)
+  @Config(sdk = false ? 23 : 34)
   public void destinationRequestAndViewRecreationDoNotSubmitTwice() throws Exception {
-    assertEquals(BuildConfig.LOW_ANDROID ? 23 : 34, Build.VERSION.SDK_INT);
+    assertEquals(false ? 23 : 34, Build.VERSION.SDK_INT);
     assertTrue(model.start());
     queue.next();
-    if (BuildConfig.LOW_ANDROID) {
+    if (false) {
       assertEquals(0, exporter.submitted);
       assertTrue(model.chooseDirectory.getValue());
       assertTrue(model.claimDirectoryPicker());
@@ -140,17 +140,17 @@ public final class OneClickBackupLifecycleTest {
     assertSame(first, recreated);
     assertFalse(recreated.claimDirectoryPicker());
     assertFalse(recreated.start());
-    assertEquals(BuildConfig.LOW_ANDROID ? 0 : 1, exporter.submitted);
+    assertEquals(false ? 0 : 1, exporter.submitted);
     assertTrue(queue.work.isEmpty());
     store.clear();
   }
 
   @Test
-  @Config(sdk = BuildConfig.LOW_ANDROID ? 23 : 34)
+  @Config(sdk = false ? 23 : 34)
   public void cancellingDestinationPreparationDoesNotCreateOrReplayAnExport() throws Exception {
-    assertEquals(BuildConfig.LOW_ANDROID ? 23 : 34, Build.VERSION.SDK_INT);
+    assertEquals(false ? 23 : 34, Build.VERSION.SDK_INT);
     model.start();
-    if (BuildConfig.LOW_ANDROID) {
+    if (false) {
       queue.next();
       assertTrue(model.claimDirectoryPicker());
       model.directoryResult(null);
@@ -198,9 +198,9 @@ public final class OneClickBackupLifecycleTest {
   }
 
   @Test
-  @Config(sdk = BuildConfig.LOW_ANDROID ? 23 : 34)
+  @Config(sdk = false ? 23 : 34)
   public void savedDirectoryGrantIsReusedOnlyByTheLegacyDestinationRoute() throws Exception {
-    assertEquals(BuildConfig.LOW_ANDROID ? 23 : 34, Build.VERSION.SDK_INT);
+    assertEquals(false ? 23 : 34, Build.VERSION.SDK_INT);
     Uri tree = Uri.parse("content://test.dsha.directory/tree/backup");
     app.getContentResolver()
         .takePersistableUriPermission(
@@ -212,21 +212,21 @@ public final class OneClickBackupLifecycleTest {
     model.start();
     queue.next();
     assertEquals(1, exporter.submitted);
-    assertEquals(BuildConfig.LOW_ANDROID ? tree : null, exporter.target);
+    assertEquals(false ? tree : null, exporter.target);
     assertFalse(model.chooseDirectory.getValue());
   }
 
   @Test
-  @Config(sdk = BuildConfig.LOW_ANDROID ? 23 : 34)
+  @Config(sdk = false ? 23 : 34)
   public void missingDirectoryGrantRequiresSelectionOnlyOnTheLegacyRoute() throws Exception {
-    assertEquals(BuildConfig.LOW_ANDROID ? 23 : 34, Build.VERSION.SDK_INT);
+    assertEquals(false ? 23 : 34, Build.VERSION.SDK_INT);
     app.getSharedPreferences("dsha_one_click_backup", Context.MODE_PRIVATE)
         .edit()
         .putString("destination_tree", "content://lost/tree/backup")
         .commit();
     model.start();
     queue.next();
-    if (BuildConfig.LOW_ANDROID) {
+    if (false) {
       assertEquals(0, exporter.submitted);
       assertTrue(model.chooseDirectory.getValue());
     } else {

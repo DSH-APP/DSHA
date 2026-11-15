@@ -1,65 +1,149 @@
 <?xml version='1.0' encoding='utf-8'?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent">
-    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/surface" android:id="@+id/launch_panel">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingLeft="18dp" android:paddingRight="18dp" android:paddingTop="14dp" android:paddingBottom="22dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_sections" android:orientation="vertical">
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_actions" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="16dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <TextView android:layout_width="44dp" android:layout_height="44dp" android:id="@+id/launch_run_dot" android:importantForAccessibility="no" android:text="@string/ui_status_dot" android:textSize="12sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:gravity="center" android:background="@drawable/bg_card" />
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="14dp">
-                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_run_state" android:accessibilityLiveRegion="polite" android:text="@string/ui2_stopped" android:textSize="20sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_subtitle" android:text="@string/ui2_launch_hint" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="5dp" />
-                        </LinearLayout>
-                    </LinearLayout>
-                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_status" android:text="" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:layout_marginTop="8dp" />
-                    <ProgressBar android:layout_width="match_parent" android:layout_height="3dp" android:id="@+id/launch_busy" style="?android:attr/progressBarStyleHorizontal" android:indeterminate="true" android:indeterminateTint="@color/primary" android:visibility="gone" />
-                    <androidx.appcompat.widget.AppCompatButton android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_start" android:text="@string/ui2_start" android:textSize="13sp" android:textStyle="bold" android:textAllCaps="false" android:gravity="center" android:includeFontPadding="false" android:minHeight="48dp" android:minWidth="0dp" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="10dp" android:paddingBottom="10dp" android:background="@drawable/bg_btn_primary" android:textColor="@color/button_primary_text" android:layout_marginTop="16dp" />
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_controls" android:orientation="horizontal" android:layout_marginTop="8dp" android:gravity="center_vertical">
-                        <androidx.appcompat.widget.AppCompatButton android:layout_width="0dp" android:layout_height="wrap_content" android:id="@+id/launch_open" android:text="@string/ui2_restart" android:textSize="13sp" android:textStyle="bold" android:textAllCaps="false" android:gravity="center" android:includeFontPadding="false" android:minHeight="48dp" android:minWidth="0dp" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="10dp" android:paddingBottom="10dp" android:background="@drawable/bg_btn" android:textColor="@color/text" android:layout_weight="1" />
-                        <androidx.appcompat.widget.AppCompatButton android:layout_width="0dp" android:layout_height="wrap_content" android:id="@+id/launch_stop" android:text="@string/ui2_stop" android:textSize="13sp" android:textStyle="bold" android:textAllCaps="false" android:gravity="center" android:includeFontPadding="false" android:minHeight="48dp" android:minWidth="0dp" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="10dp" android:paddingBottom="10dp" android:background="@drawable/bg_btn" android:textColor="@color/text" android:layout_weight="1" android:layout_marginStart="8dp" />
-                    </LinearLayout>
-                </LinearLayout>
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="12dp" android:gravity="center_vertical">
-                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:layout_weight="1" android:padding="14dp">
-                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_port" android:text="@string/ui_status_unavailable" android:textSize="19sp" android:textColor="@color/text" android:includeFontPadding="false" android:fontFamily="monospace" />
-                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_port" android:textSize="12sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:layout_marginTop="8dp" />
-                    </LinearLayout>
-                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:layout_weight="1" android:padding="14dp" android:layout_marginStart="10dp">
-                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_environment" android:text="@string/ui_status_unavailable" android:textSize="19sp" android:textColor="@color/text" android:includeFontPadding="false" android:fontFamily="monospace" />
-                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_environment" android:textSize="12sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:layout_marginTop="8dp" />
-                    </LinearLayout>
-                </LinearLayout>
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_shortcuts" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_address" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
-                        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui_link" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
-                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_address" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_address_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
-                    </LinearLayout>
-                </LinearLayout>
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_log_panel" android:orientation="vertical" android:layout_marginTop="16dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui2_logs" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_weight="1" />
-                        <Button android:id="@+id/launch_download_logs" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/Widget.DSHA.TextButton" android:text="@string/ui_m0046" />
-                    </LinearLayout>
-                    <com.deepseekharness.app.ui.LogScrollView android:layout_width="match_parent" android:layout_height="170dp" android:id="@+id/launch_log_scroll" android:fillViewport="true" android:background="@drawable/bg_ui2_console">
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/lan_addr" android:text="" android:textSize="11sp" android:textColor="@color/primary" android:includeFontPadding="false" android:visibility="gone" android:textIsSelectable="true" />
-                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_log" android:text="@string/ui_m0025" android:textSize="12sp" android:textColor="@color/ui2_log_text" android:includeFontPadding="false" android:fontFamily="monospace" android:textIsSelectable="true" android:padding="12dp" />
-                        </LinearLayout>
-                    </com.deepseekharness.app.ui.LogScrollView>
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="10dp" android:gravity="center_vertical">
-                        <androidx.appcompat.widget.AppCompatButton android:layout_width="0dp" android:layout_height="wrap_content" android:id="@+id/launch_safe" android:text="@string/ui_m0007" android:textSize="13sp" android:textStyle="bold" android:textAllCaps="false" android:gravity="center" android:includeFontPadding="false" android:minHeight="48dp" android:minWidth="0dp" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="10dp" android:paddingBottom="10dp" android:background="@drawable/bg_btn" android:textColor="@color/text" android:layout_weight="1" />
-                        <androidx.appcompat.widget.AppCompatButton android:layout_width="0dp" android:layout_height="wrap_content" android:id="@+id/launch_recovery" android:text="@string/ui_m0011" android:textSize="13sp" android:textStyle="bold" android:textAllCaps="false" android:gravity="center" android:includeFontPadding="false" android:minHeight="48dp" android:minWidth="0dp" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="10dp" android:paddingBottom="10dp" android:background="@drawable/bg_btn" android:textColor="@color/text" android:layout_weight="1" android:layout_marginStart="8dp" />
-                    </LinearLayout>
-                </LinearLayout>
+<!--
+  启动主页（UI v5 方案 A）：顶部语境 → 大标题 + 说明 + 主操作（右侧插图，仅 ≥600dp）→
+  三段就绪轨道（无卡片，上下分隔线）→ 启动日志。快捷入口已收进顶栏「+」气泡（T145）。
+  启动日志区按 docs/design/launch-log-20261101 压缩：概览分阶段 + 原始视图。
+  - 所有状态文案与可见性仍由 LaunchFragment 按真实运行状态写入；保留全部既有 id。
+  - launch_activity 必须紧跟 launch_subtitle、位于 launch_actions 内（单测锁定）。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/shell_bg">
+
+  <ScrollView android:id="@+id/launch_panel" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/shell_bg" android:fillViewport="true" android:overScrollMode="ifContentScrolls">
+
+    <LinearLayout android:id="@+id/launch_sections" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="@dimen/shell_launch_page_pad" android:paddingTop="@dimen/shell_launch_page_top" android:paddingEnd="@dimen/shell_launch_page_pad" android:paddingBottom="@dimen/shell_launch_page_bottom">
+
+      <!-- 顶部语境：状态点 + 「本机工作台 · 状态」。 -->
+      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+        <TextView android:id="@+id/launch_run_dot" style="@style/ShellLaunchDot" android:layout_width="wrap_content" android:layout_height="wrap_content" android:importantForAccessibility="no" android:text="@string/ui_status_dot" />
+        <TextView android:id="@+id/launch_eyebrow" style="@style/ShellLaunchEyebrow" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="7dp" android:layout_weight="1" />
+      </LinearLayout>
+
+      <!-- Hero：左侧标题与操作，右侧插图（窄屏隐藏）。 -->
+      <LinearLayout android:id="@+id/launch_hero" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:gravity="center_vertical" android:orientation="horizontal">
+
+        <LinearLayout android:id="@+id/launch_actions" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+
+          <TextView android:id="@+id/launch_run_state" style="@style/ShellLaunchTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityHeading="true" android:accessibilityLiveRegion="polite" android:text="@string/ui2_stopped" />
+
+          <TextView android:id="@+id/launch_subtitle" style="@style/ShellLaunchDescription" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="@string/ui2_launch_hint" />
+
+          <com.deepseekharness.app.ui.ShellActivityTrack android:id="@+id/launch_activity" android:layout_width="match_parent" android:layout_height="@dimen/shell_launch_activity_height" android:layout_marginTop="14dp" android:importantForAccessibility="no" />
+
+          <TextView android:id="@+id/launch_status" style="@style/ShellLaunchMeta" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:accessibilityLiveRegion="polite" android:text="" android:visibility="gone" />
+
+          <!-- 主操作 + 轻量重启 / 停止；窄屏由 LaunchFragment 改为主操作独占一行。图标为矢量资源，不再把符号写进文案。 -->
+          <LinearLayout android:id="@+id/launch_controls" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton android:id="@+id/launch_start" app:icon="@drawable/ic_launch_start" style="@style/ShellLaunchPrimary" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="180dp" android:paddingStart="24dp" android:paddingEnd="24dp" android:text="@string/ui2_start" />
+            <LinearLayout android:id="@+id/launch_quiet_controls" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:gravity="center_vertical" android:orientation="horizontal">
+              <com.google.android.material.button.MaterialButton android:id="@+id/launch_open" app:icon="@drawable/ic_plugin_restart" style="@style/ShellLaunchQuiet" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui2_restart" />
+              <com.google.android.material.button.MaterialButton android:id="@+id/launch_stop" app:icon="@drawable/ic_launch_stop" style="@style/ShellLaunchQuiet" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="@string/ui2_stop" />
             </LinearLayout>
+          </LinearLayout>
         </LinearLayout>
-    </ScrollView>
-    <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent" android:id="@+id/launch_web" android:visibility="gone">
-        <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent" android:id="@+id/launch_web_box" />
-    </FrameLayout>
+
+        <!-- 原型 A 插图：旋转外环 + 品牌内核；纯装饰，不参与无障碍。 -->
+        <FrameLayout android:id="@+id/launch_art" android:layout_width="116dp" android:layout_height="140dp" android:layout_marginStart="24dp" android:importantForAccessibility="noHideDescendants" android:visibility="gone">
+          <View android:id="@+id/launch_art_ring" android:layout_width="98dp" android:layout_height="93dp" android:layout_gravity="center" android:background="@drawable/bg_launch_art_ring" android:rotation="13" />
+          <FrameLayout android:layout_width="65dp" android:layout_height="65dp" android:layout_gravity="center" android:background="@drawable/bg_launch_art_core">
+            <ImageView android:layout_width="34dp" android:layout_height="34dp" android:layout_gravity="center" android:contentDescription="@null" android:src="@drawable/ic_terminal" app:tint="@color/shell_accent" />
+          </FrameLayout>
+        </FrameLayout>
+      </LinearLayout>
+
+      <!-- 三段就绪轨道：运行环境 / 工作台 / 实际端口。每项独立描边卡片，保留原设计。 -->
+      <LinearLayout android:id="@+id/launch_metrics" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/shell_launch_section_gap" android:orientation="horizontal">
+
+        <LinearLayout style="@style/ShellLaunchMetric" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1">
+          <FrameLayout android:layout_width="31dp" android:layout_height="31dp" android:background="@drawable/bg_launch_tile">
+            <ImageView android:layout_width="16dp" android:layout_height="16dp" android:layout_gravity="center" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_box" app:tint="@color/shell_accent" />
+          </FrameLayout>
+          <TextView style="@style/ShellLaunchRailLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_environment" />
+          <TextView android:id="@+id/launch_environment" style="@style/ShellLaunchRailValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_status_unavailable" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/ShellLaunchMetric" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_weight="1">
+          <FrameLayout android:layout_width="31dp" android:layout_height="31dp" android:background="@drawable/bg_launch_tile">
+            <ImageView android:layout_width="16dp" android:layout_height="16dp" android:layout_gravity="center" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_terminal" app:tint="@color/shell_accent" />
+          </FrameLayout>
+          <TextView style="@style/ShellLaunchRailLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_workspace" />
+          <TextView android:id="@+id/launch_workbench" style="@style/ShellLaunchRailValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_status_unavailable" />
+        </LinearLayout>
+
+        <LinearLayout style="@style/ShellLaunchMetric" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_weight="1">
+          <FrameLayout android:layout_width="31dp" android:layout_height="31dp" android:background="@drawable/bg_launch_tile">
+            <ImageView android:layout_width="16dp" android:layout_height="16dp" android:layout_gravity="center" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui_link" app:tint="@color/shell_accent" />
+          </FrameLayout>
+          <TextView style="@style/ShellLaunchRailLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_port" />
+          <TextView android:id="@+id/launch_port" style="@style/ShellLaunchRailValue" android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="monospace" android:text="@string/ui_status_unavailable" />
+        </LinearLayout>
+      </LinearLayout>
+
+      <!-- 下半区：启动日志。快捷入口（终端 / 检查与维护 / 访问地址）已收进顶栏「+」气泡（T145），
+           终端本身仍由底部导航进入；不再按宽度分栏。 -->
+      <LinearLayout android:id="@+id/launch_log_panel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/shell_launch_section_gap" android:orientation="vertical">
+
+          <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="@dimen/shell_launch_log_ibtn" android:orientation="horizontal">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+              <TextView android:id="@+id/launch_log_title" style="@style/ShellLaunchLogTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityHeading="true" android:text="@string/ui2_logs" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:gravity="center_vertical" android:orientation="horizontal">
+                <View android:id="@+id/launch_log_dot" android:layout_width="7dp" android:layout_height="7dp" android:importantForAccessibility="no" />
+                <TextView android:id="@+id/launch_log_meta" style="@style/ShellLaunchLogMeta" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:layout_weight="1" android:accessibilityLiveRegion="polite" android:text="" />
+              </LinearLayout>
+            </LinearLayout>
+            <ImageButton android:id="@+id/launch_copy_logs" style="@style/ShellLaunchLogIconButton" android:layout_width="@dimen/shell_launch_log_ibtn" android:layout_height="@dimen/shell_launch_log_ibtn" android:layout_marginStart="8dp" android:src="@drawable/ic_launch_log_copy" />
+            <ImageButton android:id="@+id/launch_download_logs" style="@style/ShellLaunchLogIconButton" android:layout_width="@dimen/shell_launch_log_ibtn" android:layout_height="@dimen/shell_launch_log_ibtn" android:layout_marginStart="8dp" android:src="@drawable/ic_launch_log_download" />
+          </LinearLayout>
+
+          <!-- 概览 / 原始：两段等宽；计数徽标由代码写入。 -->
+          <LinearLayout android:id="@+id/launch_log_tabs" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:background="@drawable/bg_launch_log_seg_track" android:orientation="horizontal" android:padding="3dp">
+            <TextView android:id="@+id/launch_log_tab_overview" style="@style/ShellLaunchLogTab" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="" />
+            <TextView android:id="@+id/launch_log_tab_raw" style="@style/ShellLaunchLogTab" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:layout_weight="1" android:text="" />
+          </LinearLayout>
+
+          <LinearLayout android:id="@+id/launch_log_box" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/bg_launch_log_box" android:clipToOutline="true" android:orientation="vertical">
+
+            <!-- 原始视图工具条：筛选只影响显示，复制仍是完整原文。 -->
+            <HorizontalScrollView android:id="@+id/launch_log_rawbar" android:layout_width="match_parent" android:layout_height="wrap_content" android:scrollbars="none" android:visibility="gone">
+              <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="10dp" android:paddingTop="8dp" android:paddingEnd="10dp" android:paddingBottom="6dp">
+                <TextView android:id="@+id/launch_log_filter_all" style="@style/ShellLaunchLogChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" />
+                <TextView android:id="@+id/launch_log_filter_notiming" style="@style/ShellLaunchLogChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="" />
+                <TextView android:id="@+id/launch_log_filter_issues" style="@style/ShellLaunchLogChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="" />
+                <TextView android:id="@+id/launch_log_wrap" style="@style/ShellLaunchLogChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="" />
+              </LinearLayout>
+            </HorizontalScrollView>
+            <View android:id="@+id/launch_log_rawbar_line" android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/shell_line" android:visibility="gone" />
+
+            <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+              <com.deepseekharness.app.ui.LogScrollView android:id="@+id/launch_log_scroll" android:layout_width="match_parent" android:layout_height="@dimen/shell_launch_log_height" android:fillViewport="true">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                  <LinearLayout android:id="@+id/launch_log_overview" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+                  <LinearLayout android:id="@+id/launch_log_raw" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="10dp" android:paddingTop="6dp" android:paddingEnd="10dp" android:paddingBottom="8dp" android:visibility="gone">
+                    <TextView android:id="@+id/lan_addr" android:layout_width="match_parent" android:layout_height="wrap_content" android:includeFontPadding="false" android:text="" android:textColor="@color/shell_accent" android:textIsSelectable="true" android:textSize="11sp" android:visibility="gone" />
+                    <TextView android:id="@+id/launch_log" style="@style/ShellLaunchLog" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0025" />
+                  </LinearLayout>
+                </LinearLayout>
+              </com.deepseekharness.app.ui.LogScrollView>
+
+              <!-- 跟随浮标：只在暂停跟随时出现，带新日志数；点按回到最新并恢复跟随。 -->
+              <TextView android:id="@+id/launch_latest_button" style="@style/ShellLaunchLogFollow" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="bottom|end" android:layout_margin="8dp" android:text="" android:visibility="gone" />
+            </FrameLayout>
+
+            <!-- 底栏：压缩摘要 + 展开 / 收起日志区域。 -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@color/shell_surface" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="12dp" android:paddingEnd="4dp">
+              <TextView android:id="@+id/launch_log_digest" style="@style/ShellLaunchLogDigest" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="" />
+              <ImageButton android:id="@+id/launch_log_expand" style="@style/ShellLaunchLogExpand" android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_launch_log_expand" />
+            </LinearLayout>
+          </LinearLayout>
+
+          <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:gravity="center_vertical" android:orientation="horizontal">
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/launch_safe" style="@style/ShellLaunchSecondary" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/ui_m0007" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/launch_recovery" style="@style/ShellLaunchSecondary" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="@dimen/shell_launch_control_gap" android:layout_weight="1" android:text="@string/ui_m0011" />
+          </LinearLayout>
+      </LinearLayout>
+    </LinearLayout>
+  </ScrollView>
+
+  <FrameLayout android:id="@+id/launch_web" android:layout_width="match_parent" android:layout_height="match_parent" android:visibility="gone">
+    <FrameLayout android:id="@+id/launch_web_box" android:layout_width="match_parent" android:layout_height="match_parent" />
+  </FrameLayout>
 </FrameLayout>

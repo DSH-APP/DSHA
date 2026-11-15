@@ -66,4 +66,29 @@ public class SystemPluginStateTest {
   public void legacyGraphWithoutStateRemainsCompatible() throws Exception {
     assertTrue(SystemPluginState.fromGraph(Map.of("version", 1L, "nodes", Map.of())).isEmpty());
   }
+
+  @Test
+  public void missingWebPackageCanBeCreatedInExistingDirectory() throws Exception {
+    File profiles = temp.newFolder("existing-profiles");
+    put(profiles, "web/user-data.txt", "keep");
+    Map<String, Object> state =
+        Map.of("web", Map.of("dsh-auto-review", Map.of("enabled", true, "disabled", false)));
+    assertEquals(1, SystemPluginState.apply(fs, profiles, state, new BackupControl(null), true));
+    assertEquals("keep", Files.readString(new File(profiles, "web/user-data.txt").toPath()));
+    assertTrue(new File(profiles, "web/package.json").isFile());
+  }
+
+  @Test
+  public void existingNonFilePackageIsNeverReplaced() throws Exception {
+    File profiles = temp.newFolder("conflicting-profiles");
+    Files.createDirectories(new File(profiles, "web/package.json").toPath());
+    Map<String, Object> state =
+        Map.of("web", Map.of("dsh-auto-review", Map.of("enabled", true, "disabled", false)));
+    IOException error =
+        assertThrows(
+            IOException.class,
+            () -> SystemPluginState.apply(fs, profiles, state, new BackupControl(null), true));
+    assertEquals("PLUGIN_SYSTEM_PROFILE_MISSING", error.getMessage());
+    assertTrue(new File(profiles, "web/package.json").isDirectory());
+  }
 }

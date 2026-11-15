@@ -15,7 +15,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 from test_runtime_fixture import runtime as verified_runtime
-from release_names import apk_filename
+from release_names import apk_delivery_path
 
 
 def run(label: str, command: list[str], extra_env: dict[str, str] | None = None) -> None:
@@ -92,7 +92,7 @@ def main() -> None:
     )
     args = parser.parse_args()
     if not args.apks:
-        args.apks = [ROOT / 'release' / apk_filename(flavor) for flavor in ('standard', 'low')]
+        args.apks = [apk_delivery_path('standard')]
     args.managed_runtime=verified_runtime("managed",args.managed_runtime,full=True,require_current_archive=True)
     args.raw_runtime=verified_runtime("raw",args.raw_runtime,full=True,require_current_archive=True)
 
@@ -160,7 +160,7 @@ def main() -> None:
         },
     )
     run_bound(
-        "Lexical claim 装饰与运行时归档兼容",
+        "官方 CommandChip 与旧 Lexical transform 退休证明",
         [node, str(ROOT / "tools/test-lexical-claim-compat.mjs")],
         {
             "DSHA_TEST_RUNTIME": str(args.raw_runtime.resolve()),

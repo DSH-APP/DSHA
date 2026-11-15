@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-client-ui-agent-preset/lib/client.js",
-  "sourceSha256": "6ecdf173de66fce620e588f10ed1e3b624725febab059fb867beefef9ae4ddb8",
-  "packageIntegrity": "sha512-Tp3CI/LpwykU3ttjG7MfLHk+5jep/qgwL982MAyYuoRHItuj/zvGLH/fXX0X8VAWW9OtRyv7gs/yFffkfXZ5dQ==",
+  "sourceSha256": "b409e4dd4fdbea1c313382083532f46ca21650b1c3d07c0be0074f60c337b359",
+  "packageIntegrity": "sha512-Zc2O3ghexWSPOXVzKB651U45+bKfZsMCN3dtUTg3C9f7akPYffZyrv/MtkpvbqLfx9t7etLcnmJPoPJ92TaV4Q==",
   "patches": [
     {
       "before": "setDefault: \"Set as new task default\",",

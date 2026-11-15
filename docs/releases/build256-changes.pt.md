@@ -1,0 +1,7 @@
+# DSHA 0.2.1-rc.3-20261101.2330-dsh0.2.1-rc.5 / build256
+
+- Subpáginas de dados e cópias de segurança remodeladas: o restauro passa a um assistente de quatro passos na própria página (escolher ficheiro, âmbito e opções, verificação prévia, confirmar restauro), em vez de uma série de diálogos; Confirmar bloqueia após um toque e o fluxo continua após rodar o ecrã.
+- A exportação personalizada oferece cinco âmbitos de escolha única e avisa que o ficheiro não é cifrado quando inclui chaves API; as ferramentas de recuperação e manutenção estão agrupadas por finalidade e cada ação continua a pedir confirmação.
+- A página de armazenamento mostra a ocupação total e a distribuição por categoria; as cópias retidas filtram-se por cópias de segurança, ambientes antigos, plugins e outros sem perder os itens marcados; o guia de armazenamento passa a perguntas que se expandem ao tocar no título.
+- O build255 não foi publicado à parte: um teste das notas de versão não correspondia ao texto incluído, pelo que a compilação e a publicação falharam. As alterações aos botões da página de manutenção vêm neste build e o teste foi corrigido.
+- Âmbito da verificação: apenas compilação local e testes unitários relacionados; sem instalação em dispositivo, testes de interface e Lint ficam para a CI. versionCode elevado para 256 (com base no build255). A revisão DSHA mantém-se 0.2.1-rc.3 e o DSH incluído mantém-se 0.2.1-rc.5.

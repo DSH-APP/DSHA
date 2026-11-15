@@ -4,6 +4,7 @@ import com.deepseekharness.app.backup.BackupControl;
 import com.deepseekharness.app.backup.BackupFileSystem;
 import com.deepseekharness.app.backup.UserDataLayout;
 import com.deepseekharness.app.util.SkillDocument;
+import com.deepseekharness.app.util.SkillLifecycle;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -21,16 +22,36 @@ public final class SkillImports {
   private final File files;
 
   public static final class Entry {
+    /** 相对技能根目录的实际文档路径：{@code 名/SKILL.md[.disabled]} 或 {@code 名.md[.disabled]}。 */
     public final String relative;
+
     public final SkillDocument document;
 
+    /** false = 已禁用（文档带 .disabled 后缀，DSH 不发现）。 */
+    public final boolean enabled;
+
     Entry(String relative, SkillDocument document) {
+      this(relative, document, true);
+    }
+
+    Entry(String relative, SkillDocument document, boolean enabled) {
       this.relative = relative;
       this.document = document;
+      this.enabled = enabled;
     }
 
     public String guestPath() {
       return GUEST_ROOT + "/" + relative;
+    }
+
+    /** 技能根目录下的成员名（目录名或单文件名）。 */
+    public String member() {
+      int slash = relative.indexOf('/');
+      return slash < 0 ? relative : relative.substring(0, slash);
+    }
+
+    public boolean directory() {
+      return relative.indexOf('/') >= 0;
     }
   }
 
@@ -38,9 +59,27 @@ public final class SkillImports {
     public final List<Entry> entries;
     public final int unreadable;
 
+    /** 最近删除（按删除时间倒序）；只读目录时为空。 */
+    public final List<SkillLibrary.Item> trash;
+
     Catalogue(List<Entry> entries, int unreadable) {
+      this(entries, unreadable, new ArrayList<>());
+    }
+
+    Catalogue(List<Entry> entries, int unreadable, List<SkillLibrary.Item> trash) {
       this.entries = Collections.unmodifiableList(entries);
       this.unreadable = unreadable;
+      this.trash = Collections.unmodifiableList(trash);
+    }
+
+    public Catalogue withTrash(List<SkillLibrary.Item> items) {
+      return new Catalogue(new ArrayList<>(entries), unreadable, new ArrayList<>(items));
+    }
+
+    public int enabledCount() {
+      int count = 0;
+      for (Entry entry : entries) if (entry.enabled) count++;
+      return count;
     }
   }
 
@@ -49,7 +88,7 @@ public final class SkillImports {
     this.files = files.getAbsoluteFile();
   }
 
-  private File home() throws IOException {
+  File home() throws IOException {
     File selected = new UserDataLayout(fs, files).current();
     String relative =
         selected.getPath().substring(files.getPath().length() + 1).replace(File.separatorChar, '/');
@@ -68,6 +107,7 @@ public final class SkillImports {
     if (names.size() > MAX_ENTRIES) throw new IOException("SKILL_ENTRY_LIMIT");
     List<Entry> entries = new ArrayList<>();
     int unreadable = 0;
+    java.util.Set<String> present = new java.util.HashSet<>(names);
     for (String name : names) {
       control.check();
       if (name.equals(".system")) continue;
@@ -75,17 +115,34 @@ public final class SkillImports {
       var kind = fs.stat(member);
       String relative;
       File document;
+      boolean enabled = true;
       if (kind.type.equals("DIRECTORY")) {
-        relative = name + "/SKILL.md";
-        document = fs.child(member, "SKILL.md");
-        if (fs.stat(document).type.equals("MISSING")) continue;
+        // 两份同时存在时按 DSH 实际行为算启用；切换会因目标已存在而拒绝，不覆盖任何一份。
+        relative = name + "/" + SkillLifecycle.DOCUMENT;
+        document = fs.child(member, SkillLifecycle.DOCUMENT);
+        if (fs.stat(document).type.equals("MISSING")) {
+          relative = name + "/" + SkillLifecycle.DISABLED_DOCUMENT;
+          document = fs.child(member, SkillLifecycle.DISABLED_DOCUMENT);
+          if (fs.stat(document).type.equals("MISSING")) continue;
+          enabled = false;
+        }
+      } else if (SkillLifecycle.disabledFile(name)) {
+        // 同名启用文件仍在时以它为准，不列出重复项。
+        if (present.contains(
+            name.substring(0, name.length() - SkillLifecycle.DISABLED_SUFFIX.length()))) continue;
+        relative = name;
+        document = member;
+        enabled = false;
       } else if (name.endsWith(".md")) {
         relative = name;
         document = member;
       } else continue;
       try {
         entries.add(
-            new Entry(relative, SkillDocument.parse(fs.small(document, SkillDocument.MAX_BYTES))));
+            new Entry(
+                relative,
+                SkillDocument.parse(fs.small(document, SkillDocument.MAX_BYTES)),
+                enabled));
       } catch (java.io.InterruptedIOException cancelled) {
         throw cancelled;
       } catch (IOException invalid) {
@@ -179,7 +236,7 @@ public final class SkillImports {
     }
   }
 
-  private static boolean identity(BackupFileSystem.Node expected, BackupFileSystem.Node current) {
+  static boolean identity(BackupFileSystem.Node expected, BackupFileSystem.Node current) {
     return expected != null
         && expected.type.equals(current.type)
         && expected.key.equals(current.key)
@@ -221,14 +278,19 @@ public final class SkillImports {
     return true;
   }
 
+  /** 已启用、已禁用与最近删除中的同名技能都占用名称；彻底删除后才释放。 */
   private void rejectName(String name, BackupControl control) throws IOException {
     Catalogue current = list(control);
     for (Entry entry : current.entries)
       if (entry.document.name.equals(name)) throw new IOException("SKILL_EXISTS");
+    if (new SkillLibrary(fs, files).trashNames(control).contains(name))
+      throw new IOException("SKILL_IN_TRASH");
     File root = fs.child(home(), "skills");
     if (fs.stat(root).type.equals("MISSING")) return;
     if (!fs.stat(fs.child(root, name)).type.equals("MISSING")
-        || !fs.stat(fs.child(root, name + ".md")).type.equals("MISSING"))
-      throw new IOException("SKILL_EXISTS");
+        || !fs.stat(fs.child(root, name + ".md")).type.equals("MISSING")
+        || !fs.stat(fs.child(root, name + ".md" + SkillLifecycle.DISABLED_SUFFIX))
+            .type
+            .equals("MISSING")) throw new IOException("SKILL_EXISTS");
   }
 }

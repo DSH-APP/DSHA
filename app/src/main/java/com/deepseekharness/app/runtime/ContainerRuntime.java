@@ -107,7 +107,10 @@ public interface ContainerRuntime {
       argv.add("-0");
       argv.add("--rootfs=" + rootfsDir.getAbsolutePath());
       argv.add("--cwd=/root");
-      for (Bind b : binds()) {
+      // 运行根自镜像：guest 内按 /proc/self/maps 回读自身文件依赖它，见 rootfsSelfMirror()。
+      argv.add("-b");
+      argv.add(rootfsSelfMirror(rootfsDir));
+      for (Bind b : binds(com.deepseekharness.app.StorageAccess.granted(context))) {
         if (!new File(b.host()).exists()) {
           if (context != null)
             RuntimeHostPorts.fromOwner(context.getApplicationContext())
@@ -121,23 +124,34 @@ public interface ContainerRuntime {
       return argv;
     }
 
+    /**
+     * 运行根自我镜像绑定：guest 内按 {@code /proc/self/maps} 记录的宿主绝对路径回读自身文件。
+     *
+     * <p>proot 用宿主路径 exec/mmap，maps 里是内核解析后的 canonical 路径；而运行根通常以
+     * {@code /data/user/0} 别名传入，maps 却是 {@code /data/data}。不绑定的话，guest 的 open
+     * 会被翻译成 {@code <rootfs>/data/data/...}（通常不存在或只有骨架目录）并报 ENOENT。
+     * 历史 maintenance proot 也在 {@code RecoveryToolchain} 里绑定同类自镜像。
+     */
+    private static String rootfsSelfMirror(File rootfsDir) {
+      File canonical = rootfsDir;
+      try {
+        canonical = rootfsDir.getCanonicalFile();
+      } catch (java.io.IOException ignored) {
+        // 路径暂不可解析时退回传入路径，不阻断启动。
+      }
+      return canonical.getAbsolutePath() + ":" + canonical.getAbsolutePath();
+    }
+
     @Override
     public void applyEnv(ProcessBuilder pb, File baseDir, File libDir, File tmpDir)
         throws java.io.IOException {
       prepare();
       File directory = nativeLibProot.getParentFile();
-      String loader =
-          nativeLibProot.getName().equals("libproot_legacy.so")
-              ? "libprootloader_legacy.so"
-              : "libprootloader.so";
+      String loader = "libprootloader.so";
       if (!new File(libDir, "libtalloc.so.2").isFile()
           || !new File(libDir, "libandroid-shmem.so").isFile())
         throw new java.io.IOException("PROOT_DEPENDENCIES_MISSING");
-      RuntimeHostPorts.Settings settings =
-          explicitSettings == null
-              ? RuntimeHostPorts.fromOwner(context.getApplicationContext()).settings()
-              : explicitSettings;
-      if (settings.disableProotSeccomp) pb.environment().put("PROOT_NO_SECCOMP", "1");
+      if (seccompDisabled()) pb.environment().put("PROOT_NO_SECCOMP", "1");
       else pb.environment().remove("PROOT_NO_SECCOMP");
       pb.environment().put("PROOT_TMP_DIR", tmpDir.getAbsolutePath());
       pb.environment().put("PROOT_LOADER", new File(directory, loader).getAbsolutePath());
@@ -148,13 +162,19 @@ public interface ContainerRuntime {
           .put("LD_LIBRARY_PATH", libDir.getAbsolutePath() + ":" + directory.getAbsolutePath());
     }
 
+    /** 与 applyEnv 同一来源：本次启动是否带 PROOT_NO_SECCOMP（无 seccomp 过滤的兼容档）。 */
+    public boolean seccompDisabled() {
+      RuntimeHostPorts.Settings settings =
+          explicitSettings == null
+              ? RuntimeHostPorts.fromOwner(context.getApplicationContext()).settings()
+              : explicitSettings;
+      return settings.disableProotSeccomp;
+    }
+
     @Override
     public void prepare() throws java.io.IOException {
       if (!available()) throw new java.io.IOException("PROOT_EXECUTABLE_MISSING");
-      String loader =
-          nativeLibProot.getName().equals("libproot_legacy.so")
-              ? "libprootloader_legacy.so"
-              : "libprootloader.so";
+      String loader = "libprootloader.so";
       if (!new File(nativeLibProot.getParentFile(), loader).isFile())
         throw new java.io.IOException("PROOT_LOADER_MISSING");
     }
@@ -251,7 +271,9 @@ public interface ContainerRuntime {
       argv.add("-0");
       argv.add("-w");
       argv.add("/root");
-      for (Bind b : binds()) {
+      // 运行根自镜像不在这里重复绑定：当前 v1.2.8 已把 -r 解析后的 canonical rootfs 绑进 guest
+      // （见 util/GhHostRoot 与 build343 真机实测）；重复 -b 的 vendor 行为未验证，升级 proroot 时复核。
+      for (Bind b : binds(com.deepseekharness.app.StorageAccess.granted(ctx))) {
         if (!new File(b.host()).exists()) {
           RuntimeHostPorts.fromOwner(ctx.getApplicationContext())
               .record("BIND_SKIPPED", b.host() + ": missing or inaccessible");
@@ -325,16 +347,23 @@ public interface ContainerRuntime {
    */
   record Bind(String host, String guest) {}
 
-  static java.util.List<Bind> binds() {
-    return java.util.List.of(
-        new Bind("/dev", "/dev"),
-        new Bind("/dev/urandom", "/dev/random"),
-        new Bind("/proc", "/proc"),
-        new Bind("/sys", "/sys"),
-        new Bind("/system", "/system"),
-        new Bind("/apex", "/apex"),
-        new Bind("/proc/self/fd", "/dev/fd"),
-        new Bind("/storage/emulated/0", "/sdcard"),
-        new Bind("/storage/emulated/0", "/storage/emulated/0"));
+  /**
+   * 容器挂载清单。公共存储（{@code /storage/emulated/0}）只在用户已授权文件访问时挂载；
+   * 未授权时容器只能读写自己的运行根与私有目录，不能读手机文件。
+   */
+  static java.util.List<Bind> binds(boolean includePublicStorage) {
+    java.util.List<Bind> list = new java.util.ArrayList<>();
+    list.add(new Bind("/dev", "/dev"));
+    list.add(new Bind("/dev/urandom", "/dev/random"));
+    list.add(new Bind("/proc", "/proc"));
+    list.add(new Bind("/sys", "/sys"));
+    list.add(new Bind("/system", "/system"));
+    list.add(new Bind("/apex", "/apex"));
+    list.add(new Bind("/proc/self/fd", "/dev/fd"));
+    if (includePublicStorage) {
+      list.add(new Bind("/storage/emulated/0", "/sdcard"));
+      list.add(new Bind("/storage/emulated/0", "/storage/emulated/0"));
+    }
+    return java.util.List.copyOf(list);
   }
 }

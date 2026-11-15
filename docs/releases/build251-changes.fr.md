@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.3-20261101.2100-dsh0.2.1-rc.5 / build251
+
+- Refonte de l'en-tête de la page des plugins : le titre et Marché / Gestion partagent une ligne, et les segments passent à une ligne pleine largeur faute de place. Gestion affiche un badge du nombre de plugins, avec des états distincts pour la détection, la liste non confirmée et l'échec d'actualisation.
+- Marché : la carte de l'écosystème communautaire devient un lien à côté du titre, coller et effacer sont placés en fin de champ, et l'indication change de couleur selon le résultat de la reconnaissance. Gestion : la recherche et Détecter les plugins partagent une ligne ; filtre, tri et source de téléchargement tiennent sur une ligne.
+- Progression, texte d'état, Annuler et Vérifier les mises à jour sont réunis dans une seule barre d'état avec une animation de progression en vague, dont la hauteur reste fixe au début et à la fin des tâches. Le bouton de restauration du mode sans échec passe dans le bandeau supérieur et l'aide sur la source de téléchargement dans la boîte de sélection.
+- Portée de la vérification : tests unitaires locaux des plugins et contrôles statiques uniquement ; aucune installation sur appareil, tests d'interface et Lint confiés à la CI. versionCode porté à 251 (basé sur build250). La révision DSHA reste 0.2.1-rc.3 et le DSH intégré reste 0.2.1-rc.5.

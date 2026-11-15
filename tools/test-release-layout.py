@@ -96,7 +96,7 @@ class ReleaseLayoutTest(unittest.TestCase):
     def test_new_delivery_uses_version_group_and_separate_bound_snapshot(self):
         self.write('app/build.gradle', b"ext.dshaApkNameVersion = '0.2.0-rc2'\n")
         apks = []
-        for flavor in ('standard', 'low'):
+        for flavor in ('standard',):
             source = self.write('app/build/' + flavor + '.apk', flavor.encode())
             apks.append(dict(flavor=flavor, path=str(source), sha256=digest(source), versionCode=158))
         snapshot = self.write('app/build/stability-acceptance/fixture/source-sha256.json', b'{"Example.java":"original"}\n')
@@ -129,12 +129,12 @@ class ReleaseLayoutTest(unittest.TestCase):
         output = self.root / 'artifacts/manifests/release-manifest.json'
         version = '0.2.1-rc.2'
         self.write('app/build.gradle', b"ext.dshaApkNameVersion = '0.2.1-rc.2'\n")
-        apks = [self.write(apk_filename(flavor, self.root), flavor.encode()) for flavor in ('standard', 'low')]
+        apks = [self.write(apk_filename(flavor, self.root), flavor.encode()) for flavor in ('standard',)]
         def inspect(apk, flavor, *_):
-            return dict(filename=apk.name, flavor=flavor, versionName=version + ('low' if flavor == 'low' else ''),
-                        versionCode=190, runtimeId='same-runtime', dshVersion='0.2.1-rc.2', minSdk=30 if flavor == 'standard' else 23,
+            return dict(filename=apk.name, flavor=flavor, versionName=version,
+                        versionCode=190, runtimeId='same-runtime', dshVersion='0.2.1-rc.2', minSdk=30,
                         bytes=apk.stat().st_size, sha256=digest(apk))
-        argv = ['manifest', '--standard', str(apks[0]), '--low', str(apks[1]), '--build-tools', str(self.root),
+        argv = ['manifest', '--standard', str(apks[0]), '--build-tools', str(self.root),
                 '--notes', str(notes), '--output', str(output)]
         with patch('sys.argv', argv), patch.object(manifest, 'inspect', inspect), \
                 patch.object(manifest, 'apk_name_version', lambda: apk_name_version(self.root)), \
@@ -151,15 +151,12 @@ class ReleaseLayoutTest(unittest.TestCase):
         self.write('app/build.gradle', b"ext.dshaApkNameVersion = '0.2.1-rc.2'\n")
         notes = self.write('notes.txt', b'local fixture only')
         output = self.root / 'artifacts/manifests/release-manifest.json'
-        apks = [self.write('dsha-0.2.0-rc2.apk', b'standard'),
-                self.write('dsha-0.2.0-rc2low.apk', b'low')]
+        historic = self.write('dsha-0.2.0-rc2.apk', b'standard')
         def inspect(apk, flavor, *_):
-            return dict(filename=apk.name, flavor=flavor,
-                        versionName='0.2.1-rc.2' + ('low' if flavor == 'low' else ''),
+            return dict(filename=apk.name, flavor=flavor, versionName='0.2.1-rc.2',
                         versionCode=190, runtimeId='same-runtime', dshVersion='0.2.1-rc.2',
-                        minSdk=30 if flavor == 'standard' else 23,
-                        bytes=apk.stat().st_size, sha256=digest(apk))
-        argv = ['manifest', '--standard', str(apks[0]), '--low', str(apks[1]),
+                        minSdk=30, bytes=apk.stat().st_size, sha256=digest(apk))
+        argv = ['manifest', '--standard', str(historic),
                 '--build-tools', str(self.root), '--notes', str(notes), '--output', str(output)]
         with patch('sys.argv', argv), patch.object(manifest, 'inspect', inspect), \
                 patch.object(manifest, 'apk_name_version', lambda: apk_name_version(self.root)), \
@@ -167,9 +164,22 @@ class ReleaseLayoutTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'dsha-0.2.1-rc.2.apk'):
                 manifest.main()
         self.assertFalse(output.exists())
-        for apk in apks:
-            self.assertTrue(apk.exists())
-            self.assertFalse(apk.with_suffix('.apk.sha256').exists())
+        self.assertTrue(historic.exists())
+        self.assertFalse(historic.with_suffix('.apk.sha256').exists())
+        # 旧 -low 版本名不再是合法发布身份。
+        current = self.write(apk_filename('standard', self.root), b'current standard')
+        def inspect_low(apk, flavor, *_):
+            return dict(filename=apk.name, flavor=flavor, versionName='0.2.1-rc.2low',
+                        versionCode=190, runtimeId='same-runtime', dshVersion='0.2.1-rc.2',
+                        minSdk=30, bytes=apk.stat().st_size, sha256=digest(apk))
+        argv = ['manifest', '--standard', str(current),
+                '--build-tools', str(self.root), '--notes', str(notes), '--output', str(output)]
+        with patch('sys.argv', argv), patch.object(manifest, 'inspect', inspect_low), \
+                patch.object(manifest, 'apk_name_version', lambda: apk_name_version(self.root)), \
+                patch.object(manifest, 'apk_filename', lambda flavor: apk_filename(flavor, self.root)):
+            with self.assertRaisesRegex(ValueError, 'low'):
+                manifest.main()
+        self.assertFalse(output.exists())
 
 
 if __name__ == '__main__':

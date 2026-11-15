@@ -13,4 +13,8 @@ events['dsha-startup']({detail:JSON.stringify({type:'ready',documentId:'fixture-
 assert.equal(sent[1].report.sequence,1);assert.equal(sent[1].report.type,'ready');
 events['dsha-startup']({detail:'not-json'});assert.equal(sent.length,2);
 events['dsha-language-selected']({detail:'system'});assert.equal(sent.length,2);
+for(const tag of ['zh','zh-Hant','en','ru','ja','ko','ar','pt','la','fr'])events['dsha-language-selected']({detail:tag});
+assert.deepEqual(sent.slice(2).map(value=>value.language),['zh','zh-Hant','en','ru','ja','ko','ar','pt','la','fr']);
+for(const tag of ['ar-EG','zh-TW','invalid'])events['dsha-language-selected']({detail:tag});
+assert.equal(sent.length,12);
 console.log('Current Gecko relay: buffered pre-binding failure, current-port nonce/page stamping, raw report fields, malformed and invalid language bounds PASS. No browser/device network claimed.');

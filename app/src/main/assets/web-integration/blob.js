@@ -18,7 +18,7 @@
             const chunk = await reader.read(); if (chunk.done) break;
             for (let offset=0;offset<chunk.value.length;offset+=24576) {
               const bytes = chunk.value.subarray(offset,offset+24576); total += bytes.length;
-              if (total > 2147483648) throw new Error('文件超过 2 GiB');
+              if (total > 5000000000) throw new Error('文件超过 5 GB');
               let binary=''; for (let i=0;i<bytes.length;i++) binary+=String.fromCharCode(bytes[i]);
               await new Promise((resolve,reject) => {
                 const timer=setTimeout(()=>reject(new Error('文件传输超时')),30000);

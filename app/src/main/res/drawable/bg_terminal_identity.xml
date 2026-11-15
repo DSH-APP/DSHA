@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 侧栏顶部会话标识块：accent_bg 底 + accent_line 描边，10dp 圆角（radius_small）。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/terminal_accent_bg" />
+    <corners android:radius="@dimen/radius_small" />
+    <stroke android:width="@dimen/stroke" android:color="@color/terminal_accent_line" />
+</shape>

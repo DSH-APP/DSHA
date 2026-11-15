@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.3-20261031.0300-dsh0.2.1-rc.5 / build215
+
+- Paquet allégé : le DSH de secours indépendant passe de 0.2.1-rc.3 à la même version 0.2.1-rc.5 que l'environnement principal. Les deux archives d'exécution sont désormais identiques octet pour octet, l'APK n'en conserve donc qu'une seule copie (une archive DSH d'environ 127,7 Mo en moins) ; l'environnement de secours est toujours extrait dans son propre répertoire, avec son verrou, son identité, ses sessions et son démarrage indépendants.
+- Correction de l'échec de la première préparation du DSH de secours indépendant, causé par une liste d'entrées de surcouche non conforme au descripteur (depuis build193) : les recettes sont désormais lues pour la version du verrou de secours, avec un nouveau test unitaire et un contrôle croisé côté build.
+- Suppression des ressources BouncyCastle que l'application ne charge jamais (tables de constantes post-quantiques Picnic et messages de revue des chemins de certificats, environ 1,2 Mo) ; AES-GCM, SHA-256 et PBKDF2 utilisés pour le chiffrement des sauvegardes ne sont pas affectés.
+- versionCode porté à 215 ; la révision DSHA reste 0.2.1-rc.3 et le suffixe du DSH intégré est 0.2.1-rc.5 ; le périmètre de build et de recette suit cette exécution et le reçu de la Release.

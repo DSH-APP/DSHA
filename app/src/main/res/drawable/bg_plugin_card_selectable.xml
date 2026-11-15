@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UI v5 方案 A：插件双栏左侧卡片。选中时强调色描边 + 浅蓝底，未选中与 bg_shell_card 相同。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/shell_surface" />
+            <corners android:radius="@dimen/shell_launch_radius_card" />
+            <stroke android:width="2dp" android:color="@color/shell_accent" />
+        </shape>
+    </item>
+    <item android:drawable="@drawable/bg_shell_card" />
+</selector>

@@ -2,6 +2,7 @@
 """显式迁移已审阅的应用文案。只替换源代码字面量，不扫描运行时用户文本。"""
 from pathlib import Path
 import argparse,json,re,xml.etree.ElementTree as ET
+from ui_language_catalog import LANGUAGES, RESOURCE_FOLDERS, load_catalog, format_signature
 
 ROOT=Path(__file__).resolve().parents[1]
 TOKEN=re.compile(r'"""[\s\S]*?"""|"(?:\\.|[^"\\])*"|//[^\n]*|/\*[\s\S]*?\*/|\'(?:\\.|[^\'\\])*\'')
@@ -61,10 +62,38 @@ def resource_value(value):
     value=value.replace('\\n','\n').replace('\\t','\t')
     return '"'+value.replace('\\','\\\\').replace('"','\\"').replace('\n','\\n').replace('\t','\\t')+'"'
 
-def resources(messages):
+def android_resources(root):
+    data=json.loads((root/'tools/i18n/android-resources.json').read_text(encoding='utf-8'))
+    if data.get('schema')!=1:raise ValueError('UI_ANDROID_RESOURCE_SCHEMA')
+    for key in ('standardEdition','pluginCount'):
+        if set(data.get(key,{}))!=set(LANGUAGES):raise ValueError('UI_ANDROID_RESOURCE_LANGUAGES: '+key)
+    required={'ar':{'zero','one','two','few','many','other'},'ru':{'one','few','many','other'}}
+    for tag in LANGUAGES:
+        edition=data['standardEdition'][tag]
+        if not isinstance(edition,str) or not edition.strip():raise ValueError('UI_ANDROID_EDITION_EMPTY: '+tag)
+        items=data['pluginCount'][tag]
+        if not isinstance(items,dict) or not required.get(tag,{'other'}).issubset(items):
+            raise ValueError('UI_ANDROID_PLURAL_QUANTITIES: '+tag)
+        if set(items)-{'zero','one','two','few','many','other'}:raise ValueError('UI_ANDROID_PLURAL_QUANTITY: '+tag)
+        for value in items.values():
+            if not isinstance(value,str) or format_signature(value)!=['d']:
+                raise ValueError('UI_ANDROID_PLURAL_FORMAT: '+tag)
+    return data
+
+def write_resource(target,doc,check):
+    ET.indent(doc,space='    ')
+    expected=ET.tostring(doc,encoding='utf-8',xml_declaration=True)
+    if check:
+        if not target.exists() or target.read_bytes()!=expected:raise ValueError('UI_RESOURCE_STALE: '+str(target))
+    else:
+        target.parent.mkdir(parents=True,exist_ok=True)
+        if not target.exists() or target.read_bytes()!=expected:target.write_bytes(expected)
+
+def resources(messages,catalogs,root=ROOT,migrate=True,check=False):
+    typed=android_resources(root)
     lookup={item['zh']:item for item in messages if item['en']};used={}
-    for file in (ROOT/'app/src/main/res').rglob('*.xml'):
-        if file.name=='ui_strings.xml' or 'values-en' in str(file):continue
+    for file in (root/'app/src/main/res').rglob('*.xml') if migrate else []:
+        if file.name=='ui_strings.xml' or file.parent.name.startswith('values-'):continue
         original=file.read_text(encoding='utf-8');text=original
         def replace(match):
             raw=match[2]
@@ -77,25 +106,56 @@ def resources(messages):
         text=re.sub(r'(android:(?:text|hint|contentDescription|label|title|summary|prompt)=)"([^"]*)"',replace,text)
         if text!=original:file.write_text(text,encoding='utf-8',newline='\n')
     # 保持已生成的条目，使重复执行不会清掉现有资源引用。
-    existing=ROOT/'app/src/main/res/values/ui_strings.xml'
+    existing=root/'app/src/main/res/values/ui_strings.xml'
     if existing.exists():
         by_id={'ui_'+m['id']:m for m in messages if m['en']}
         for node in ET.parse(existing).getroot():
             if node.attrib['name'] in by_id:used[node.attrib['name']]=by_id[node.attrib['name']]
-    originals=ET.parse(ROOT/'app/src/main/res/values/strings.xml').getroot()
-    english={node.attrib['name']:lookup[node.text] for node in originals if node.text in lookup}
-    for folder,items,field in [('values',used,'zh'),('values-en',dict(used,**english),'en')]:
+    named={}
+    for file in (root/'app/src/main/res/values').glob('*.xml'):
+        if file.name=='ui_strings.xml':continue
+        for node in ET.parse(file).getroot():
+            if node.tag=='string' and node.get('translatable')!='false' and node.text in lookup:
+                named[node.attrib['name']]=lookup[node.text]
+    for tag in LANGUAGES:
+        folder=RESOURCE_FOLDERS[tag]
+        items=used if tag=='zh' else dict(used,**named)
+        # Existing hand-maintained locale resources already own these names.
+        existing_names=set()
+        existing_plurals={}
+        for file in (root/f'app/src/main/res/{folder}').glob('*.xml'):
+            if file.name!='ui_strings.xml':
+                for node in ET.parse(file).getroot():
+                    if node.tag=='string':existing_names.add(node.get('name'))
+                    elif node.tag=='plurals':existing_plurals[node.get('name')]=node
         doc=ET.Element('resources')
-        for name,item in sorted(items.items()):ET.SubElement(doc,'string',name=name,formatted='false').text=resource_value(item[field])
-        ET.indent(doc,space='    ');target=ROOT/f'app/src/main/res/{folder}/ui_strings.xml';target.parent.mkdir(parents=True,exist_ok=True)
-        ET.ElementTree(doc).write(target,encoding='utf-8',xml_declaration=True)
-    print('XML language resources:',len(used),'+',len(english),'existing names')
+        for name,item in sorted(items.items()):
+            if name not in existing_names:
+                ET.SubElement(doc,'string',name=name,formatted='false').text=resource_value(catalogs[tag][item['id']])
+        plugin_count=typed['pluginCount'][tag]
+        if 'plugin_count' in existing_plurals:
+            actual={item.get('quantity'):item.text for item in existing_plurals['plugin_count']}
+            if actual!=plugin_count:raise ValueError('UI_ANDROID_EXISTING_PLURAL_STALE: '+tag)
+        else:
+            plural=ET.SubElement(doc,'plurals',name='plugin_count')
+            for quantity,value in plugin_count.items():ET.SubElement(plural,'item',quantity=quantity).text=resource_value(value)
+        write_resource(root/f'app/src/main/res/{folder}/ui_strings.xml',doc,check)
+        edition=ET.Element('resources')
+        ET.SubElement(edition,'string',name='edition_description').text=resource_value(typed['standardEdition'][tag])
+        write_resource(root/f'app/src/standard/res/{folder}/edition.xml',edition,check)
+    print('XML language resources:',len(used),'+',len(named),'existing names x',len(LANGUAGES),'languages')
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--scope',choices=['ui','all'],default='ui');args=parser.parse_args()
-    messages=json.loads((ROOT/'tools/i18n/messages.json').read_text(encoding='utf-8'));translated={m['zh'] for m in messages if m['en']}
+    parser=argparse.ArgumentParser();parser.add_argument('--scope',choices=['ui','all'],default='ui')
+    parser.add_argument('--root',type=Path,default=ROOT)
+    parser.add_argument('--resources-only',action='store_true',help='Generate locale resources without rewriting Java/layout sources')
+    parser.add_argument('--check',action='store_true',help='Check deterministic resources without writing files')
+    args=parser.parse_args();ROOT=args.root
+    messages,catalogs=load_catalog(ROOT);translated={m['zh'] for m in messages if m['en']}
     total=0
-    for tree in ['app/src/main/java/com/deepseekharness/app','app/src/low/java']:
-        for file in (ROOT/tree).rglob('*.java'):
-            if args.scope=='all' or '/ui/' in str(file).replace('\\','/'):total+=source(file,translated)
-    resources(messages);print('Localized source literals:',total)
+    if not args.resources_only and not args.check:
+        for tree in ['app/src/main/java/com/deepseekharness/app']:
+            for file in (ROOT/tree).rglob('*.java'):
+                if args.scope=='all' or '/ui/' in str(file).replace('\\','/'):total+=source(file,translated)
+    resources(messages,catalogs,ROOT,migrate=not args.resources_only and not args.check,check=args.check)
+    print('Localized source literals:',total)

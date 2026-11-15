@@ -6,8 +6,14 @@ import java.io.File;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -393,5 +399,57 @@ public final class JvmBackupFileSystemTest {
       offsets[count] = used;
       return used;
     }
+  }
+
+  @Test
+  public void currentSnapshotReadsAcrossAtomicReplacementDuringHeartbeat() throws Exception {
+    File target = new File(temporary.getRoot(), "snapshot.json");
+    Files.writeString(target.toPath(), "0".repeat(4096));
+    JvmBackupFileSystem filesystem = new JvmBackupFileSystem();
+    var pool = Executors.newSingleThreadExecutor();
+    AtomicBoolean running = new AtomicBoolean(true);
+    try {
+      Future<?> writer =
+          pool.submit(
+              () -> {
+                int round = 1;
+                try {
+                  while (running.get()) {
+                    File next = new File(temporary.getRoot(), "snapshot.next");
+                    Files.writeString(next.toPath(), Integer.toString(round++ % 10).repeat(4096));
+                    Files.move(
+                        next.toPath(),
+                        target.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE);
+                  }
+                } catch (Exception error) {
+                  throw new IllegalStateException(error);
+                }
+                return null;
+              });
+      for (int i = 0; i < 100; i++) {
+        byte[] bytes = filesystem.currentSnapshot(target, 64 * 1024);
+        assertEquals(4096, bytes.length);
+        assertEquals(bytes[0], bytes[4095]);
+      }
+      running.set(false);
+      writer.get(10, TimeUnit.SECONDS);
+    } finally {
+      running.set(false);
+      pool.shutdownNow();
+    }
+  }
+
+  @Test
+  public void currentSnapshotEnforcesByteLimit() throws Exception {
+    File file = temporary.newFile("snapshot");
+    Files.writeString(file.toPath(), "0123456789");
+    JvmBackupFileSystem filesystem = new JvmBackupFileSystem();
+    assertEquals(
+        "0123456789", new String(filesystem.currentSnapshot(file, 10), StandardCharsets.UTF_8));
+    IOException failure =
+        assertThrows(IOException.class, () -> filesystem.currentSnapshot(file, 9));
+    assertEquals("METADATA_LIMIT", failure.getMessage());
   }
 }

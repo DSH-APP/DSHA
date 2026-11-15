@@ -38,7 +38,7 @@ final class PreviewAuth {
               String error = null;
               try {
                 if (url.isEmpty())
-                  error = com.deepseekharness.app.util.UiText.text("Web 尚未就绪，请返回启动页查看服务状态");
+                  error = com.deepseekharness.app.util.UiText.text("Web 未就绪，请回启动页");
                 else {
                   cookie = controller.exchangeDshAuthCookie();
                   if (cookie == null) error = controller.getWebAuthFailure();

@@ -72,7 +72,9 @@ SKIP = {".pnpm-store", ".cache", "session_projcache", "dist-cache",
 # 这个文件由 make_backup 根据 native-config 重新生成，避免复制旧的或
 # 用户手工留下的明文凭据。它仍会进入清单，恢复侧可以在需要时回填。
 SKIP.add(API_KEY_FILE)
-# 仅排除 App 管理的顶层缓存；插件内同名目录与配对密钥均属于备份内容。
+# 仅排除 App 管理的顶层缓存；插件内同名目录属于备份内容。
+# ADB 配对密钥 .dsh/adbkeys 经 credential-paths.json 的 backupMachine 按本机状态排除：
+# 不进备份 / 导出，恢复旧归档时也不覆盖本机现有密钥。
 TOP_CACHE = {"plugin-previews", "plugin-updates.json", ".plugins.lock"}
 # APK 管理的缓存只有摘要一致时才排除；用户修改或另加的文件仍备份。
 def adb_wheel_identity():

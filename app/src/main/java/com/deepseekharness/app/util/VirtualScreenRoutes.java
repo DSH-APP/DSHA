@@ -79,4 +79,36 @@ public final class VirtualScreenRoutes {
     if (route == null || !route.startsWith(prefix)) return false;
     return mutates(route.substring(prefix.length()));
   }
+
+  /** 该端点会把界面内容返回给调用方（像素、语义树、输入框文本），敏感分类对它们也生效。 */
+  public static boolean readsContent(String operation) {
+    if (operation == null) return false;
+    switch (operation) {
+      case "see":
+      case "tree":
+      case "editor":
+      case "anchor":
+      case "anchored-click":
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /** 该端点会写入文本；密码界面的文本读写是输入层硬阻断，不再先走一次可被误解的确认。 */
+  public static boolean writesText(String operation) {
+    if (operation == null) return false;
+    switch (operation) {
+      case "type":
+      case "edit":
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /** 需要敏感界面分类的端点：读取内容或注入输入；生命周期端点（status/close/preview）不需要。 */
+  public static boolean classified(String operation) {
+    return mutates(operation) || readsContent(operation);
+  }
 }

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.1-rc.5",
   "module": "@deepseek-ai/dsh-client-ui-settings/lib/client.js",
   "sourceSha256": "0555eec2df1ca392a1167e637f287ac9963dbd2b0a230089c2a41be079c490e3",
   "requiredAnchors": [

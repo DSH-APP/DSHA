@@ -11,8 +11,8 @@
     ]
   },
   "proxySoname": "libdsha-proroot-compat.so",
-  "proxySourceSha256": "36f444b3b9ffaa38b5d3d1fb8ffd3375deafc2f327045289794b5b8e9a466e9f",
-  "proxySha256": "c693728a15bfef86eb52731517da2d06e67474459eeb883e31a4fa75dff0592d",
+  "proxySourceSha256": "8ded54f347be46cba7a9f60cccf28cbd984a7a43540788b4671f9d757b7087de",
+  "proxySha256": "175f6b628ad62824c673e75bc0e7e22453d5b9cccbf3920e59d1df1bde4cdd7b",
   "proxyNeeded": [],
   "proxyRpath": [],
   "entrySoname": "libdsha-proroot-linker.so",
@@ -60,5 +60,12 @@
     "suffix": "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
     "position": "one optional pair immediately after original runtime preload",
     "vendorProducer": "libproroot.so run_child_exec 0xab98..0xaba8; format anchor0x2cd0"
+  },
+  "gnuFcntl": {
+    "F_DUPFD": 0,
+    "F_DUPFD_CLOEXEC": 1030,
+    "aarch64SyscallNumber": 25,
+    "vendorDefect": "libproroot-runtime.so v1.2.8 fcntl stores -(proroot_raw_syscall6 result) into errno; the helper already returns -1 with errno set, so every failure becomes EPERM",
+    "vendorTrackedCommands": "F_DUPFD and F_DUPFD_CLOEXEC are forwarded to the vendor (drm/seat/netlink dup tracking); all other commands use the kernel syscall directly"
   }
 }

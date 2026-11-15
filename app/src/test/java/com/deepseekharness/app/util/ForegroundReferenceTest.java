@@ -15,15 +15,15 @@ public class ForegroundReferenceTest {
   }
 
   @Test
-  public void oldWebDestroyCannotClearGeckoOrRecreatedHost() {
+  public void oldWebDestroyCannotClearReplacementOrRecreatedHost() {
     ForegroundReference<Object> state = new ForegroundReference<>();
-    Object web = new Object(), gecko = new Object(), recreated = new Object();
+    Object web = new Object(), replacement = new Object(), recreated = new Object();
     state.resumed(web);
-    state.resumed(gecko);
+    state.resumed(replacement);
     state.left(web);
-    assertSame(gecko, state.current());
+    assertSame(replacement, state.current());
     state.resumed(recreated);
-    state.left(gecko);
+    state.left(replacement);
     assertSame(recreated, state.current());
   }
 

@@ -1,6 +1,6 @@
 # DSHA project architecture and feature-maintenance handbook
 
-> Translation verified: 2026-10-21. Source baseline: released F10 `087724c` and the current Chinese build190/F12 maintenance handbook and production call chain. F11 is an unpublished local checkpoint, not another released version. This complete feature/code map is not a new acceptance report and changes no runtime privileges, data format, or APK. Final identity and software/APK/asset scope are in the [English README](../../README.en.md), [release introduction](release-introduction.md), [app/build.gradle](../../app/build.gradle), and [F12 record](releases/v0.2.1-rc.2-build190-fix12-20261021.md); no final version or test total is prefilled here. Device, ADB, real-account/model-conversation, and long-duration work retain the delivery record's paused boundaries; host tests are not phone-performance measurements. The [F11 receipt](../releases/v0.2.1-rc.2-build190-fix11-20261021.md) remains a historical local record.
+> Translation baseline: build356. This English handbook mirrors the current Chinese maintenance handbook, production call chain and current package identity; F10/F11/build190 records remain historical and cannot serve as evidence for this build. It is a feature/code map, not an acceptance report. Final identity and software/APK/asset scope are in the [English README](../../README.en.md), [release introduction](release-introduction.md), [app/build.gradle](../../app/build.gradle), and this build's CI/Release receipt; no final test total is prefilled here. Device, ADB, real-account/model-conversation and long-duration work require their own records; host tests are not phone-performance measurements.
 
 ## 1. Reading order, project provenance, and current boundaries
 
@@ -21,17 +21,16 @@ Read the [README](../../README.en.md) first, then choose references for the area
 | [Module map](module-map.md) | State ownership and collaborators across layers |
 | [Security model](security-model.md) | Actual same-UID, plugin, bridge, and authorization boundaries |
 
-DSHA is an Android host and adaptation project. It embeds upstream DSH and adds installation, lifecycle, device bridges, and data protection. [DeepSeek's deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) is upstream; this maintenance branch, its private prerelease repository, and its Android changes do not represent an official DeepSeek release or certification. The DSHA project originates from [DSH-APP/DSHA](https://github.com/DSH-APP/DSHA), with current maintenance/distribution in [DSHA-prerelase](https://github.com/ym2025szz/DSHA-prerelase). Private pages require access rights.
+DSHA is an Android host and adaptation project. It embeds upstream DSH and adds installation, lifecycle, device bridges, and data protection. [DeepSeek's deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) is upstream; this maintenance branch, its public prerelease repository, and its Android changes do not represent an official DeepSeek release or certification. The DSHA project originates from [DSH-APP/DSHA](https://github.com/DSH-APP/DSHA), with current maintenance/distribution in [DSHA-Sunset-mod](https://github.com/SunsetRNE/DSHA-Sunset-mod).
 
-Read the [npm manifest](../../tools/dsh-runtime/package.json) and [complete lock](../../tools/dsh-runtime/package-lock.json) to establish the embedded DSH version; do not infer it from the upstream default branch. The mobile UI is the third-party [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) plugin. Its 3.2.1 source is pinned to an actual main commit, rather than an unmodified tag of the same name; see the [upstream lock](../../tools/mobile-plugin-upstream.lock.json). Local patches, fixed archives, licenses, and reproducibility scope have separate records. “Open source” does not imply every vendor binary can be rebuilt.
+Read the [npm manifest](../../tools/dsh-runtime/package.json) and [complete lock](../../tools/dsh-runtime/package-lock.json) to establish the embedded DSH version; do not infer it from the upstream default branch. The mobile UI is the third-party [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) plugin. Its 3.3.1 source is pinned to upstream main `4e71eb67` (upstream renumbered the host-0.2.2 3.4.0 content as 3.3.1), but the packaged bytes carry local patches and are not an unmodified copy of that tag; see the [upstream lock](../../tools/mobile-plugin-upstream.lock.json). Local patches, fixed archives, licenses, and reproducibility scope have separate records. “Open source” does not imply every vendor binary can be rebuilt.
 
 | Production choice in the source | Maintenance implication |
 |---|---|
 | Java 17, Material3, single `:app` module | Native UI/platform bridges use Java; no new Kotlin bypass |
-| `dsh.android.client`, historical E7E3 certificate, non-debuggable release | Actual package/certificate checks establish upgrade compatibility; changing signatures is not an upgrade |
-| Standard: minSdk 30, system WebView, arm64 | APK delivery described by the source record; system WebView still depends on the device |
-| Low: minSdk 23, Gecko compatibility path, arm64 | Source/software checks retained; the source record did not deliver a new Low APK or device result |
-| Ubuntu base10, DSH 0.2.1-rc.2 | Base environment, DSH, APK, and data format have separate identities |
+| `io.github.sunsetrne.dsha`, Mod-owned certificate (see `ci/release-identity.json`), non-debuggable release | Actual package/certificate checks establish upgrade compatibility; changing signatures is not an upgrade |
+| Standard: minSdk 30, system WebView, arm64 | The only build line; the Low/GeckoView line was removed and Android 10 or below is no longer supported. System WebView still depends on the device |
+| Ubuntu base10, DSH 0.2.1-rc.5 | Base environment, DSH, APK, and data format have separate identities |
 | proot default, proroot explicit option | No production bxroot execution; old branch constraints do not override this choice |
 | PiP off by default | System picture-in-picture is permitted only after explicit user enablement |
 | Models and API keys configured in Web | Native model wizard, configuration-page model editing, and production routes are removed |
@@ -52,13 +51,13 @@ Main's bottom navigation has Launch, Terminal, Plugins, and Settings. A separate
 | Plugin catalog, install, toggle, update | PluginFragment / PluginInstallActivity | Check package format, dependencies, and actual loading separately |
 | Root, Shizuku, ADB, and grants | DeviceGrantsFragment / AdbPairActivity | A channel toggle, actual grant, and connected state are different |
 | Observe/control the physical screen | Accessibility, device bridge, built-in tools | Current target, screen policy, and system capability must all hold |
-| Independent virtual screen and node actions | VirtualScreenActivity | Experimental Standard capability, not proof of Low support |
+| Independent virtual screen and node actions | VirtualScreenActivity | Standard-only capability (API 30+); Android 10 and below are not supported |
 | Save a one-click backup | Data and backups → One-click backup | Safely stops before export; user restarts afterward |
 | More export, restore, verification | NativeDataActivity | Read fully, validate, and preflight before transaction commit |
 | Browse, save, share files | WorkspaceFilesActivity | SAF/Provider controlled streams; no arbitrary local path from Web |
 | Automatic backups | AutomaticBackupActivity | Scheduling is system-constrained; uninstall survival is not guaranteed |
 | Workspace/storage maintenance | StorageActivity / StorageHelpActivity | External workspace contents are not automatically scanned/cleaned |
-| User skills | SkillsActivity | Imports documents into official skill directories; does not execute imported text |
+| User skills | SkillsFragment (Settings sub-page) | Imports documents into official skill directories; does not execute imported text; single column or side-by-side by page width |
 | Startup diagnosis/recovery | DiagnosticActivity / StartupRecoveryActivity | Recovery and ordinary plugin queries use different state criteria |
 | Independent emergency DSH | RecoveryActivity / RecoveryWebActivity | Independent runtime root; repair writes require native confirmation |
 | App updates | UpdateActivity / UpdateDownloadService | APK updates differ from managed-environment updates |
@@ -72,7 +71,7 @@ Main's bottom navigation has Launch, Terminal, Plugins, and Settings. A separate
 | Setting | Without explicit selection | Change/restore boundary |
 |---|---|---|
 | Shell confirmation | On | Distinguish app confirmation, DSH approval, and native terminal execution |
-| DSH tool permission mode | `danger-full-access` | workspace-write/read-only are options, not Android UID isolation |
+| DSH runtime permission mode | Fixed `danger-full-access` | Build191 removes the native three-mode selector and legacy-value effects; existing session/plugin policies and independent read-only recovery remain separate, without Android UID isolation |
 | Root Shell | Off | Enabling neither creates su nor proves actual UID0 |
 | App update check | On | Controls checking intent, not completed download/installation |
 | Desktop Web mode | Off | Browser presentation choice, not an engine change |
@@ -91,7 +90,7 @@ flowchart TB
   APP --> LIFE[HarnessController / WebLifecycleController]
   LIFE --> START[StartupPipeline / RuntimeLauncher]
   START --> LINUX[Private Ubuntu / Node / DSH]
-  UI --> BROWSER[WebView or Low Gecko]
+  UI --> BROWSER[System WebView]
   BROWSER <--> LINUX
   LINUX --> HTTP[Authenticated local HttpShellService bridge]
   HTTP --> CAP[Capability and consent policy]
@@ -159,7 +158,7 @@ Discuss maintenance, repair, rebuilding, and APK upgrade separately:
 
 ## 6. Native navigation, both browsers, PiP, and keyboard
 
-Main provides native navigation; WebPreviewActivity/Low GeckoPreviewActivity hold the page instance. Within a runtime generation, full screen, background, and PiP reuse the same page rather than “restoring” drafts by recreating it. `BrowserTasks` and task policy record explicit navigation origins, distinguishing system Home/background from deliberate return to Main. After Home from Web, the desktop icon should restore same-generation Web; deliberate Back/home-page navigation returns to Main. A new generation cannot claim an old Web task. Retiring an empty old host must match current identity. A successful `moveTaskToBack()` alone does not prove Main actually became visible.
+Main provides native navigation; WebPreviewActivity holds the page instance (the Low/Gecko implementation was removed with the low source set in build209).
 
 PiP is off in the app by default; system PiP permission is not user enablement inside the app. Home, autoEnter, fullscreen return, and old-task re-entry all pass the same explicit-intent gate. Disabling PiP returns to normal home navigation while retaining the active page, sessions, and data. Native system bars stay visible. Safe regions cover stable status bars, cutouts, captions, and bottom system areas. PiP body insets are zero; fullscreen return uses current system state and idempotently clears only app-owned offsets/scales.
 
@@ -184,7 +183,7 @@ Plugin entries include native management, the Web plugin page, link activation, 
 
 [PluginRepository](../../app/src/main/java/com/deepseekharness/app/core/PluginRepository.java) connects native UI to guest tools. [plugin-manager.py](../../app/src/main/assets/plugin-manager.py) resolves sources, discovers, and installs; [plugin-transactions.py](../../app/src/main/assets/plugin-transactions.py) manages candidates, originals, and commit journals. The [tools lock](../../tools/runtime-tools.lock.json) defines bundled pnpm, not a temporary global version on the phone. Production dependencies permit unlocked resolution, lifecycle scripts, and pnpmfile; retain actual resolved locks and dependency-directory records. Download-stage script suppression must not be described as a guarantee that the whole installation never executes third-party code.
 
-Checked candidates commit/enable automatically, while deliberate user disablement and safe-mode intent remain authoritative. Installation-directory existence, profile registration/enablement, and actual loading in current Web are three layers; list text does not replace load results. Uncommitted transactions block ordinary startup from overwriting scenes; committed old journals cannot roll back later user changes. Removal acts on exact object identity; old dependency links follow their actual version contract without recursive external deletion. Signed APK managed proof rebuilds system plugins; user source, actual dependencies, and wrappers are archived separately. Before mobile UI updates, check whether upstream absorbed or withdrew differences; do not reapply a whole historical patch set. User skills enter through [SkillsActivity](../../app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java). See [plugin operations](plugins.md); a historical title does not override the current lock.
+Checked candidates commit/enable automatically, while deliberate user disablement and safe-mode intent remain authoritative. Installation-directory existence, profile registration/enablement, and actual loading in current Web are three layers; list text does not replace load results. Uncommitted transactions block ordinary startup from overwriting scenes; committed old journals cannot roll back later user changes. Removal acts on exact object identity; old dependency links follow their actual version contract without recursive external deletion. Signed APK managed proof rebuilds system plugins; user source, actual dependencies, and wrappers are archived separately. Before mobile UI updates, check whether upstream absorbed or withdrew differences; do not reapply a whole historical patch set. User skills enter through [SkillsFragment](../../app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java). See [plugin operations](plugins.md); a historical title does not override the current lock.
 
 Discovery filters small manifests and actual patch bundles first, authenticates proof once per command/request, and deduplicates canonical directories. It does not replace full FILE/mode/LINK, directory membership, and race proof with cross-request stat caches. Actual Node Host bundle/full-content proof uses asynchronous work with at most two global content scans, reads of at most 64 KiB, and event-loop yields. Removal preflights outside writer/HMR locks, then fully rechecks the actual target inside commit. Read-only list does not occupy the profile writer lock; these optimizations neither skip content proof nor relax deletion targets.
 
@@ -204,7 +203,7 @@ Each privileged channel requires actual availability:
 | Shizuku | Available service Binder, user authorization, and valid UserService binding | Independent of the ADB toggle; Binder presence is not completed authorization |
 | ADB | Actual pairing/connection, port/key identity, current connection generation | Pairing and connection ports differ; never hard-code them |
 
-Ordinary `devicePlan/deviceExecute` selects Root → Shizuku → ADB; force/SMS paths have dedicated rules. Unknown results after sending cannot cause replay on another channel. Only an explicit NOT_SENT permits revoking an uncommitted ticket under its controlled contract. Wireless pairing UI mainly targets Android11+; older paths depend on actual ADB TCP, Root, or Shizuku conditions. The app neither creates Root nor completes every protected system-setting grant for the user.
+`devicePlan/deviceExecute` and the virtual screen share the channel order in `util/DeviceChannelOrder`: Root → Shizuku → ADB, with ADB ahead of Shizuku on API≥37 when the ADB connection is verified. Device commands pick once from strictly usable channels, then once from authorized channels; force/SMS/SHELL paths have dedicated rules. Unknown results after sending cannot cause replay on another channel. Only an explicit NOT_SENT permits revoking an uncommitted ticket under its controlled contract. Wireless pairing UI mainly targets Android11+; older paths depend on actual ADB TCP, Root, or Shizuku conditions. The app neither creates Root nor completes every protected system-setting grant for the user.
 
 Global toggles, DSH tool approval, screen confirmation, and Android permissions are separate layers. Global consent may reduce app ASK prompts, but cannot override DENY, system capability, actual target, pause, or runtime-generation gates. Screen policy supports all manual, per-app rules, and allow all. Skipping confirmation does not skip current-target/observation identity checks. Invalid persistent records fail closed. After native confirmation, preserve the original and rebuild OFF, then let the user enable it. Backups do not automatically activate grants; Stop, revocation, and disconnect invalidate this run's permission or queued requests.
 
@@ -218,7 +217,7 @@ An independent `app_process` Core creates the virtual `VirtualDisplay`, with the
 
 DSH `tree/node/editor`, `see/anchor/anchored_click`, and native node actions have different input sources. An explicit native click cannot grant a background model an extended lease. Leaving the page or owner changes revoke current action eligibility. Closing requires exact Core exit and confirmed display release, not just a disconnected socket. UNKNOWN retains journals/barriers. Missing identity must not lead to bare-PID cleanup or automatic replay of creation/clicks.
 
-Read [virtual-screen architecture](virtual-screen-architecture.md) and [ADR 0003](adr/0003-virtual-screen-lifecycle-and-input.md) before changes. See the [virtual-screen guide](virtual-screen-guide.md) for prerequisites, and preserve the explicit unsupported boundary for Low.
+Read [virtual-screen architecture](virtual-screen-architecture.md) and [ADR 0003](adr/0003-virtual-screen-lifecycle-and-input.md) before changes. See the [virtual-screen guide](virtual-screen-guide.md) for prerequisites, and preserve the explicit unsupported boundary for Android 10 and below.
 
 ## 10. Terminal, attachments, files, sharing, and microphone
 
@@ -253,7 +252,7 @@ flowchart LR
   EXT[External workspace] -.maintain private references only.-> JOB
 ```
 
-One-click backup reuses `OneClickBackup`, `NativeBackupJobs`, and the existing v5 engine rather than creating another lightweight format. Standard publishes directly to `Download/DSHA`; Low old-system flow reuses a persistent grant after first directory selection. Backup safely stops DSH and running tasks, generates/verifies contents, then delivers the file. It does not restart business work automatically. It includes application data recorded in the actual manifest and the current in-app workspace; users must back up external workspace contents separately.
+One-click backup reuses `OneClickBackup`, `NativeBackupJobs`, and the existing v5 engine rather than creating another lightweight format. Standard publishes directly to `Download/DSHA`; Low was removed, and the old-system SAF directory flow is historical only. Backup safely stops DSH and running tasks, generates/verifies contents, then delivers the file. It does not restart business work automatically. It includes application data recorded in the actual manifest and the current in-app workspace; users must back up external workspace contents separately.
 
 More options support scope selection, import preflight, historical readers, verification, restore, and re-export of verified copies. New user exports are password-free `DSHA-data-v5-<UUID>.tar.gz`, not renamed encrypted files. Internal automatic copies remain encrypted. Old encrypted originals require their original password to read, and failure does not overwrite them. Password-free exports provide integrity, not confidentiality; chats, projects, and `.env` may still contain secrets. One-click excludes the native API key by default. Other entries follow the actual request/user choice, not an old preference generalized across every path. Excluding that key is not automatic redaction of all exported contents. See [host v5 archive](backup-format-v5.md).
 
@@ -282,7 +281,7 @@ Old-port draft restore separately uses `BrowserOriginRestoreActivity` and a cont
 | `tools/` and locks | Generation, patches, host checks, release checks | Update source and deployed bytes together |
 | `res/`, `i18n/` | Material resources, UiText, bilingual indexes | No credential disclosure in text or dead-page remnants |
 
-Production Java is in [app source](../../app/src/main/java/com/deepseekharness/app/), Low adaptations in the [low source set](../../app/src/low/), and tests in [host JUnit](../../app/src/test/java/com/deepseekharness/app/). Historical directory counts are not live architecture. Build/fixture-only scripts must not be presented as user features.
+Production Java is in [app source](../../app/src/main/java/com/deepseekharness/app/) and tests are in [host JUnit](../../app/src/test/java/com/deepseekharness/app/); the historical low source set was removed in build209 and only the Standard line remains. Historical directory counts are not live architecture. Build/fixture-only scripts must not be presented as user features.
 
 ## 14. Verification, builds, and the modification workflow
 
@@ -324,7 +323,7 @@ To make a change concrete and reviewable:
 - Backup generation, Provider publication, complete readback verification, and complete data coverage cannot be collapsed into one claim.
 - Unreadable credentials are not unconfigured; unknown data is not garbage; historical receipts are not current scenes.
 - Same-origin bridge checks, tool approval, and proot do not strongly sandbox arbitrary third-party code.
-- Both flavors passing software checks does not mean a Low APK was delivered this round; passing browser fixtures does not cover every ROM/input method on phones.
+- Passing software checks for Standard does not cover every Android 11+ ROM or input method; passing browser fixtures does not cover every phone.
 - Adding manuals or uploading source changes neither a signed APK nor the scope of device/long-duration validation.
 
 Continue with [device permissions](device-permissions-architecture.md), [runtime and data](runtime-data-plugin-architecture.md), [engines](runtime-engines.md), [networking](ports-and-networking.md), [DNS](dns-configuration.md), [virtual screens](virtual-screen-architecture.md), [provenance](references-and-provenance.md), and [BUILD](../../BUILD.en.md).

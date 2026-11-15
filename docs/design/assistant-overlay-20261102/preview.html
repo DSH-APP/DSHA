@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>悬浮助手重构原型 2026-11-02</title>
+<style>
+  :root {
+    --bg: #eef1f6; --surface: #ffffff; --surface2: #f3f5f9; --line: #dfe3ea;
+    --text: #1d2330; --sub: #5f6b7d; --accent: #3b6cf6; --accent-weak: #e7eefe;
+    --run: #22a06b; --pause: #d98a00; --danger: #d64545; --danger-weak: #fdeaea;
+    --user: #3b6cf6; --user-text: #fff; --ai: #f0f2f6; --shadow: 0 8px 28px rgba(20,30,50,.18);
+    --kbd: #d6dae2; --key: #fff;
+  }
+  .night {
+    --bg: #0f141c; --surface: #1a2432; --surface2: #222e3e; --line: #2d3a4d;
+    --text: #e8edf5; --sub: #9aa7b9; --accent: #6f93ff; --accent-weak: #263552;
+    --run: #3ccf8e; --pause: #f0b440; --danger: #ff7272; --danger-weak: #3a2228;
+    --user: #4f78f0; --user-text: #fff; --ai: #263243; --shadow: 0 8px 28px rgba(0,0,0,.5);
+    --kbd: #20262f; --key: #353d49;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 "Noto Sans CJK SC", "Noto Sans SC", sans-serif; background: var(--bg); color: var(--text); }
+  h1 { font-size: 20px; margin: 18px 24px 4px; }
+  .lead { margin: 0 24px 14px; color: var(--sub); }
+  .grid { display: grid; grid-template-columns: repeat(4, 360px); gap: 22px; padding: 0 24px 24px; }
+  .col h2 { font-size: 15px; margin: 0 0 8px; }
+  .col p.note { margin: 8px 2px 0; color: var(--sub); font-size: 12.5px; }
+  .screen { position: relative; height: 640px; border-radius: 22px; background: var(--surface2); border: 1px solid var(--line); overflow: hidden; }
+  .app { position: absolute; inset: 0; padding: 18px; color: var(--sub); }
+  .app .bar { height: 12px; border-radius: 6px; background: var(--line); margin: 10px 0; }
+  .app .bar.s { width: 60%; } .app .bar.m { width: 82%; }
+  .app .composer { position: absolute; left: 14px; right: 14px; bottom: 16px; height: 46px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); padding: 12px 14px; font-size: 13px; }
+
+  /* 收起：胶囊 */
+  .pill { position: absolute; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 6px 0 12px;
+          border-radius: 22px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--run); flex: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--run) 25%, transparent); }
+  .dot.pause { background: var(--pause); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pause) 25%, transparent); }
+  .pill .t { font-weight: 600; } .pill .s { color: var(--sub); max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .grip { width: 28px; height: 32px; display: grid; place-items: center; color: var(--sub); border-radius: 10px; }
+  .grip i { display: block; width: 14px; height: 2px; background: currentColor; border-radius: 1px; margin: 2px 0; }
+
+  /* 展开：卡片 */
+  .card { position: absolute; left: 14px; right: 14px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line);
+          box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; }
+  .head { display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 6px 0 14px; border-bottom: 1px solid var(--line); }
+  .head .title { font-weight: 600; } .head .state { color: var(--sub); }
+  .head .handle { position: absolute; left: 50%; top: 5px; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--line); }
+  .sp { flex: 1; }
+  .ib { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: var(--sub); font-size: 18px; position: relative; }
+  .ib.on { background: var(--accent-weak); color: var(--accent); }
+  .ib.send { background: var(--accent); color: #fff; }
+  .ib.off { opacity: .45; }
+  .log { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .msg { max-width: 86%; padding: 8px 11px; border-radius: 14px; font-size: 13px; }
+  .msg.u { align-self: flex-end; background: var(--user); color: var(--user-text); border-bottom-right-radius: 4px; }
+  .msg.a { align-self: flex-start; background: var(--ai); border-bottom-left-radius: 4px; }
+  .msg.live { color: var(--sub); }
+  .step { font-size: 12px; color: var(--sub); display: flex; gap: 6px; align-items: center; }
+  .step b { width: 6px; height: 6px; border-radius: 50%; background: var(--run); }
+  .inputrow { display: flex; align-items: center; gap: 6px; padding: 8px 8px 10px 10px; border-top: 1px solid var(--line); }
+  .field { flex: 1; min-height: 40px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--line); padding: 9px 12px; color: var(--sub); }
+  .field.focus { border-color: var(--accent); color: var(--text); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-weak); }
+  .caret { display: inline-block; width: 1.5px; height: 16px; background: var(--accent); vertical-align: -3px; margin-left: 1px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--sub); padding: 0 14px 6px; }
+
+  .menu { position: absolute; right: 10px; top: 48px; width: 196px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line);
+          box-shadow: var(--shadow); padding: 6px; z-index: 3; }
+  .menu div { height: 42px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border-radius: 10px; }
+  .menu div.dis { opacity: .45; }
+  .menu hr { border: 0; border-top: 1px solid var(--line); margin: 6px 4px; }
+  .menu .danger { color: var(--danger); }
+  .menu .danger.armed { background: var(--danger-weak); font-weight: 600; }
+
+  .kbd { position: absolute; left: 0; right: 0; bottom: 0; height: 220px; background: var(--kbd); padding: 10px 6px; display: grid;
+         grid-template-columns: repeat(10, 1fr); gap: 6px; align-content: start; }
+  .kbd span { height: 40px; border-radius: 7px; background: var(--key); }
+  .tag { position: absolute; z-index: 5; font-size: 11.5px; padding: 3px 8px; border-radius: 8px; background: var(--accent); color: #fff; white-space: nowrap; }
+
+  /* 通知 / 岛 */
+  .shade { position: absolute; inset: 0; background: color-mix(in srgb, var(--bg) 80%, transparent); padding: 14px; }
+  .noti { border-radius: 18px; background: var(--surface); border: 1px solid var(--line); padding: 12px 14px; box-shadow: var(--shadow); }
+  .noti .r1 { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--sub); }
+  .noti .r2 { font-weight: 600; margin: 6px 0 2px; } .noti .r3 { color: var(--sub); font-size: 13px; }
+  .noti .acts { display: flex; gap: 18px; margin-top: 10px; font-weight: 600; color: var(--accent); font-size: 13px; }
+  .noti .acts .danger { color: var(--danger); }
+  .reply { margin-top: 10px; display: flex; gap: 6px; }
+  .reply .field { min-height: 38px; padding: 8px 12px; }
+  .island { margin: 0 auto 14px; width: 250px; height: 36px; border-radius: 18px; background: #0b0d12; color: #fff; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 13px; }
+  .island .dot { box-shadow: none; }
+  .island.big { width: 100%; height: auto; border-radius: 26px; display: block; padding: 12px 14px; }
+  .island.big .row { display: flex; align-items: center; gap: 8px; }
+  .island.big .f { margin-top: 10px; display: flex; gap: 6px; }
+  .island.big .f div { flex: 1; height: 36px; border-radius: 12px; background: #1f2430; color: #8b93a3; padding: 8px 12px; font-size: 13px; }
+  .island.big .f b { width: 36px; height: 36px; border-radius: 12px; background: #4f78f0; display: grid; place-items: center; }
+  .legend { margin: 0 24px 24px; padding: 14px 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); color: var(--sub); font-size: 13px; columns: 2; column-gap: 36px; }
+  .legend b { color: var(--text); }
+  .legend p { margin: 0 0 8px; break-inside: avoid; }
+</style>
+</head>
+<body>
+<script>if (new URLSearchParams(location.search).get('theme') === 'night') document.body.classList.add('night');</script>
+<h1>悬浮助手重构原型 · <span id="mode">白天</span></h1>
+<p class="lead">示意稿，不是实现截图。颜色跟随 App 日夜主题；所有尺寸为 dp 级示意。</p>
+<script>if (document.body.classList.contains('night')) document.getElementById('mode').textContent = '夜间';</script>
+
+<div class="grid">
+  <!-- 1 收起 -->
+  <div class="col">
+    <h2>① 收起：可拖动胶囊</h2>
+    <div class="screen">
+      <div class="app"><div class="bar s"></div><div class="bar m"></div><div class="bar"></div><div class="bar s"></div><div class="bar m"></div>
+        <div class="composer">Web 聊天输入框（不再被挡住）</div></div>
+      <div class="pill" style="left:118px; top:382px">
+        <span class="dot"></span><span class="t">执行中</span><span class="s">正在读取屏幕…</span>
+        <span class="grip"><span><i></i><i></i><i></i></span></span>
+      </div>
+      <div class="tag" style="left:150px; top:350px">点按展开 · 按住任意处拖动</div>
+    </div>
+    <p class="note">只有状态点 + 一行状态，约 230×44。拖到哪停到哪，贴屏幕内 8dp；不显示任何按钮，单手误触不会触发动作。</p>
+  </div>
+
+  <!-- 2 展开 -->
+  <div class="col">
+    <h2>② 展开：对话卡片</h2>
+    <div class="screen">
+      <div class="app"><div class="bar s"></div><div class="bar m"></div></div>
+      <div class="card" style="top:120px; height:500px">
+        <span class="handle"></span>
+        <div class="head"><span class="dot"></span><span class="title">本机 DSH</span><span class="state">· 执行中</span><span class="sp"></span>
+          <span class="ib">⋯</span><span class="ib">—</span><span class="ib">✕</span></div>
+        <div class="log">
+          <div class="msg u">帮我把系统设置里的深色模式打开</div>
+          <div class="step"><b></b>已打开 设置 · 读屏 31 个元素</div>
+          <div class="step"><b></b>点按「显示与亮度」</div>
+          <div class="msg a">已进入显示与亮度，正在找深色模式开关。</div>
+          <div class="msg a live">生成中…</div>
+        </div>
+        <div class="sp"></div>
+        <div class="inputrow"><div class="field">回复或补充要求…</div><span class="ib">🎤</span><span class="ib send off">➤</span></div>
+      </div>
+    </div>
+    <p class="note">顶部可拖动；— 收回胶囊，✕ 隐藏悬浮窗（任务照跑，转到通知/岛）。暂停、继续、停止、打开完整会话收进 ⋯，正面只留对话和输入。</p>
+  </div>
+
+  <!-- 3 菜单 + 打字 -->
+  <div class="col">
+    <h2>③ ⋯ 菜单 / 直接打字</h2>
+    <div class="screen">
+      <div class="app"><div class="bar s"></div></div>
+      <div class="card" style="top:40px; height:360px">
+        <span class="handle"></span>
+        <div class="head"><span class="dot"></span><span class="title">本机 DSH</span><span class="state">· 执行中</span><span class="sp"></span>
+          <span class="ib on">⋯</span><span class="ib">—</span><span class="ib">✕</span></div>
+        <div class="menu">
+          <div>⏸ 暂停</div><div class="dis">▶ 继续</div><div>↗ 打开完整会话</div><hr>
+          <div class="danger armed">■ 再点一次停止</div>
+        </div>
+        <div class="log">
+          <div class="msg u">帮我把系统设置里的深色模式打开</div>
+          <div class="msg a">已进入显示与亮度，正在找深色模式开关。</div>
+        </div>
+        <div class="sp"></div>
+        <div class="chip"><span class="dot"></span>你正在输入：AI 的手机操作停在原地，发送后接着做</div>
+        <div class="inputrow"><div class="field focus">顺便把字体调大一点<span class="caret"></span></div><span class="ib">🎤</span><span class="ib send">➤</span></div>
+      </div>
+      <div class="kbd"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="tag" style="right:18px; top:12px">停止需 3 秒内再点</div>
+    </div>
+    <p class="note">点输入框才变为可聚焦并弹键盘。输入期间 AI 的手机动作原地等待（读屏照常），不取消对话；发送后消息插进当前这一轮，AI 读完接着做；不发就收起则直接继续。</p>
+  </div>
+
+  <!-- 4 隐藏后 -->
+  <div class="col">
+    <h2>④ ✕ 隐藏后：通知 / 上岛</h2>
+    <div class="screen">
+      <div class="shade">
+        <div class="island"><span class="dot"></span><b>DSH</b><span style="opacity:.75">执行中 · 读屏</span><span class="sp"></span>■</div>
+        <div class="island big">
+          <div class="row"><span class="dot"></span><b>本机 DSH · 执行中</b><span class="sp"></span><span style="opacity:.7">■ 停止</span></div>
+          <div style="opacity:.75; margin-top:4px; font-size:12.5px">已进入显示与亮度，正在找深色模式开关。</div>
+          <div class="f"><div>在岛上回复…</div><b>➤</b></div>
+        </div>
+        <div class="noti">
+          <div class="r1"><span class="dot"></span>DSHA · 手机任务状态 · 刚刚</div>
+          <div class="r2">本机 DSH · 执行中</div>
+          <div class="r3">已进入显示与亮度，正在找深色模式开关。</div>
+          <div class="reply"><div class="field">回复…</div><span class="ib send">➤</span></div>
+          <div class="acts"><span>显示悬浮窗</span><span>暂停</span><span class="danger">停止</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="note">通知始终保留：直接回复（系统 RemoteInput）、显示悬浮窗、暂停、停止。支持实时活动/上岛的系统把同一通知提升为岛，展开后可回复；不支持时只有通知，行为一致。</p>
+  </div>
+</div>
+
+<div class="legend">
+  <p><b>不变的边界</b>：停止仍需二次确认并取消当前轮；UNKNOWN 不重放；通知栏停止入口始终存在，✕ 不能把它也关掉。</p>
+  <p><b>展开 / 收起 / 拖动 / 打开会话</b>：只改界面，不暂停、不取消；几何变化只让 AI 下一步先重新读屏（已在 T13 实现）。</p>
+  <p><b>直接打字</b>：输入期间 AI 不点、不滑、不输入，最多等 60 秒；超时后 AI 收到“用户仍在输入”并停下等你。个别 ROM 若悬浮窗拿不到键盘焦点，自动退回全屏编辑页，草稿保留。</p>
+  <p><b>上岛</b>：复用现有 IslandSupport（Android 16 实时活动）与 RemoteInput；岛内能否直接打字取决于系统对实时活动回复的支持，需要真机确认，做不到时岛只显示状态与停止。</p>
+</div>
+</body>
+</html>

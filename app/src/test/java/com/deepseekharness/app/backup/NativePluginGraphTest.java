@@ -186,4 +186,55 @@ public class NativePluginGraphTest {
     assertEquals("DEPENDENCIES_CAPTURED_IN_GRAPH", graph.exclusion(detached));
     assertEquals("DEPENDENCIES_CAPTURED_IN_GRAPH", graph.exclusion(history.getParentFile()));
   }
+
+  @Test
+  public void mappedProfilesUseResolvedRootForBuiltinExclusions() throws Exception {
+    File root = temporary.newFolder();
+    File dsh = new File(root, "actual"), original = new File(root, "legacy");
+    File global = new File(root, "global");
+    write(
+        new File(dsh, "profiles/web/package.json"),
+        "{\"dependencies\":{\"dsh-web-mobile\":\"link:/root/dsha-web-mobile\"}}");
+    write(
+        new File(dsh, "profiles/web/node_modules/dsh-web-mobile/package.json"),
+        "{\"name\":\"dsh-web-mobile\"}");
+    write(new File(dsh, "profiles/web/node_modules/.bin/custom"), "keep user wrapper");
+    GuestDataResolver resolver =
+        new GuestDataResolver(
+            fs,
+            root,
+            null,
+            List.of(),
+            path -> {
+              String base = original.getAbsolutePath();
+              String value = path.getAbsolutePath();
+              return value.equals(base) || value.startsWith(base + File.separator)
+                  ? new File(dsh.getAbsolutePath() + value.substring(base.length()))
+                  : path;
+            });
+    NativePluginGraph graph = new NativePluginGraph(fs, resolver, dsh, global, root, Map.of());
+    graph.collect(new BackupControl(null));
+    File resolvedProfiles = resolver.resolve(new File(original, "profiles")).file;
+    FileBackupSource source =
+        new FileBackupSource(
+            fs,
+            "profiles",
+            "plugins",
+            resolvedProfiles,
+            false,
+            (path, node) -> graph.exclusion(new File(resolvedProfiles, path)),
+            resolver);
+    List<BackupSource.Item> items = new ArrayList<>();
+    source.walk(items::add, new BackupControl(null));
+    assertTrue(
+        items.stream()
+            .anyMatch(
+                item ->
+                    item.path.equals("web/node_modules/dsh-web-mobile")
+                        && item.kind.equals("EXCLUDED")
+                        && item.reason.equals("DEPENDENCIES_CAPTURED_IN_GRAPH")));
+    assertFalse(
+        items.stream()
+            .anyMatch(item -> item.path.equals("web/node_modules/dsh-web-mobile/package.json")));
+  }
 }

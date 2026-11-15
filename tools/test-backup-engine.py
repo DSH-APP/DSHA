@@ -228,6 +228,22 @@ class BackupTest(unittest.TestCase):
         self.assertEqual('{"active":true}',(self.root/'.dsh/plugin-safe-mode.json').read_text())
         self.assertEqual('restored-session',(self.root/'.dsh/sessions/restored.jsonl').read_text())
 
+    def test_historical_archive_adb_keys_are_not_restored(self):
+        # build322 及以前的完整备份带 .dsh/adbkeys；恢复时跳过归档里的密钥，保留本机现有配对。
+        self.put('.dsh/adbkeys/adbkey','current-device-key')
+        self.pack([('.dsh/sessions/restored.jsonl','restored-session'),('.dsh/adbkeys/adbkey','archive-key'),('.dsh/adbkeys/adbkey.pub','archive-pub'),('.dsh/adbkeys/connect_port','5555')])
+        engine.restore_archive(self.root,self.archive,'full')
+        self.assertEqual('current-device-key',(self.root/'.dsh/adbkeys/adbkey').read_text())
+        self.assertFalse((self.root/'.dsh/adbkeys/adbkey.pub').exists())
+        self.assertFalse((self.root/'.dsh/adbkeys/connect_port').exists())
+        self.assertEqual('restored-session',(self.root/'.dsh/sessions/restored.jsonl').read_text())
+
+    def test_historical_archive_adb_keys_do_not_land_without_local_keys(self):
+        self.pack([('.dsh/sessions/restored.jsonl','restored-session'),('.dsh/adbkeys/adbkey','archive-key')])
+        engine.restore_archive(self.root,self.archive,'full')
+        self.assertFalse(os.path.lexists(self.root/'.dsh/adbkeys'))
+        self.assertEqual('restored-session',(self.root/'.dsh/sessions/restored.jsonl').read_text())
+
     def test_full_restore_does_not_publish_historical_plaintext_key_or_guess_native_config(self):
         self.put('.dsh/.dsha-apikey','old-active-unknown-key')
         self.pack([('.dsh/sessions/restored.jsonl','restored'),('.dsh/.dsha-apikey','archive-key-needs-explicit-native-selection')])
@@ -529,7 +545,7 @@ class BackupTest(unittest.TestCase):
         self.put(".dsh/wheels/custom.whl", "user supplied")
         self.put(".dsh/wheels/nested/bundled.whl", "nested user data")
         self.put(".dsh/adb-wheels.tar.gz", "archive")
-        self.put(".dsh/adbkeys/adbkey", "keep pairing key")
+        self.put(".dsh/adbkeys/adbkey", "pairing key stays on this device")
         hashes = {n: hashlib.sha256(b"bundled").hexdigest() for n in ("bundled.whl", "modified.whl")}
         with patch.object(engine, "ADB_WHEEL_CACHE", hashes), patch.object(engine, "ADB_ARCHIVE_SHA256", hashlib.sha256(b"archive").hexdigest()):
             engine.make_backup(self.root, self.archive, "full")
@@ -539,7 +555,9 @@ class BackupTest(unittest.TestCase):
             self.assertNotIn(".dsh/adb-wheels.tar.gz", names)
             for kept in ("modified.whl", "custom.whl", "nested/bundled.whl"):
                 self.assertIn(".dsh/wheels/" + kept, names)
-            self.assertIn(".dsh/adbkeys/adbkey", names)
+            # ADB 私钥属于本机状态：完整备份与无密码导出都不能带走。
+            self.assertFalse(any(n == ".dsh/adbkeys" or n.startswith(".dsh/adbkeys/") for n in names))
+            self.assertNotIn(".dsh/adbkeys/adbkey", names)
 
     def test_modified_adb_cache_archive_is_kept(self):
         self.put(".dsh/adb-wheels.tar.gz", "custom archive")

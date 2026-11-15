@@ -14,7 +14,7 @@ For the project entry point, see the [architecture handbook](project-architectur
 | ADB | System adbd, pairing keys and current authenticated connection | Local wireless device-shell channel | Root, a connected accessibility service or approval of this action |
 | Accessibility | User's system settings and actual system binding | Nodes, gestures and some screenshot/screen operations | Arbitrary shell execution or permission to create a separate display |
 | DSHA local confirmation policy | DeviceGrants, CapabilityBroker and the current runtime | Decides whether an assistant request asks, allows or rejects | System permission or a device connection |
-| DSH session permission mode | Web/runtime options and tool policy | Tool constraints such as read-only and workspace-write | Android UID isolation or a strong system sandbox |
+| DSH runtime permission mode | Production Web fixes danger-full-access; build191 removes the native three-mode selector | Existing session/plugin tool policies and independent read-only recovery remain separate | Android UID isolation, a strong sandbox or extra Android capability grants |
 
 Android treats normal permissions, runtime permissions and special permissions separately. A Manifest declaration alone does not establish that every capability has been granted. [Android permissions overview](https://developer.android.com/guide/topics/permissions/overview). The checks in the last three rows are DSHA source policies, not security endorsements supplied by Android or Shizuku.
 
@@ -43,6 +43,12 @@ The current Manifest declares capabilities including recording, location, networ
 | APK installation | System installation capability and installation transaction | Entering the system installation flow does not prove installation succeeded or runtime processes exited |
 
 The API37 gate comes from current source. It does not imply identical behavior across Android versions, settings pages or ROMs. A user may revoke permission; permission may also be allowed while the actual service is disconnected. Obtain fresh facts at the use point. Choices in system dialogs still belong to the user; global confirmation cannot answer them automatically.
+
+### 2.1 Cross-app file access (SAF)
+
+Settings → Device permissions → Cross-app files uses the system `ACTION_OPEN_DOCUMENT_TREE` picker so the user grants folders one by one. It does not request `MANAGE_EXTERNAL_STORAGE` and does not widen container or rootfs path scope. The grants page shows only the short id, app label, read/write bits for the folder and the bits newly acquired by this feature recorded by `SafGrants`; "allow assistant writes" is a second local switch, and writes/deletes return `READ_ONLY` when it is off. A write-only tree is rejected when added (`WRITE_ONLY`) so the user does not end up with a half-usable grant whose read endpoints can never work.
+
+Permission queries (`getPersistedUriPermissions`, display names) run only on a background executor; the lightweight `/app/saf/trees` list never queries the Provider. Revocation releases only the read/write bits newly acquired by this feature; pending records are retried on the next access. SAF does not change Root/Shizuku/ADB authorization and never borrows them to widen the target scope; Provider denials or hangs fail with the bridge error code and do not trigger a channel fallback.
 
 ## 3. Root: finding su, user approval and execution are three steps
 

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  手机竖屏：底部胶囊只显示图标（文字作为无障碍描述与长按提示保留），胶囊压到 52dp。
+  横屏沿用 values/ 的带文字胶囊；平板（sw600dp）使用左栏，bottom_nav 隐藏，
+  shell_page_bottom / shell_nav_clearance 由 values-sw600dp 覆盖（sw 限定符优先于 port）。
+-->
+<resources>
+    <!-- 对应 BottomNavigationView labelVisibilityMode：2 = unlabeled -->
+    <integer name="shell_nav_label_visibility">2</integer>
+    <dimen name="shell_nav_height">52dp</dimen>
+    <!-- 无文字时图标居中，不再为标签预留上下内边距 -->
+    <dimen name="shell_nav_item_padding_top">0dp</dimen>
+    <dimen name="shell_nav_item_padding_bottom">0dp</dimen>
+    <!-- 52dp 高 + 10dp 底边距 + 16dp 余量 -->
+    <dimen name="shell_page_bottom">78dp</dimen>
+    <!-- shell_nav_height 52dp + shell_nav_margin_bottom 10dp -->
+    <dimen name="shell_nav_clearance">62dp</dimen>
+</resources>

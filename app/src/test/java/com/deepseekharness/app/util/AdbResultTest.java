@@ -41,4 +41,15 @@ public class AdbResultTest {
     assertFalse(AdbResult.code("1234567"));
     assertFalse(AdbResult.code("１２３４５６"));
   }
+
+  @Test
+  public void backgroundProbeAlwaysNamesAnAdbPort() {
+    // 0 会让原生层改走 root / Shizuku，探活必须始终给出显式端口（T38）。
+    assertEquals(37123, AdbResult.probePort("37123\n"));
+    assertEquals(5555, AdbResult.probePort(null));
+    assertEquals(5555, AdbResult.probePort(""));
+    assertEquals(5555, AdbResult.probePort("0"));
+    assertEquals(5555, AdbResult.probePort("65536"));
+    assertEquals(5555, AdbResult.probePort("12a"));
+  }
 }

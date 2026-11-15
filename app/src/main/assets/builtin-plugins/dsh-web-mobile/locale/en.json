@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Mobile adaptation",
+    "description": "Makes the DSH web UI usable on narrow touch screens: drawer navigation, bottom sheets, safe-area padding, and a composer that stays out of the way. A no-op on desktop."
+  }
+}

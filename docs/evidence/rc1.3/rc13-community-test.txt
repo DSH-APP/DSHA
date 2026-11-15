@@ -1,8 +1,0 @@
-PLUGIN_RESULT: {"status": "ok", "message": "已安装 dsh-session-health；重启 Web 后生效。", "installed": ["dsh-session-health"]}
-INSTALLED dsh-session-health 0.6.0
-PLUGIN_RESULT: {"status": "ok", "message": "已安装 dsh-subagent-model-picker；重启 Web 后生效。", "installed": ["dsh-subagent-model-picker"]}
-INSTALLED dsh-subagent-model-picker 0.1.1
-WEB_LOG dsh web: http://127.0.0.1:3188/?token=[REDACTED]
-
-SESSION_HEALTH_RPC_OK
-COMMUNITY_WEB_BOOT_OK

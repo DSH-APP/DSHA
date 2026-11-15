@@ -18,9 +18,13 @@ public final class SkillImportFixture {
     byte[] explicit =
         ("---\nname: user-only\ndescription: Explicit invocation only\ndisable-model-invocation: true\nuser-invocable: 1\n---\nUser body\n")
             .getBytes(StandardCharsets.UTF_8);
+    byte[] disabled =
+        ("---\nname: fully-disabled\ndescription: No invocation path\ndisable-model-invocation: true\nuser-invocable: false\n---\nDisabled body\n")
+            .getBytes(StandardCharsets.UTF_8);
     imports.install("SKILL.md", regular, new BackupControl(null));
     imports.install("SKILL.md", explicit, new BackupControl(null));
-    if (imports.list(new BackupControl(null)).entries.size() != 2)
+    imports.install("SKILL.md", disabled, new BackupControl(null));
+    if (imports.list(new BackupControl(null)).entries.size() != 3)
       throw new IllegalStateException("SKILL_FIXTURE_IMPORT_COUNT");
     if (!java.util.Arrays.equals(regular,
         Files.readAllBytes(files.resolve("user-data-v5/dsh/skills/hello-world/SKILL.md"))))

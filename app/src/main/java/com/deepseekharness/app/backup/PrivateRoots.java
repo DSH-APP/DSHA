@@ -48,12 +48,19 @@ public final class PrivateRoots {
   public static final Set<String> DSH =
       Set.of(
           "plugin-install-operations",
+          PluginInstallJournals.HISTORY_PROOF,
+          PluginJournalQuarantine.DIRECTORY,
           "plugin-activations.json",
           "plugin-safe-mode.json",
           "plugin-previews",
           "plugin-dependency-locks");
 
   private PrivateRoots() {}
+
+  /** dsh 数据根下的私有子项；插件完成证明连同其原子写兄弟文件一并私有。 */
+  public static boolean dsh(String name) {
+    return DSH.contains(name) || name.startsWith(PluginInstallJournals.HISTORY_PROOF + ".");
+  }
 
   public static boolean top(String name) {
     return TOP.contains(name)

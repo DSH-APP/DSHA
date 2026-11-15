@@ -1,8 +1,9 @@
-// The layout service face drifted between host generations. rc.6's ILayout
-// carries only toggleSidebar/openDetails/closeDetails; 0.1.6-alpha.2 added
-// selectPanel(panelId | null) for the sidebar's main-area panels. This helper
-// lets call sites stay compile-green against rc.6 typings while degrading
-// explicitly on a host that cannot select a panel, instead of throwing.
+// Every supported host (>=0.2.2-rc.1, dsh-client-ui-layout) exposes
+// selectPanel(panelId | null) on the layout service. The repo still
+// type-checks against the pinned 0.1.0-rc.6 typings, whose ILayout carries only
+// toggleSidebar/openDetails/closeDetails, so the call stays a structural probe:
+// compile-green against those typings, and inert rather than throwing if a
+// host ever drops the method.
 //
 // Kept DOM-free and dependency-free (like sessions-compat.ts) so it is directly
 // unit-testable and compiles against either generation's typings — never import

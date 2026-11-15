@@ -99,4 +99,20 @@ public final class VirtualScreenPolicy {
     String rejected = observationRejection(requested, observed, ageMs);
     return rejected != null ? rejected : frameRejection(requested, current);
   }
+
+  /** 宿主自身不能作为虚拟屏的启动目标（T76）。 */
+  public static final String SELF_LAUNCH_REFUSED = "VSCREEN_SELF_LAUNCH_REFUSED";
+
+  /**
+   * 启动目标是宿主自身时返回稳定拒绝码，返回 null 表示放行。
+   *
+   * <p>系统不会为副屏另起一个实例，而是复用已经在跑的同一个进程，把它带进
+   * {@code am start --display}：同一进程里已绑定默认 display 的 WebView 在副屏会以
+   * {@code libmonochrome} 空指针结束（T76 真机 tombstone：主线程 Looper 进入 WebView 回调）。
+   * 因此该请求必须在任何 {@code am start} 之前失败，不能成为“结果未知”或可重试的动作。
+   */
+  public static String selfLaunchRejection(String requested, String selfPackage) {
+    if (requested == null || selfPackage == null || selfPackage.isEmpty()) return null;
+    return requested.equals(selfPackage) ? SELF_LAUNCH_REFUSED : null;
+  }
 }

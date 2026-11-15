@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 首次引导夜间 token：与 values/onboarding_ui.xml 一一对应。 -->
+<resources>
+    <!-- 推荐卡片描边 onb_accent_line 随调色板切换，见 values-night/theme_palettes.xml。 -->
+</resources>

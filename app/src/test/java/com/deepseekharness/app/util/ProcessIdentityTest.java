@@ -90,7 +90,7 @@ public class ProcessIdentityTest {
   @Test
   public void prootProtocolIsNotAppliedToProrootOrOtherCommands() {
     assertTrue(ProcessIdentity.isProot("/data/app/pkg/lib/arm64/libproot.so"));
-    assertTrue(ProcessIdentity.isProot("/data/app/pkg/lib/arm64/libproot_legacy.so (deleted)"));
+    assertTrue(ProcessIdentity.isProot("/data/app/pkg/lib/arm64/libproot.so (deleted)"));
     for (String value :
         new String[] {null, "/bin/bash", "/lib/libproroot.so", "/tmp/libproot.so-other"})
       assertFalse(ProcessIdentity.isProot(value));

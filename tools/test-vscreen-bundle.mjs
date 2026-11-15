@@ -1,4 +1,4 @@
-// 真实锁定 rc2 组合、Cordis 工具与 MCP stdio 生命周期；不调用模型或设备。
+// 真实锁定 rc3 组合、Cordis 工具与 MCP stdio 生命周期；不调用模型或设备。
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -60,8 +60,26 @@ elif mode=='enable': assert r.enable_plugin('dsh-tool-vscreen')==0
   for(let turn=0;turn<2;turn++){
     ctx=new Context();await ctx.plugin(SystemPrompt,{});await ctx.plugin(ToolRuntime,{mode:'native'});
     const mounted=ctx.plugin(plugin);await mounted;
-    assert.deepEqual(ctx.tools.schemas().map(row=>row.name).sort(),wanted);
+    const schemas=ctx.tools.schemas();
+    assert.deepEqual(schemas.map(row=>row.name).sort(),wanted);
     assert.equal(wanted.length,15);
+    const launch=schemas.find(row=>row.name==='mcp__dsha-vscreen__android_vscreen_launch');
+    assert.ok(launch,'the actual rc3 host must expose the launch tool');
+    assert.equal(launch.parameters.type,'object');
+    assert.deepEqual(Object.keys(launch.parameters.properties).sort(),['coreInstance','generation','package']);
+    assert.deepEqual(launch.parameters.required,['coreInstance','package']);
+    assert.equal(launch.parameters.additionalProperties,false);
+    assert.equal(launch.parameters.properties.coreInstance.type,'string');
+    assert.equal(launch.parameters.properties.package.type,'string');
+    assert.deepEqual(launch.parameters.properties.generation,{type:'string',minLength:1,maxLength:80});
+    assert.match(launch.description,/AbortError/);assert.match(launch.description,/先观察实际状态/);
+    assert.match(launch.description,/不自动重放/);
+    const sections=(await ctx.systemPrompt.assemble()).sections.filter(section=>section.name==='mcp:dsha-vscreen');
+    assert.equal(sections.length,1,'the actual MCP initialization instructions must reach the model');
+    const instructions=sections[0].text;
+    assert.match(instructions,/Cancellation, timeout or interruption/);assert.match(instructions,/SDK AbortError/);
+    assert.match(instructions,/can discard the server receipt and does not prove launch was not executed/);
+    assert.match(instructions,/inspect actual state before deciding and never replay automatically/);
     await mounted.dispose();assert.equal(ctx.tools.schemas().length,0);
     await ctx.fiber.dispose();ctx=null;
   }
@@ -76,7 +94,7 @@ elif mode=='enable': assert r.enable_plugin('dsh-tool-vscreen')==0
   if(!fs.existsSync(link))fs.symlinkSync(pluginDir,link,process.platform==='win32'?'junction':'dir');
   python('enable');assert.equal(composed().filter(row=>row.name==='dsh-tool-vscreen').length,1);
   assert.ok(!fs.existsSync(disabled));
-  console.log('PASS real rc2 fresh composition, preserved custom patch and disabled intent, reenable, and two MCP lifecycles with exactly 15 tools');
+  console.log('PASS real rc3 fresh composition, model-visible launch schema and cancellation instructions, preserved custom patch and disabled intent, reenable, and two MCP lifecycles with exactly 15 tools; SDK cancellation receipt delivery NOT_TESTED');
 }finally{
   if(ctx)await ctx.fiber.dispose();
   const relative=path.relative(path.resolve(root,'app/build'),fs.realpathSync(directory));

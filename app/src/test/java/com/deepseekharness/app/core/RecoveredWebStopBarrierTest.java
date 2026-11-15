@@ -169,9 +169,49 @@ public final class RecoveredWebStopBarrierTest {
               throw new SecurityException("PRIVATE_DIRECTORY_DENIED");
             });
     assertFalse(sessions.confirmStopped());
-    assertTrue(state.webStopProofLoaded);
+    assertFalse(state.webStopProofLoaded); // 失败不锁存，下次停止 / 启动会重读。
     assertTrue(state.unreadableWebStopProof);
     assertFalse(sessions.confirmStopped());
+    state.io.shutdownNow();
+  }
+
+  @Test
+  public void transientProofReadFailureIsRetriedInsteadOfBlockingWholeProcess() throws Exception {
+    // 覆盖安装后同一进程内：第一次读取失败，之后可读且原启动器已退出，屏障必须能放行。
+    var state = new HarnessSessionState();
+    Manager manager = new Manager();
+    var reads = new java.util.concurrent.atomic.AtomicInteger();
+    var unavailable = new java.util.concurrent.atomic.AtomicBoolean(true);
+    var proof =
+        new com.deepseekharness.app.util.WebSessionProof.Saved(
+            "boot", 7, "instance", "nonce", 42, 10, "web", 41, 9, "launcher");
+    var sessions =
+        new WebProcessSession(
+            state,
+            manager,
+            () -> {
+              throw new AssertionError();
+            },
+            () -> {
+              reads.incrementAndGet();
+              if (unavailable.get()) throw new IOException("KEYSTORE_NOT_READY");
+              return new StoredWebSession.Record(proof, "", "", "", "", false, "");
+            });
+    manager.closed = false;
+    assertFalse(sessions.stopOwnedLauncherFacts().isEmpty());
+    assertTrue(state.unreadableWebStopProof);
+    assertFalse(state.webStopProofLoaded);
+    // 之后读到原记录：改按原启动器判定，未退出时仍阻挡。
+    unavailable.set(false);
+    reads.set(0);
+    assertFalse(sessions.stopOwnedLauncherFacts().isEmpty());
+    assertSame(proof, state.retainedWebStopProof);
+    assertFalse(state.unreadableWebStopProof);
+    assertTrue(state.webStopProofLoaded);
+    manager.closed = true;
+    assertTrue(sessions.stopOwnedLauncherFacts().isEmpty());
+    assertTrue(sessions.confirmStopped());
+    assertEquals(1, reads.get()); // 成功后锁存，不再重复解密。
     state.io.shutdownNow();
   }
 }

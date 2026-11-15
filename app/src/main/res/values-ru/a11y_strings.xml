@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_label" formatted="false">"Управление экраном DSH-A-Su"</string>
+    <string name="accessibility_desc" formatted="false">"Два назначения: автоматическое чтение кода сопряжения из беспроводной отладки Android и разрешение ИИ-помощнику читать экран, нажимать, вводить текст, посылать клавиши и делать снимки экрана для управления телефоном. DSH-A-Su не записывает экран в фоне: содержимое читается только по запросу помощника."</string>
+</resources>

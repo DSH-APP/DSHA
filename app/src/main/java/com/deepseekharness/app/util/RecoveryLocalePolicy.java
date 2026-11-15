@@ -62,10 +62,10 @@ public final class RecoveryLocalePolicy {
   }
 
   public static boolean supportedLanguage(String language) {
-    return "zh".equals(language) || "en".equals(language);
+    return UiLanguagePreference.isSupportedLanguage(language);
   }
 
-  /** Values are fixed to zh/en before they reach this script. */
+  /** Only the fixed supported BCP-47 tags can reach this script. */
   public static String pageScript(String language) {
     if (!supportedLanguage(language)) throw new IllegalArgumentException("RECOVERY_LANGUAGE");
     return "if(location.protocol==='http:'&&location.hostname==='localhost'){"

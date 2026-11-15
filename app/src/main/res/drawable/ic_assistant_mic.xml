@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 悬浮助手语音输入：话筒；颜色运行时着色。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M12,3a3,3 0,0 1,3 3v6a3,3 0,0 1,-6 0V6a3,3 0,0 1,3 -3z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M6,11h1.8a4.2,4.2 0,0 0,8.4 0H18a6,6 0,0 1,-5.1 5.93V20h-1.8v-3.07A6,6 0,0 1,6 11z" />
+</vector>

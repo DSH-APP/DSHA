@@ -8,39 +8,48 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class UiLanguagePreferenceTest {
 
-  /** 只认显式的小写 en/zh；其它（含 null、旧脏值、大写、区域标签）一律「跟随系统」。 */
+  /** Saved values are canonical; locale variants belong to the system resolution path. */
   @Test
   public void onlyExplicitSelectionDeviatesFromSystem() {
-    for (String value : new String[] {null, "", "system", "fr", "EN", "zh-CN", "en-US", "SYSTEM"}) {
+    for (String value : new String[] {null, "", "system", "de", "EN", "zh-CN", "en-US", "SYSTEM"}) {
       assertEquals("跟随系统", UiLanguagePreference.SYSTEM, UiLanguagePreference.normalize(value));
       assertTrue("应视为跟随系统：" + value, UiLanguagePreference.followsSystem(value));
     }
-    assertEquals("en", UiLanguagePreference.normalize("en"));
-    assertEquals("zh", UiLanguagePreference.normalize("zh"));
-    assertFalse(UiLanguagePreference.followsSystem("en"));
-    assertFalse(UiLanguagePreference.followsSystem("zh"));
+    for (String language : UiLanguagePreference.LANGUAGES) {
+      assertEquals(language, UiLanguagePreference.normalize(language));
+      assertFalse(UiLanguagePreference.followsSystem(language));
+    }
   }
 
   @Test
-  public void supportedCoversExactlyThreeValues() {
+  public void supportedCoversSystemAndExactlyTenLanguages() {
     assertTrue(UiLanguagePreference.supported("system"));
     assertTrue(UiLanguagePreference.supported("zh"));
     assertTrue(UiLanguagePreference.supported("en"));
-    assertFalse(UiLanguagePreference.supported("fr"));
+    assertEquals(10, UiLanguagePreference.LANGUAGES.size());
+    for (String language : UiLanguagePreference.LANGUAGES) {
+      assertTrue(UiLanguagePreference.supported(language));
+      assertFalse(UiLanguagePreference.nativeName(language).isEmpty());
+    }
+    assertFalse(UiLanguagePreference.supported("de"));
     assertFalse(UiLanguagePreference.supported(null));
     assertFalse(UiLanguagePreference.supported(""));
   }
 
-  /** 系统语言映射：中文（含区域变体）→ 中文；其它任何语言 → 英文。 */
+  /** System language retains script/region distinctions when a translated locale exists. */
   @Test
   public void systemLanguageMapsToChineseOnlyForChinese() {
-    for (String tag : new String[] {"zh", "zh-CN", "zh-Hans", "zh-Hant", "zh_TW", "ZH", "zh-HK"}) {
+    for (String tag : new String[] {"zh", "zh-CN", "zh-Hans", "ZH", "zh-SG", "zh-Hans-TW"}) {
       assertEquals("中文应识别：" + tag, "zh", UiLanguagePreference.resolveLanguage(tag));
     }
-    for (String tag :
-        new String[] {"en", "en-US", "fr", "de-DE", "ja", "ko", "ar", "ru", "zho", "en-zh"}) {
+    for (String tag : new String[] {"en", "en-US", "de-DE", "zho", "en-zh"}) {
       assertEquals("非中文应落英文：" + tag, "en", UiLanguagePreference.resolveLanguage(tag));
     }
+    for (String tag : new String[] {"zh-Hant", "zh_TW", "zh-HK", "zh-MO", "zh-Hant-CN"})
+      assertEquals(tag, "zh-Hant", UiLanguagePreference.resolveLanguage(tag));
+    for (String tag :
+        new String[] {"ru-RU", "ja-JP", "ko-KR", "ar-EG", "pt-BR", "pt-PT", "la", "fr-CA"})
+      assertEquals(tag, tag.split("-")[0], UiLanguagePreference.resolveLanguage(tag));
   }
 
   /** 显式选择必须压过系统语言；跟随系统时才看系统。 */
@@ -53,9 +62,12 @@ public class UiLanguagePreferenceTest {
     // 从未设置（null）等价于跟随系统
     assertEquals("en", UiLanguagePreference.resolve(null, "en-US"));
     assertEquals("zh", UiLanguagePreference.resolve(null, "zh-CN"));
-    // 法语等非中文系统落英文：英语是唯一可用的国际通用语言
-    assertEquals("en", UiLanguagePreference.resolve(null, "fr"));
-    assertEquals("en", UiLanguagePreference.resolve("system", "fr-FR"));
+    assertEquals("fr", UiLanguagePreference.resolve(null, "fr"));
+    assertEquals("fr", UiLanguagePreference.resolve("system", "fr-FR"));
+    assertEquals("zh-Hant", UiLanguagePreference.resolve("zh-Hant", "ar-EG"));
+    assertEquals("ar", UiLanguagePreference.resolve("ar", "zh-TW"));
+    assertTrue(UiLanguagePreference.isRtl("ar-EG"));
+    assertFalse(UiLanguagePreference.isRtl("zh-Hant"));
   }
 
   @Test

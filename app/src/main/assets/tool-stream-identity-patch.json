@@ -1,8 +1,8 @@
 {
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-llm-pi-ai/lib/index.js",
-  "packageVersion": "0.2.1-rc.2",
-  "canonicalSourceSha256": "99b5c20830a52f69641df8a18a39206079b0c725201958cce2c4a934f1d4f7cd",
+  "packageVersion": "0.2.2-rc.1",
+  "canonicalSourceSha256": "1a3ae58f9b4493e15459cc5000ec80f21b5d3f4a9dea6ffb6bc28e5b8817ae8a",
   "patches": [
     {
       "before": "\t\t\tconst known = toolIds.get(event.contentIndex);",

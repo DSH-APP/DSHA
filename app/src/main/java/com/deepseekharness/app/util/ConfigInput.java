@@ -9,9 +9,11 @@ public final class ConfigInput {
     if (port < 1 || port > 65535)
       throw new IllegalArgumentException(
           com.deepseekharness.app.util.UiText.text("端口请输入 1—65535 的整数"));
-    if (port == Constants.LAN_BRIDGE_PORT || port == Constants.SHELL_BRIDGE_PORT)
+    if (WebPortPolicy.reserved(port))
       throw new IllegalArgumentException(
-          com.deepseekharness.app.util.UiText.text("3081 和 3090 已用于 App 桥接，请换一个端口"));
+          com.deepseekharness.app.util.UiText.choose(
+              "3081、3082 和 3090–3099 已用于 App 桥接，请换一个端口",
+              "3081, 3082 and 3090–3099 are reserved for app bridges. Choose another port."));
     return port;
   }
 

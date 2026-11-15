@@ -1,0 +1,81 @@
+/*
+ * DSHA UI 模板基准 · 设计 token 离线副本（仅供本预览，不进 APK）。
+ * 颜色：values{,-night}/theme_palettes.xml 的 pal_standard_* + values{,-night}/shell_ui.xml。
+ * 尺寸：values/shell_ui.xml、shell_page.xml、shell_launch.xml、dimens.xml，以及
+ *       values-w600dp / values-sw600dp 覆盖（由 kit.js 按档位写入 --launch-* / --page-*）。
+ * 以 origin/main build279（466e16ae）为准；源资源改了要同步这里。
+ */
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --bg: #F3F6FB;            /* shell_bg */
+  --surface: #FCFDFF;       /* shell_surface / card */
+  --raised: #E7EDF6;        /* shell_raised */
+  --line: rgba(29,58,96,.075);        /* shell_line   #131D3A60 */
+  --line-strong: rgba(29,58,96,.145); /* shell_line_strong #251D3A60 */
+  --text: #18273F;
+  --text-2: #50617A;        /* shell_text_secondary */
+  --muted: #5A6B86;         /* shell_text_muted */
+  --accent: #1E50D0;        /* shell_accent / primary */
+  --accent-soft: rgba(30,80,208,.078);   /* #141E50D0 */
+  --accent-tonal: rgba(30,80,208,.122);  /* #1F1E50D0 */
+  --on-accent: #FFFFFF;
+  --logo-top: #E8EFFF;      /* bg_logo 底 */
+  --good: #287453; --warn: #8C600D; --bad: #AF404B;
+  --good-soft: rgba(40,116,83,.078); --warn-soft: rgba(140,96,13,.078); --bad-soft: rgba(175,64,75,.078);
+  --glass: rgba(250,252,255,.88);
+  --nav-bg: #FCFDFF;
+  --disabled: #E7EDF6;
+  --preview: #E7EDF6;
+  --shadow: 0 8px 24px rgba(24,42,68,.10), 0 1px 3px rgba(24,42,68,.06);
+  /* 终端（values/colors.xml terminal_*，终端面板随主题，终端画布恒黑） */
+  --term-surface: #000000; --term-fg: #E4E8F0; --term-tray: #0A0D13; --term-tray-line: #1A212C;
+  --term-key: #1C2430; --term-key-fn: #161D28; --term-key-text: #E8ECF3; --term-key-ctrl: #A9C4F7;
+  --term-panel: #FFFFFF; --term-panel-card: #F7F9FD; --term-tile: #F1F4F9; --term-line: #DFE6F0;
+  /* 系统栏（预览示意） */
+  --sys-fg: #18273F;
+  --page: #E4EAF3;          /* 设计台底色，不属于 App */
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0B0F16;
+  --surface: #131923;
+  --raised: #1B2432;
+  --line: rgba(203,220,255,.071);       /* #12CBDCFF */
+  --line-strong: rgba(208,225,255,.125);/* #20D0E1FF */
+  --text: #EDF1F7;
+  --text-2: #B0BBCC;
+  --muted: #8895AA;
+  --accent: #6AA4FF;
+  --accent-soft: rgba(106,164,255,.078);
+  --accent-tonal: rgba(106,164,255,.141); /* #246AA4FF */
+  --on-accent: #091729;
+  --logo-top: #13233C;
+  --good: #93CCAF; --warn: #E4BE83; --bad: #EEA3A6;
+  --good-soft: rgba(147,204,175,.078); --warn-soft: rgba(228,190,131,.078); --bad-soft: rgba(238,163,166,.078);
+  --glass: rgba(25,34,48,.86);
+  --nav-bg: #131923;
+  --disabled: #1B2432;
+  --preview: #05090E;
+  --shadow: 0 10px 28px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.35);
+  --term-panel: #0B0F16; --term-panel-card: #10151E; --term-tile: #141B25; --term-line: #1E2735;
+  --sys-fg: #EDF1F7;
+  --page: #05070B;
+}
+:root {
+  --sans: "Roboto", "Noto Sans CJK SC", "WenQuanYi Micro Hei", "PingFang SC", system-ui, sans-serif;
+  --mono: "Roboto Mono", "WenQuanYi Micro Hei Mono", ui-monospace, monospace;
+  /* 外壳（values/shell_ui.xml） */
+  --header-h: 60px; --brand: 34px; --brand-icon: 18px; --title-text: 16px; --context-text: 11px;
+  --nav-h: 64px; --nav-mx: 12px; --nav-mb: 10px; --nav-icon: 22px; --nav-label: 10px;
+  --rail-w: 80px; --rail-px: 7px; --rail-item-w: 56px; --rail-item-h: 64px; --rail-gap: 8px; --rail-icon: 22px; --rail-label: 10px; --rail-foot: 8px;
+  /* 内页（values/shell_page.xml；底部余量由 kit.js 按 sw600 写入） */
+  --page-pad: 20px; --page-top: 18px; --page-title: 26px; --page-desc: 13px;
+  --section-gap: 24px; --section-label: 12px; --section-margin: 10px;
+  --card-pad: 16px; --row-min: 56px; --row-title: 14px; --row-sub: 12px; --row-value: 13px; --row-icon: 32px;
+  --input-h: 48px; --btn-h: 52px; --btn2-h: 46px; --touch: 44px;
+  /* 圆角（dimens.xml） */
+  --r-card: 18px; --r-control: 13px; --r-small: 10px; --r-pill: 999px;
+  /* 启动页（values/shell_launch.xml，w600 覆盖由 kit.js 写入） */
+  --launch-title: 28px; --launch-pad: 20px; --launch-top: 18px; --launch-gap: 22px;
+  --launch-row-h: 54px; --launch-pill-h: 44px; --launch-log-h: 184px;
+}

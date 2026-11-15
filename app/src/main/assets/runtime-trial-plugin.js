@@ -12,7 +12,7 @@ function storageEntry(){try{return require.resolve('@deepseek-ai/dsh-storage-jso
 function storagePatch(entry){
  try{
   if(!entry)throw Object.assign(Error('unresolved'),{code:'UNRESOLVED'});const source=readFileSync(entry,'utf8');
-  return {entryHash:pathHash(entry),marker:source.includes('DSHA_PROROOT_DIRENT_FALLBACK_V3')?'V3':source.includes('DSHA_PROROOT_DIRENT_FALLBACK_V2')?'V2':source.includes('DSHA_PROROOT_DIRENT_FALLBACK_V1')?'V1':'UPSTREAM',directRecordHints:source.includes('DSHA_PROROOT_DIRECT_RECORD_HINTS_V1')};
+  return {entryHash:pathHash(entry),marker:source.includes('DSHA_PROROOT_DIRENT_FALLBACK_V3')?'V3':source.includes('DSHA_PROROOT_DIRENT_FALLBACK_V2')?'V2':source.includes('DSHA_PROROOT_DIRENT_FALLBACK_V1')?'V1':'UPSTREAM',directRecordHints:source.includes('DSHA_PROROOT_DIRECT_RECORD_HINTS_V2')||source.includes('DSHA_PROROOT_DIRECT_RECORD_HINTS_V1')};
  }catch(error){return {entryHash:'unavailable',marker:'UNREADABLE_'+errorCode(error),directRecordHints:false}}
 }
 function directoryState(path,expected){

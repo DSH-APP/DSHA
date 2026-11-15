@@ -1,0 +1,44 @@
+name: Fixed inputs health
+
+# 定时巡检：源码锁指向的固定输入预发布资产仍可下载，SHA-256 与逐项 pin 仍一致。
+# 只下载与校验，不重建运行时、不上传 artifact、不写仓库。
+on:
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inputs:
+    name: Restore locked fixed inputs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Resolve source-locked input pair
+        id: resolve
+        run: python3 tools/sunset-ci-inputs.py --github-output
+      - name: Download and verify every pinned input
+        env:
+          INPUT_URL: ${{ steps.resolve.outputs.url }}
+          INPUT_SHA: ${{ steps.resolve.outputs.sha256 }}
+          INPUT_FORMAT: ${{ steps.resolve.outputs.format }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          args=(--url "$INPUT_URL" --sha256 "$INPUT_SHA")
+          if [ "$INPUT_FORMAT" = source-archive ]; then args+=(--source-archive); fi
+          python3 tools/ci-assets.py "${args[@]}"
+      - name: Report
+        if: always()
+        env:
+          OUTCOME: ${{ job.status }}
+          INPUT_SHA: ${{ steps.resolve.outputs.sha256 }}
+        run: |
+          {
+            echo "### Fixed inputs health"
+            echo "- lock: \`ci/sunset-inputs.lock.json\`"
+            echo "- bundle SHA-256: \`$INPUT_SHA\`"
+            echo "- result: $OUTCOME"
+          } >> "$GITHUB_STEP_SUMMARY"

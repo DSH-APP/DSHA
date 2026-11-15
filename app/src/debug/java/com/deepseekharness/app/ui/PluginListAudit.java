@@ -6,8 +6,9 @@ import android.os.Bundle;
 import android.widget.TextView;
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.core.PluginRepository;
+import com.deepseekharness.app.plugins.PluginManagementEngine;
 
-/** 真实插件页面触发检测，核验列表已同步；不安装或启停第三方插件。 */
+/** 显式设备审计入口：真实插件页面检测与强刷；不提交安装或启停意图。 */
 public final class PluginListAudit extends Instrumentation {
   @Override
   public void onCreate(Bundle args) {
@@ -15,18 +16,26 @@ public final class PluginListAudit extends Instrumentation {
     start();
   }
 
+  private PluginRepository.State awaitCatalog(PluginManagementEngine engine, long afterVersion)
+      throws Exception {
+    long deadline = android.os.SystemClock.elapsedRealtime() + 90000;
+    while (android.os.SystemClock.elapsedRealtime() < deadline) {
+      PluginRepository.State state = engine.state().getValue();
+      if (state != null && state.catalog != null && state.catalog.version > afterVersion) {
+        if (!state.catalog.loading && !state.catalog.error.isEmpty())
+          throw new AssertionError(state.catalog.error);
+        if (state.catalog.known && !state.catalog.loading && !state.catalog.stale) return state;
+      }
+      Thread.sleep(100);
+    }
+    throw new AssertionError("插件目录未在期限内完成核验");
+  }
+
   @Override
   public void onStart() {
     Bundle result = new Bundle();
     FragmentSessionTestActivity page = null;
     try {
-      try (android.os.ParcelFileDescriptor fd =
-              getUiAutomation()
-                  .executeShellCommand(
-                      "am start -W -n com.dsh.client/com.deepseekharness.app.ui.MainActivity");
-          java.io.InputStream in = new android.os.ParcelFileDescriptor.AutoCloseInputStream(fd)) {
-        while (in.read() != -1) {}
-      }
       ActivityMonitor monitor =
           addMonitor(FragmentSessionTestActivity.class.getName(), null, false);
       runOnMainSync(
@@ -40,28 +49,24 @@ public final class PluginListAudit extends Instrumentation {
       if (page == null) throw new AssertionError("插件测试宿主未打开");
       FragmentSessionTestActivity host = page;
       PluginFragment fragment = new PluginFragment();
+      Bundle installed = new Bundle();
+      installed.putBoolean("show_installed", true);
+      fragment.setArguments(installed);
+      PluginManagementEngine[] engine = {null};
       runOnMainSync(
-          () ->
-              host.getSupportFragmentManager()
-                  .beginTransaction()
-                  .replace(R.id.fragment_container, fragment)
-                  .commitNow());
-      PluginRepository[] repository = {null};
-      runOnMainSync(
-          () ->
-              repository[0] =
-                  new androidx.lifecycle.ViewModelProvider(host).get(PluginRepository.class));
-      long deadline = System.currentTimeMillis() + 90000;
-      while ((repository[0].isBusy() || repository[0].state().getValue().items.isEmpty())
-          && System.currentTimeMillis() < deadline) Thread.sleep(200);
-      if (repository[0].isBusy()) throw new AssertionError("初次检测尚未结束");
-      runOnMainSync(() -> fragment.requireView().findViewById(R.id.btnRefresh).performClick());
-      deadline = System.currentTimeMillis() + 90000;
-      while (repository[0].isBusy() && System.currentTimeMillis() < deadline) Thread.sleep(200);
+          () -> {
+            engine[0] = PluginManagementEngine.get(host);
+            host.getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commitNow();
+            if (fragment.installedState() != engine[0].state())
+              throw new AssertionError("页面未订阅生产应用级目录");
+          });
+      PluginRepository.State first = awaitCatalog(engine[0], -1);
+      runOnMainSync(() -> fragment.find(R.id.btnRefresh).performClick());
+      PluginRepository.State state = awaitCatalog(engine[0], first.catalog.version);
       waitForIdleSync();
-      PluginRepository.State state = repository[0].state().getValue();
-      if (state.busy || !state.message.startsWith("插件检测完成") || state.message.contains("列表未能同步"))
-        throw new AssertionError(state.message);
       java.util.Set<String> expected = new java.util.LinkedHashSet<>();
       for (String name : com.deepseekharness.app.util.BuiltinPlugins.DEFAULT_BUILTINS)
         if (!com.deepseekharness.app.util.BuiltinPlugins.internal(name)) expected.add(name);
@@ -75,13 +80,10 @@ public final class PluginListAudit extends Instrumentation {
         throw new AssertionError("内置组件集合错误：expected=" + expected + ", actual=" + actual);
       String[] shown = {null};
       runOnMainSync(
-          () ->
-              shown[0] =
-                  ((TextView) fragment.requireView().findViewById(R.id.statusText))
-                      .getText()
-                      .toString());
-      if (!shown[0].equals(state.message)) throw new AssertionError("页面未显示实际检测结果");
-      result.putString("result", "PASS：真实页面初次检测及手动刷新成功，注册清单中的可见内置组件可用，列表已同步");
+          () -> shown[0] = ((TextView) fragment.find(R.id.statusText)).getText().toString());
+      if (!shown[0].equals(com.deepseekharness.app.util.UiStateText.render(state.message)))
+        throw new AssertionError("页面未显示实际检测结果");
+      result.putString("result", "PASS：生产应用级目录、真实页面确保载入与显式强刷、可见内置组件核验");
     } catch (Throwable error) {
       result.putString("failure", android.util.Log.getStackTraceString(error));
     } finally {
@@ -89,11 +91,7 @@ public final class PluginListAudit extends Instrumentation {
         FragmentSessionTestActivity host = page;
         runOnMainSync(host::finish);
       }
-      finish(
-          result.containsKey("failure")
-              ? android.app.Activity.RESULT_CANCELED
-              : android.app.Activity.RESULT_OK,
-          result);
+      finish(result.containsKey("failure") ? Activity.RESULT_CANCELED : Activity.RESULT_OK, result);
     }
   }
 }

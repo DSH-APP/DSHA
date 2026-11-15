@@ -57,7 +57,7 @@ class DshLauncherIntegrity(unittest.TestCase):
         if version.returncode or 'version "17.' not in version.stdout + version.stderr:
             raise RuntimeError("JDK17_REQUIRED: " + version.stdout + version.stderr)
         source = ROOT / "app/src/main/java/com/deepseekharness/app/util"
-        files = [source / (name + ".java") for name in ("DshEntrypoint", "WebLaunchCommand", "WebProcSel", "ShellQuote")]
+        files = [source / (name + ".java") for name in ("DshEntrypoint", "WebLaunchCommand", "WebProcSel", "ShellQuote", "PermissionMode")]
         before = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
         helper = java_root / "EntryDump.java"
         put(helper, '''import com.deepseekharness.app.util.*;
@@ -67,8 +67,8 @@ public class EntryDump {
   public static void main(String[] args) {
     for (String value : new String[] { DshEntrypoint.NODE, DshEntrypoint.SCRIPT,
       DshEntrypoint.exec(), DshEntrypoint.wrapper(),
-      WebLaunchCommand.build("ask", true, "en", "web", 0, 42),
-      WebLaunchCommand.build("ask", true, "en", "dsha-startup-safe-fixture", 0, 43) })
+      WebLaunchCommand.build(true, "en", "web", 0, 42),
+      WebLaunchCommand.build(true, "en", "dsha-startup-safe-fixture", 0, 43) })
       System.out.println(Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8)));
   }
 }
@@ -226,8 +226,8 @@ public class EntryDump {
         self.assertFalse(self.command.exists())
         self.assertTrue(self.command.is_symlink())
 
-    def test_real_registrar_links_all_eight_wrappers_and_cache_reuses_them(self):
-        self.assertEqual(8, len(self.managed))
+    def test_real_registrar_links_all_eleven_wrappers_and_cache_reuses_them(self):
+        self.assertEqual(11, len(self.managed))
         self.assertGreater(self.registrar.ensure_runtime_modules(), 0)
         with contextlib.redirect_stdout(io.StringIO()) as captured:
             self.assertEqual(0, self.registrar.ensure_runtime_modules())
@@ -241,7 +241,7 @@ public class EntryDump {
         self.registrar.ensure_runtime_modules()
         for directory in self.managed:
             (directory / "node_modules").unlink()
-        self.assertEqual(8, self.registrar.ensure_runtime_modules())
+        self.assertEqual(11, self.registrar.ensure_runtime_modules())
         for directory in self.managed:
             self.boot_ok(directory / "launcher-anchor-probe.mjs")
 

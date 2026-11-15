@@ -82,4 +82,45 @@ for(const shell of [false,true]){
  vm.runInNewContext(source,mounted);
  assert.equal(seen.some(e=>e.type==='ready'),shell,'arbitrary nonempty root is insufficient; mounted rc2 shell is ready');
 }
+// This observer runs before any locale plugin. Exercise its own static copy,
+// retain the plugin identity and error text, and preserve apply() return values.
+const pageLabels = {
+  zh:['正在初始化网页插件：','网页插件初始化返回：','网页已就绪'],
+  en:['Initializing web plugin: ','Web plugin initialization returned: ','Web page ready'],
+  'zh-Hant':['正在初始化網頁外掛：','網頁外掛初始化已返回：','網頁已就緒'],
+  ru:['Инициализация веб-плагина: ','Инициализация веб-плагина завершилась: ','Веб-страница готова'],
+  ja:['Web プラグインを初期化中：','Web プラグインの初期化から戻りました：','Web ページの準備ができました'],
+  ko:['웹 플러그인 초기화 중: ','웹 플러그인 초기화가 반환되었습니다: ','웹 페이지가 준비되었습니다'],
+  ar:['جارٍ تهيئة إضافة الويب: ','عادت تهيئة إضافة الويب: ','صفحة الويب جاهزة'],
+  pt:['Inicializando plugin da Web: ','A inicialização do plugin da Web retornou: ','Página da Web pronta'],
+  la:['Additamentum interretiale initiatur: ','Initiatio additamenti interretialis rediit: ','Pagina interretialis parata est'],
+  fr:['Initialisation du module Web : ','L’initialisation du module Web a rendu la main : ','La page Web est prête'],
+};
+for (const [language, labels] of Object.entries(pageLabels)) {
+  const seen = []; let definition, inspectLocale, mounted = false;
+  const localized = {
+    __DSHA_LANGUAGE__:language, __DSHA_PAGE_BINDING__:{nonce:'b'.repeat(32)},
+    document:{querySelector(selector){return selector==='[data-composer-input]' && mounted ? {} : null;},getElementById(){return null;}},
+    location:{origin:'http://127.0.0.1:3087',pathname:'/'},
+    console:{info(line){seen.push(JSON.parse(line.slice(12)));}},
+    CustomEvent:context.CustomEvent,
+    MutationObserver:class {constructor(callback){inspectLocale=callback;}observe(){}disconnect(){}},
+    addEventListener(){},dispatchEvent(){},
+  };
+  localized.window=localized;localized.top=localized;
+  vm.runInNewContext(source,localized);
+  localized.__ModuleLoader__={load(value){definition=value;}};
+  const pluginId='plugin/原始-ID';
+  localized.__ModuleLoader__.load({id:pluginId,factory(){return {apply(){return 197;}};}});
+  assert.equal(definition.factory().apply(),197,language);
+  mounted=true;inspectLocale();
+  assert.equal(seen.find(event=>event.type==='loading').message,labels[0]+pluginId,language);
+  assert.equal(seen.find(event=>event.type==='active').message,labels[1]+pluginId,language);
+  assert.equal(seen.find(event=>event.type==='ready').message,labels[2],language);
+  const rawError='原始用户错误 / User error <keep-{value}>';const error=new Error(rawError);
+  localized.__ModuleLoader__.load({id:'error/原始',factory(){return {apply(){throw error;}};}});
+  assert.throws(()=>definition.factory().apply(),value=>value===error);
+  assert(seen.some(event=>event.type==='issue' && event.id==='error/原始' && event.message.includes(rawError)),language);
+}
 console.log('PASS startup observer: named missing import, thrown module, one execution, browser factory/apply/rejection, boot failure, ready');
+console.log('PASS startup page labels: ten languages before locale plugins; plugin IDs, return values and raw errors preserved');

@@ -5,3 +5,6 @@ dsh-web-mobile
 dsh-computer-use-android
 dsh-auto-review
 dsh-tool-vscreen
+dsh-launch-target
+dsh-fs-read-hint
+dsh-fs-search-scope

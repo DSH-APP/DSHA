@@ -3,26 +3,34 @@
 
 
 
-    <color name="primary">#6AA4FF</color>
-    <color name="primary_dark">#3A75DA</color>
-    <color name="accent_on">#081428</color>
-    <color name="surface">#000000</color>
-    <color name="card">#111214</color>
-    <color name="raised">#1A1C20</color>
-    <color name="line">#292C32</color>
-    <color name="text">#E4E8F0</color>
-    <color name="text_secondary">#ADB8C9</color>
-    <color name="text_muted">#9DA8BB</color>
-    <color name="ok">#7ED6A2</color>
-    <color name="warn">#E5C07B</color>
-    <color name="err">#E08A8A</color>
-    <color name="preview">#080B10</color>
-    <color name="logo_top">#12233D</color>
+    <!-- 2026-10-27 UI v5：与 shell_ui.xml 夜间 token 对齐，旧页面不再保留第二套黑灰。 -->
+    <color name="line">#12CBDCFF</color>
+    <color name="text">#EDF1F7</color>
+    <color name="text_secondary">#B0BBCC</color>
+    <color name="text_muted">#8895AA</color>
+    <color name="ok">#93CCAF</color>
+    <color name="warn">#E4BE83</color>
+    <color name="err">#EEA3A6</color>
 
-    <!-- 深色底下涟漪要更亮一点才看得见 -->
-    <color name="ripple">#187DA7F4</color>
+    <!-- 深色底下涟漪要更亮一点才看得见；叠加 raised 后主色文字仍须保持 4.5:1。 -->
     <color name="primary_ripple">#20FFFFFF</color>
     <color name="error_on">#1A0F0F</color>
-    <color name="disabled">#1B2130</color>
-    <color name="err_bg">#1AE08A8A</color>
+    <color name="err_bg">#1AEEA3A6</color>
+
+    <!-- 终端外壳夜间：浅蓝 + 近黑；输出区固定 token（surface/foreground/outline）不在此覆盖。 -->
+    <color name="terminal_panel_text">#E4E8F0</color>
+    <color name="terminal_panel_text_strong">#F2F5FA</color>
+    <color name="terminal_muted">#9DA8BB</color>
+    <color name="terminal_faint">#7C8AA0</color>
+    <color name="terminal_line">#1E2735</color>
+    <color name="terminal_line_strong">#2E3B4F</color>
+    <color name="terminal_warning">#E5C07B</color>
+    <color name="terminal_warning_soft">#2A2417</color>
+    <color name="terminal_danger">#E08A8A</color>
+    <color name="terminal_danger_soft">#2C1A1C</color>
+    <color name="terminal_scrim">#B3000000</color>
+    <color name="terminal_state_running">#5CC98F</color>
+    <color name="terminal_state_pending">#E5C07B</color>
+    <!-- 侧栏底部动作与弹窗选项卡：无描边柔和填充 / 按压加深；新建按钮内加号方块的半透明底。 -->
+    <color name="terminal_on_primary_chip">#1F081428</color>
 </resources>

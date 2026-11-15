@@ -12,10 +12,12 @@ public class LanFailureResponseTest {
     LanFailureResponse.write(out, 401, LanFailureResponse.Reason.TOKEN_INVALID, false);
     String response = out.toString(StandardCharsets.UTF_8.name());
     assertTrue(response.startsWith("HTTP/1.1 401 Unauthorized\r\n"));
-    assertTrue(response.contains("WWW-Authenticate: Bearer realm=\"DSHA LAN\""));
+    assertTrue(
+        response.contains(
+            "WWW-Authenticate: Basic realm=\"DSHA LAN (username: dsha)\", charset=\"UTF-8\""));
     assertTrue(response.contains("X-Dsha-Lan-Reason: token-invalid"));
     assertTrue(response.contains("Set-Cookie: dsha_lan=; Path=/; Max-Age=0"));
-    assertTrue(response.contains("重新复制") || response.contains("Copy a new"));
+    assertTrue(response.contains("局域网密码") || response.contains("LAN password"));
     assertFalse(response.contains("Request could not be processed"));
     assertFalse(response.contains("dsh_auth="));
   }

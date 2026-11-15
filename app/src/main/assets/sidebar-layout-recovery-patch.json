@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-client-ui-sidebar-right/lib/client.js",
   "patches": [
     {
@@ -12,9 +12,11 @@
       "after": "\t\t\t\tactions: {\n\t\t\t\t\tdshaRecoverLayout: (d, sessionId) => {\n\t\t\t\t\t\tconst current = d.bySession[sessionId];\n\t\t\t\t\t\tif (current === void 0 || dshaValidSurface(current)) return;\n\t\t\t\t\t\tdshaKeepLayout(sessionId, JSON.stringify(current));\n\t\t\t\t\t\td.bySession = { ...d.bySession, [sessionId]: createSurface() };\n\t\t\t\t\t},\n\t\t\t\t\topen: (d, sessionId) => {"
     },
     {
-      "before": "\t\tfunction RightbarSeat({ sessionId, width, viewportWidth, canShow, useStore, actions, t, renderSlot, syncPresentation, measureRoom, reportAutoFullscreen, openTab, closeTab, useTabTypes, useTabNavigation, occurrence, retainTab, active, useShortcuts, splitPane, toggleFullscreen }) {",
-      "after": "\t\tfunction RightbarSeat(props) {\n\t\t\treturn react.createElement(DshaLayoutBoundary, {sessionId:props.sessionId, actions:props.actions}, react.createElement(DshaRightbarSeatBody, props));\n\t\t}\n\t\tfunction DshaRightbarSeatBody({ sessionId, width, viewportWidth, canShow, useStore, actions, t, renderSlot, syncPresentation, measureRoom, reportAutoFullscreen, openTab, closeTab, useTabTypes, useTabNavigation, occurrence, retainTab, active, useShortcuts, splitPane, toggleFullscreen }) {",
+      "before": "\t\tfunction RightbarSeat({ sessionId, width, viewportWidth, canShow, useStore, actions, t, renderSlot, syncPresentation, measureRoom, reportAutoFullscreen, openTab, closeTab, useContextMenu, useContextMenuTarget, useTabTypes, useTabNavigation, occurrence, retainTab, active, useShortcuts, splitPane, toggleFullscreen, useFlash }) {",
+      "after": "\t\tfunction RightbarSeat(props) {\n\t\t\treturn react.createElement(DshaLayoutBoundary, {sessionId:props.sessionId, actions:props.actions}, react.createElement(DshaRightbarSeatBody, props));\n\t\t}\n\t\tfunction DshaRightbarSeatBody({ sessionId, width, viewportWidth, canShow, useStore, actions, t, renderSlot, syncPresentation, measureRoom, reportAutoFullscreen, openTab, closeTab, useContextMenu, useContextMenuTarget, useTabTypes, useTabNavigation, occurrence, retainTab, active, useShortcuts, splitPane, toggleFullscreen, useFlash }) {",
       "prependAsset": "dsha-layout-recovery.js"
     }
-  ]
+  ],
+  "sourceSha256": "45868a5ae021b850f6ee6451b6d1168d3c72ddea81b3073b6cfbbebaf23c5257",
+  "packageIntegrity": "sha512-YBp8SbsvrBW3PtYCEHHssteCHbTie6zRDv8N6MXW55h3fkme5tYeDhjDINFnFrexRQPlGQJR7fWBLtgeD4nkkQ=="
 }

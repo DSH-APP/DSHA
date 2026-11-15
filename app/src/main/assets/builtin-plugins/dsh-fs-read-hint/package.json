@@ -1,0 +1,18 @@
+{
+  "name": "dsh-fs-read-hint",
+  "description": "DSHA builtin fix plugin: when an edit is refused because the file has not been read, names the same-named file this session did read at another path (e.g. main checkout vs worktree). Message only; the read-before-edit guard is unchanged. Temporary until upstream discussion #11977 is resolved",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT"
+}

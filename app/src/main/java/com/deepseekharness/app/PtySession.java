@@ -53,6 +53,9 @@ public final class PtySession implements TerminalSessionClient {
 
     /** 响铃：震一下比响一声合适。 */
     void onBell();
+
+    /** 输入未接收或写入结果不确定；内容不会自动重放。 */
+    default void onInputProblem(int reason) {}
   }
 
   private volatile WeakReference<Listener> listener = new WeakReference<>(null);
@@ -60,6 +63,18 @@ public final class PtySession implements TerminalSessionClient {
   private volatile com.deepseekharness.app.util.ProcessIdentity identity;
   private com.deepseekharness.app.core.RuntimeTasks work;
   private volatile boolean maintenanceClosing;
+  private volatile String cleanupError = "";
+  private volatile Integer exitStatus;
+
+  /**
+   * 监听器与输入问题状态的独立锁。finishAndWait 持有会话监视器最长数秒等待进程退出；
+   * 主线程切换 / 重绘时注册监听、读取输入问题不得排在它后面，否则关闭标签即 ANR，
+   * 用户选择「关闭应用」会连同 DSH 环境一起结束。
+   */
+  private final Object inputState = new Object();
+
+  private int pendingInputProblem;
+  private Runnable cleanupVerified, cleanupChanged;
   private boolean prootLauncher;
   private static final java.util.Set<PtySession> pending =
       java.util.Collections.newSetFromMap(
@@ -68,7 +83,24 @@ public final class PtySession implements TerminalSessionClient {
   private PtySession() {}
 
   public void attachListener(Listener l) {
-    listener = new WeakReference<>(l);
+    int problem;
+    synchronized (inputState) {
+      listener = new WeakReference<>(l);
+      problem = pendingInputProblem;
+    }
+    if (l != null && problem != 0) l.onInputProblem(problem);
+  }
+
+  public int inputProblem() {
+    synchronized (inputState) {
+      return pendingInputProblem;
+    }
+  }
+
+  public void acknowledgeInputProblem(int reason) {
+    synchronized (inputState) {
+      if (pendingInputProblem == reason) pendingInputProblem = 0;
+    }
   }
 
   public void detachListener(Listener l) {
@@ -87,31 +119,78 @@ public final class PtySession implements TerminalSessionClient {
    *             瞎给一个值会让 TUI 的边框错位。
    */
   public static PtySession start(ProotBootstrap proot, int cols, int rows, Listener l) {
+    return start(proot, cols, rows, l, null, null, null, null);
+  }
+
+  /** 只增加已核验释放通知，fork/出生身份/guest 退出算法保持原样。 */
+  public static PtySession start(
+      ProotBootstrap proot,
+      int cols,
+      int rows,
+      Listener l,
+      Runnable cleanupVerified,
+      Runnable cleanupChanged,
+      Runnable beforeFork,
+      java.util.function.Consumer<PtySession> allocated) {
+    return start(
+        proot, cols, rows, l, cleanupVerified, cleanupChanged, beforeFork, allocated, null);
+  }
+
+  /** 固定 guest command 只替换命令尾部；fork、出生身份、保护票和失败清理保持原样。 */
+  public static PtySession start(
+      ProotBootstrap proot,
+      int cols,
+      int rows,
+      Listener l,
+      Runnable cleanupVerified,
+      Runnable cleanupChanged,
+      Runnable beforeFork,
+      java.util.function.Consumer<PtySession> allocated,
+      String[] guestCommand) {
     PtySession ps = new PtySession();
+    ps.cleanupVerified = cleanupVerified;
+    ps.cleanupChanged = cleanupChanged;
     ps.attachListener(l);
-    // 必须先登记异步寿命，再准备目录和 fork，避免维护切换与终端启动交错。
-    ps.work = com.deepseekharness.app.core.RuntimeTasks.beginDetached("终端");
-    pending.add(ps);
     try {
+      if (allocated != null) allocated.accept(ps);
+      // 必须先登记异步寿命，再准备目录和 fork，避免维护切换与终端启动交错。
+      ps.work = com.deepseekharness.app.core.RuntimeTasks.beginDetached("终端");
+      pending.add(ps);
+      // 共享租约只覆盖创建/fork 窗口；终端寿命仍由上面的 RuntimeTasks token 与退出核验持有。
+      com.deepseekharness.app.util.EnvironmentTaskGate.Lease environmentUse =
+          com.deepseekharness.app.util.EnvironmentTaskGate.tryAcquireShared("启动终端");
+      if (environmentUse == null)
+        throw new IllegalStateException(
+            com.deepseekharness.app.util.UiText.text("环境维护或独占任务正在进行，终端未启动"));
       try {
-        proot.requireUserRuntime();
-      } catch (java.io.IOException error) {
-        throw new IllegalStateException(error.getMessage(), error);
+        try {
+          proot.requireUserRuntime();
+        } catch (java.io.IOException error) {
+          throw new IllegalStateException(error.getMessage(), error);
+        }
+        proot.ensureAndroidGroups(); // 登录 shell 的 $(groups) 依赖 /etc/group 里有 Android GID
+        ProotBootstrap.PtyLaunch launch = proot.ptyLaunch(guestCommand);
+        String[] argv = launch.argv;
+        ps.prootLauncher = com.deepseekharness.app.util.ProcessIdentity.isProot(argv[0]);
+        String[] env = launch.environment;
+        // args 就是 argv（含 argv[0]）：查过 termux.c，Java 数组原样转成 argv 后
+        // 直接 execvp(cmd, argv)，没有任何加工 —— 与 ProcessBuilder 的行为一致。
+        initializeOnMain(
+            () -> {
+              // 0.118.0 的 TerminalSession 内建 Handler 绑定构造线程；只能在主 Looper 构造/初始化。
+              // 资产准备留在工作线程，主线程只完成原有终端构造与出生握手。
+              if (beforeFork != null) beforeFork.run();
+              TerminalSession s = new TerminalSession(argv[0], "/", argv, env, TRANSCRIPT_ROWS, ps);
+              ps.session = s;
+              // initializeEmulator 才真正 fork 出子进程，所以尺寸要在这之前定好。
+              com.deepseekharness.app.runtime.NativeProcess.capturePtyIdentity(
+                  value -> ps.identity = value,
+                  () -> s.initializeEmulator(Math.max(4, cols), Math.max(2, rows)));
+            });
+        return ps;
+      } finally {
+        environmentUse.close();
       }
-      proot.ensureAndroidGroups(); // 登录 shell 的 $(groups) 依赖 /etc/group 里有 Android GID
-      ProotBootstrap.PtyLaunch launch = proot.ptyLaunch();
-      String[] argv = launch.argv;
-      ps.prootLauncher = com.deepseekharness.app.util.ProcessIdentity.isProot(argv[0]);
-      String[] env = launch.environment;
-      // args 就是 argv（含 argv[0]）：查过 termux.c，Java 数组原样转成 argv 后
-      // 直接 execvp(cmd, argv)，没有任何加工 —— 与 ProcessBuilder 的行为一致。
-      TerminalSession s = new TerminalSession(argv[0], "/", argv, env, TRANSCRIPT_ROWS, ps);
-      ps.session = s;
-      // initializeEmulator 才真正 fork 出子进程，所以尺寸要在这之前定好
-      com.deepseekharness.app.runtime.NativeProcess.capturePtyIdentity(
-          value -> ps.identity = value,
-          () -> s.initializeEmulator(Math.max(4, cols), Math.max(2, rows)));
-      return ps;
     } catch (RuntimeException | Error e) {
       if (ps.session == null || (ps.session.getPid() == 0 && ps.identity == null)) ps.releaseWork();
       else if (ps.session.getPid() == 0) {
@@ -121,6 +200,8 @@ public final class PtySession implements TerminalSessionClient {
               ps.identity.pid);
           ps.releaseWork();
         } catch (java.io.IOException | RuntimeException uncertain) {
+          ps.cleanupError = SensitiveData.redact(String.valueOf(uncertain.getMessage()));
+          ps.notifyCleanupChanged();
           android.util.Log.w(
               TAG, com.deepseekharness.app.util.UiText.text("终端初始化异常后仍无法确认退出，已保留环境保护"));
         }
@@ -132,6 +213,36 @@ public final class PtySession implements TerminalSessionClient {
         }
       }
       throw e;
+    }
+  }
+
+  private static void initializeOnMain(Runnable initialize) {
+    if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
+      initialize.run();
+      return;
+    }
+    java.util.concurrent.FutureTask<Void> task =
+        new java.util.concurrent.FutureTask<>(initialize, null);
+    if (!new android.os.Handler(android.os.Looper.getMainLooper()).post(task))
+      throw new IllegalStateException("TERMINAL_MAIN_DISPATCH_REJECTED");
+    boolean interrupted = false;
+    try {
+      while (true) {
+        try {
+          task.get();
+          return;
+        } catch (InterruptedException waitAgain) {
+          // 不能取消可能已 fork 的 UI 回调；等待确切回执后再恢复中断标记。
+          interrupted = true;
+        } catch (java.util.concurrent.ExecutionException failed) {
+          Throwable cause = failed.getCause();
+          if (cause instanceof Error) throw (Error) cause;
+          if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+          throw new IllegalStateException("TERMINAL_MAIN_INITIALIZATION_FAILED", cause);
+        }
+      }
+    } finally {
+      if (interrupted) Thread.currentThread().interrupt();
     }
   }
 
@@ -160,9 +271,42 @@ public final class PtySession implements TerminalSessionClient {
       terminal.finishAndWait(timeoutMs);
   }
 
-  private void releaseWork() {
+  /** 与 isRunning 分离：pending 只有原有退出核验成功后才能移除。 */
+  public boolean isCleanupPending() {
+    return pending.contains(this);
+  }
+
+  public String cleanupError() {
+    return cleanupError;
+  }
+
+  public Integer exitStatus() {
+    return exitStatus;
+  }
+
+  private synchronized void releaseWork() {
     if (work != null) work.close();
     pending.remove(this);
+    cleanupError = "";
+    Runnable released = cleanupVerified;
+    cleanupVerified = null;
+    if (released != null) {
+      try {
+        released.run();
+      } catch (RuntimeException ignored) {
+      }
+    }
+    notifyCleanupChanged();
+  }
+
+  private void notifyCleanupChanged() {
+    Runnable changed = cleanupChanged;
+    if (changed != null) {
+      try {
+        changed.run();
+      } catch (RuntimeException ignored) {
+      }
+    }
   }
 
   public synchronized void finishAndWait(long timeoutMs)
@@ -176,6 +320,8 @@ public final class PtySession implements TerminalSessionClient {
         if (expected == null)
           throw new java.io.IOException(
               com.deepseekharness.app.util.UiText.text("无法确认终端身份，原环境保持保护"));
+        TerminalSession active = session;
+        if (active != null) active.cancelPendingInput();
         // 启动方式在 fork 前由可信 argv 记录，PID 身份仍用出生握手与当前 stat 双重核验。
         // /proc/PID/exe 在退出及非调试应用 exec 窗口可能不可读，不能把它当成永久维护故障。
         if (prootLauncher)
@@ -194,6 +340,8 @@ public final class PtySession implements TerminalSessionClient {
       com.deepseekharness.app.runtime.TerminalProcessCloser.requireSessionEmpty(identity.pid);
       releaseWork();
     } catch (java.io.IOException | InterruptedException | RuntimeException error) {
+      cleanupError = SensitiveData.redact(String.valueOf(error.getMessage()));
+      notifyCleanupChanged();
       android.util.Log.w(
           TAG,
           com.deepseekharness.app.util.UiText.format(
@@ -202,7 +350,7 @@ public final class PtySession implements TerminalSessionClient {
     }
   }
 
-  /** 结束会话（切页面/退出时调，避免留一个孤儿 bash 在容器里跑）。 */
+  /** 显式请求结束会话；切页面、Activity 销毁均不得调用。 */
   public void finish() {
     TerminalSession t = session;
     if (t == null || !t.isRunning()) return;
@@ -222,6 +370,7 @@ public final class PtySession implements TerminalSessionClient {
       if (!expected.sameProcess(readIdentity(pid)))
         throw new IllegalStateException(
             com.deepseekharness.app.util.UiText.text("终端进程身份已变化，未发送信号"));
+      t.cancelPendingInput();
       android.system.Os.kill(pid, signal);
     } catch (android.system.ErrnoException e) {
       if (e.errno != android.system.OsConstants.ESRCH)
@@ -245,6 +394,19 @@ public final class PtySession implements TerminalSessionClient {
   // ==================== TerminalSessionClient ====================
 
   @Override
+  public void onInputError(TerminalSession source, int reason) {
+    if (source != session) return;
+    Listener l;
+    int problem;
+    synchronized (inputState) {
+      l = listener();
+      pendingInputProblem = Math.max(pendingInputProblem, reason);
+      problem = pendingInputProblem;
+    }
+    if (l != null) l.onInputProblem(problem);
+  }
+
+  @Override
   public void onTextChanged(TerminalSession changedSession) {
     Listener l = listener();
     if (l != null) l.onOutput();
@@ -258,6 +420,8 @@ public final class PtySession implements TerminalSessionClient {
 
   @Override
   public void onSessionFinished(TerminalSession finishedSession) {
+    exitStatus = finishedSession == null ? null : finishedSession.getExitStatus();
+    notifyCleanupChanged();
     if (!maintenanceClosing) {
       // 保留待核验会话，避免页面回调清掉引用后无法再次回收。
       Thread verify =

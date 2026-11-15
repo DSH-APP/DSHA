@@ -2,9 +2,9 @@
 <resources>
     <string name="ui2_stopped">DSH 未运行</string>
     <string name="ui2_launch_hint">随时开始你的下一项任务。</string>
-    <string name="ui2_start">▶  启动 DSHA</string>
-    <string name="ui2_restart">↻  重启</string>
-    <string name="ui2_stop">□  停止</string>
+    <string name="ui2_start">启动 DSHA</string>
+    <string name="ui2_restart">重启</string>
+    <string name="ui2_stop">停止</string>
     <string name="ui2_port">实际 Web 端口</string>
     <string name="ui2_environment">运行环境</string>
     <string name="ui2_address">访问地址</string>
@@ -109,10 +109,10 @@
     <string name="ui2_environment_recovery">环境修复与恢复</string>
     <string name="ui2_environment_recovery_sub">查看启动依赖与中断维护</string>
     <string name="ui2_installation_log">检查与安装日志</string>
-    <string name="ui2_config_sub">模型和 API Key 在 Web UI 中配置。这里的端口与运行方式在下次启动生效。</string>
+    <string name="ui2_config_sub">端口与运行方式下次启动生效</string>
     <string name="ui2_network_runtime">运行与网络</string>
     <string name="ui2_port_preferred">首选 Web 端口</string>
-    <string name="ui2_port_hint">端口占用时保留首选设置，自动使用可用端口。</string>
+    <string name="ui2_port_hint">端口占用时自动换用可用端口</string>
     <string name="ui2_dns">DNS 解析策略</string>
     <string name="ui2_display">显示与启动</string>
     <string name="ui2_floating">悬浮条</string>
@@ -138,7 +138,7 @@
     <string name="ui2_troubleshooting">排查与修复</string>
     <string name="ui2_reproduction">补充复现步骤</string>
     <string name="ui2_adb">ADB 无线配对</string>
-    <string name="ui2_adb_intro">在系统无线调试中取得配对码，再连接当前设备。</string>
+    <string name="ui2_adb_intro">从系统无线调试获取配对码</string>
     <string name="ui2_connection">连接状态</string>
 
     <string name="ui2_backup_restore">备份与恢复</string>

@@ -3,6 +3,7 @@ package com.deepseekharness.app.ui;
 import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.content.Intent;
+import android.view.View;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import com.deepseekharness.app.R;
@@ -15,6 +16,8 @@ public final class AutomaticBackupActivity extends AppCompatActivity {
   private TextView state;
   private LinearLayout copies;
   private boolean reading;
+  private FiniteSkeleton skeleton;
+  private boolean skeletonPlayed;
 
   private static String t(String zh, String en) {
     return UiText.choose(zh, en);
@@ -42,8 +45,8 @@ public final class AutomaticBackupActivity extends AppCompatActivity {
             value -> {
               if (state == null) return;
               if (value.busy)
-                state.setText(
-                    UiText.format("备份任务进行中：%s · %s 项", stage(value.stage), value.entries));
+                FadeSwap.text(
+                    state, UiText.format("备份任务进行中：%s · %s 项", stage(value.stage), value.entries));
               else refresh();
             });
   }
@@ -57,6 +60,8 @@ public final class AutomaticBackupActivity extends AppCompatActivity {
                 "默认开启。备份对话、附件、配置和插件；不重复备份 Ubuntu。个人项目请使用手动备份。",
                 "On by default. Saves conversations, attachments, settings and plugins, without copying Ubuntu. Use manual backup for personal projects."));
     UiNavigation.addHeader(this, page.root, t("自动备份", "Automatic backups"), this::finish);
+    // 页首只留「默认开启」这一句；备份范围、不重复 Ubuntu 与手动备份建议收进 ⓘ。
+    InfoHint.attach(page.subtitle, t("自动备份", "Automatic backups"));
     var prefs = AutomaticBackups.prefs(this);
     LinearLayout settings = page.card();
     var enabled = new com.google.android.material.materialswitch.MaterialSwitch(this);
@@ -147,13 +152,16 @@ public final class AutomaticBackupActivity extends AppCompatActivity {
             dialog.show();
           });
     }
-    settings.addView(
+    TextView timingHint =
         page.text(
             t(
                 "到期时仍在运行则延后，不会停止对话或终端。时间由系统调度，可能略有延迟。保留最近 3 份已验证自动副本。关闭后取消后续任务，已有副本保留。",
                 "If DSH or a terminal is running, backup waits. Android scheduling may delay the selected time. Keeps the latest 3 verified automatic copies. Turning off cancels future jobs and preserves existing copies."),
             12,
-            R.color.text_secondary));
+            R.color.text_secondary);
+    // 行内只留「到期仍在运行则延后」；调度延迟与保留策略收进 ⓘ。
+    InfoHint.attach(timingHint, t("备份时机", "Backup timing"));
+    settings.addView(timingHint);
     TextView localHint =
         page.text(
             t(
@@ -162,9 +170,12 @@ public final class AutomaticBackupActivity extends AppCompatActivity {
             11,
             R.color.text_muted);
     localHint.setPadding(0, page.dp(10), 0, 0);
+    // 行内只留卸载会清除；换机前导出无密码备份的做法收进 ⓘ。
+    InfoHint.attach(localHint, t("本机副本 · 保留最近 3 份", "Local copies · latest 3 kept"));
     settings.addView(localHint);
     state = page.text("", 12, R.color.text_secondary);
     page.content.addView(state);
+    page.label(t("本机副本 · 保留最近 3 份", "Local copies · latest 3 kept"));
     copies = page.card();
     page.button(
         page.footer,
@@ -182,18 +193,76 @@ public final class AutomaticBackupActivity extends AppCompatActivity {
           AutomaticBackups.request(this, true);
           state.setText(
               t(
-                  "已安排：DSH 和终端停止后可执行，稍后刷新查看结果。",
+                  "已安排，稍后查看结果",
                   "Scheduled. DSH and terminals must be stopped. Refresh shortly to view the result."));
         });
     page.button(page.footer, t("刷新备份记录", "Refresh backup records"), false, this::refresh);
     setContentView(page.root);
+    PressFeedback.attachButtons(findViewById(android.R.id.content));
     refresh();
+  }
+
+  private void openCopy(String extra, String copyId) {
+    startActivity(new Intent(this, NativeDataActivity.class).putExtra(extra, copyId));
+  }
+
+  /**
+   * G1 详情 / 动作抽屉：只读展示副本时间、大小、编号与结果；动作跳到 NativeData 的既有预检 / 导出
+   * 流程。点遮罩或返回键只关闭抽屉，不会执行任何动作。
+   */
+  private void showCopyDrawer(VerifiedBackupCopy copy, String title, String detail) {
+    CardPage sheet = new CardPage(this, t("备份详情", "Backup details"), title, true);
+    LinearLayout facts = sheet.card();
+    sheet.kv(
+        facts,
+        t("创建时间", "Created"),
+        android.text.format.DateFormat.format("yyyy-MM-dd HH:mm", copy.created).toString());
+    sheet.kv(facts, t("大小", "Size"), com.deepseekharness.app.util.Fmt.bytes(copy.bytes));
+    sheet.kv(facts, t("编号", "ID"), copy.id);
+    if (!detail.isEmpty()) sheet.kv(facts, t("摘要", "Summary"), detail);
+    String result = copy.result(true);
+    if (!result.isEmpty()) sheet.kv(facts, t("结果", "Result"), result);
+    TextView note =
+        sheet.text(
+            t(
+                "预检与导出都会再次核对私有副本；原副本保留，不覆盖已有备份。",
+                "Inspect and export verify the private copy again. The original is kept and existing backups are not overwritten."),
+            12,
+            R.color.text_secondary);
+    note.setPadding(0, sheet.dp(4), 0, sheet.dp(8));
+    sheet.content.addView(note);
+    final BottomSheetCard.Sheet[] drawer = new BottomSheetCard.Sheet[1];
+    sheet.button(
+        sheet.footer,
+        t("预检恢复", "Inspect for restore"),
+        true,
+        () -> {
+          if (drawer[0] != null) drawer[0].dismiss();
+          openCopy("auto_restore_id", copy.id);
+        });
+    sheet.button(
+        sheet.footer,
+        t("导出无密码备份", "Export backup without a password"),
+        false,
+        () -> {
+          if (drawer[0] != null) drawer[0].dismiss();
+          openCopy("auto_export_id", copy.id);
+        });
+    sheet.button(
+        sheet.footer,
+        t("关闭", "Close"),
+        false,
+        () -> {
+          if (drawer[0] != null) drawer[0].dismiss();
+        });
+    drawer[0] = BottomSheetCard.show(this, sheet);
   }
 
   private void refresh() {
     if (reading) return;
     reading = true;
-    state.setText(t("正在读取记录…", "Reading records…"));
+    FadeSwap.text(state, t("正在读取记录…", "Reading records…"));
+    showFirstLoadSkeleton();
     new Thread(
             () -> {
               try {
@@ -205,6 +274,7 @@ public final class AutomaticBackupActivity extends AppCompatActivity {
                     () -> {
                       reading = false;
                       if (isFinishing() || isDestroyed()) return;
+                      stopSkeleton();
                       copies.removeAllViews();
                       String status =
                           AutomaticBackups.enabled(this)
@@ -232,42 +302,45 @@ public final class AutomaticBackupActivity extends AppCompatActivity {
                                 + t(
                                     "数据已保存；部分插件依赖需在恢复预检中核对。",
                                     "Data saved; some plugin dependencies need review before restore.");
-                      state.setText(status);
+                      FadeSwap.text(state, status);
                       for (var copy : found.valid)
                         if (Boolean.TRUE.equals(copy.metadata.get("automatic"))) {
                           String title =
                               android.text.format.DateFormat.format("MM-dd HH:mm", copy.created)
                                   .toString();
-                          page.entry(
-                              copies,
-                              title,
+                          String detail =
                               com.deepseekharness.app.util.Fmt.bytes(copy.bytes)
                                   + ("DATA_SAVED_PLUGIN_WARNINGS".equals(copy.result(true))
                                       ? t(" · 插件依赖待核对", " · review plugin dependencies")
-                                      : ""),
-                              R.drawable.ic_recovery_document,
-                              () ->
-                                  CardSheet.choices(
-                                      this,
-                                      title,
-                                      () ->
-                                          java.util.List.of(
-                                              t("预检恢复", "Inspect for restore"),
-                                              t("导出无密码备份", "Export backup without a password")),
-                                      action ->
-                                          startActivity(
-                                              new Intent(this, NativeDataActivity.class)
-                                                  .putExtra(
-                                                      action == 0
-                                                          ? "auto_restore_id"
-                                                          : "auto_export_id",
-                                                      copy.id))));
+                                      : "");
+                          View copyRow =
+                              page.entry(
+                                  copies,
+                                  title,
+                                  detail,
+                                  R.drawable.ic_recovery_document,
+                                  () -> showCopyDrawer(copy, title, detail));
+                          // F2：左滑露出「预检恢复 / 导出」；滑动只露出动作，点按才生效。
+                          SwipeAction.attach(
+                              copyRow,
+                              SwipeAction.Model.of(
+                                  SwipeAction.Action.of(
+                                      t("预检恢复", "Inspect for restore"),
+                                      R.drawable.ic_recovery_refresh,
+                                      () -> openCopy("auto_restore_id", copy.id)),
+                                  SwipeAction.Action.of(
+                                      t("导出", "Export"),
+                                      t("导出无密码备份", "Export backup without a password"),
+                                      R.drawable.ic_ui_export,
+                                      () -> openCopy("auto_export_id", copy.id))));
+                          // F1：备份记录列表首次出现前 8 条错峰，刷新重排不重放。
+                          StaggerList.revealRow(copyRow, "auto-backup-copies", copy.id);
                         }
                       if (copies.getChildCount() == 0)
                         copies.addView(
                             page.text(
                                 t(
-                                    "还没有自动备份。到达所选时间后，在 DSH 停止且没有终端任务时创建第一份。",
+                                    "还没有自动备份",
                                     "No automatic backup yet. The first copy is created when due, with DSH and terminals stopped."),
                                 12,
                                 R.color.text_muted));
@@ -276,12 +349,34 @@ public final class AutomaticBackupActivity extends AppCompatActivity {
                 runOnUiThread(
                     () -> {
                       reading = false;
-                      state.setText(NativeBackupJobs.code(error));
+                      FadeSwap.text(state, NativeBackupJobs.code(error));
                     });
               }
             },
             "auto-backup-records")
         .start();
+  }
+
+  /**
+   * E4：首次读取记录时用 2 行骨架占位，数据到达立即收掉；上限 1.5 秒后骨架自己停，
+   * 页面保留静态「正在读取记录…」，不做无限 shimmer。
+   */
+  private void showFirstLoadSkeleton() {
+    if (skeletonPlayed || copies.getChildCount() > 0) return;
+    skeletonPlayed = true;
+    LinearLayout host = new LinearLayout(this);
+    host.setOrientation(LinearLayout.VERTICAL);
+    copies.addView(host, new LinearLayout.LayoutParams(-1, -2));
+    skeleton =
+        FiniteSkeleton.attach(host, 2, com.deepseekharness.app.util.SkeletonTiming.DEFAULT_MS);
+    skeleton.start();
+  }
+
+  private void stopSkeleton() {
+    if (skeleton != null) {
+      skeleton.stop();
+      skeleton = null;
+    }
   }
 
   @Override

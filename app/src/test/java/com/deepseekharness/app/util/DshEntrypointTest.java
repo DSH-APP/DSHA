@@ -7,7 +7,7 @@ public class DshEntrypointTest {
   @Test
   public void webAndSafeProfileDoNotDependOnGlobalOrPathSelectedDsh() {
     for (String profile : new String[] {"web", "dsha-recovery-example"}) {
-      String command = WebLaunchCommand.build("ask", true, "zh", profile, 0, 8);
+      String command = WebLaunchCommand.build(true, "zh", profile, 0, 8);
       assertTrue(command.contains(DshEntrypoint.exec() + " "));
       assertFalse(command.contains("exec dsh "));
       assertFalse(command.contains("/usr/local/bin/dsh "));

@@ -245,6 +245,24 @@ public final class WebProcSel {
         && webArguments(args, entry + 1);
   }
 
+  /**
+   * 停止升级判据：这条命令行是否为本安装受管的 proroot bridge（guest 侧）。
+   *
+   * <p>只用于“优雅退出窗口结束后，是否允许按同一出生身份升级一次信号”；不替代任何身份核验。
+   * proroot 的 bridge 进程会登记自己的 tracee，普通 SIGTERM 可能被忽略；SIGQUIT 才是它回收
+   * tracee 的约定信号。proot/proroot 容器启动器仍不在本判据范围内（启动器由持有 Process 句柄的
+   * 收尾路径按亲子身份处理）。
+   */
+  public static boolean prorootManagedBridge(String cmdline) {
+    if (cmdline == null || cmdline.isEmpty()) return false;
+    String[] args =
+        cmdline.indexOf('\0') >= 0 ? cmdline.split("\u0000") : cmdline.trim().split("\\s+");
+    args = directProrootPreloads(args);
+    return args.length > 0
+        && basename(args[0]).equals("libproroot-bridge.so")
+        && (isProrootWebPayload(args) || isProrootManagedWebShell(args));
+  }
+
   /** 返回严格直启命令绑定的隔离 profile；普通 Web、shell 包装和伪造参数均为空。 */
   public static String trialProfile(String cmdline) {
     if (cmdline == null || cmdline.isEmpty()) return "";
@@ -268,6 +286,27 @@ public final class WebProcSel {
     if (argument + 1 >= args.length || !args[argument].equals("--profile")) return "";
     String profile = args[argument + 1];
     return profile.matches("dsha-recovery-[0-9a-f]{16}") ? profile : "";
+  }
+
+  /**
+   * 供界面展示的命令摘要：只保留可执行文件名与前几个参数（最多 160 字符）。
+   *
+   * <p>这不是信号判据，也不能替代任何内核核验；仅用于停止失败时告诉用户“已核验到哪个残留进程”。
+   * 值会在 {@link WebStopDiagnostic} 中再次脱敏；控制字符换成问号，避免把内核命令行原文直接塞进界面。
+   */
+  public static String commandDigest(String cmdline) {
+    if (cmdline == null || cmdline.isEmpty()) return "";
+    java.util.List<String> parts = new java.util.ArrayList<>();
+    for (String raw : cmdline.split("\u0000", -1)) {
+      String token = raw == null ? "" : raw.trim();
+      if (token.isEmpty()) continue;
+      if (parts.isEmpty()) token = basename(token);
+      parts.add(token);
+      if (parts.size() >= 8) break;
+    }
+    if (parts.isEmpty()) return "";
+    String digest = String.join(" ", parts).replaceAll("[\\p{Cntrl}]", "?");
+    return digest.length() <= 160 ? digest : digest.substring(0, 157) + "…";
   }
 
   private static boolean webArguments(String[] args, int index) {

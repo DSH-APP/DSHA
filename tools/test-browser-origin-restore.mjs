@@ -2,7 +2,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import http from 'node:http';
-import {createHash} from 'node:crypto';
+import {createHash,webcrypto} from 'node:crypto';
+import vm from 'node:vm';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 import {browserFixture} from './rc1-browser-fixture.mjs';
@@ -10,6 +11,62 @@ import {testRuntime} from './test-runtime-fixture.mjs';
 const require=createRequire(import.meta.url);
 let playwright; try {playwright=require(process.env.DSHA_PLAYWRIGHT||'playwright');} catch {playwright=require(path.join(process.env.USERPROFILE,'.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'));}
 const source=fs.readFileSync('app/src/main/assets/app-integration/browser-origin-state.js','utf8');
+// Locale-only host path: run the real progress/error renderer, with capture and
+// restore mocked at their storage boundary. The existing suite below retains
+// real IndexedDB/Blob transaction coverage.
+const titles={zh:'恢复旧端口草稿',en:'Restore previous-port drafts','zh-Hant':'還原舊連接埠草稿',
+  ru:'Восстановление черновиков с прежнего порта',ja:'以前のポートの下書きを復元',ko:'이전 포트의 초안 복원',
+  ar:'استعادة المسودات من المنفذ السابق',pt:'Restaurar rascunhos da porta anterior',la:'Restitue adumbrationes portae prioris',fr:'Restaurer les brouillons de l’ancien port'};
+const captureAnchor='const snapshot = await capture(localStorage,indexedDB);';
+const restoreAnchor="const result = await restore(manifest,blobs,localStorage,indexedDB,() => call('/lease'),verify);";
+const copyAnchor="    const locale = String(config.language || 'zh')";
+for(const anchor of [captureAnchor,restoreAnchor,copyAnchor])assert.equal(source.split(anchor).length,2,'current run() fixture anchor: '+anchor);
+const uiFixture=source.replace(captureAnchor,'const snapshot = await scope.fixtureCapture();')
+  .replace(restoreAnchor,'const result = await scope.fixtureRestore();')
+  .replace(copyAnchor,'    scope.fixtureMessages = uiMessages;\n'+copyAnchor);
+const localeResults=[];
+for(const [language,titleText] of Object.entries(titles)){
+  const statuses=[],posted=[];const title={textContent:''},status={set textContent(value){statuses.push(value);}};
+  const rawUser='用户聊天原文 / User content <keep-{candidate}>';
+  const candidate={version:1,source:'http://127.0.0.1:3080',rows:[{key:'dsh.conversation.ui-only',value:JSON.stringify({draft:rawUser,view:null,viewRequest:null})}],images:[],parts:[]};
+  const manifestText=JSON.stringify(candidate),snapshot=createHash('sha256').update(manifestText).digest('hex');
+  const blob=new Blob(['candidate bytes 原件']);let fail=false;
+  const rawError='用户错误原文 / Original error <keep-{value}>';
+  const context={Blob,TextEncoder,crypto:webcrypto,
+    document:{getElementById(){return status;},querySelector(){return title;}},
+    window:{addEventListener(){}},
+    fixtureCapture:async()=>{if(fail)throw Error(rawError);return {manifest:candidate,parts:[blob]};},
+    fixtureRestore:async()=>({applied:2,conflicts:3,unknown:4,candidate:'candidate-unchanged'}),
+    fetch:async(url,options)=>{if(options.method==='POST')posted.push({path:new URL(url).pathname,body:options.body});return {ok:true,text:async()=>manifestText,json:async()=>({snapshot})};},
+  };
+  vm.runInNewContext(uiFixture,context);
+  const config={mode:'capture',language,transport:'http://127.0.0.1:3090',secret:'c'.repeat(64)};
+  await context.DshaOriginState.run(config);
+  const maps=context.fixtureMessages,copy=maps[language];
+  assert.deepEqual(Object.keys(maps),Object.keys(titles));
+  for(const [tag,messages] of Object.entries(maps)){
+    assert.deepEqual(Object.keys(messages),Object.keys(maps.en),tag);
+    for(const [key,value] of Object.entries(messages)){
+      assert.equal(typeof value,'string');assert(value.trim(),tag+'/'+key);
+      if(!['zh','en'].includes(tag))assert.notEqual(value,maps.en[key],tag+'/'+key+' must be a translation');
+    }
+  }
+  assert.equal(title.textContent,titleText,language);
+  assert.deepEqual(statuses,[copy.saving+'1/1',copy.retained],language);
+  assert.equal(posted.find(row=>row.path==='/manifest').body,manifestText,language+' candidate must remain unchanged');
+  assert.equal(await posted.find(row=>row.path==='/part/0').body.text(),await blob.text());
+  statuses.length=0;
+  await context.DshaOriginState.run({...config,mode:'restore'});
+  assert.deepEqual(statuses,[copy.result+'2'+copy.conflicts+'3'+copy.unknown+'4'+copy.completed],language);
+  assert.deepEqual(JSON.parse(posted.find(row=>row.path==='/finished').body),{applied:2,conflicts:3,unknown:4,candidate:'candidate-unchanged',snapshot});
+  fail=true;statuses.length=0;
+  await context.DshaOriginState.run(config);
+  assert.deepEqual(statuses,[copy.incomplete+rawError+copy.retry],language+' error text must remain unchanged');
+  assert.equal(JSON.parse(candidate.rows[0].value).draft,rawUser);
+  localeResults.push({language,title:title.textContent,rawCandidatePreserved:true,rawErrorPreserved:true});
+}
+console.log(JSON.stringify({status:'PASS',stage:'origin-run-ten-language-ui',locales:localeResults}));
+if(process.argv.includes('--ui-text-only'))process.exit(0);
 const secret='a'.repeat(64), parts=[], transferCookies=[]; let manifest, allowed=true;
 const bytes=async req=>{const rows=[];for await(const part of req)rows.push(part);return Buffer.concat(rows);};
 const server=http.createServer(async(req,res)=>{

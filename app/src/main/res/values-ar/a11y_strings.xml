@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_label" formatted="false">"التحكم في الشاشة DSH-A-Su"</string>
+    <string name="accessibility_desc" formatted="false">"استخدامان: قراءة رمز الاقتران من تصحيح الأخطاء اللاسلكي تلقائياً، وتمكين مساعد الذكاء الاصطناعي من قراءة الشاشة والنقر والكتابة وضغط المفاتيح والتقاط الصور للتحكم في الهاتف. لا يسجّل DSH-A-Su الشاشة في الخلفية، ويقرأ الشاشة الحالية فقط عند طلب المساعد."</string>
+</resources>

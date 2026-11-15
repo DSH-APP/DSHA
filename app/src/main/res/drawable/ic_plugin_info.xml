@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 圆圈感叹号：打开下载源说明与最近一次插件任务结果。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M12,3.2A8.8,8.8 0,1,0 12,20.8A8.8,8.8 0,1,0 12,3.2zM12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M11.15,6.6h1.7v6.8h-1.7zM11.15,15.2h1.7v1.8h-1.7z" />
+</vector>

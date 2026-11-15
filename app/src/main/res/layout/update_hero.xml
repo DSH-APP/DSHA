@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  版本更新主卡（手机 / 平板竖屏 / 平板横屏左栏共用）：版本一行 + 可展开完整版本、通道两段切换、状态行、进度按钮。
+  进度按钮 update_action 本身就是进度条，检查 / 下载 / 核验 / 安装原位切换，页面不放取消（下载通知栏保留）。
+  保留 id：update_current / update_code / update_edition / update_dsh / update_channels / update_stable /
+  update_preview / update_status / update_check（改为状态行末尾的“重新检查”链接）。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" style="@style/ShellCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/shell_card_pad">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+    <ImageView android:layout_width="40dp" android:layout_height="40dp" android:importantForAccessibility="no" android:scaleType="centerCrop" android:src="@drawable/dsha_brand" />
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
+      <TextView style="@style/ShellCardTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityHeading="true" android:text="@string/app_name" />
+      <LinearLayout android:id="@+id/update_version_toggle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="-6dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center_vertical" android:minHeight="@dimen/touch_min" android:orientation="horizontal" android:paddingStart="6dp" android:paddingEnd="6dp">
+        <TextView android:id="@+id/update_version_line" style="@style/ShellCardBody" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFeatureSettings="tnum" />
+        <ImageView android:id="@+id/update_version_chevron" android:layout_width="16dp" android:layout_height="16dp" android:layout_marginStart="4dp" android:importantForAccessibility="no" android:src="@drawable/ic_chevron_down" app:tint="@color/shell_text_muted" />
+      </LinearLayout>
+    </LinearLayout>
+    <TextView android:id="@+id/update_edition" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:background="@drawable/bg_update_pill" android:includeFontPadding="false" android:maxLines="1" android:paddingStart="10dp" android:paddingTop="4dp" android:paddingEnd="10dp" android:paddingBottom="4dp" android:textColor="@color/shell_accent" android:textSize="12sp" android:textStyle="bold" />
+  </LinearLayout>
+
+  <LinearLayout android:id="@+id/update_version_details" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/bg_update_inset" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="12dp" android:paddingTop="6dp" android:paddingEnd="4dp" android:paddingBottom="6dp" android:visibility="gone">
+    <TableLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:shrinkColumns="1" android:stretchColumns="1">
+      <TableRow android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="4dp" android:paddingBottom="4dp">
+        <TextView style="@style/ShellStatusText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="12dp" android:text="@string/ui134_current" />
+        <TextView android:id="@+id/update_current" style="@style/ShellStatusText" android:layout_width="0dp" android:layout_height="wrap_content" android:fontFamily="monospace" android:textColor="@color/shell_text" android:textIsSelectable="true" />
+      </TableRow>
+      <TableRow android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="4dp" android:paddingBottom="4dp">
+        <TextView style="@style/ShellStatusText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="12dp" android:text="@string/ui134_code" />
+        <TextView android:id="@+id/update_code" style="@style/ShellStatusText" android:layout_width="0dp" android:layout_height="wrap_content" android:fontFamily="monospace" android:textColor="@color/shell_text" />
+      </TableRow>
+      <TableRow android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingTop="4dp" android:paddingBottom="4dp">
+        <TextView style="@style/ShellStatusText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="12dp" android:text="@string/ui_brand_dsh" />
+        <TextView android:id="@+id/update_dsh" style="@style/ShellStatusText" android:layout_width="0dp" android:layout_height="wrap_content" android:fontFamily="monospace" android:textColor="@color/shell_text" />
+      </TableRow>
+    </TableLayout>
+    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/update_copy_version" android:layout_width="@dimen/touch_min" android:layout_height="@dimen/touch_min" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/upd_copy_version" android:padding="13dp" android:scaleType="fitCenter" android:src="@drawable/ic_ui_copy" app:tint="@color/shell_text_muted" />
+  </LinearLayout>
+
+  <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="12dp" android:layout_marginBottom="8dp" android:background="@color/shell_line" />
+
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="@dimen/touch_min" android:orientation="horizontal">
+    <TextView android:id="@+id/update_channel_label" style="@style/ShellCardBody" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginEnd="12dp" android:layout_weight="1" android:labelFor="@id/update_channels" android:text="@string/ui2_update_channel" />
+    <RadioGroup android:id="@+id/update_channels" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/bg_plugin_segment_track" android:orientation="horizontal" android:padding="3dp">
+      <RadioButton android:id="@+id/update_stable" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/bg_update_channel_tab" android:button="@null" android:gravity="center" android:includeFontPadding="false" android:minWidth="76dp" android:minHeight="@dimen/touch_min" android:paddingStart="14dp" android:paddingEnd="14dp" android:text="@string/ui_m0173" android:textColor="@color/update_channel_text" android:textSize="13sp" android:textStyle="bold" />
+      <RadioButton android:id="@+id/update_preview" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="2dp" android:background="@drawable/bg_update_channel_tab" android:button="@null" android:gravity="center" android:includeFontPadding="false" android:minWidth="76dp" android:minHeight="@dimen/touch_min" android:paddingStart="14dp" android:paddingEnd="14dp" android:text="@string/ui_m0215" android:textColor="@color/update_channel_text" android:textSize="13sp" android:textStyle="bold" />
+    </RadioGroup>
+  </LinearLayout>
+
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:orientation="horizontal">
+    <View android:id="@+id/update_status_dot" android:layout_width="8dp" android:layout_height="8dp" android:layout_marginTop="6dp" android:background="@drawable/bg_update_dot" android:importantForAccessibility="no" />
+    <TextView android:id="@+id/update_status" style="@style/ShellCardBody" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:layout_weight="1" android:accessibilityLiveRegion="polite" android:textColor="@color/shell_text" android:textIsSelectable="true" />
+    <TextView android:id="@+id/update_check" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_marginTop="-12dp" android:layout_marginEnd="-8dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center" android:includeFontPadding="false" android:minHeight="@dimen/touch_min" android:paddingStart="8dp" android:paddingEnd="8dp" android:text="@string/upd_recheck" android:textColor="@color/shell_accent" android:textSize="13sp" android:textStyle="bold" android:visibility="gone" />
+  </LinearLayout>
+
+  <com.deepseekharness.app.ui.UpdateProgressButton android:id="@+id/update_action" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
+</LinearLayout>

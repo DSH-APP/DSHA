@@ -2,6 +2,7 @@ package com.deepseekharness.app.vscreen;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
@@ -19,7 +20,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import org.json.JSONObject;
 import org.junit.Test;
+import org.robolectric.RuntimeEnvironment;
 
 /** Executes the current owner/manager APIs; Android framework construction is not acceptance. */
 @org.junit.runner.RunWith(org.robolectric.RobolectricTestRunner.class)
@@ -172,6 +175,23 @@ public final class VirtualScreenManagerOwnershipTest {
       release.countDown();
       shutdown(one);
       shutdown(two);
+    }
+  }
+
+  @Test
+  public void refusesTheHostPackageBeforeAnyLaunchReachesTheCore() throws Exception {
+    Context host = RuntimeEnvironment.getApplication();
+    VirtualScreenManager manager = new VirtualScreenManager(host, () -> 100, new Effects());
+    try {
+      JSONObject refused = manager.launch(host.getPackageName());
+      assertFalse(refused.optBoolean("ok"));
+      assertEquals("VSCREEN_SELF_LAUNCH_REFUSED", refused.optString("error"));
+      assertEquals("NOT_SENT", refused.optString("state"));
+      // 别的目标不被这条宿主策略拦下；此处没有 Core，所以它仍以未运行结束。
+      assertNotEquals(
+          "VSCREEN_SELF_LAUNCH_REFUSED", manager.launch("com.example.other").optString("error"));
+    } finally {
+      shutdown(manager);
     }
   }
 }

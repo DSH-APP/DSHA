@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-client-ui-conversation/lib/client.js",
   "patches": [
     {
@@ -15,5 +15,7 @@
       "before": "\t\t\t\t\t\t\t\t\t\t\t\t\t\"aria-label\": t(\"queue.steer\"),\n\t\t\t\t\t\t\t\t\t\t\t\t\ttitle: void 0,\n\t\t\t\t\t\t\t\t\t\t\t\t\tdisabled: busy !== null || !running,",
       "after": "\t\t\t\t\t\t\t\t\t\t\t\t\t\"aria-label\": t(\"queue.steer\"),\n\t\t\t\t\t\t\t\t\t\t\t\t\ttitle: void 0,\n\t\t\t\t\t\t\t\t\t\t\t\t\tdisabled: busy !== null,"
     }
-  ]
+  ],
+  "sourceSha256": "9a37949cc76603ea3a965ce4d0d6ca65885de4a9808345c38748e595ac396378",
+  "packageIntegrity": "sha512-bxxnfa7meTpRAm6ErErSkVWi/IBVNt7LGg2StoH85wknvIn0jVShg6wqPwCbei6myR0/C5u17CjiBoCqAvsviA=="
 }

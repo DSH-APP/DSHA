@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.3-20261026.2115-dsh0.2.1-rc.3 / build202
+
+- Interface trial: the v5 interaction prototype's shell is implemented natively — header brand and page context, a floating pill navigation on phones, a left navigation rail on tablets, a restructured launch home with an activity strip, and log copy/follow/export. Plugins and settings keep their existing real functions; the prototype's simulated data is not connected.
+- Terminal: the fullscreen terminal host and session protection from Sunset-zhongdua-G are merged in. Tapping "Terminal" opens the standalone fullscreen TerminalActivity; returning only closes the page and does not end sessions. The themed sidebar, 7+7 phone / 8+8 tablet extra keys, and landscape three-column compaction ship with this build.
+- The bundled dsh-web-mobile stays at 3.2.2 and the bundled DSH stays at rc.3; versionCode is now 202. The test identity is dsh.android.client.SunsetRNE with a local test certificate, not the E7E3 production package.
+- Boundary: this is an interface and terminal integration trial. No device installation, TalkBack, font-scale, or full rotation acceptance was performed. Plugin/settings sub-pages and some prototype pages (files, backups, diagnostics) still use the existing implementation.

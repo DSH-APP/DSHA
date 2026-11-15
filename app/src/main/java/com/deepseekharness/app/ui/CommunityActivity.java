@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.WebResourceRequest;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -18,12 +19,13 @@ public final class CommunityActivity extends AppCompatActivity {
   private WebView browser;
   private TextView status;
   private boolean pageFailed;
+  private LinearLayout root;
 
   @android.annotation.SuppressLint("SetJavaScriptEnabled")
   @Override
   protected void onCreate(Bundle saved) {
     super.onCreate(saved);
-    LinearLayout root = new LinearLayout(this);
+    root = new LinearLayout(this);
     root.setOrientation(LinearLayout.VERTICAL);
     root.setBackgroundColor(getColor(R.color.surface));
     LinearLayout bar = new LinearLayout(this);
@@ -48,6 +50,28 @@ public final class CommunityActivity extends AppCompatActivity {
     status.setPadding(16, 8, 16, 8);
     status.setTextColor(getColor(R.color.text_muted));
     root.addView(status);
+    createBrowser();
+    setContentView(root);
+    back.setOnClickListener(v -> leave());
+    reload.setOnClickListener(
+        v -> {
+          if (browser == null) createBrowser();
+          browser.loadUrl(com.deepseekharness.app.util.Constants.SITE_URL);
+        });
+    getOnBackPressedDispatcher()
+        .addCallback(
+            this,
+            new androidx.activity.OnBackPressedCallback(true) {
+              public void handleOnBackPressed() {
+                leave();
+              }
+            });
+    if (saved == null || browser.restoreState(saved) == null)
+      browser.loadUrl(com.deepseekharness.app.util.Constants.SITE_URL);
+  }
+
+  @android.annotation.SuppressLint("SetJavaScriptEnabled")
+  private void createBrowser() {
     browser = new WebView(this);
     browser.setBackgroundColor(getColor(R.color.surface));
     browser.getSettings().setJavaScriptEnabled(true);
@@ -57,6 +81,18 @@ public final class CommunityActivity extends AppCompatActivity {
     browser.getSettings().setMixedContentMode(android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW);
     browser.setWebViewClient(
         new WebViewClient() {
+          @Override
+          public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+            if (view != browser) return true;
+            browser = null;
+            pageFailed = true;
+            root.removeView(view);
+            view.destroy();
+            status.setVisibility(android.view.View.VISIBLE);
+            status.setText(UiText.text("网页渲染进程已退出"));
+            return true;
+          }
+
           @Override
           public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             return request.isForMainFrame() && navigate(request.getUrl());
@@ -69,6 +105,7 @@ public final class CommunityActivity extends AppCompatActivity {
 
           @Override
           public void onPageStarted(WebView view, String url, android.graphics.Bitmap icon) {
+            if (view != browser) return;
             pageFailed = false;
             status.setVisibility(android.view.View.VISIBLE);
             status.setText(UiText.choose("正在连接社区…", "Connecting to the community…"));
@@ -76,13 +113,13 @@ public final class CommunityActivity extends AppCompatActivity {
 
           @Override
           public void onPageFinished(WebView view, String url) {
-            if (!pageFailed) status.setVisibility(android.view.View.GONE);
+            if (view == browser && !pageFailed) status.setVisibility(android.view.View.GONE);
           }
 
           @Override
           public void onReceivedError(
               WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
-            if (request.isForMainFrame()) {
+            if (view == browser && request.isForMainFrame()) {
               pageFailed = true;
               status.setVisibility(android.view.View.VISIBLE);
               status.setText(
@@ -92,20 +129,6 @@ public final class CommunityActivity extends AppCompatActivity {
           }
         });
     root.addView(browser, new LinearLayout.LayoutParams(-1, 0, 1));
-    setContentView(root);
-    back.setOnClickListener(v -> leave());
-    reload.setOnClickListener(
-        v -> browser.loadUrl(com.deepseekharness.app.util.Constants.SITE_URL));
-    getOnBackPressedDispatcher()
-        .addCallback(
-            this,
-            new androidx.activity.OnBackPressedCallback(true) {
-              public void handleOnBackPressed() {
-                leave();
-              }
-            });
-    if (saved == null || browser.restoreState(saved) == null)
-      browser.loadUrl(com.deepseekharness.app.util.Constants.SITE_URL);
   }
 
   private boolean navigate(Uri uri) {
@@ -127,22 +150,24 @@ public final class CommunityActivity extends AppCompatActivity {
   }
 
   private void leave() {
-    if (browser.canGoBack()) browser.goBack();
+    if (browser != null && browser.canGoBack()) browser.goBack();
     else finish();
   }
 
   @Override
   protected void onSaveInstanceState(Bundle out) {
-    browser.saveState(out);
+    if (browser != null) browser.saveState(out);
     super.onSaveInstanceState(out);
   }
 
   @Override
   protected void onDestroy() {
     if (browser != null) {
-      browser.stopLoading();
-      browser.destroy();
+      WebView previous = browser;
       browser = null;
+      root.removeView(previous);
+      previous.stopLoading();
+      previous.destroy();
     }
     super.onDestroy();
   }

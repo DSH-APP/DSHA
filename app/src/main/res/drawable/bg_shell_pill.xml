@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- 小型胶囊：按压缩放由 ripple 承担，胶囊本身只用 token 实色，无渐变。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/shell_accent_soft">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="@dimen/shell_launch_radius_pill" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/shell_raised" />
+            <corners android:radius="@dimen/shell_launch_radius_pill" />
+            <stroke android:width="1dp" android:color="@color/shell_line" />
+        </shape>
+    </item>
+</ripple>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 日志框右下角「回到最新」浮标：暂停跟随时才显示。surface 实底叠 accent_soft，避免透出日志文字。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/shell_nav_ripple">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="@dimen/shell_launch_radius_pill" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/shell_surface" />
+            <corners android:radius="@dimen/shell_launch_radius_pill" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/shell_accent_soft" />
+            <corners android:radius="@dimen/shell_launch_radius_pill" />
+            <stroke android:width="1dp" android:color="@color/shell_line" />
+        </shape>
+    </item>
+</ripple>

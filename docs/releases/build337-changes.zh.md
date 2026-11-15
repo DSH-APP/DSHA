@@ -1,0 +1,11 @@
+# DSHA 0.2.1-rc.5-20261107.1900-dsh0.2.2-rc.1 / build337
+
+- 手机任务接口 409 修复（T115，`a9c718e2`）：build336 正式包的实体屏手机任务窗无法建立——内置 `dsh-status-overlay` 的 `sessions.status` / `sessions.cancel` 仍在调用 0.2.2-rc.1 已移除的 `SessionController.inspect`，`sessions.status` 抛 TypeError，桥统一回 409，Java 侧只见 `ASSISTANT_TASK_CHANGED`。现改为 `controller.state` + `controller.events` 的有界读取（最近 16 条消息事件裁剪为最近 8 条可见对话；turnId / turnActive 优先用 Host 的 turnBoundary 投影），响应字段与 Java 读取保持一致；host 测试 11/11 通过。**正式包真机待用户安装 build337 后验证。**
+- Web 终端 `pty.fork` 修复（T116，`adab1698`）：同一 Node 进程里 `sharp` 先于 `node-pty` 加载会把 `pty.node` 导出注册到 sharp/libvips 键，之后打开 Web 终端报 `pty.fork is not a function`（重试无效）。启动预加载 `startup-observer.cjs` 在插件加载前 require node-pty，失败静默、不影响启动；详细审计见 [T116 审计](../design/t116-pty-fork-20261107.md)。
+- UI 长文本整改第一批（T114，`c4c79941`）：审计报告 §2.3 的 12 处 P1 默认可见长文改为页内 1–2 行摘要，完整说明复用既有 InfoHint / InfoSurface 弹层（不新增翻译键，安全/隐私文案语义不变）；`UiMotion` 新增 `crossFadeText` 与 `animateCounter`，试接维护页状态、自动备份状态与启动页大标题；新增 UiMotionTest（9 项）与 InfoHintTest（6 项），ui 包 53 个测试类 449 项通过。
+- 隐藏后台最近任务重放（T111，`e809f72c`）：`MainActivity.onCreate`、`WebPreviewActivity.onCreate` 与 `onResume` 重放 `BrowserTasks.applyRecentsPreference`，覆盖进程重启 / 覆盖更新 / 系统重建任务后「新任务默认可见」的缺口；清单只保留任务根 Activity 的 `excludeFromRecents`。定向单测 51 项通过；ColorOS 16 与 Lenovo 真机行为未验证，不据此宣称现场已修复。
+- 文案与 CI/文档修复：T109 切片 1 合并 15 处原生 UI 同义/近重复并统一术语、修正唯一一处俄语超长（`44e44119`）；启动状态条补十语文案（`c4fd2828`）；补齐 Java 格式清单（`ec532d9a`）与六份翻译字节钉（`6b573957`），恢复 contracts / java-format 门禁。UI 基准线 v2–v5 与 [T112 审计](../design/ui-baseline-audit-20261107.md)（51 项，P1 22）为 docs-only 记录，不含代码改动。
+- 内置 `dsh-web-mobile` 保持上游 3.3.1 与默认启用不变；本版不更换插件，也不改 Ubuntu 基础环境。
+- 版本与受管输入：版本码提升为 337（基于 build336）；DSHA 修订号保持 `0.2.1-rc.5`，内置 DSH 为 `0.2.2-rc.1`。受管输入随 T115/T116 重算 runtime-descriptor（runtimeId `da08b4cb…`）；版本与文档改动不改变它；固定输入未重建，不新增受管运行时。
+- **未包含 / 未验收**：**T110 页面保活不在本版**——从网页返回原生主页面再回网页时，侧栏连接状态重走「黄→绿→隐藏」与原生加载遮罩的已知问题仍在；**K5 未验收**（自动化被 build336 正式包 409 阻塞，需按测试包流程手动执行，或等 build337 正式包后再自动化）；T111 / T115 / T116 的真机行为待用户安装正式包验证。**build337 尚未真机验收**，验收项是 336→337 首次覆盖成功、手机任务工具可 begin、Web 终端可打开、隐藏后台按开关生效、数据完好、READY。
+- 验证范围：发布身份与前置检查、宿主 contracts 整组 12 项、host-tests fast 与 runtime、全量 `:app:testStandardDebugUnitTest`、全树 Java 格式、`git diff --check`、`generate-changelog --check` 与文档链接检查；结果以本机发布准备回执与本次 CI run 为准。Lint 由 release-production 的 CI lint 节点执行。

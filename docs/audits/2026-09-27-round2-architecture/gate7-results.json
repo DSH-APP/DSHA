@@ -1,6 +1,0 @@
-{
-  "receipt": "app\\build\\stability-acceptance\\f558c6f3-9184-43a8-90e4-b56cbf80f558\\manifest.json",
-  "status": "INCOMPLETE_OR_FAILED",
-  "failure": "gradle-verification failed; see F:\\DSHA_RESTART\\app\\build\\stability-acceptance\\f558c6f3-9184-43a8-90e4-b56cbf80f558\\gradle-verification.log",
-  "note": "Standard 779 tests: one Android JSONObject stub error in newly added discard test; Low not executed. Assertions retained; production validation moved to existing strict JSON library before rerun."
-}

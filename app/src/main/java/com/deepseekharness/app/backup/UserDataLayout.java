@@ -134,7 +134,7 @@ public final class UserDataLayout {
                 .substring(home.getAbsolutePath().length() + 1)
                 .replace(File.separatorChar, '/')
                 .split("/", 2)[0];
-        return PrivateRoots.DSH.contains(child);
+        return PrivateRoots.dsh(child);
       }
     } catch (IOException unavailable) {
       return true;

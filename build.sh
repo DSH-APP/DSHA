@@ -3,7 +3,7 @@
 #
 # 用法（两种方式都行 —— 脚本本身在部分文件系统上没有可执行位）：
 #   bash build.sh :app:testStandardDebugUnitTest
-#   bash build.sh :app:assembleLowRelease
+#   bash build.sh :app:lintStandardRelease
 #   bash build.sh                      # 默认 :app:assembleStandardDebug
 #
 # 工具链解析顺序：环境变量 > 原开发机 F:/DSHA/_toolchains > 本机自动探测。
@@ -197,8 +197,21 @@ seed_gradle_dist() {
 #
 # 已搭好 qemu-user + binfmt 的主机可设 DSHA_FORCE_AIDL=1 走原生 aidl；
 # 如异常现场无法自动确认备份，请先人工核对，不覆盖未知 aidl。
+# AGP 实际调用的是 ci/toolchain.lock.json 锁定的 build-tools（不是 SDK 里最高的那份）；
+# 同时装了 36/37 时只给 37 换 shim，AGP 仍跑 36 的 x86_64 aidl 而失败。
+# 锁定版本目录存在就用它，否则退回最高版本。
+aidl_build_tools_dir() {
+    local locked
+    locked="$("$DSHA_PYTHON" "$ROOT/tools/ci-toolchain.py" --field buildTools 2>/dev/null || true)"
+    if [ -n "$locked" ] && [ -d "$SDK/build-tools/$locked" ]; then
+        printf '%s\n' "$SDK/build-tools/$locked"
+    else
+        ls -d "$SDK"/build-tools/*/ 2>/dev/null | sort -V | tail -1 | sed 's:/*$::'
+    fi
+}
+
 probe_aidl_arch() {
-    "$DSHA_PYTHON" - "$SDK" <<'PY'
+    "$DSHA_PYTHON" - "$SDK" "$(aidl_build_tools_dir || true)" <<'PY'
 import glob, os, struct, sys
 host = os.uname().machine
 want = {'aarch64': 183, 'arm64': 183, 'x86_64': 62, 'amd64': 62,
@@ -206,7 +219,8 @@ want = {'aarch64': 183, 'arm64': 183, 'x86_64': 62, 'amd64': 62,
 if want is None:
     print('unknown-host:%s' % host); sys.exit()
 found = None
-for d in sorted(glob.glob(os.path.join(sys.argv[1], 'build-tools', '*')), reverse=True):
+preferred = [sys.argv[2]] if len(sys.argv) > 2 and sys.argv[2] else []
+for d in preferred + sorted(glob.glob(os.path.join(sys.argv[1], 'build-tools', '*')), reverse=True):
     b = os.path.join(d, 'aidl')
     if not os.path.isfile(b):
         continue
@@ -251,7 +265,7 @@ restore_aidl_on_exit() {
 install_aidl_shim() {
     local stub="$ROOT/tools/aidl-stub" bt bin bak line
     find "$stub" -name '*.java' | grep -q . || { echo "ERROR: $stub 里没有等价产物" >&2; return 1; }
-    bt="$(ls -d "$SDK"/build-tools/*/ 2>/dev/null | sort -V | tail -1 || true)"
+    bt="$(aidl_build_tools_dir || true)"
     [ -n "$bt" ] || { echo "ERROR: SDK 里没有 build-tools" >&2; return 1; }
     bin="$bt/aidl"
     bak="$bin.x86_64.disabled"

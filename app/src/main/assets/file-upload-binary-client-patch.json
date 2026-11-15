@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-file-upload/lib/client.js",
+  "sourceSha256": "a96d8423b318b76bdda4b138a89c72cfc5492b95b9cfaad3cbc0cb3f188ebec3",
+  "packageIntegrity": "sha512-MipvUhc+bLgexDff+vFNUZodd3WQ9Q+OZnYW8kAv6MU6ieSRUeVxgGOlNsM5rKVZNjxDmmzXaXeXq2d5VnvTTA==",
+  "purpose": "Enforce 5,000,000,000 bytes per file, count streamed bytes before storage, retain image budgets and use bounded binary browser transport.",
+  "patches": [
+    {
+      "before": "\t\tfunction bytesToBase64(data) {\n\t\t\tlet binary = \"\";\n\t\t\tconst chunk = 32768;\n\t\t\tfor (let offset = 0; offset < data.length; offset += chunk) binary += String.fromCharCode(...data.subarray(offset, offset + chunk));\n\t\t\treturn btoa(binary);\n\t\t}",
+      "after": "\t\t// DSHA_UPLOAD_BINARY_ONLY_V1: never aggregate browser files into a base64 RPC.\n\t\tconst DSHA_UPLOAD_FILE_LIMIT = 5000000000;\n\t\tfunction dshaUploadTooLarge() {\n\t\t\treturn new RemoteError(\"session/attachment-invalid\", \"Single file exceeds 5 GB (5,000,000,000 bytes).\", { reason: \"FILE_TOO_LARGE\", maxBytes: DSHA_UPLOAD_FILE_LIMIT });\n\t\t}\n\t\tfunction dshaBoundedUploadStream(source) {\n\t\t\tconst reader = source.getReader();\n\t\t\tlet bytes = 0, released = false;\n\t\t\tconst release = () => { if (!released) { released = true; reader.releaseLock(); } };\n\t\t\treturn new ReadableStream({\n\t\t\t\tasync pull(controller) {\n\t\t\t\t\ttry {\n\t\t\t\t\t\tconst item = await reader.read();\n\t\t\t\t\t\tif (item.done) { release(); controller.close(); return; }\n\t\t\t\t\t\tif (!(item.value instanceof Uint8Array)) throw new TypeError(\"file upload stream produced a non-Uint8Array chunk\");\n\t\t\t\t\t\tif (item.value.byteLength > DSHA_UPLOAD_FILE_LIMIT - bytes) throw dshaUploadTooLarge();\n\t\t\t\t\t\tbytes += item.value.byteLength;\n\t\t\t\t\t\tcontroller.enqueue(item.value);\n\t\t\t\t\t} catch (error) {\n\t\t\t\t\t\tawait reader.cancel(error).catch(() => {}); release(); controller.error(error);\n\t\t\t\t\t}\n\t\t\t\t},\n\t\t\t\tasync cancel(reason) { try { await reader.cancel(reason); } finally { release(); } }\n\t\t\t});\n\t\t}"
+    },
+    {
+      "before": "\t\t\tasync upload(sessionId, data, name, signal, onProgress) {\n\t\t\t\tif (!(data instanceof Uint8Array)) {\n\t\t\t\t\tconst query = new URLSearchParams({ sessionId });\n\t\t\t\t\tif (name !== void 0) query.set(\"name\", name);\n\t\t\t\t\treturn parseUploadResult(await this.postRaw(query, data, signal, onProgress), fileUploadValue);\n\t\t\t\t}\n\t\t\t\treturn this.ctx.remote.fileUploads.upload(sessionId, {\n\t\t\t\t\tdata: bytesToBase64(data),\n\t\t\t\t\t...name === void 0 ? {} : { name }\n\t\t\t\t}, signal);\n\t\t\t}",
+      "after": "\t\t\tasync upload(sessionId, data, name, signal, onProgress) {\n\t\t\t\tsignal?.throwIfAborted();\n\t\t\t\tif (data instanceof Uint8Array) data = new Blob([data]);\n\t\t\t\tif (data instanceof Blob && data.size > DSHA_UPLOAD_FILE_LIMIT) return { ok: false, error: dshaUploadTooLarge() };\n\t\t\t\tif (data instanceof ReadableStream) data = dshaBoundedUploadStream(data);\n\t\t\t\tconst query = new URLSearchParams({ sessionId });\n\t\t\t\tif (name !== void 0) query.set(\"name\", name);\n\t\t\t\t// Prompt images keep upstream uploadImage(): Blob only, bounded by Host imageLimits.\n\t\t\t\treturn parseUploadResult(await this.postRaw(query, data, signal, onProgress), fileUploadValue);\n\t\t\t}"
+    },
+    {
+      "before": "\t\t\t\t\tif (request.body instanceof ReadableStream) worker.postMessage(message, [request.body]);\n\t\t\t\t\telse worker.postMessage(message);",
+      "after": "\t\t\t\t\ttry {\n\t\t\t\t\t\tif (request.body instanceof ReadableStream) worker.postMessage(message, [request.body]);\n\t\t\t\t\t\telse worker.postMessage(message);\n\t\t\t\t\t} catch (error) { finish(() => reject(error)); }"
+    }
+  ]
+}

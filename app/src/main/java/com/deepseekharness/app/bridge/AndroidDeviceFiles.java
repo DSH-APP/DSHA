@@ -19,8 +19,9 @@ import java.util.List;
 public final class AndroidDeviceFiles implements DeviceFileOperations.Access {
   private static final int O_PATH = 0x200000;
   private static final int O_CLOEXEC = 0x80000;
-  // Linux asm-generic UAPI；Java OsConstants 未公开 O_DIRECTORY，arm64/API23 使用同一值。
-  private static final int O_DIRECTORY = 0x10000;
+  // NDK 26.3 aarch64-linux-android/asm/fcntl.h: 040000. Production is arm64 only;
+  // asm-generic/x86 00200000 is arm64 O_DIRECT, not its directory flag.
+  private static final int O_DIRECTORY = 040000;
 
   private static IOException failure(ErrnoException error) {
     return new IOException("DEVICE_FILESYSTEM_" + error.errno, error);

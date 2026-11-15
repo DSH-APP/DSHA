@@ -61,6 +61,43 @@ public class StartupHistoryStoreTest {
   }
 
   @Test
+  public void persistedMilestonesDistinguishStartupFromLaterRuntimeErrors() throws Exception {
+    var store =
+        new StartupHistoryStore(
+            new com.deepseekharness.app.backup.JvmBackupFileSystem(), folder.getRoot());
+    var trace = new StartupTrace();
+    trace.begin(1, 1000, false);
+    trace.backendReady(1, 3000);
+    trace.browserReady(1, 6000);
+    trace.add(1, 16_000, "HTTP 403 remains visible");
+    store.save(
+        UUID.randomUUID().toString(),
+        1,
+        "ready",
+        "",
+        trace.snapshot(17_000, "zh"),
+        trace.snapshot(17_000, "en"));
+    var entry = store.list("en").get(0);
+    assertEquals(5000, entry.elapsed);
+    assertEquals(16_000, entry.runElapsed);
+    assertEquals(2000, entry.backendReadyMs);
+    assertEquals(5000, entry.browserReadyMs);
+    assertTrue(entry.log.contains("HTTP 403 remains visible"));
+  }
+
+  @Test
+  public void legacyHistoryWithoutMilestonesRemainsReadableWithoutInventingReadyTimes() {
+    Properties legacy = new Properties();
+    legacy.setProperty("elapsed", "7437300");
+    StartupHistoryStore.Entry entry =
+        new StartupHistoryStore.Entry(UUID.randomUUID().toString(), legacy, "en");
+    assertEquals(7_437_300, entry.elapsed);
+    assertEquals(7_437_300, entry.runElapsed);
+    assertEquals(-1, entry.backendReadyMs);
+    assertEquals(-1, entry.browserReadyMs);
+  }
+
+  @Test
   public void trustedParentAliasIsNormalizedBeforeCheckingRecordPaths() throws Exception {
     folder.newFolder("alias");
     StartupHistoryStore store =

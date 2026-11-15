@@ -1,0 +1,336 @@
+{
+  "schema": 1,
+  "channel": "1.100.0",
+  "manifestDate": "2026-11-12",
+  "rustc": {
+    "version": "1.100.0",
+    "commit": "0ef1bc386",
+    "commitDate": "2026-11-09",
+    "llvm": "23.1.5"
+  },
+  "cargo": {
+    "version": "1.100.0",
+    "packageVersion": "0.101.0",
+    "commit": "3acc79c0c",
+    "commitDate": "2026-11-05"
+  },
+  "profile": "minimal",
+  "components": [
+    "rustfmt",
+    "clippy"
+  ],
+  "targets": [
+    "aarch64-linux-android",
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu"
+  ],
+  "rustup": {
+    "version": "1.29.3",
+    "installer": {
+      "host": "aarch64-unknown-linux-gnu",
+      "bytes": 20172120,
+      "sha256": "9f608c142e0e38a78957d0661ba1dfaf0b6fb37184cfaa4b9a0aa57af6184282"
+    }
+  },
+  "ndk": "26.3.11579264",
+  "androidApi": 23,
+  "linker": "aarch64-linux-android23-clang",
+  "androidNeededAllowed": [
+    "libc.so",
+    "libdl.so",
+    "liblog.so",
+    "libm.so",
+    "libunwind.so"
+  ],
+  "abi": {
+    "version": 1,
+    "symbols": [
+      "Java_com_deepseekharness_app_util_RustNative_abiVersion",
+      "Java_com_deepseekharness_app_util_RustNative_archivePackAbort",
+      "Java_com_deepseekharness_app_util_RustNative_archivePackCreate",
+      "Java_com_deepseekharness_app_util_RustNative_archivePackFinish",
+      "Java_com_deepseekharness_app_util_RustNative_archivePackUpdate",
+      "Java_com_deepseekharness_app_util_RustNative_archiveUnpackAbort",
+      "Java_com_deepseekharness_app_util_RustNative_archiveUnpackCreate",
+      "Java_com_deepseekharness_app_util_RustNative_archiveUnpackRead",
+      "Java_com_deepseekharness_app_util_RustNative_archiveUnpackWrite",
+      "Java_com_deepseekharness_app_util_RustNative_digest",
+      "Java_com_deepseekharness_app_util_RustNative_verifyPlan"
+    ]
+  },
+  "crate": {
+    "name": "dsha-core",
+    "lib": "dsha_rs",
+    "artifact": "libdsha_rs.so",
+    "crateType": "cdylib",
+    "edition": "2021",
+    "profile": {
+      "optLevel": "z",
+      "lto": "fat",
+      "codegenUnits": 1,
+      "panic": "unwind",
+      "strip": "symbols"
+    }
+  },
+  "dependencies": [
+    {
+      "name": "adler2",
+      "version": "2.0.1",
+      "source": "crates.io",
+      "checksum": "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa",
+      "upstreamLicense": "0BSD OR MIT OR Apache-2.0",
+      "license": "0BSD OR MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-0BSD",
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "block-buffer",
+      "version": "0.10.4",
+      "source": "crates.io",
+      "checksum": "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71",
+      "upstreamLicense": "MIT OR Apache-2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "cfg-if",
+      "version": "1.0.5",
+      "source": "crates.io",
+      "checksum": "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600",
+      "upstreamLicense": "MIT OR Apache-2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "cpufeatures",
+      "version": "0.2.17",
+      "source": "crates.io",
+      "checksum": "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280",
+      "upstreamLicense": "MIT OR Apache-2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "crc32fast",
+      "version": "1.5.5",
+      "source": "crates.io",
+      "checksum": "2b929dd2a135771f40afabd1073f85eed59c800b7c61901e5c254270497dad64",
+      "upstreamLicense": "MIT OR Apache-2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "crypto-common",
+      "version": "0.1.7",
+      "source": "crates.io",
+      "checksum": "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a",
+      "upstreamLicense": "MIT OR Apache-2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "digest",
+      "version": "0.10.7",
+      "source": "crates.io",
+      "checksum": "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292",
+      "upstreamLicense": "MIT OR Apache-2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "flate2",
+      "version": "1.1.11",
+      "source": "crates.io",
+      "checksum": "626d4928326b646e70f65ed36fc7cf9f206bdb68a0019ee7c6b4709da4e084c4",
+      "upstreamLicense": "MIT OR Apache-2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "generic-array",
+      "version": "0.14.7",
+      "source": "crates.io",
+      "checksum": "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a",
+      "upstreamLicense": "MIT",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "name": "libc",
+      "version": "0.2.191",
+      "source": "crates.io",
+      "checksum": "65cd87c9a6d60536580b316ad985726104730a5151c99845f2490428ef91240a",
+      "upstreamLicense": "MIT OR Apache-2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "miniz_oxide",
+      "version": "0.9.1",
+      "source": "crates.io",
+      "checksum": "b63fbc4a50860e98e7b2aa7804ded1db5cbc3aff9193adaff57a6931bf7c4b4c",
+      "upstreamLicense": "MIT OR Zlib OR Apache-2.0",
+      "license": "MIT OR Zlib OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE",
+        "LICENSE-APACHE.md",
+        "LICENSE-MIT.md",
+        "LICENSE-ZLIB.md"
+      ]
+    },
+    {
+      "name": "sha1",
+      "version": "0.10.7",
+      "source": "crates.io",
+      "checksum": "a978451301f4db1d02937a4ab3ccce137717b81826e79b7d49ffe3244a13c3b8",
+      "upstreamLicense": "MIT OR Apache-2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "sha2",
+      "version": "0.10.9",
+      "source": "crates.io",
+      "checksum": "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283",
+      "upstreamLicense": "MIT OR Apache-2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "simd-adler32",
+      "version": "0.3.10",
+      "source": "crates.io",
+      "checksum": "3a219298ac11a56ea9a6d2120044824d6f01aeb034955e7af7bc16858527deea",
+      "upstreamLicense": "MIT",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE.md"
+      ]
+    },
+    {
+      "name": "typenum",
+      "version": "1.20.1",
+      "source": "crates.io",
+      "checksum": "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20",
+      "upstreamLicense": "MIT OR Apache-2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE",
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "version_check",
+      "version": "0.9.5",
+      "source": "crates.io",
+      "checksum": "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a",
+      "upstreamLicense": "MIT/Apache-2.0",
+      "license": "MIT OR Apache-2.0",
+      "licenseFiles": [
+        "LICENSE-APACHE",
+        "LICENSE-MIT"
+      ]
+    }
+  ],
+  "vendor": {
+    "layout": "versioned-dirs",
+    "crates": 16,
+    "files": 782,
+    "bytes": 7384177
+  },
+  "buildInputs": [
+    {
+      "path": "vendor/crc32fast-1.5.5/build.rs",
+      "kind": "build.rs",
+      "sha256": "deb6052c4a586e8875ef677fe2d9e9dcfafebfa949803455ea8eff6e7dbde436",
+      "allowedCommands": [
+        "rustc --version"
+      ],
+      "network": false,
+      "fileWrites": false,
+      "behavior": "读 RUSTC 执行 rustc --version 探测 minor；只输出 cargo cfg，无网络/文件写/凭据读取"
+    },
+    {
+      "path": "vendor/generic-array-0.14.7/build.rs",
+      "kind": "build.rs",
+      "sha256": "08fa30c4a2c1ad24fe5f987e721dfb20131f45ea5b5dc3e836dcf88a8e33248c",
+      "allowedCommands": [
+        "rustc --version"
+      ],
+      "network": false,
+      "fileWrites": false,
+      "behavior": "调用 version_check 执行 rustc --version --verbose；输出一个 cfg，无网络/文件写/凭据读取"
+    },
+    {
+      "path": "vendor/libc-0.2.191/build.rs",
+      "kind": "build.rs",
+      "sha256": "e70593206df4d2a3138eab463567e0ae8f91c1bea565da4ab5370ea8986840ac",
+      "allowedCommands": [
+        "rustc --version"
+      ],
+      "network": false,
+      "fileWrites": false,
+      "behavior": "读 RUSTC/RUSTC_WRAPPER/CARGO_CFG_*/CARGO_FEATURE_*/RUST_LIBC_UNSTABLE_* 并执行 rustc --version；Android 目标不触达 freebsd-version/emcc 分支；无网络/文件写/凭据读取"
+    },
+    {
+      "path": "vendor/version_check-0.9.5/src/lib.rs",
+      "kind": "build-dependency",
+      "sha256": "01bb86088ba281d511ae002aa939bb30b747f47ace5ea13a46de554a3117806e",
+      "allowedCommands": [
+        "rustc --version"
+      ],
+      "network": false,
+      "fileWrites": false,
+      "behavior": "构建期只执行 rustc --verbose --version；File::open/fs::metadata 只在 #[cfg(test)] 内，不进入产物"
+    }
+  ],
+  "buildInputEnvAllow": [
+    "RUSTC",
+    "RUSTC_WRAPPER",
+    "WIND_RELEASE_ID",
+    "CARGO_ENCODED_RUSTFLAGS",
+    "RUSTFLAGS",
+    "FORCE_STATIC",
+    "KNOWN_CHANNEL",
+    "CARGO_CFG_*",
+    "CARGO_FEATURE_*",
+    "RUST_LIBC_UNSTABLE_*",
+    "CARGO_CFG_LIBC_UNSTABLE_*"
+  ]
+}

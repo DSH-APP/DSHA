@@ -1,17 +1,17 @@
 # References, upstream provenance and verifiable scope
 
-This is a build190 fact index, originally using F10 as a reference. The supplemental Root source/boundary review is dated 2026-10-22 and scoped in section 5.1; other upstream references retain their 2026-10-21 review scope. Its purpose is to locate primary references, version locks and verification entry points, not imply official endorsement or security certification. The original documentation work read source, locks and upstream references; section 5.1 separately records subsequent isolated host checks. The documentation correction itself does not rerun builds, operate a su device or publish artifacts.
+This is a build356 fact index covering the current publication identity, upstream sources and fixed inputs. F10/F11/build190 and other historical records stay as written and cannot serve as evidence for this build. Its purpose is to locate primary references, version locks and verification entry points, not imply official endorsement or security certification. Documentation corrections do not rerun builds, operate a su device or publish artifacts; this build's software, APK and release results are bound by the CI run and Release receipt.
 
 ## 1. Project and upstream relationships
 
 | Project | Role and evidence in this branch | What this does not establish |
 |---|---|---|
-| [ym2025szz/DSHA-prerelase](https://github.com/ym2025szz/DSHA-prerelase) | Private maintenance and prerelease distribution repository linked by the current README; the repository's actual spelling is retained | An official DeepSeek Android client or officially certified branch |
+| [SunsetRNE/DSHA-Sunset-mod](https://github.com/SunsetRNE/DSHA-Sunset-mod) | Current public maintenance and prerelease distribution repository; the former `DSHA-Sunset-mod-3090-Q` was merged and removed | An official DeepSeek Android client or officially certified branch |
 | [DSH-APP/DSHA](https://github.com/DSH-APP/DSHA) | Origin of the DSHA project; local AGENTS records migration of later changes onto the build170 base | Identity between this maintenance branch and every branch, Release or website of that repository |
 | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) | Official DeepSeek Harness upstream; this project installs its npm runtime into a Linux environment inside Android | Upstream maintenance or approval of DSHA's native shell, authorization policy, container patches or local APK |
 | [mexiaosqwq/dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) | Third-party mobile Web-plugin upstream; imported at an exact commit, then locally adapted | An official DeepSeek mobile UI or an entirely unmodified upstream package |
 
-The relationships are described jointly by [README](../../README.en.md), [AGENTS](../../AGENTS.en.md), locks and actual differences. Public project descriptions establish public statements, not the source commit of a particular local binary. Anonymous access to a private repository may return 404; that neither proves its absence nor replaces authenticated permission/attachment checks. This page did not inspect the private repository's remote commit or attachment state. A concrete delivery needs separate verification of the exact Release and digests. Maintainer attribution, upstream organization names, use of their APIs and retained licenses do not amount to organizational authorization or audit endorsement.
+The relationships are described jointly by [README](../../README.en.md), [AGENTS](../../AGENTS.en.md), locks and actual differences. Public project descriptions establish public statements, not the source commit of a particular local binary. Anonymous access to a private repository may return 404; that neither proves its absence nor replaces authenticated permission/attachment checks. This page did not inspect the public repository's remote commit or attachment state. A concrete delivery needs separate verification of the exact Release and digests. Maintainer attribution, upstream organization names, use of their APIs and retained licenses do not amount to organizational authorization or audit endorsement.
 
 ## 2. What the three evidence categories answer
 
@@ -29,22 +29,20 @@ The following values come from current files. Update the lock before this page w
 
 | Component | Current local selection | Original lock/configuration |
 |---|---|---|
-| Main DSH package | `@deepseek-ai/dsh` `0.2.1-rc.2` | [package.json](../../tools/dsh-runtime/package.json), [package-lock.json](../../tools/dsh-runtime/package-lock.json) |
-| Mobile plugin | `3.2.1`; actual main input commit below | [mobile-plugin-upstream.lock.json](../../tools/mobile-plugin-upstream.lock.json) |
+| Main DSH package | `@deepseek-ai/dsh` `0.2.1-rc.5` | [package.json](../../tools/dsh-runtime/package.json), [package-lock.json](../../tools/dsh-runtime/package-lock.json) |
+| Mobile plugin | `3.3.5`; actual main input commit below | [mobile-plugin-upstream.lock.json](../../tools/mobile-plugin-upstream.lock.json) |
 | Managed environment | Ubuntu 24.04 arm64; DSHA `baseVersion=10` | [runtime-descriptor.json](../../app/src/main/assets/runtime-descriptor.json), [Ubuntu package lock](../../tools/ubuntu-tools/packages.lock.json) |
 | Runtime tools | pnpm `10.34.5`, certifi `2026.7.22` | [runtime-tools.lock.json](../../tools/runtime-tools.lock.json) |
 | Default/optional engine | proot/proroot; the latter locally declared v1.2.8 | [AGENTS](../../AGENTS.en.md), [THIRD_PARTY_NOTICES](../../THIRD_PARTY_NOTICES.md) |
-| Shizuku API/provider | Standard `13.1.5`; Low `12.2.0` | [app/build.gradle](../../app/build.gradle) |
-| Low GeckoView | `143.0.20251003115653`, arm64-v8a | [app/build.gradle](../../app/build.gradle) |
-| Android identity | `dsh.android.client`, versionCode `190`; see build configuration for the dated versionName | [app/build.gradle](../../app/build.gradle) |
-| Independent recovery environment | DSH `0.2.1-rc.2` / base `10`, separate archive digests | [recovery-runtime/lock.json](../../tools/recovery-runtime/lock.json) |
+| Android identity | `io.github.sunsetrne.dsha`, versionCode `216`; test variant `io.github.sunsetrne.dsha.test` | [app/build.gradle](../../app/build.gradle), [release identity](../../ci/release-identity.json) |
+| Independent recovery environment | DSH `0.2.1-rc.5` / base `10`, separate archive digests (since build215 byte-identical to the regular archive and shared in the APK) | [recovery-runtime/lock.json](../../tools/recovery-runtime/lock.json) |
 
 ### DSH package provenance
 
-The main package's resolved URL in the current npm lock is the [exact 0.2.1-rc.2 tarball at registry.npmjs.org](https://registry.npmjs.org/@deepseek-ai/dsh/-/dsh-0.2.1-rc.2.tgz). Its locked integrity value is:
+The main package's resolved URL in the current npm lock is the [exact 0.2.1-rc.5 tarball at registry.npmjs.org](https://registry.npmjs.org/@deepseek-ai/dsh/-/dsh-0.2.1-rc.5.tgz). Its locked integrity value is:
 
 ```text
-sha512-tvY+yhfKRifthbqPe/OK0AYxM5ZkvqfYq/jMYgJcEUxiRRL1Vwra3Ti5TB6AXgSWQdiPHYh/Vp6SJa9yHwMNuw==
+sha512-WkyJZv4zl9sCAxSzRctGm58m0rilGqwR6pniBiLOz5CPDfHfDuAUicg0AAazXI7oj/Cph6/cjNTncA/rpLTXpw==
 ```
 
 The lock also retains resolved URLs, integrity and declared licenses throughout the actual dependency graph. Checking only the main package name is insufficient. DSHA manages adaptations to installation, bridging, Web behavior and storage; its runtime archive is not an untouched official installation. Modification entry points are [prepare-dsh-runtime.py](../../tools/prepare-dsh-runtime.py) and [runtime-patches.json](../../app/src/main/assets/runtime-patches.json).
@@ -53,12 +51,13 @@ The lock also retains resolved URLs, integrity and declared licenses throughout 
 
 The current lock distinguishes the release tag from later main inputs:
 
-- The recorded release tag is `v3.2.1`, with releaseCommit `1844bf21db47a9b942275b8118988e3f6718cf4b`.
-- The imported commit is [`10e58ce0c4ed424c7fbd9c91d48db06c6061b4e4`](https://github.com/mexiaosqwq/dsh-web-mobile/tree/10e58ce0c4ed424c7fbd9c91d48db06c6061b4e4).
-- The upstream source-archive SHA-256 in the lock is `9629e585127dd8dd2149bb9f188cef957e5d0f5d4ae57d07f6f881748940e1e5`.
+- The current fixed commit is [`646fe837440f9939228bdba0024d407eaac01128`](https://github.com/mexiaosqwq/dsh-web-mobile/tree/646fe837440f9939228bdba0024d407eaac01128); release tag v3.3.5 points to `14ecfccf5a6acb69e3a84229dee328d31801306f` (2026-11-08), with three post-tag README / plugin-page-layout fixes also taken from main. `lib/client.js` digest `8a17dd03b5de35f1aea52c93d6e3352fcd43c781de380639f60a93bf6040a26a`.
+- This import has 37 commits (merge commits included) beyond the previous pin `4e71eb67de7dac9d8b2572757c81e47aa32a32fb` (v3.3.1): plugin-page icon and localized title/description, the phone "more views" entry, subagent-chip yielding, the drawer dim layer painted by a frame pseudo-element, full-screen gestures classified by direction (the 45% edge zones are retired), the hero worktree row, plugin-page host layout restored, and hardened test gates. The three server modules (`lib/index.js` / `compress.js` / `delete-session.js`) did not change upstream, so the local replacements still pass the exact upstream digest and anchor checks.
+- New members `locale/en.json`, `locale/zh.json` and `assets/icon.png` are installed through the managed table (the host plugin card reads `package.json#icon` and `meta.title` / `meta.description` from `locale/<lang>.json`); upstream renamed `overlay-backdrop-fab` to `drawer-layer`, and the three old members are recorded in the lock's `retiredFiles`.
+- The upstream source-archive SHA-256 in the lock is `15a51f4018485d930e66b5734b4421da2a32fbca59e20219b68f4c7fe34c7515` (3,291,698 B).
 - Upstream client and final local client are recorded separately; final member digests are in the current THIRD_PARTY_NOTICES and descriptor.
 
-An internal package version of 3.2.1 does not mean it contains only that tag's original bytes. [apply-mobile-client-patches.mjs](../../tools/apply-mobile-client-patches.mjs) and [mobile-server](../../tools/mobile-server) manage local differences. Check individually whether an upstream upgrade absorbed local patches; do not apply the entire old patch set again.
+An internal package version of 3.3.5 does not mean it contains only that tag's original bytes. [apply-mobile-client-patches.mjs](../../tools/apply-mobile-client-patches.mjs) and [mobile-server](../../tools/mobile-server) manage local differences. Check individually whether an upstream upgrade absorbed local patches; do not apply the entire old patch set again.
 
 ## 4. Licenses and unresolved provenance boundaries
 
@@ -66,14 +65,14 @@ An internal package version of 3.2.1 does not mean it contains only that tag's o
 
 | Component/source | Direct primary reference and local evidence | Known boundary |
 |---|---|---|
-| proot | [Termux proot](https://github.com/termux/proot); [Low build script](../../tools/build-low-proot.py) | Low pins v5.1.107.92; the original Standard binary's exact revision remains unverified |
+| proot | [Termux proot](https://github.com/termux/proot) | The original Standard binary's exact revision remains unverified; the historical Low build script was removed with that line in build209 |
 | proroot | [coderredlab/proroot](https://github.com/coderredlab/proroot); local THIRD_PARTY_NOTICES | Local v1.2.8 is declared an upstream proprietary binary; do not claim a complete public-source rebuild or unrestricted redistribution |
 | DSHA proroot compatibility layer | [Independent compatibility-layer README](../../tools/proroot-compat/README.md), [ABI lock](../../tools/proroot-compat/abi.lock.json) | Owned shim/entry source and locks do not provide vendor source or provenance for its five libraries |
 | Termux terminal JNI | [Termux app](https://github.com/termux/termux-app); [local upstream license exception](../../tools/termux-jni/LICENSE.upstream.md) | A terminal-specific exception cannot be extended to the whole Termux project |
 | Ubuntu packages | [Ubuntu Security Notices](https://ubuntu.com/security/notices); local package locks and rootfs copyright files | USN is a verification entry point, not proof that the current archive has no vulnerabilities |
 | Other original JNI | THIRD_PARTY_NOTICES section on actual checked-in JNI members and provenance boundaries | Original provenance/license of libandroidshmem and exact versions of some Standard proot/talloc inputs remain unverified |
 
-The local fixed SHA-256 for the Low proot source ZIP is `29385d1ddb619a9c4449ab512bfd55032034b22f724ddf98fc95ff300ea32135`. It identifies a particular input; it cannot establish that the original Standard proot library came from the same build. DSHA `v1.1.6` in CHANGELOG is a historical shell-project version, not an upstream proroot version. Keep unknown provenance explicit with the materials still needed; do not invent a license or commit. Use/distribution of closed-source components depends on their actual license terms. This page does not provide a legal authorization conclusion.
+The local fixed SHA-256 for the historical low/API23 proot source ZIP (unused since build209) is `29385d1ddb619a9c4449ab512bfd55032034b22f724ddf98fc95ff300ea32135`. It identifies a particular input; it cannot establish that the original Standard proot library came from the same build. DSHA `v1.1.6` in CHANGELOG is a historical shell-project version, not an upstream proroot version. Keep unknown provenance explicit with the materials still needed; do not invent a license or commit. Use/distribution of closed-source components depends on their actual license terms. This page does not provide a legal authorization conclusion.
 
 ## 5. Android, Shizuku and Root upstream reference map
 
@@ -135,7 +134,7 @@ Gradle 9.3.1   AGP 9.1.1
 android-37.0   build-tools 36.0.0   NDK 26.3.11579264
 ```
 
-[ci-toolchain.py](../../tools/ci-toolchain.py) cross-checks the lock against Gradle, compile/targetSdk, NDK and Wrapper configuration. The distributionSha256Sum in [gradle-wrapper.properties](../../gradle/wrapper/gradle-wrapper.properties) is `b266d5ff6b90eada6dc3b20cb090e3731302e553a27c5d3e4df1f0d76beaff06`. It pins the Gradle distribution ZIP, not every byte of the SDK, Maven cache or local JDK. [ci-fast](../../.github/workflows/ci-fast.yml) and [ci-package](../../.github/workflows/ci-package.yml) use fixed action commits. Workflow configuration can be reviewed, but its presence does not prove a particular remote commit ran and passed. The complete package workflow produces unsigned verification artifacts. The final APK's formal E7E3 signing identity needs independent verification. Signing keys, keystores, tokens and developer local.properties must not enter published source materials.
+[ci-toolchain.py](../../tools/ci-toolchain.py) cross-checks the lock against Gradle, compile/targetSdk, NDK and Wrapper configuration. The distributionSha256Sum in [gradle-wrapper.properties](../../gradle/wrapper/gradle-wrapper.properties) is `b266d5ff6b90eada6dc3b20cb090e3731302e553a27c5d3e4df1f0d76beaff06`. It pins the Gradle distribution ZIP, not every byte of the SDK, Maven cache or local JDK. [ci-fast](../../.github/workflows/ci-fast.yml) and [ci-package](../../.github/workflows/ci-package.yml) use fixed action commits. Workflow configuration can be reviewed, but its presence does not prove a particular remote commit ran and passed. The complete package workflow produces unsigned verification artifacts. The final APK's signing identity is recorded in `ci/release-identity.json` and must be verified on the actual APK. Signing keys, keystores, tokens and developer local.properties must not enter published source materials.
 
 ## 7. Git source, complete source ZIP and APK
 

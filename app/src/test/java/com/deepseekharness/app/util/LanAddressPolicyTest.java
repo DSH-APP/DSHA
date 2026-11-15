@@ -71,4 +71,51 @@ public class LanAddressPolicyTest {
         }) assertFalse(ip, LanAddressPolicy.privateIpv4(ip));
     assertFalse(LanAddressPolicy.privateIpv4(null));
   }
+
+  @Test
+  public void allEligibleAddressesAreStableDeduplicatedAndWifiFirst() {
+    var discovery =
+        LanAddressPolicy.discover(
+            java.util.List.of(
+                candidate("eth0", "10.2.0.2"),
+                candidate("wlan0", "192.168.1.3"),
+                candidate("wlan0", "192.168.1.2"),
+                candidate("wifi1", "192.168.1.2"),
+                candidate("tun0", "10.3.0.2")));
+    assertEquals(
+        java.util.List.of("192.168.1.2", "192.168.1.3", "10.2.0.2"), discovery.addresses());
+    assertFalse(discovery.ipv6Only());
+    assertEquals(LanAddressPolicy.Failure.NONE, discovery.failure());
+  }
+
+  @Test
+  public void ipv6OnlyIsObservedWithoutInventingIpv4OrAnIpv6Listener() {
+    var discovery =
+        LanAddressPolicy.discover(
+            java.util.List.of(
+                candidate("wlan0", "2001:db8::2"), candidate("wlan0", "fe80::2%wlan0")));
+    assertTrue(discovery.addresses().isEmpty());
+    assertTrue(discovery.ipv6Only());
+    assertNull(LanAddressPolicy.choose(java.util.List.of(candidate("wlan0", "2001:db8::2"))));
+    assertFalse(
+        LanAddressPolicy.discover(
+                java.util.List.of(
+                    candidate("wlan0", "2001:db8::2"), candidate("wlan0", "192.168.1.2")))
+            .ipv6Only());
+  }
+
+  @Test
+  public void invalidLoopbackMulticastAndCellularIpv6DoNotClaimUsableLan() {
+    var discovery =
+        LanAddressPolicy.discover(
+            java.util.List.of(
+                candidate("wlan0", "::1"),
+                candidate("wlan0", "::"),
+                candidate("wlan0", "ff02::1"),
+                candidate("wlan0", "not:a:literal"),
+                candidate("wlan0", "2001:db8:::2"),
+                candidate("rmnet_data0", "2001:db8::2")));
+    assertFalse(discovery.ipv6Only());
+    assertTrue(discovery.addresses().isEmpty());
+  }
 }

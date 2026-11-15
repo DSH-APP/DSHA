@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 新建按钮内的加号方块：主色按钮上的半透明底。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/terminal_on_primary_chip" />
+    <corners android:radius="9dp" />
+</shape>

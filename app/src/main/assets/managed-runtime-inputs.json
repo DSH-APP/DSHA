@@ -3,6 +3,36 @@
   "purpose": "Signed host-managed runtime inputs; the installer, descriptor and Gradle consume this same contract. User data and recovery runtime are outside this contract.",
   "installs": [
     {
+      "asset": "bridge-port.cjs",
+      "target": "root/.dsh/bridge-port.cjs",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-device-shell-guide/lib/bridge-port.cjs",
+      "target": "root/dsha-device-shell-guide/lib/bridge-port.cjs",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-computer-use-android/lib/bridge-port.cjs",
+      "target": "root/dsha-computer-use-android/lib/bridge-port.cjs",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-tool-vscreen/lib/bridge-port.cjs",
+      "target": "root/dsha-tool-vscreen/lib/bridge-port.cjs",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-status-overlay/lib/bridge-port.cjs",
+      "target": "root/dsha-status-overlay/lib/bridge-port.cjs",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-task-notifier/lib/bridge-port.cjs",
+      "target": "root/dsha-task-notifier/lib/bridge-port.cjs",
+      "executable": false
+    },
+    {
       "asset": "ca-certificates.crt",
       "target": "usr/local/share/dsha/ca-certificates.crt",
       "executable": false
@@ -10,6 +40,11 @@
     {
       "asset": "dns-compat.cjs",
       "target": "usr/local/share/dsha/dns-compat.cjs",
+      "executable": false
+    },
+    {
+      "asset": "net-epoch.cjs",
+      "target": "usr/local/share/dsha/net-epoch.cjs",
       "executable": false
     },
     {
@@ -40,6 +75,11 @@
     {
       "asset": "plugin-transactions.py",
       "target": "root/.dsh/plugin-transactions.py",
+      "executable": false
+    },
+    {
+      "asset": "materialize-cas-links.py",
+      "target": "root/.dsh/materialize-cas-links.py",
       "executable": false
     },
     {
@@ -163,6 +203,11 @@
       "executable": false
     },
     {
+      "asset": "builtin-plugins/dsh-status-overlay/lib/session-adapter.js",
+      "target": "root/dsha-status-overlay/lib/session-adapter.js",
+      "executable": false
+    },
+    {
       "asset": "builtin-plugins/dsh-web-mobile/package.json",
       "target": "root/dsha-web-mobile/package.json",
       "executable": false
@@ -170,6 +215,21 @@
     {
       "asset": "builtin-plugins/dsh-web-mobile/cordis.patch.yml",
       "target": "root/dsha-web-mobile/cordis.patch.yml",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-web-mobile/assets/icon.png",
+      "target": "root/dsha-web-mobile/assets/icon.png",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-web-mobile/locale/en.json",
+      "target": "root/dsha-web-mobile/locale/en.json",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-web-mobile/locale/zh.json",
+      "target": "root/dsha-web-mobile/locale/zh.json",
       "executable": false
     },
     {
@@ -210,6 +270,11 @@
     {
       "asset": "builtin-plugins/dsh-computer-use-android/lib/index.js",
       "target": "root/dsha-computer-use-android/lib/index.js",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-computer-use-android/lib/task-binding.js",
+      "target": "root/dsha-computer-use-android/lib/task-binding.js",
       "executable": false
     },
     {
@@ -256,6 +321,25 @@
       "asset": "dsha-plugin.sh",
       "target": "root/dsh-bin/dsha-plugin",
       "executable": true
+    },
+    {
+      "asset": "gh-wrapper.sh",
+      "target": "root/dsh-bin/gh",
+      "executable": true
+    },
+    {
+      "asset": "gh-proxy.mjs",
+      "target": "usr/local/share/dsha/gh-proxy.mjs",
+      "executable": false
+    },
+    {
+      "asset": "gh-cli.tar.gz",
+      "target": "opt/gh/bin/gh",
+      "executable": true,
+      "extract": {
+        "member": "gh_2.103.3_linux_arm64/bin/gh",
+        "sha256": "a82a52e1bbe05bcd485f8cbbd5aa67e11a76fce6bdad394a2d179e1c24cfe367"
+      }
     },
     {
       "asset": "install-ubuntu-tools.sh",
@@ -376,9 +460,73 @@
       "asset": "managed-package-proofs.json",
       "target": "root/.dsh/managed-package-proofs.json",
       "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-web-mobile/lib/file-transfer.js",
+      "target": "root/dsha-web-mobile/lib/file-transfer.js",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-launch-target/package.json",
+      "target": "root/dsha-launch-target/package.json",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-launch-target/cordis.patch.yml",
+      "target": "root/dsha-launch-target/cordis.patch.yml",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-launch-target/lib/index.js",
+      "target": "root/dsha-launch-target/lib/index.js",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-launch-target/lib/bridge-port.cjs",
+      "target": "root/dsha-launch-target/lib/bridge-port.cjs",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-launch-target/lib/client.js",
+      "target": "root/dsha-launch-target/lib/client.js",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-fs-read-hint/package.json",
+      "target": "root/dsha-fs-read-hint/package.json",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-fs-read-hint/cordis.patch.yml",
+      "target": "root/dsha-fs-read-hint/cordis.patch.yml",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-fs-read-hint/lib/index.js",
+      "target": "root/dsha-fs-read-hint/lib/index.js",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-fs-search-scope/package.json",
+      "target": "root/dsha-fs-search-scope/package.json",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-fs-search-scope/cordis.patch.yml",
+      "target": "root/dsha-fs-search-scope/cordis.patch.yml",
+      "executable": false
+    },
+    {
+      "asset": "builtin-plugins/dsh-fs-search-scope/lib/index.js",
+      "target": "root/dsha-fs-search-scope/lib/index.js",
+      "executable": false
     }
   ],
   "assetFiles": [
+    "mcp-image-base64-patch.json",
+    "mcp-version-negotiation-patch.json",
+    "web-fetch-http-surrogate-patch.json",
+    "web-fetch-output-surrogate-patch.json",
     "client-combo-patch.json",
     "composer-enter-patch.json",
     "conversation-materialized-patch.json",
@@ -405,8 +553,6 @@
     "runtime-trial-plugin.js",
     "session-interaction-patch.json",
     "subagent-navigation-patch.json",
-    "tooltip-entry-patch.json",
-    "tooltip-interaction-patch.json",
     "ubuntu-tools.bin",
     "ubuntu-tools.layout",
     "ubuntu-tools.manifest.json",
@@ -419,6 +565,7 @@
     "guard-editor-patch.json",
     "guard-fs-patch.json",
     "guard-tools-patch.json",
+    "guard-tools-pipeline-patch.json",
     "native-consent.cjs",
     "permission-full-access-patch.json",
     "retire-guarded-preset-patch.json",
@@ -428,6 +575,7 @@
     "startup-mcp-timing-patch.json",
     "tool-block-identity-patch.json",
     "tool-dispatch-validation-patch.json",
+    "tool-dispatch-validation-pipeline-patch.json",
     "tool-history-display-patch.json",
     "tool-messages-history-patch.json",
     "tool-stream-identity-patch.json",
@@ -441,9 +589,10 @@
     "web-integration/permission-full-access.js",
     "web-integration/session-interaction.js",
     "lan-settings-upstream-contract.json",
+    "deepseek-account-client-diagnostic-patch.json",
+    "deepseek-account-requests-patch.json",
     "deepseek-native-oauth-patch.json",
     "directory-picker-service-patch.json",
-    "file-upload-resolver-lifecycle-patch.json",
     "config-editor-lock-order-patch.json",
     "plugin-manager-pending-patch.json",
     "agent-preset-pending-patch.json",
@@ -454,7 +603,16 @@
     "plugin-inventory-management-remote-codec-patch.json",
     "plugin-inventory-management-api-codec-patch.json",
     "plugin-manager-management-probe-patch.json",
-    "plugin-bundle-proof-workers-patch.json"
+    "plugin-bundle-proof-workers-patch.json",
+    "deepseek-web-search-headers-patch.json",
+    "file-upload-capacity-patch.json",
+    "file-upload-binary-client-patch.json",
+    "file-deliverables-patch.json",
+    "file-image-actions-patch.json",
+    "user-only-skill-approval-patch.json",
+    "first-connect-indicator-patch.json",
+    "plugin-pnpm-argv-patch.json",
+    "external-tool-proof.json"
   ],
   "assetTrees": [
     "web-integration",
@@ -464,21 +622,27 @@
   ],
   "launcherTrees": [
     "app/src/main/jniLibs",
-    "app/src/low/jniLibs",
     "app/src/main/java/com/deepseekharness/app/runtime",
     "app/src/main/java/com/deepseekharness/app/backup",
     "app/src/main/java/com/deepseekharness/app/capabilities",
     "app/src/main/java/com/deepseekharness/app/screen",
     "app/src/main/java/com/deepseekharness/app/vscreen",
     "app/src/main/java/com/deepseekharness/app/device",
-    "app/src/main/java/com/deepseekharness/app/diagnostics"
+    "app/src/main/java/com/deepseekharness/app/diagnostics",
+    "app/src/main/java/com/deepseekharness/app/plugins",
+    "app/src/main/java/com/deepseekharness/app/saf"
   ],
   "launcherSources": [
+    "util/ComposeGate.java",
     "util/IsolatedCommand.java",
+    "util/OverlayPlacement.java",
+    "util/OverlayTouchGuard.java",
     "util/PluginDownloadSource.java",
     "backup/RuntimeTrialRecords.java",
+    "util/TurnScreenGrants.java",
     "util/WebProcSel.java",
     "util/WebPidIdentity.java",
+    "util/WebStartProtection.java",
     "util/ManagedRuntimeLayout.java",
     "util/ManagedAssetVersion.java",
     "util/ManagedInstallPath.java",
@@ -487,10 +651,15 @@
     "util/GuestCommandOutcome.java",
     "backup/HostMaintenancePending.java",
     "core/RuntimeTasks.java",
+    "core/PluginRepository.java",
+    "core/PluginTask.java",
+    "core/PluginActivationHooks.java",
     "core/MaintenanceCoordinator.java",
     "core/ConfigStore.java",
     "core/HarnessController.java",
     "core/TerminalSessionOwner.java",
+    "core/TerminalRuntimeProtection.java",
+    "TerminalRuntimeService.java",
     "core/SimpleTerminalBackend.java",
     "util/TerminalSession.java",
     "util/TerminalReady.java",
@@ -503,6 +672,7 @@
     "util/ColdRuntimeSelection.java",
     "util/Ids.java",
     "util/GuestPaths.java",
+    "util/GuestRegularFile.java",
     "util/BackupScopes.java",
     "util/NpmPackageName.java",
     "util/BuiltinPluginRegistry.java",
@@ -524,6 +694,7 @@
     "HttpShellService.java",
     "DshaAccessibilityService.java",
     "bridge/AdbBridge.java",
+    "bridge/BridgeImageDecoder.java",
     "util/SensitiveData.java",
     "recovery/RecoveryStoragePlan.java",
     "runtime/GuestPreparationFailure.java",
@@ -555,6 +726,7 @@
     "util/ContainerFileTransfers.java",
     "util/BridgeCredentialAuth.java",
     "util/BridgeCredentialFiles.java",
+    "util/BridgePortPolicy.java",
     "util/SelfPackageIdentity.java",
     "util/DeviceAppPolicy.java",
     "util/DeviceShellPolicy.java",
@@ -622,6 +794,10 @@
     "util/ScreenObservationLedger.java",
     "util/ScreenPixelFingerprint.java",
     "util/ScreenRequestExecutor.java",
+    "util/ScreenSenseCodec.java",
+    "util/ScreenSenseMetadata.java",
+    "util/ScreenSenseState.java",
+    "util/ScreenSenseStateStore.java",
     "util/ScreenSerialExecutor.java",
     "util/ScreenWindowRegion.java",
     "util/VirtualScreenCoreIdentity.java",
@@ -632,6 +808,7 @@
     "util/VirtualScreenInputPolicy.java",
     "util/VirtualScreenInputResult.java",
     "util/VirtualScreenLifecycleState.java",
+    "util/VirtualScreenDisplayPreset.java",
     "util/VirtualScreenPolicy.java",
     "util/VirtualScreenRoutes.java",
     "util/VirtualScreenStroke.java",
@@ -645,13 +822,28 @@
     "LanAuth.java",
     "util/SocketDispatch.java",
     "util/LanNetworkState.java",
-    "util/DeepSeekOAuthNavigation.java"
+    "util/DeepSeekOAuthNavigation.java",
+    "util/RecoveryDescriptorLimits.java",
+    "util/DiagnosticOperationSummary.java",
+    "util/LanPortPolicy.java",
+    "core/StartupPreparationTiming.java",
+    "util/WebSessionStorage.java",
+    "util/WebSessionDiagnostics.java",
+    "util/ExternalToolPolicy.java",
+    "util/ExternalDevicePolicy.java",
+    "util/ExternalInstallPlan.java",
+    "util/ExternalStepOutput.java",
+    "util/ExternalImportQuota.java"
   ],
   "generatorSources": [
     "tools/mobile-server/compress.js",
     "tools/mobile-server/delete-session.js",
     "tools/mobile-server/index.js",
     "tools/apply-mobile-client-patches.mjs",
+    "tools/mobile-safe-area.mjs",
+    "tools/mobile-locales.mjs",
+    "tools/mobile-locales.json",
+    "tools/mobile-plugin-upstream.lock.json",
     "tools/generate-builtin-plugins.py",
     "tools/generate-credential-paths.py",
     "tools/prepare-runtime-tools.py",
@@ -670,6 +862,23 @@
     "tools/proroot-compat/linker-entry.c",
     "tools/prepare-welcome-notice-patch.py",
     "tools/welcome-notice/WelcomeNotice.js",
-    "tools/welcome-notice/WelcomeNoticeStore.js"
+    "tools/welcome-notice/WelcomeNoticeStore.js",
+    "tools/prepare-web-search-headers-patch.py",
+    "tools/prepare-file-upload-capacity-patch.py",
+    "tools/file-transfer/prepare-client-patches.py",
+    "tools/file-transfer/file-transfer.js",
+    "tools/file-transfer/client-mobile.mjs",
+    "tools/file-transfer/client-controls.js",
+    "tools/prepare-mobile-plugin.py",
+    "tools/prepare-plugin-pnpm-argv-patch.py",
+    "tools/recovery_descriptor_limits.py",
+    "tools/prepare-web-languages.py",
+    "tools/web_language_catalog.py",
+    "tools/i18n/web-language-bridge.js",
+    "tools/i18n/web-messages.json",
+    "tools/i18n/web-translations/ar.json",
+    "tools/i18n/web-translations/ko.json",
+    "tools/i18n/web-translations/la.json",
+    "tools/i18n/web-translations/zh-Hant.json"
   ]
 }

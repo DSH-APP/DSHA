@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 状态卡内的统计格：shell_bg 底 + 点按水波；与卡片 surface 拉开层次。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/ripple">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/shell_bg" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+</ripple>

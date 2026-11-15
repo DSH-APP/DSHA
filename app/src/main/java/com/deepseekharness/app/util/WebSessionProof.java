@@ -60,6 +60,21 @@ public final class WebSessionProof {
             && identity(saved, launcher);
   }
 
+  /**
+   * 只读核对记录中的启动器仍是同一进程。覆盖更新弃旧版只对它发信号，因此这里要求 UID、PID、
+   * 出生时间、命令行与代次/实例/nonce 全部一致；启动器退出或编号复用由调用方按退出证明处理。
+   */
+  public static boolean matchesLauncher(Saved saved, int uid, Process launcher) {
+    return saved != null
+        && launcher != null
+        && launcher.alive()
+        && launcher.pid() == saved.launcherPid()
+        && launcher.uid() == uid
+        && launcher.started() == saved.launcherStarted()
+        && launcher.command().equals(saved.launcherCommand())
+        && identity(saved, launcher);
+  }
+
   private static boolean identity(Saved saved, Process process) {
     return Long.toString(saved.generation()).equals(process.generation())
         && saved.instance().equals(process.instance())

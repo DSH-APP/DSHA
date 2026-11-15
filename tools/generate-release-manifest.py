@@ -27,7 +27,7 @@ def retain_channels(current, previous):
     """新预览发布时保留可下载的稳定版；官网仍展示首个当前发布。"""
     if previous is None:
         return [current]
-    if (previous.get('schemaVersion') != 1 or previous.get('packageName') != 'dsh.android.client'
+    if (previous.get('schemaVersion') != 1 or previous.get('packageName') != 'io.github.sunsetrne.dsha'
             or previous.get('certificateSha256') != PUBLISH_CERT):
         raise ValueError('上一发布清单的结构、包名或签名不一致')
     latest = {current['channel']: current}
@@ -55,10 +55,10 @@ def inspect(apk, flavor, build_tools, java):
     package = re.search(r"package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'", badging)
     sdk = re.search(r"(?:minSdkVersion|sdkVersion):'(\d+)'", badging)
     abi = re.search(r"native-code: (.+)", badging)
-    if not package or package[1] != 'dsh.android.client' or not sdk or not abi:
+    if not package or package[1] != 'io.github.sunsetrne.dsha' or not sdk or not abi:
         raise ValueError(f'{apk.name}: 无法读取 DSHA 包信息')
-    if int(sdk[1]) != (30 if flavor == 'standard' else 23) or abi[1].strip() != "'arm64-v8a'":
-        raise ValueError(f'{apk.name}: 系统要求或架构不匹配')
+    if int(sdk[1]) != 30 or abi[1].strip() != "'arm64-v8a'":
+        raise ValueError(f'{apk.name}: 系统要求或架构不匹配（单 Standard 变体必须 minSdk 30 + arm64-v8a）')
     if 'application-debuggable' in badging:
         raise ValueError(f'{apk.name}: 不允许发布调试包')
     signing = run([java, '-jar', build_tools / 'lib/apksigner.jar', 'verify', '--min-sdk-version', '23', '--verbose', '--print-certs', apk])
@@ -81,7 +81,6 @@ def inspect(apk, flavor, build_tools, java):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--standard', required=True, type=Path)
-    parser.add_argument('--low', required=True, type=Path)
     parser.add_argument('--build-tools', required=True, type=Path)
     parser.add_argument('--java', default='java')
     parser.add_argument('--notes', required=True, type=Path)
@@ -98,18 +97,16 @@ def main():
     origin = args.origin.rstrip('/')
     if urlparse(origin).scheme != 'https' or urlparse(origin).path:
         parser.error('--origin 必须是 HTTPS 站点根地址')
-    artifacts = [inspect(args.standard, 'standard', args.build_tools, args.java),
-                 inspect(args.low, 'low', args.build_tools, args.java)]
+    artifacts = [inspect(args.standard, 'standard', args.build_tools, args.java)]
     version, code = artifacts[0]['versionName'], artifacts[0]['versionCode']
     if not re.fullmatch(r'\d+\.\d+(?:\.\d+)?(?:-[A-Za-z0-9.-]+)?', version):
         raise ValueError('版本名称无效')
-    if artifacts[1]['versionName'] != version + 'low' or artifacts[1]['versionCode'] != code:
-        raise ValueError('两版 APK 版本不一致')
-    if artifacts[0]['runtimeId']!=artifacts[1]['runtimeId'] or artifacts[0]['dshVersion']!=artifacts[1]['dshVersion']:
-        raise ValueError('两版受管运行身份不一致')
+    # Sunset-3090-Q 只有 Standard；旧的 -low 版本名不再是合法发布身份。
+    if version.endswith('low'):
+        raise ValueError('版本名称不得再使用 low 后缀')
     notes = args.notes.read_text(encoding='utf-8').strip()
     download_version = apk_name_version()
-    for artifact, apk in zip(artifacts, (args.standard, args.low)):
+    for artifact, apk in zip(artifacts, (args.standard,)):
         expected = apk_filename(artifact['flavor'])
         if artifact['filename'] != expected:
             raise ValueError(f'发布文件名应为 {expected}')
@@ -117,17 +114,17 @@ def main():
         apk.with_suffix('.apk.sha256').write_bytes(f'{artifact["sha256"]}  {apk.name}\n'.encode('utf-8'))
     release = dict(version=version, apkNameVersion=download_version, versionCode=code, channel=release_channel(version, args.channel),
                    pageUrl=origin + '/download/', notes=notes, dshVersion=artifacts[0]['dshVersion'], runtimeId=artifacts[0]['runtimeId'], artifacts=artifacts)
-    manifest = dict(schemaVersion=1, packageName='dsh.android.client', certificateSha256=PUBLISH_CERT,
+    manifest = dict(schemaVersion=1, packageName='io.github.sunsetrne.dsha', certificateSha256=PUBLISH_CERT,
                     releases=retain_channels(release, previous))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    github = f'# v{version}\n\n{notes}\n\n版本码 {code}；两版共享包名及历史发布签名。\n\n'
-    github += '| 版本 | 最低 Android API | 安装包 | 大小 | SHA-256 |\n|---|---:|---|---:|---|\n'
+    github = f'# v{version}\n\n{notes}\n\n版本码 {code}；单 Standard 包（Android 11 / API 30+），使用历史发布签名。\n\n'
+    github += '| 变体 | 最低 Android API | 安装包 | 大小 | SHA-256 |\n|---|---:|---|---:|---|\n'
     for a in artifacts:
         url = f'https://github.com/DSH-APP/DSHA/releases/download/v{version}/{a["filename"]}'
         github += f'| {a["flavor"]} | {a["minSdk"]} | [{a["filename"]}]({url}) | {a["bytes"]/1048576:.2f} MiB | `{a["sha256"]}` |\n'
     args.output.with_name('github-release-body.md').write_text(github, encoding='utf-8')
-    print(f'已核验两份 APK：{version} / {code}，清单：{args.output}')
+    print(f'已核验单份 APK：{version} / {code}，清单：{args.output}')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 终端底栏主软按钮（返回主界面等）：强调浅底 + 强调描边 + 主题涟漪；
+     禁用时与普通按钮一致变灰，避免“看起来还能点”。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/terminal_ripple">
+
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="@dimen/radius_control" />
+        </shape>
+    </item>
+
+    <item>
+        <selector>
+            <item android:state_enabled="false">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/disabled" />
+                    <corners android:radius="@dimen/radius_control" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/terminal_accent_bg" />
+                    <corners android:radius="@dimen/radius_control" />
+                    <stroke
+                        android:width="@dimen/stroke"
+                        android:color="@color/terminal_accent_line" />
+                </shape>
+            </item>
+        </selector>
+    </item>
+</ripple>

@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.3-20261101.0910-dsh0.2.1-rc.5 / build244
+
+- Fixes Recover interrupted maintenance failing forever: older builds wrote the plugin completion record atomically inside the plugin transaction directory, and an interrupted write left files such as `.previous` or `.tmp-*`. Every later check then reported `PLUGIN_JOURNAL_ID`, recovery stalled at Stopping Web, other repairs were refused with `REPAIR_RECOVER_PENDING_FIRST`, and Web could not start.
+- The completion record now lives outside the transaction directory. Old leftovers and any other unrecognized entries in that directory are kept as they are; they no longer block maintenance and are never replayed as plugin operations. Devices already stuck should pass the check after an overwrite install.
+- This build updates the plugin transaction script, so an overwrite install replaces managed files through the normal managed-runtime update flow; personal data stays in place.
+- Verification scope: local unit tests (1,689 cases in the backup and util packages) and the plugin-transaction Python regressions pass; not yet verified on a device that hit this problem. Raises versionCode to 244. The DSHA revision remains 0.2.1-rc.3 and bundled DSH remains 0.2.1-rc.5.

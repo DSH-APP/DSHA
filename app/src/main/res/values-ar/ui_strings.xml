@@ -1,0 +1,295 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="about_close_button" formatted="false">"إغلاق"</string>
+    <string name="about_community" formatted="false">"مجتمع QQ"</string>
+    <string name="about_tagline" formatted="false">"مشغّل DSHA لأندرويد"</string>
+    <string name="adb_pairing_service_label" formatted="false">"إقران ADB لاسلكيًا"</string>
+    <string name="alpha_no_seccomp" formatted="false">"تعطيل تسريع seccomp"</string>
+    <string name="alpha_static_loader" formatted="false">"محمّل ثابت (proroot)"</string>
+    <string name="build190_auto_port" formatted="false">"تعيين المنفذ تلقائيًا"</string>
+    <string name="build190_restore_port_drafts" formatted="false">"استعادة المسودات القديمة"</string>
+    <string name="computer_use_title" formatted="false">"التحكم في الشاشة"</string>
+    <string name="copy_text" formatted="false">"نسخ"</string>
+    <string name="device_checking" formatted="false">"جارٍ التحقق من التفويض…"</string>
+    <string name="device_open_access" formatted="false">"إدارة الوصول إلى الملفات"</string>
+    <string name="diag248_copy" formatted="false">"نسخ تقرير التشخيص"</string>
+    <string name="diag248_copy_sub" formatted="false">"نص محجوب للصقه في الملاحظات"</string>
+    <string name="diag248_empty" formatted="false">"لا نتائج بعد؛ الفحص يقرأ الحالة المحلية فقط"</string>
+    <string name="diag248_export" formatted="false">"تصدير التشخيص"</string>
+    <string name="diag248_export_sub" formatted="false">"حزمة سجلات منظّمة"</string>
+    <string name="diag248_feedback" formatted="false">"الملاحظات"</string>
+    <string name="diag248_idle_sub" formatted="false">"فحص المكونات والبيئة"</string>
+    <string name="diag248_idle_title" formatted="false">"لم يُفحص"</string>
+    <string name="diag248_plugins" formatted="false">"مدير الإضافات"</string>
+    <string name="diag248_plugins_sub" formatted="false">"تشخيص مشكلات البدء بسبب الإضافات"</string>
+    <string name="diag248_repair_sub" formatted="false">"أعد تثبيت الشهادات ومكونات التشغيل"</string>
+    <string name="diag248_start" formatted="false">"فحص"</string>
+    <string name="diag248_status" formatted="false">"الحالة"</string>
+    <string name="diag248_tools" formatted="false">"الأدوات"</string>
+    <string name="dns_auto" formatted="false">"توافق تلقائي (موصى به)"</string>
+    <string name="dns_ipv4" formatted="false">"توافق DNS عبر IPv4"</string>
+    <string name="dns_native" formatted="false">"التحليل الأصلي بمكدسين"</string>
+    <string name="nh_sub" formatted="false">"تُسجَّل أعطال الشبكة ولا تُصلَح"</string>
+    <string name="nh_title" formatted="false">"سلامة الشبكة"</string>
+    <string name="paste_text" formatted="false">"لصق"</string>
+    <string name="phone_assistant" formatted="false">"المساعد العائم"</string>
+    <string name="phone_assistant_detail" formatted="false">"اختر جلسة DSH فعلية على هذا الهاتف للمحادثة العائمة وعناصر التحكم في الإيقاف المؤقت."</string>
+    <string name="picture_in_picture_allowed" formatted="false">"مسموح به من النظام؛ تبقى المحادثة في نافذة صغيرة عند الانتقال إلى الشاشة الرئيسية أو تبديل التطبيقات."</string>
+    <string name="picture_in_picture_disabled" formatted="false">"معطّل من النظام؛ لا تظهر نافذة صغيرة في الخلفية. انقر للتغيير."</string>
+    <string name="picture_in_picture_enable" formatted="false">"تفعيل صورة داخل صورة"</string>
+    <string name="picture_in_picture_landscape" formatted="false">"التبديل إلى الوضع الأفقي"</string>
+    <string name="picture_in_picture_opted_out" formatted="false">"معطّل افتراضيًا. فعّل المفتاح أعلاه لإبقاء المحادثة في نافذة صغيرة عند الانتقال إلى الشاشة الرئيسية."</string>
+    <string name="picture_in_picture_portrait" formatted="false">"التبديل إلى الوضع الرأسي"</string>
+    <string name="picture_in_picture_settings_unavailable" formatted="false">"تعذّر فتح إعدادات صورة داخل صورة في النظام."</string>
+    <string name="picture_in_picture_title" formatted="false">"صورة داخل صورة"</string>
+    <string name="picture_in_picture_unsupported" formatted="false">"يتطلب وضع صورة داخل صورة Android 8.0 أو أحدث وجهازًا يدعمه."</string>
+    <string name="plugin_sort_az" formatted="false">"الاسم A–Z"</string>
+    <string name="plugin_sort_enabled" formatted="false">"المفعّل أولًا"</string>
+    <string name="plugin_sort_title" formatted="false">"ترتيب الإضافات"</string>
+    <string name="plugin_sort_updates" formatted="false">"التحديثات أولًا"</string>
+    <string name="plugin_sort_za" formatted="false">"الاسم Z–A"</string>
+    <string name="text_selection_more" formatted="false">"المزيد…"</string>
+    <string name="ui134_adb_hint" formatted="false">"Android 11 أو أحدث: اقتران تصحيح الأخطاء اللاسلكي على شبكة Wi-Fi نفسها. لا حاجة إلى صلاحيات الجذر. تحقّق أو أعد الاقتران بعد تغيير الشبكة."</string>
+    <string name="ui134_candidate" formatted="false">"عرض الإصدار المرشّح"</string>
+    <string name="ui134_candidate_sub" formatted="false">"ملاحظات الإصدار والحجم والتثبيت"</string>
+    <string name="ui134_changelog" formatted="false">"هذا الإصدار"</string>
+    <string name="ui134_check_ready" formatted="false">"تجهيز الفحوص"</string>
+    <string name="ui134_code" formatted="false">"رمز الإصدار"</string>
+    <string name="ui134_current" formatted="false">"التطبيق الحالي"</string>
+    <string name="ui134_disconnect" formatted="false">"قطع اتصال ADB"</string>
+    <string name="ui134_edition" formatted="false">"النسخة"</string>
+    <string name="ui134_recent_startups" formatted="false">"آخر خمس عمليات بدء تشغيل"</string>
+    <string name="ui134_recent_startups_sub" formatted="false">"المراحل والأخطاء ورموز الخروج"</string>
+    <string name="ui134_results" formatted="false">"نتائج الفحص"</string>
+    <string name="ui134_root_hint" formatted="false">"عندما يكون الهاتف بصلاحيات root، يمكن استخدام su مباشرة دون اقتران ADB. فوّض DSHA في مدير root عند أول تنفيذ. اختر مستوى اعتراض الأوامر أدناه؛ تظل البوابات الأصلية مثل قراءة الرسائل سارية في المستويات الثلاثة."</string>
+    <string name="ui134_screen_setup" formatted="false">"إعداد التحكم في الشاشة · خطوتان"</string>
+    <string name="ui134_shizuku_hint" formatted="false">"شغّل Shizuku في مديره، ثم فوّض DSHA هنا. تحتاج الخدمة عادةً إلى إعادة التشغيل بعد إقلاع الجهاز."</string>
+    <string name="ui134_start_records" formatted="false">"سجلات بدء التشغيل"</string>
+    <string name="ui134_startup_recovery" formatted="false">"استرداد بدء التشغيل"</string>
+    <string name="ui134_startup_recovery_sub" formatted="false">"المشكلات وخيارات الاسترداد"</string>
+    <string name="ui2_about" formatted="false">"حول DSHA"</string>
+    <string name="ui2_about_sub" formatted="false">"الإصدار والتراخيص والملاحظات"</string>
+    <string name="ui2_adb" formatted="false">"إقران ADB لاسلكيًا"</string>
+    <string name="ui2_adb_intro" formatted="false">"احصل على رمز الاقتران من تصحيح الأخطاء اللاسلكي"</string>
+    <string name="ui2_address" formatted="false">"عناوين الوصول"</string>
+    <string name="ui2_address_sub" formatted="false">"عناوين محلية وشبكة محلية"</string>
+    <string name="ui2_app_version" formatted="false">"إصدار التطبيق"</string>
+    <string name="ui2_backup_restore" formatted="false">"نسخ احتياطي واستعادة"</string>
+    <string name="ui2_backup_restore_sub" formatted="false">"تصدير واستيراد ونسخ تلقائي"</string>
+    <string name="ui2_base" formatted="false">"قاعدة Ubuntu"</string>
+    <string name="ui2_check_all" formatted="false">"فحص جميع المكوّنات"</string>
+    <string name="ui2_community" formatted="false">"إضافات المجتمع"</string>
+    <string name="ui2_community_sub" formatted="false">"استكشاف الإضافات ومصادر التثبيت"</string>
+    <string name="ui2_component1" formatted="false">"بيئة Ubuntu"</string>
+    <string name="ui2_component2" formatted="false">"أدوات العمل دون اتصال"</string>
+    <string name="ui2_component3" formatted="false">"Node.js 24"</string>
+    <string name="ui2_component4" formatted="false">"pnpm"</string>
+    <string name="ui2_component5" formatted="false">"DeepSeek Harness"</string>
+    <string name="ui2_component6" formatted="false">"فحص بدء التشغيل"</string>
+    <string name="ui2_component_hint" formatted="false">"فحص النتائج وخيارات الإصلاح"</string>
+    <string name="ui2_config_sub" formatted="false">"يُطبَّق تغيير المنفذ وطريقة التشغيل عند التشغيل التالي"</string>
+    <string name="ui2_connection" formatted="false">"حالة الاتصال"</string>
+    <string name="ui2_data_ops" formatted="false">"نسخ احتياطي واستعادة"</string>
+    <string name="ui2_data_sub" formatted="false">"التصدير والاسترداد ومشاركة الملفات."</string>
+    <string name="ui2_data_title" formatted="false">"بيانات ونسخ احتياطي"</string>
+    <string name="ui2_device_channels" formatted="false">"قنوات أوامر الجهاز"</string>
+    <string name="ui2_device_grants" formatted="false">"أذونات الجهاز"</string>
+    <string name="ui2_diagnostics" formatted="false">"التشخيص"</string>
+    <string name="ui2_diagnostics_intro" formatted="false">"افحص المكوّنات والتخزين والخدمات وأنشئ تقريرًا محجوب البيانات الحساسة."</string>
+    <string name="ui2_diagnostics_sub" formatted="false">"فحوص بيئة التشغيل وسجلات التشخيص"</string>
+    <string name="ui2_display" formatted="false">"العرض وبدء التشغيل"</string>
+    <string name="ui2_dns" formatted="false">"سياسة DNS"</string>
+    <string name="ui2_environment" formatted="false">"بيئة التشغيل"</string>
+    <string name="ui2_environment_page" formatted="false">"التثبيت وبيئة التشغيل"</string>
+    <string name="ui2_environment_recovery" formatted="false">"استرداد البيئة"</string>
+    <string name="ui2_environment_recovery_sub" formatted="false">"تبعيات التشغيل والصيانة"</string>
+    <string name="ui2_environment_state" formatted="false">"حالة البيئة"</string>
+    <string name="ui2_environment_sub" formatted="false">"افحص كل مكوّن وأصلح ما يحتاج إلى عناية فقط."</string>
+    <string name="ui2_error_logs" formatted="false">"سجلات الأخطاء"</string>
+    <string name="ui2_experience" formatted="false">"التجربة"</string>
+    <string name="ui2_export" formatted="false">"تصدير الإضافات"</string>
+    <string name="ui2_export_sub" formatted="false">"حفظ نسخة من الإضافات المثبّتة"</string>
+    <string name="ui2_floating" formatted="false">"الحالة العائمة"</string>
+    <string name="ui2_floating_settings" formatted="false">"مظهر النافذة العائمة"</string>
+    <string name="ui2_floating_settings_sub" formatted="false">"تعديل النمط والمحتوى والمعاينة"</string>
+    <string name="ui2_from_link" formatted="false">"التثبيت من رابط"</string>
+    <string name="ui2_grants_sub" formatted="false">"إمكانات اختيارية. لا تتطلب المحادثات والطرفيات إذن التحكم في الجهاز."</string>
+    <string name="ui2_import" formatted="false">"استيراد الإضافات"</string>
+    <string name="ui2_import_sub" formatted="false">"اختيار ملف ZIP لإضافة من جهازك"</string>
+    <string name="ui2_install_environment" formatted="false">"التثبيت وبيئة التشغيل"</string>
+    <string name="ui2_installation_log" formatted="false">"سجل الفحص والتثبيت"</string>
+    <string name="ui2_installed" formatted="false">"الإضافات المثبّتة"</string>
+    <string name="ui2_launch_hint" formatted="false">"جاهز لمهمتك التالية."</string>
+    <string name="ui2_local_plugins" formatted="false">"الإضافات المحلية"</string>
+    <string name="ui2_logs" formatted="false">"سجل بدء التشغيل"</string>
+    <string name="ui2_maintenance" formatted="false">"الصيانة والاسترداد"</string>
+    <string name="ui2_managed" formatted="false">"بيئة التشغيل المُدارة"</string>
+    <string name="ui2_managed_sub" formatted="false">"تحديث المكوّنات المضمّنة والاحتفاظ بالبيانات الشخصية"</string>
+    <string name="ui2_managed_update" formatted="false">"تحديث بيئة التشغيل"</string>
+    <string name="ui2_management" formatted="false">"الإدارة"</string>
+    <string name="ui2_meet" formatted="false">"اكتشف DSHA"</string>
+    <string name="ui2_network_runtime" formatted="false">"بيئة التشغيل والشبكة"</string>
+    <string name="ui2_offline_badge" formatted="false">"إعداد دون اتصال  ·  دون صلاحيات الجذر  ·  %1$s"</string>
+    <string name="ui2_online_notice" formatted="false">"تتلقى النماذج المتصلة بالإنترنت الرسائل والمرفقات التي تختار إرسالها."</string>
+    <string name="ui2_overlay" formatted="false">"الحالة العائمة"</string>
+    <string name="ui2_overlay_sub" formatted="false">"المحتوى والعتامة ومدة العرض"</string>
+    <string name="ui2_plugin_link" formatted="false">"رابط المستودع أو التنزيل"</string>
+    <string name="ui2_port" formatted="false">"منفذ الويب النشط"</string>
+    <string name="ui2_port_hint" formatted="false">"استخدم منفذًا متاحًا تلقائيًا عند انشغال المنفذ"</string>
+    <string name="ui2_port_preferred" formatted="false">"منفذ الويب المفضّل"</string>
+    <string name="ui2_recovery_tools" formatted="false">"استرداد البيئة والبيانات"</string>
+    <string name="ui2_repair_parts" formatted="false">"إصلاح المكوّنات"</string>
+    <string name="ui2_repair_parts_sub" formatted="false">"فحص الأجزاء المفقودة والاحتفاظ بالمكوّنات العاملة"</string>
+    <string name="ui2_reproduction" formatted="false">"خطوات إعادة الإظهار"</string>
+    <string name="ui2_resolve" formatted="false">"تحليل وتثبيت"</string>
+    <string name="ui2_restart" formatted="false">"إعادة التشغيل"</string>
+    <string name="ui2_rollback" formatted="false">"الرجوع لبيئة متوافقة"</string>
+    <string name="ui2_rollback_sub" formatted="false">"التبديل بعد التحقق المعزول فقط"</string>
+    <string name="ui2_runtime_compat" formatted="false">"توافق بيئة التشغيل"</string>
+    <string name="ui2_runtime_config" formatted="false">"إعدادات بيئة التشغيل"</string>
+    <string name="ui2_sensitive" formatted="false">"الإمكانات الحساسة"</string>
+    <string name="ui2_settings" formatted="false">"الإعدادات"</string>
+    <string name="ui2_settings_hint" formatted="false">"خصّص مساحة عملك على طريقتك."</string>
+    <string name="ui2_shortcuts" formatted="false">"الوصول السريع"</string>
+    <string name="ui2_six_steps" formatted="false">"ست خطوات للتثبيت"</string>
+    <string name="ui2_skip" formatted="false">"تخطي المقدمة"</string>
+    <string name="ui2_start" formatted="false">"تشغيل DSHA"</string>
+    <string name="ui2_stop" formatted="false">"إيقاف"</string>
+    <string name="ui2_stopped" formatted="false">"DSH لا يعمل"</string>
+    <string name="ui2_storage_files" formatted="false">"التخزين والملفات"</string>
+    <string name="ui2_storage_files_sub" formatted="false">"استخدام التخزين وتنظيف الذاكرة المؤقتة ومشاركة الملفات"</string>
+    <string name="ui2_support" formatted="false">"الدعم"</string>
+    <string name="ui2_system_permissions" formatted="false">"أذونات النظام"</string>
+    <string name="ui2_troubleshooting" formatted="false">"استكشاف الأخطاء وإصلاحها"</string>
+    <string name="ui2_update_channel" formatted="false">"قناة التحديث"</string>
+    <string name="ui2_updates" formatted="false">"تحديثات التطبيق"</string>
+    <string name="ui2_updates_intro" formatted="false">"عرض إصدارات التطبيق ومكوّنات بيئة التشغيل."</string>
+    <string name="ui2_updates_sub" formatted="false">"التحديثات المستقرة والتجريبية"</string>
+    <string name="ui2_w1_0" formatted="false">"المحادثات والمهام"</string>
+    <string name="ui2_w1_1" formatted="false">"طرفية كاملة"</string>
+    <string name="ui2_w1_2" formatted="false">"الإضافات وأدوات الجهاز"</string>
+    <string name="ui2_w2_0" formatted="false">"المحادثات والملفات"</string>
+    <string name="ui2_w2_1" formatted="false">"النماذج وبيانات الاعتماد"</string>
+    <string name="ui2_w2_2" formatted="false">"إجراءات الجهاز"</string>
+    <string name="ui2_welcome_lead0" formatted="false">"اكتب الشيفرة، وتعامل مع الملفات واستخدم الأدوات.\nاصطحب مساحة عملك معك."</string>
+    <string name="ui2_welcome_lead1" formatted="false">"المحادثات والملفات والأدوات معًا."</string>
+    <string name="ui2_welcome_lead2" formatted="false">"إذن التحكم في الجهاز اختياري."</string>
+    <string name="ui2_welcome_title0" formatted="false">"مساحة عملك بالذكاء الاصطناعي،\nعلى هاتفك مباشرةً."</string>
+    <string name="ui2_welcome_title1" formatted="false">"من فكرة\nإلى إنجاز."</string>
+    <string name="ui2_welcome_title2" formatted="false">"أذوناتك.\nبياناتك."</string>
+    <string name="ui2_workspace" formatted="false">"مساحة العمل"</string>
+    <string name="ui2_ws1_0" formatted="false">"تعاون مع النماذج لإنجاز المهام."</string>
+    <string name="ui2_ws1_1" formatted="false">"أوامر Ubuntu وجلسات مستقلة."</string>
+    <string name="ui2_ws1_2" formatted="false">"أضف الإضافات وفعّل إمكانات الجهاز."</string>
+    <string name="ui2_ws2_0" formatted="false">"تُخزّن محليًا مع تصدير يدوي."</string>
+    <string name="ui2_ws2_1" formatted="false">"اضبط النماذج ومفاتيح API في واجهة الويب. يتم الاحتفاظ ببيانات الاعتماد الأصلية الموجودة."</string>
+    <string name="ui2_ws2_2" formatted="false">"لصلاحيات الجذر وShizuku وADB والرسائل النصية أذونات منفصلة."</string>
+    <string name="ui_adb_code_label" formatted="false">"رمز الاقتران (6 أرقام)"</string>
+    <string name="ui_adb_host_label" formatted="false">"عنوان الجهاز (فارغ = اكتشاف)"</string>
+    <string name="ui_adb_port_label" formatted="false">"منفذ الاقتران (فارغ = اكتشاف)"</string>
+    <string name="ui_lan_unencrypted" formatted="false">"حركة الشبكة المحلية غير مشفّرة؛ اقتصر على شبكات وأجهزة موثوقة"</string>
+    <string name="ui_language_title" formatted="false">"اللغة"</string>
+    <string name="ui_m0001" formatted="false">"تنزيل التحديث"</string>
+    <string name="ui_m0002" formatted="false">"حفظ الإعدادات"</string>
+    <string name="ui_m0003" formatted="false">"إلغاء الفحص"</string>
+    <string name="ui_m0005" formatted="false">"بدء"</string>
+    <string name="ui_m0006" formatted="false">"نسخ احتياطي وإعادة بناء"</string>
+    <string name="ui_m0007" formatted="false">"بدء آمن"</string>
+    <string name="ui_m0010" formatted="false">"بدء الإقران"</string>
+    <string name="ui_m0011" formatted="false">"خيارات الاسترداد"</string>
+    <string name="ui_m0012" formatted="false">"العنوان والمنفذ يدويًا"</string>
+    <string name="ui_m0013" formatted="false">"إدارة الإضافات"</string>
+    <string name="ui_m0015" formatted="false">"منح الإذن لـ Shizuku"</string>
+    <string name="ui_m0016" formatted="false">"الإضافات"</string>
+    <string name="ui_m0017" formatted="false">"لم يُفحص"</string>
+    <string name="ui_m0018" formatted="false">"البحث عن تحديثات"</string>
+    <string name="ui_m0020" formatted="false">"فاتح"</string>
+    <string name="ui_m0021" formatted="false">"الطرفية"</string>
+    <string name="ui_m0023" formatted="false">"الإعدادات"</string>
+    <string name="ui_m0024" formatted="false">"أدخل أمرًا واضغط Enter"</string>
+    <string name="ui_m0025" formatted="false">"لا توجد سجلات بعد."</string>
+    <string name="ui_m0026" formatted="false">"الإقران والمنافذ"</string>
+    <string name="ui_m0030" formatted="false">"أبقِه مغلقًا إن كنت لا تستخدم تصحيح الأخطاء اللاسلكي"</string>
+    <string name="ui_m0031" formatted="false">"إقران ADB لاسلكيًا"</string>
+    <string name="ui_m0039" formatted="false">"لم يُمنح الإذن لـ Shizuku"</string>
+    <string name="ui_m0046" formatted="false">"تنزيل السجلات"</string>
+    <string name="ui_m0047" formatted="false">"تنزيل سجلات الأخطاء"</string>
+    <string name="ui_m0050" formatted="false">"إيقاف"</string>
+    <string name="ui_m0053" formatted="false">"المستشعرات والمصباح"</string>
+    <string name="ui_m0054" formatted="false">"استخدام بيئة تشغيل proroot"</string>
+    <string name="ui_m0055" formatted="false">"استخدام المتصفح المتوافق"</string>
+    <string name="ui_m0057" formatted="false">"استخدام تخطيط الويب لسطح المكتب"</string>
+    <string name="ui_m0060" formatted="false">"أدوات الإصلاح"</string>
+    <string name="ui_m0062" formatted="false">"السماح بصدفة root"</string>
+    <string name="ui_m0063" formatted="false">"السماح بالشبكة المحلية"</string>
+    <string name="ui_m0066" formatted="false">"السماح بالوصول للموقع"</string>
+    <string name="ui_m0067" formatted="false">"حول"</string>
+    <string name="ui_m0078" formatted="false">"إلغاء المهمة"</string>
+    <string name="ui_m0079" formatted="false">"إلغاء العملية"</string>
+    <string name="ui_m0080" formatted="false">"حفظ باسم"</string>
+    <string name="ui_m0081" formatted="false">"إضافاتي فقط"</string>
+    <string name="ui_m0084" formatted="false">"استمر في الفحص عند انقطاع الخلفية؛ شغّل تصحيح الأخطاء اللاسلكي قبل الاستعادة"</string>
+    <string name="ui_m0089" formatted="false">"تحديثات عند بدء التشغيل"</string>
+    <string name="ui_m0090" formatted="false">"تمكين وصول ADB إلى الجهاز (متوقف افتراضيًا)"</string>
+    <string name="ui_m0094" formatted="false">"عرض الإصدارات في المتصفح"</string>
+    <string name="ui_m0095" formatted="false">"فتح في المتصفح"</string>
+    <string name="ui_m0102" formatted="false">"نسخ"</string>
+    <string name="ui_m0103" formatted="false">"نسخ التقرير"</string>
+    <string name="ui_m0104" formatted="false">"الوضع الآمن: استعادة إضافات الطرف الثالث"</string>
+    <string name="ui_m0106" formatted="false">"تثبيت إضافة"</string>
+    <string name="ui_m0107" formatted="false">"تثبيت التحديث"</string>
+    <string name="ui_m0109" formatted="false">"تصدير التقرير"</string>
+    <string name="ui_m0118" formatted="false">"محرك ويب مضمّن؛ جرّبه عند مشكلات التوافق"</string>
+    <string name="ui_m0121" formatted="false">"عرض مخرجات الذكاء الاصطناعي"</string>
+    <string name="ui_m0125" formatted="false">"فتح مدير Shizuku"</string>
+    <string name="ui_m0126" formatted="false">"بيانات ونسخ احتياطي"</string>
+    <string name="ui_m0128" formatted="false">"إعدادات التصحيح اللاسلكي"</string>
+    <string name="ui_m0133" formatted="false">"سوق الإضافات"</string>
+    <string name="ui_m0134" formatted="false">"حالة تشغيل الإضافة. انقر للتفاصيل."</string>
+    <string name="ui_m0135" formatted="false">"مدير الإضافات"</string>
+    <string name="ui_m0137" formatted="false">"رابط الإضافة أو اسم حزمة npm"</string>
+    <string name="ui_m0138" formatted="false">"اسم أو وصف الإضافة"</string>
+    <string name="ui_m0142" formatted="false">"طرفية جديدة"</string>
+    <string name="ui_m0145" formatted="false">"لا توجد طرفيات\nانقر «جديد» للفتح"</string>
+    <string name="ui_m0146" formatted="false">"المزيد"</string>
+    <string name="ui_m0158" formatted="false">"اكتشاف الإضافات المثبّتة"</string>
+    <string name="ui_m0159" formatted="false">"اكتشاف الإضافات"</string>
+    <string name="ui_m0164" formatted="false">"مسح"</string>
+    <string name="ui_m0170" formatted="false">"منح صلاحية root والتحقق منها"</string>
+    <string name="ui_m0171" formatted="false">"قراءة SMS"</string>
+    <string name="ui_m0173" formatted="false">"مستقر"</string>
+    <string name="ui_m0177" formatted="false">"بسيط"</string>
+    <string name="ui_m0178" formatted="false">"طرفية بسيطة"</string>
+    <string name="ui_m0179" formatted="false">"لصق الرابط"</string>
+    <string name="ui_m0181" formatted="false">"قراءة رمز الإقران تلقائيًا"</string>
+    <string name="ui_m0182" formatted="false">"أضف خطوات إعادة إنتاج المشكلة. لا تضمّن مفاتيح أو محادثات خاصة."</string>
+    <string name="ui_m0185" formatted="false">"فحص الرابط"</string>
+    <string name="ui_m0191" formatted="false">"إعدادات البطارية"</string>
+    <string name="ui_m0201" formatted="false">"العودة"</string>
+    <string name="ui_m0202" formatted="false">"العودة إلى البدء: الإضافات / البدء الآمن"</string>
+    <string name="ui_m0209" formatted="false">"إعادة الفحص"</string>
+    <string name="ui_m0211" formatted="false">"إعادة الضبط مع حفظ المحادثات"</string>
+    <string name="ui_m0212" formatted="false">"إعادة المحاولة"</string>
+    <string name="ui_m0215" formatted="false">"تجريبي"</string>
+    <string name="ui_m0217" formatted="false">"التحقق من الاتصال"</string>
+    <string name="ui_m0218" formatted="false">"＋ جديد"</string>
+    <string name="ui_m9024" formatted="false">"تغيير"</string>
+    <string name="upd_browser_sub" formatted="false">"كل الإصدارات وملفات APK"</string>
+    <string name="upd_copy_version" formatted="false">"نسخ معلومات الإصدار"</string>
+    <string name="upd_full_notes" formatted="false">"كل الملاحظات"</string>
+    <string name="upd_pane_empty" formatted="false">"عند العثور على إصدار مرشح تظهر هنا الملاحظات والحجم وطريقة التثبيت."</string>
+    <string name="upd_recheck" formatted="false">"الفحص مجددًا"</string>
+    <string name="upd_tab_candidate" formatted="false">"الإصدار المرشح"</string>
+    <string name="upd_tab_current" formatted="false">"هذا الإصدار"</string>
+    <string name="welcome_eyebrow0" formatted="false">"DEEPSEEK HARNESS · ANDROID"</string>
+    <string name="welcome_eyebrow1" formatted="false">"01 / مصمّم لطريقة عملك"</string>
+    <string name="welcome_eyebrow2" formatted="false">"02 / بياناتك، اختيارك"</string>
+    <plurals name="plugin_count">
+        <item quantity="zero">"لا توجد إضافات (%d)"</item>
+        <item quantity="one">"إضافة واحدة (%d)"</item>
+        <item quantity="two">"إضافتان (%d)"</item>
+        <item quantity="few">"%d إضافات"</item>
+        <item quantity="many">"%d إضافةً"</item>
+        <item quantity="other">"%d إضافة"</item>
+    </plurals>
+</resources>

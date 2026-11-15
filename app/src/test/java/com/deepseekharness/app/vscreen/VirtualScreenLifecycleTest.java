@@ -160,4 +160,38 @@ public final class VirtualScreenLifecycleTest {
       shutdown(manager);
     }
   }
+
+  @Test
+  public void statusWithoutCoreOffersCreateFirst() throws Exception {
+    var manager = manager();
+    try {
+      var status = manager.status();
+      assertFalse(status.optBoolean("ok"));
+      assertEquals("VSCREEN_NOT_RUNNING", status.optString("error"));
+      // 旧字段保持原样，避免破坏仍按 error/state 判断的调用方。
+      assertEquals("STOPPED", status.optString("lifecycleState"));
+      assertEquals("REJECTED", status.optString("state"));
+      assertEquals("CREATE_FIRST", status.optString("nextAction"));
+      assertTrue(status.optBoolean("retryable"));
+    } finally {
+      shutdown(manager);
+    }
+  }
+
+  @Test
+  public void statusWhileCleanupPendingAsksUserToClose() throws Exception {
+    var manager = manager();
+    try {
+      set(manager, "lifecycleState", VirtualScreenLifecycleState.CLOSE_UNKNOWN);
+      var status = manager.status();
+      assertFalse(status.optBoolean("ok"));
+      assertEquals("VSCREEN_CLOSE_UNKNOWN", status.optString("error"));
+      assertTrue(status.optBoolean("cleanupPending"));
+      // 待清理不能靠重看或重试解决：须用户同意后按原 coreInstance 显式 close。
+      assertEquals("ASK_USER_TO_CLOSE", status.optString("nextAction"));
+      assertFalse(status.optBoolean("retryable"));
+    } finally {
+      shutdown(manager);
+    }
+  }
 }

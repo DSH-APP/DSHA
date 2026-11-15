@@ -1,20 +1,30 @@
-<?xml version='1.0' encoding='utf-8'?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/surface" android:orientation="vertical">
-  <LinearLayout android:id="@+id/app_bar" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="60dp" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="18dp" android:paddingEnd="16dp">
-    <FrameLayout android:id="@+id/app_logo" android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_logo">
-      <ImageView android:layout_width="17dp" android:layout_height="17dp" android:layout_gravity="center" android:contentDescription="@null" android:src="@drawable/ic_terminal" app:tint="@color/primary" />
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  UI v5 手机外壳：顶栏品牌/页面语境 + 内容区铺满 + 底部悬浮胶囊导航（竖屏只显示图标，见 values-port）。
+  胶囊叠在内容之上（不占纵向空间），底色不透明；页面用 shell_page_bottom 留出胶囊高度。
+  底栏仍必须是 BottomNavigationView（单元测试与 debug 工具会强转）。
+  平板形态见 layout-sw600dp/activity_main.xml（左栏 + 隐藏底栏）。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/shell_bg" android:orientation="vertical">
+  <LinearLayout android:id="@+id/app_bar" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="@dimen/shell_header_min_height" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="18dp" android:paddingEnd="12dp">
+    <FrameLayout android:id="@+id/app_logo" android:layout_width="@dimen/shell_brand_size" android:layout_height="@dimen/shell_brand_size" android:background="@drawable/bg_shell_brand">
+      <ImageView android:layout_width="@dimen/shell_brand_icon_size" android:layout_height="@dimen/shell_brand_icon_size" android:layout_gravity="center" android:contentDescription="@null" android:src="@drawable/ic_terminal" app:tint="@color/shell_accent" />
     </FrameLayout>
-    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/sub_back" android:visibility="gone" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_ui_back" android:contentDescription="@string/ui_m0201" app:tint="@color/text" />
-    <TextView android:id="@+id/app_title" style="@style/DshaText.PageTitle" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_control" android:text="@string/app_name" android:textSize="18sp" />
-    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/btn_tasks" android:layout_width="44dp" android:layout_height="44dp" android:padding="11dp" android:src="@drawable/ic_ui_tasks" app:tint="@color/text_secondary" android:background="?attr/selectableItemBackgroundBorderless" />
-    <TextView android:id="@+id/btn_theme" style="@style/Widget.DSHA.ToolbarAction" android:layout_width="44dp" android:layout_height="44dp" android:layout_marginEnd="8dp" android:text="@string/ui_m0020" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" />
-    <FrameLayout android:id="@+id/btn_about" android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_chip_clickable" android:clickable="true" android:contentDescription="@string/ui_m0067" android:focusable="true" android:visibility="gone">
-      <ImageView android:layout_width="16dp" android:layout_height="16dp" android:layout_gravity="center" android:contentDescription="@null" android:src="@drawable/ic_about" app:tint="@color/text_secondary" />
+    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/sub_back" android:visibility="gone" android:layout_width="44dp" android:layout_height="44dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_ui_back" android:contentDescription="@string/ui_m0201" app:tint="@color/shell_text_secondary" />
+    <LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:gravity="center_vertical" android:orientation="vertical">
+      <TextView android:id="@+id/app_title" style="@style/DshaText.PageTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/app_name" android:textColor="@color/shell_text" android:textSize="@dimen/shell_title_text" android:letterSpacing="0.06" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" />
+      <TextView android:id="@+id/app_context" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:textColor="@color/shell_text_secondary" android:textSize="@dimen/shell_context_text" android:includeFontPadding="false" android:maxLines="1" android:ellipsize="end" />
+    </LinearLayout>
+    <FrameLayout android:id="@+id/btn_more" android:layout_width="44dp" android:layout_height="44dp" android:background="?attr/selectableItemBackgroundBorderless" android:clickable="true" android:focusable="true" android:contentDescription="@string/ui_m0146" android:visibility="gone">
+      <ImageView android:layout_width="18dp" android:layout_height="18dp" android:layout_gravity="center" android:contentDescription="@null" android:src="@drawable/ic_ui_add" app:tint="@color/shell_text_secondary" />
     </FrameLayout>
   </LinearLayout>
-  <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
-  <TextView android:id="@+id/environment_recovery_banner" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:padding="12dp" android:textColor="@color/primary" android:background="@drawable/bg_chip_clickable" android:textSize="14sp" android:clickable="true" android:focusable="true" android:visibility="gone" android:gravity="center" android:includeFontPadding="false" />
-  <FrameLayout android:id="@+id/fragment_container" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
-  <View android:layout_width="match_parent" android:layout_height="@dimen/stroke" android:background="@color/line" />
-  <com.google.android.material.bottomnavigation.BottomNavigationView android:id="@+id/bottom_nav" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@color/surface" android:minHeight="64dp" app:itemIconSize="20dp" app:itemPaddingTop="8dp" app:itemPaddingBottom="6dp" app:elevation="0dp" app:itemIconTint="@color/nav_item_tint" app:itemTextColor="@color/nav_item_tint" app:labelVisibilityMode="labeled" app:menu="@menu/bottom_nav_menu" app:itemTextAppearanceActive="@style/Ui2.Nav" app:itemTextAppearanceInactive="@style/Ui2.Nav" />
+  <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/shell_line" />
+  <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipChildren="false" android:clipToPadding="false">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+      <com.deepseekharness.app.ui.EnvironmentNoticeBanner android:id="@+id/environment_recovery_banner" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_marginEnd="12dp" android:layout_marginTop="8dp" android:layout_marginBottom="2dp" android:visibility="gone" />
+      <FrameLayout android:id="@+id/fragment_container" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    </LinearLayout>
+    <com.google.android.material.bottomnavigation.BottomNavigationView android:id="@+id/bottom_nav" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="bottom" android:layout_marginStart="@dimen/shell_nav_margin_horizontal" android:layout_marginEnd="@dimen/shell_nav_margin_horizontal" android:layout_marginBottom="@dimen/shell_nav_margin_bottom" android:background="@drawable/bg_shell_nav" android:backgroundTint="@null" android:elevation="8dp" android:outlineProvider="background" android:minHeight="@dimen/shell_nav_height" app:backgroundTint="@null" app:itemIconSize="@dimen/shell_nav_icon_size" app:itemPaddingTop="@dimen/shell_nav_item_padding_top" app:itemPaddingBottom="@dimen/shell_nav_item_padding_bottom" app:itemIconTint="@color/shell_nav_item_tint" app:itemTextColor="@color/shell_nav_item_tint" app:itemRippleColor="@color/shell_nav_ripple" app:itemTextAppearanceActive="@style/Widget.DSHA.ShellNavLabel" app:itemTextAppearanceInactive="@style/Widget.DSHA.ShellNavLabel" app:labelVisibilityMode="@integer/shell_nav_label_visibility" app:elevation="8dp" app:menu="@menu/bottom_nav_menu" />
+  </FrameLayout>
 </LinearLayout>

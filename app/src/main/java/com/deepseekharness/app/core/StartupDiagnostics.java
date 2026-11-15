@@ -16,8 +16,6 @@ public final class StartupDiagnostics {
   private final java.io.File files;
   private final java.util.function.LongSupplier clock;
   private final Events events;
-  private String recentError = "";
-  private int errorLines;
   private boolean explicitStartupFailure;
   private final com.deepseekharness.app.util.StartupHistoryStore history;
   private final java.util.concurrent.ScheduledExecutorService historyIo;
@@ -66,8 +64,6 @@ public final class StartupDiagnostics {
   public synchronized void begin(long generation, boolean safe) {
     persistHistory(true);
     owners.clear();
-    recentError = "";
-    errorLines = 0;
     explicitStartupFailure = false;
     issueBudget.begin(generation);
     trace.begin(generation, now(), safe);
@@ -86,9 +82,10 @@ public final class StartupDiagnostics {
     trace.owned(generation, now(), text);
   }
 
-  public void stage(long generation, String stage) {
+  public synchronized void stage(long generation, String stage) {
+    if (!trace.isCurrent(generation)) return;
     trace.stage(generation, now(), stage);
-    events.record("STARTUP_STAGE", stage);
+    events.record(snapshot().browserReady ? "RUNTIME_STAGE" : "STARTUP_STAGE", stage);
     persistHistory(false);
   }
 
@@ -124,22 +121,17 @@ public final class StartupDiagnostics {
           if ("stage".equals(type)) stage(generation, message);
           else if ("issue".equals(type)) {
             issue(generation, name, message);
-            explicitStartupFailure |= !Boolean.FALSE.equals(event.get("fatal"));
+            if (!snapshot().browserReady)
+              explicitStartupFailure |= !Boolean.FALSE.equals(event.get("fatal"));
           } else if (!message.isEmpty()) trace.owned(generation, now(), message);
           continue;
         } catch (Exception ignored) {
         }
       }
+      // Preserve each raw line once. Keywords or a dependency path in a nearby stack frame do
+      // not establish plugin ownership, a second request, or a loader failure. Only the
+      // structured observer issue carries that evidence.
       trace.add(generation, now(), line);
-      if (line.matches("(?i).*(error|failed|cannot|did not activate|missing).*")) {
-        recentError = line;
-        errorLines = 12;
-        String name = owner(line);
-        if (!name.isEmpty()) related(generation, name, line);
-      } else if (errorLines-- > 0) {
-        String name = owner(line);
-        if (!name.isEmpty()) related(generation, name, recentError + "\n" + line);
-      }
     }
     persistHistory(false);
   }
@@ -179,29 +171,23 @@ public final class StartupDiagnostics {
       if (!alreadyReady) browserReady(generation);
       return false;
     }
-    if ("issue".equals(type)) {
-      String name = owner("\"" + id + "\" " + detail);
-      String message =
-          (id.isEmpty() ? "" : id + com.deepseekharness.app.util.UiText.text("：")) + detail;
-      if (alreadyReady || !event.optBoolean("fatal")) {
-        browser(generation, message);
-        return false;
-      }
-      issue(generation, name, message);
-      if (name.isEmpty())
-        for (String line : detail.split("\n")) {
-          String candidate = owner(line);
-          if (!candidate.isEmpty()) issue(generation, candidate, line);
-        }
-      return event.optBoolean("fatal") && !alreadyReady;
-    }
+    if ("issue".equals(type)) return pageIssue(generation, id, detail, event.optBoolean("fatal"));
     if (!alreadyReady) trace.owned(generation, now(), detail);
     return false;
   }
 
-  /** A keyword near a plugin path is related evidence, not a confirmed loading failure. */
-  private void related(long generation, String name, String detail) {
-    trace.add(generation, now(), "RELATED_PLUGIN_LOG[" + name + "]: " + detail);
+  synchronized boolean pageIssue(long generation, String id, String detail, boolean fatal) {
+    if (!trace.isCurrent(generation)) return false;
+    // The event's declared entry ID can identify its owner; dependency stack paths cannot.
+    String name = id.isEmpty() ? "" : owner("\"" + id + "\"");
+    String message =
+        (id.isEmpty() ? "" : id + com.deepseekharness.app.util.UiText.text("：")) + detail;
+    if (snapshot().browserReady || !fatal) {
+      browser(generation, message);
+      return false;
+    }
+    issue(generation, name, message);
+    return true;
   }
 
   public synchronized void issue(long generation, String name, String detail) {
@@ -223,9 +209,17 @@ public final class StartupDiagnostics {
       historyGate.execute(historyIo, () -> onHealthy.accept(generation));
   }
 
+  /** Called only after the current run's official authentication URL has been accepted. */
+  public synchronized void backendReady(long generation) {
+    if (!trace.isCurrent(generation) || snapshot().backendReady) return;
+    trace.backendReady(generation, now());
+    persistHistory(true);
+  }
+
   public synchronized void completed(long generation, String status, String reason) {
     if (!trace.isCurrent(generation)) return;
     if ("failed".equals(result) && "stopped".equals(status)) return;
+    trace.completed(generation, now());
     result = status;
     failure = reason == null ? "" : reason;
     persistHistory(true);
@@ -281,8 +275,6 @@ public final class StartupDiagnostics {
   /** 清除磁盘后不能让下一次 begin 把格式化前的内存记录重新写回。 */
   public synchronized void completeFactoryResetDrain() {
     owners.clear();
-    recentError = "";
-    errorLines = 0;
     explicitStartupFailure = false;
     issueBudget.begin(0);
     recordId = "";

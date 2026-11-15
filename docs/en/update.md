@@ -1,6 +1,6 @@
 # Application updates and managed runtime updates
 
-> Checked on 2026-10-21 against actual build190 update code, using published F10 `087724c` as a reference baseline. This page did not inspect the live remote feed, install an APK, or perform device acceptance. Current final identity is documented by [README](../../README.en.md) and the [release introduction](release-introduction.md).
+> Baseline checked on 2026-10-21 against build190 update code. Current publication identity is build356 / `io.github.sunsetrne.dsha` / single Standard; F10–F13/build190 records are historical. This page did not inspect the live remote feed, install an APK, or perform device acceptance. Current identity is documented by [README](../../README.en.md) and the [release introduction](release-introduction.md).
 
 APK updates and managed-component updates inside Ubuntu are different chains. An APK passes download and package-identity checks before the system installer opens. Managed components require plan review, normal task shutdown, candidate preparation/trial, and transactional switching. Both retain specific failures; version text does not replace actual outcomes.
 
@@ -19,12 +19,14 @@ The feed request uses `DSHA/<VERSION_NAME>` as User-Agent, and the receiving ser
 | Stable / preview channel | Switches while idle and checks immediately | Stable accepts stable only; preview accepts stable/preview. Select by larger versionCode, not rc filename ordering |
 | Default channel | Initialized when no preference exists | A version name containing `-` defaults to preview; otherwise stable |
 | Check again | User click, or first entry to an update page with no task | Network failure retains the channel's last result; an old candidate with unknown source cannot install directly |
-| Download / resume | Starts an application-scoped foreground download after selection | Leaving/rotating does not restart it; cancel retains partial progress for a later resume request |
+| Download / resume | Starts an application-scoped foreground download after selection | Leaving/rotating does not restart it; cancel lives in the download notification (the page has none) and retains partial progress for a later resume request |
 | Install update | A foreground page claims the fully reverified result once | Rejects channel/candidate changes during verification; process-recreation interruption requires a user retry |
+
+The page has a single main button that is itself the progress bar and never changes size or position: a sweep while checking, a fill from the start edge with percent and bytes while downloading, full while verifying, then "Install update". It is not clickable while busy and the channel is locked. [UpdateActionPolicy](../../app/src/main/java/com/deepseekharness/app/util/UpdateActionPolicy.java) derives what it shows. Tablet landscape (≥ 840dp) uses two panes: the main card and management on the left, candidate / this-build notes on the right.
 
 [UpdatePolicy](../../app/src/main/java/com/deepseekharness/app/util/UpdatePolicy.java) also validates flavor, minSdk, `arm64-v8a`, versionCode, allowed HTTPS source, 64-character hexadecimal SHA-256, and size up to 1 GiB. A saved candidate's checked channel is separate from the release's own channel; current preference cannot establish its origin.
 
-F10/F11 revisions that share code190 are not selected as a newer version even with a later version name: candidates require `versionCode > BuildConfig.VERSION_CODE`. Use [README](../../README.en.md), the [release introduction](release-introduction.md), the [historical F11 record](../releases/v0.2.1-rc.2-build190-fix11-20261021.md), and the actual Release for private publication, attachment digests, and manual downloads. Attachment status requires actual Release and independent external receipts. “No update” does not prove there are no remote prerelease attachments.
+F10/F11 revisions sharing code190 are not selected as a newer version even with a later version name: candidates require `versionCode > BuildConfig.VERSION_CODE`. Use [README](../../README.en.md), the [release introduction](release-introduction.md) and the actual Release for public prerelease assets, attachment digests, and manual downloads. Attachment status requires the actual Release and independent external receipts. “No update” does not prove there are no remote prerelease attachments.
 
 ## Download, verification, and system installation
 
@@ -32,10 +34,10 @@ Allowed sources are dsha.cc download paths and GitHub Release APK paths under DS
 
 - The package matches the installed application and has `debuggable=false`.
 - Actual versionCode matches the feed, is greater, and supports this Android version.
-- versionName matches the current Standard/Low variant.
+- versionName matches the current single Standard variant; Low was removed and Low candidates are rejected.
 - The candidate's complete current signer set exactly matches the installed application, not just a subset.
 
-Release delivery retains `dsh.android.client` and E7E3. The implementation compares the actual installed signer set; a shortened fingerprint in documentation does not authorize installation. A digest establishes byte equality, and a matching signature establishes continuity of installation identity. Neither proves plugin code harmless. See [download verification](download-verification.md) for manual APK checks.
+Current release delivery uses `io.github.sunsetrne.dsha` and the Mod-owned certificate recorded in `ci/release-identity.json`. The implementation compares the actual installed signer set; a shortened fingerprint in documentation does not authorize installation. A digest establishes byte equality, and a matching signature establishes continuity of installation identity. Neither proves plugin code harmless. See [download verification](download-verification.md) for manual APK checks.
 
 On Android 8+, if this application lacks unknown-source installation permission, the page opens system authorization settings first and verifies after the user returns. On Android 13+, download first requests notification permission and continues requesting the download after the callback; notification permission is not installation permission. The system installer still requires user confirmation; installation is not silent.
 
@@ -48,6 +50,8 @@ Canceling system installation leaves the original application installed; opening
 “Review update plan” opens environment maintenance, compares installed and bundled components, then runs [EnvironmentMaintenance](../../app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java) after confirmation. Within the same Ubuntu base, only managed components update; personal data stays in place, and UI-only APK changes should not rebuild the environment directly. An unsuitable base requires a data-preserving rebuild plan.
 
 Managed commit first uses [MaintenanceCoordinator](../../app/src/main/java/com/deepseekharness/app/core/MaintenanceCoordinator.java) to stop Web/terminals normally and enforce the exit barrier. It prepares a candidate, records digests/predecessor, and runs [RuntimeTrial](../../app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java), checking actual port/authentication, sessions/storage, browser handshake, and exit before commit. Failure retains originals. Unknown exit cannot switch, clean, or replay. A compatibility rollback tries the predecessor with the current launcher and does not roll back conversation snapshots. See [installation and maintenance](install-and-maintenance.md).
+
+Whether a patch-level update enters the maintenance page after an over-the-top install, how to keep a user entry when auto-start is blocked by an old Web session, and the pre-release checklist and device overwrite acceptance steps are in [over-the-top upgrades, runtime maintenance, and plugin dependency contracts](overwrite-upgrade-and-maintenance.md).
 
 ## Change and validation entry points
 

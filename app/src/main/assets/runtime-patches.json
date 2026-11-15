@@ -1,7 +1,13 @@
 {
   "schema": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "active": [
+    {
+      "asset": "web-fetch-http-surrogate-patch.json"
+    },
+    {
+      "asset": "web-fetch-output-surrogate-patch.json"
+    },
     {
       "asset": "permission-full-access-patch.json"
     },
@@ -13,6 +19,16 @@
       "module": "@deepseek-ai/dsh-mcp-client/lib/index.js",
       "markers": [
         "DSHA_STARTUP_MCP_TIMING_V1"
+      ]
+    },
+    {
+      "asset": "mcp-image-base64-patch.json"
+    },
+    {
+      "asset": "mcp-version-negotiation-patch.json",
+      "module": "@deepseek-ai/dsh-mcp-client/lib/index.js",
+      "markers": [
+        "DSHA_MCP_VERSION_NEGOTIATION_V1"
       ]
     },
     {
@@ -63,6 +79,12 @@
       "asset": "plugin-manager-policy-patch.json"
     },
     {
+      "asset": "plugin-pnpm-argv-patch.json",
+      "markers": [
+        "DSHA_PLUGIN_PNPM_ARGV_V3"
+      ]
+    },
+    {
       "asset": "plugin-manager-auto-enable-patch.json"
     },
     {
@@ -78,18 +100,9 @@
       "asset": "language-patch.json"
     },
     {
-      "asset": "tooltip-interaction-patch.json",
-      "markers": [
-        "DSHA_TOOLTIP_DISMISS_RC2_V1"
-      ]
-    },
-    {
-      "asset": "tooltip-entry-patch.json"
-    },
-    {
       "asset": "frontend-static-cache-patch.json",
       "markers": [
-        "DSHA_STATIC_CACHE_V2"
+        "DSHA_STATIC_CACHE_V3"
       ]
     },
     {
@@ -108,6 +121,9 @@
       "asset": "tool-dispatch-validation-patch.json"
     },
     {
+      "asset": "tool-dispatch-validation-pipeline-patch.json"
+    },
+    {
       "asset": "tool-messages-history-patch.json"
     },
     {
@@ -115,6 +131,12 @@
     },
     {
       "asset": "guard-tools-patch.json",
+      "markers": [
+        "DSHA_REQUIRED_POLICY_V1"
+      ]
+    },
+    {
+      "asset": "guard-tools-pipeline-patch.json",
       "markers": [
         "DSHA_REQUIRED_POLICY_V1"
       ]
@@ -139,7 +161,7 @@
     },
     {
       "asset": "retired-market-optional-patch.json",
-      "module": "@deepseek-ai/dsh-app-boot/lib/index.js",
+      "module": "@deepseek-ai/dsh-official-bundles/lib/index.js",
       "markers": [
         "DSHA_RETIRED_MARKET_OPTIONAL_V1"
       ]
@@ -170,13 +192,6 @@
       "module": "@deepseek-ai/dsh-api-workspace-controller/lib/index.js",
       "markers": [
         "DSHA_DIRECTORY_PICKER_INDEPENDENT_LIFETIME_V1"
-      ]
-    },
-    {
-      "asset": "file-upload-resolver-lifecycle-patch.json",
-      "module": "@deepseek-ai/dsh-client-file-upload/lib/index.js",
-      "markers": [
-        "DSHA_FILE_UPLOAD_RESOLVER_LIFETIME_V1"
       ]
     },
     {
@@ -249,6 +264,63 @@
       "markers": [
         "DSHA_PLUGIN_BUNDLE_READ_WORKERS_V2"
       ]
+    },
+    {
+      "asset": "deepseek-account-requests-patch.json",
+      "markers": [
+        "DSHA_ACCOUNT_REQUEST_DIAGNOSTICS_V1",
+        "DSHA_ACCOUNT_PROFILE_SINGLE_FLIGHT_V1"
+      ]
+    },
+    {
+      "asset": "deepseek-account-client-diagnostic-patch.json",
+      "markers": [
+        "DSHA_ACCOUNT_CLIENT_DIAGNOSTIC_V1"
+      ]
+    },
+    {
+      "asset": "deepseek-web-search-headers-patch.json",
+      "markers": [
+        "DSHA_WEB_SEARCH_HEADERS_V1"
+      ]
+    },
+    {
+      "asset": "file-upload-capacity-patch.json",
+      "markers": [
+        "DSHA_UPLOAD_FILE_LIMIT_V1"
+      ]
+    },
+    {
+      "asset": "file-upload-binary-client-patch.json",
+      "markers": [
+        "DSHA_UPLOAD_BINARY_ONLY_V1"
+      ]
+    },
+    {
+      "asset": "file-deliverables-patch.json",
+      "markers": [
+        "DSHA_FILE_DELIVERABLES_RC2_V1"
+      ]
+    },
+    {
+      "asset": "file-image-actions-patch.json",
+      "markers": [
+        "DSHA_IMAGE_GALLERY_MENU_V1"
+      ]
+    },
+    {
+      "asset": "user-only-skill-approval-patch.json",
+      "module": "@deepseek-ai/dsh-tool-skill/lib/index.js",
+      "markers": [
+        "DSHA_USER_ONLY_SKILL_APPROVAL_V1"
+      ]
+    },
+    {
+      "asset": "first-connect-indicator-patch.json",
+      "module": "@deepseek-ai/dsh-client-ui-settings-general/lib/client.js",
+      "markers": [
+        "DSHA_FIRST_CONNECT_SILENT_V1"
+      ]
     }
   ],
   "specialized": [
@@ -274,6 +346,22 @@
     {
       "asset": "lexical-claim-patch.json",
       "reason": "Reviewed 0.2.1 atomic CommandChipNode replaces the old splitText/TOKEN_STYLE transform; exact raw retirement proof remains required, with materialized-node patch preserved."
+    },
+    {
+      "asset": "file-upload-resolver-lifecycle-patch.json",
+      "reason": "0.2.2-rc.1 upstream holds the cold-Session resolver in a stable data object (agentResolution={resolver}); raw module passes real Cordis dispose/fence and two CLI workspace-HMR rounds without DSHA_FILE_UPLOAD_RESOLVER_LIFETIME_V1."
+    },
+    {
+      "asset": "conversation-large-image-file-patch.json",
+      "reason": "0.2.2-rc.1 stages prompt images through binary fileUpload.uploadImage (no FileReader/base64) and intake rejects images over imageLimits (default 50 MiB); the old 20 MiB split would demote valid 20-50 MiB images to plain files."
+    },
+    {
+      "asset": "tooltip-interaction-patch.json",
+      "reason": "0.2.2-rc.1 frontend entry renamed (index-BgUyXZcc.js); upstream primitives Tooltip ignores touch/no-hover pointer enter, dismisses on touch pointerdown, suppresses focus tooltips after pointer input, and closes pinned tooltips on outside pointer/Escape/Tab."
+    },
+    {
+      "asset": "tooltip-entry-patch.json",
+      "reason": "Cache-busting query for the retired tooltip-interaction bundle; 0.2.2-rc.1 renamed the entry and upstream owns touch tooltip dismissal."
     }
   ]
 }

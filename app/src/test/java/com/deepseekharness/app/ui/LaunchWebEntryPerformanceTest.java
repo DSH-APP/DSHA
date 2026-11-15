@@ -48,6 +48,21 @@ public class LaunchWebEntryPerformanceTest {
     static final AtomicInteger exchanges = new AtomicInteger();
     static long generation;
     static String replacementUrl;
+    static final java.util.Set<Runnable> readyListeners = new java.util.LinkedHashSet<>();
+
+    @Implementation
+    protected void addReadyWebPageListener(Runnable listener) {
+      readyListeners.add(listener);
+    }
+
+    @Implementation
+    protected void removeReadyWebPageListener(Runnable listener) {
+      readyListeners.remove(listener);
+    }
+
+    static void notifyReady() {
+      for (Runnable listener : java.util.List.copyOf(readyListeners)) listener.run();
+    }
 
     @Implementation
     protected static HarnessController get(Context c) {
@@ -94,6 +109,8 @@ public class LaunchWebEntryPerformanceTest {
     boolean changedGeneration, changedUrl, navigationFailure;
     PreviewAuth preview;
     int generationReads, urlReads;
+    boolean available = true;
+    int entryUrlReads;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle saved) {
@@ -113,6 +130,8 @@ public class LaunchWebEntryPerformanceTest {
 
     @Override
     String webEntryUrl() {
+      entryUrlReads++;
+      if (!available) return "";
       return changedUrl && urlReads++ > 0
           ? "http://127.0.0.1:5555/?token=changed"
           : Controller.server.url();
@@ -213,6 +232,7 @@ public class LaunchWebEntryPerformanceTest {
     Controller.exchanges.set(0);
     Controller.generation = 7;
     Controller.replacementUrl = null;
+    Controller.readyListeners.clear();
     host = Robolectric.buildActivity(Host.class).setup();
     entry = new Entry();
     host.get().getSupportFragmentManager().beginTransaction().add(10001, entry).commitNow();
@@ -352,5 +372,79 @@ public class LaunchWebEntryPerformanceTest {
     ((org.robolectric.shadows.ShadowLooper) Shadow.extract(Looper.getMainLooper())).idle();
     assertEquals(0, entry.callbacks);
     assertEquals(1, Controller.exchanges.get());
+  }
+
+  @Test
+  public void readyEventConsumesExplicitEntryWithoutWaitingForTheOneSecondPoll() throws Exception {
+    entry.available = false;
+    entry.requestAutoEnterWeb();
+    var looper = org.robolectric.shadows.ShadowLooper.shadowMainLooper();
+    looper.idle();
+    assertEquals(0, entry.navigations);
+    long before = android.os.SystemClock.uptimeMillis();
+    entry.available = true;
+    Controller.notifyReady();
+    looper.idle();
+    assertEquals(
+        "No virtual clock advance or periodic tick is required",
+        before,
+        android.os.SystemClock.uptimeMillis());
+    assertEquals(1, entry.navigations);
+    pump(() -> entry.callbacks == 1);
+    assertNull(entry.error);
+    assertEquals(1, Controller.exchanges.get());
+    Controller.notifyReady();
+    looper.idle();
+    assertEquals(1, entry.navigations);
+  }
+
+  @Test
+  public void repeatedEntryRequestsAndReadyEventsKeepOnePeriodicRefreshChain() {
+    entry.available = false;
+    var looper = org.robolectric.shadows.ShadowLooper.shadowMainLooper();
+    looper.idle();
+    entry.entryUrlReads = 0;
+    for (int i = 0; i < 20; i++) {
+      entry.requestAutoEnterWeb();
+      Controller.notifyReady();
+    }
+    looper.idle();
+    assertEquals("Requests in one main-loop turn coalesce", 1, entry.entryUrlReads);
+    looper.idleFor(java.time.Duration.ofSeconds(1));
+    assertEquals("Only one one-second successor remains", 2, entry.entryUrlReads);
+    looper.idleFor(java.time.Duration.ofSeconds(1));
+    assertEquals(3, entry.entryUrlReads);
+    assertEquals(0, entry.navigations);
+    assertEquals(0, Controller.exchanges.get());
+  }
+
+  @Test
+  public void readyEventWithoutExplicitEntryNeverOpensWeb() {
+    Controller.notifyReady();
+    org.robolectric.shadows.ShadowLooper.shadowMainLooper().idle();
+    assertEquals(0, entry.navigations);
+    assertEquals(0, Controller.exchanges.get());
+  }
+
+  @Test
+  public void pausedOrDestroyedEntryDiscardsQueuedReadyEvents() {
+    entry.available = false;
+    entry.requestAutoEnterWeb();
+    org.robolectric.shadows.ShadowLooper.shadowMainLooper().idle();
+    Runnable stale = Controller.readyListeners.iterator().next();
+    host.pause();
+    assertTrue(Controller.readyListeners.isEmpty());
+    entry.available = true;
+    stale.run();
+    org.robolectric.shadows.ShadowLooper.shadowMainLooper().idle();
+    assertEquals(0, entry.navigations);
+    host.resume();
+    org.robolectric.shadows.ShadowLooper.shadowMainLooper().idle();
+    assertEquals("Pausing revoked the pending navigation", 0, entry.navigations);
+    host.get().getSupportFragmentManager().beginTransaction().remove(entry).commitNow();
+    stale.run();
+    org.robolectric.shadows.ShadowLooper.shadowMainLooper().idle();
+    assertTrue(Controller.readyListeners.isEmpty());
+    assertEquals(0, entry.navigations);
   }
 }

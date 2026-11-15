@@ -1,9 +1,10 @@
 /* SPDX-License-Identifier: MIT
- * Narrow GNU/AArch64 sysconf compatibility for the original proroot loader.
+ * Narrow GNU/AArch64 sysconf and fcntl compatibility for the original proroot loader.
  * No private glibc offsets, constructors, libc dependency, or vendor changes.
  */
 typedef unsigned long word;
 typedef long (*sysconf_function)(int);
+typedef int (*fcntl_function)(int, int, ...);
 extern void *dlsym(void *, const char *);
 extern int *__errno_location(void);
 
@@ -14,7 +15,7 @@ enum { GNU_AARCH64_MINSIGSTKSZ = 5120, GNU_AARCH64_SIGSTKSZ = 16384,
 enum { AUX_NULL = 0, AUX_MINSIGSTKSZ = 51, MAX_AUX_RECORDS = 256 };
 
 #if defined(__aarch64__)
-enum { NR_OPENAT = 56, NR_CLOSE = 57, NR_READ = 63, NR_WRITE = 64, NR_EXIT_GROUP = 94 };
+enum { NR_FCNTL = 25, NR_OPENAT = 56, NR_CLOSE = 57, NR_READ = 63, NR_WRITE = 64, NR_EXIT_GROUP = 94 };
 static long native_call(long number, word a, word b, word c, word d) {
   register word x0 __asm__("x0") = a;
   register word x1 __asm__("x1") = b;
@@ -26,7 +27,7 @@ static long native_call(long number, word a, word b, word c, word d) {
 }
 #elif defined(__x86_64__) && defined(DSHA_SYSCONF_HOST_TEST)
 /* Host-only real-glibc forwarding tests. The packaged build permits ARM64 only. */
-enum { NR_OPENAT = 257, NR_CLOSE = 3, NR_READ = 0, NR_WRITE = 1, NR_EXIT_GROUP = 231 };
+enum { NR_FCNTL = 72, NR_OPENAT = 257, NR_CLOSE = 3, NR_READ = 0, NR_WRITE = 1, NR_EXIT_GROUP = 231 };
 static long native_call(long number, word a, word b, word c, word d) {
   register word r10 __asm__("r10") = d;
   long result;
@@ -103,3 +104,37 @@ static long dispatch(int name) {
 
 long sysconf(int name) { return dispatch(name); }
 long __sysconf(int name) { return dispatch(name); }
+
+/* proroot v1.2.8 的 fcntl 先调用 proroot_raw_syscall6（失败时已返回 -1 并写好 errno），
+ * 再把返回值取反写回 errno，于是所有失败都变成 1（EPERM）：抢锁失败的 EAGAIN、坏 fd 的
+ * EBADF、参数错误的 EINVAL 全部丢失。JDK libnio 走这个旧符号，FileChannel.tryLock 因此在
+ * 锁被占用时抛 "Operation not permitted"，Gradle 等跨进程锁全部失效。
+ *
+ * vendor 只对 F_DUPFD / F_DUPFD_CLOEXEC 做额外登记（drm / seat / netlink 的 dup 跟踪），
+ * 其余命令只是原样系统调用。所以：dup 两条仍交给 vendor，其余命令直接发内核系统调用并
+ * 按 glibc 语义设置 errno（成功不改 errno）。glibc 的 fcntl64 不经过 vendor，不受影响。
+ */
+enum { FCNTL_DUPFD = 0, FCNTL_DUPFD_CLOEXEC = 1030 };
+
+int fcntl(int fd, int command, ...);
+
+int fcntl(int fd, int command, ...) {
+  __builtin_va_list list;
+  __builtin_va_start(list, command);
+  word argument = __builtin_va_arg(list, word); /* 与 glibc 相同：无第三参时读到的值不使用。 */
+  __builtin_va_end(list);
+  int *error = __errno_location();
+  if (command == FCNTL_DUPFD || command == FCNTL_DUPFD_CLOEXEC) {
+    int saved = *error;
+    fcntl_function next = (fcntl_function)dlsym((void *)-1L, "fcntl");
+    *error = saved;
+    /* 找不到 vendor 时退回原生系统调用：丢失 dup 跟踪好过让进程退出。 */
+    if (next && next != fcntl) return next(fd, command, argument);
+  }
+  long result = native_call(NR_FCNTL, (word)(long)fd, (word)(long)command, argument, 0);
+  if (result < 0 && result > -4096) {
+    *error = (int)-result;
+    return -1;
+  }
+  return (int)result;
+}

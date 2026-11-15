@@ -23,7 +23,7 @@
  */
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import { installMobileEffect } from '../platform/breakpoints.ts'
-import { FILE_SHARE_NS, fileShareEn, fileShareZh } from '../components/file-share-locale.ts'
+import { FILE_SHARE_NS, fileShareLocales } from '../components/file-share-locale.ts'
 import { FilePreviewShareButton, FilesRowShare } from '../components/file-share-controls.tsx'
 import type { FileShareInject } from '../components/file-share-controls.tsx'
 import type { ReadBytesResult } from '../components/file-share-core.ts'
@@ -48,7 +48,7 @@ export function installFileShare(ctx: ClientContext): void {
   // `remote.workspaceFiles` is not in the root inject list: a child fiber
   // waits for it, so hosts without the namespace stay a quiet no-op.
   ctx.inject(['slots', 'locale', 'remote', 'remote.workspaceFiles'], (scope: ClientContext) => {
-    scope.effect(() => scope.locale.register(FILE_SHARE_NS, { zh: fileShareZh, en: fileShareEn }), 'dsh-web-mobile: file-share dictionaries')
+    scope.effect(() => scope.locale.register(FILE_SHARE_NS, fileShareLocales), 'dsh-web-mobile: file-share dictionaries')
 
     const remote = (scope as unknown as { remote: WorkspaceFilesRemote }).remote
     const inject = (): FileShareInject => ({

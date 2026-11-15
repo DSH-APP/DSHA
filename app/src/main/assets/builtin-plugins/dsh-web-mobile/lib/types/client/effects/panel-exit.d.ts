@@ -23,8 +23,6 @@ export interface PanelExit {
     back: () => void;
     /** Whether a panel subpage currently carries the host's own back control. */
     subpageOpen: () => boolean;
-    /** Whether the host can select a panel at all; false on rc.6. */
-    supported: boolean;
     /**
      * Whether a panel owns the main area, IGNORING the in-flight exit window.
      * The FAB reads this one: its icon must not flip back to 「打开目录」 halfway
@@ -92,7 +90,7 @@ export declare function createPanelExit(layout: unknown): PanelExit;
  *   panel subpage gets no history entry of its own, so a back press there must
  *   climb the host view and RE-ARM the entry it just consumed.
  */
-export declare function createPanelBackExitTask(exitPanel: () => void, supported: boolean, backOneLevel: () => void, subpageControl: () => HTMLElement | null): ReconcilerTask;
+export declare function createPanelBackExitTask(exitPanel: () => void, supported: boolean, backOneLevel: () => void, subpageControl: (open?: boolean) => HTMLElement | null): ReconcilerTask;
 /**
  * Tapping the already-selected panel row again returns to the conversation.
  * Unselected rows are left alone — they still go through the host's own

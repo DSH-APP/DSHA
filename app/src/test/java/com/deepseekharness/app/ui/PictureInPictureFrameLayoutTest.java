@@ -253,4 +253,40 @@ public final class PictureInPictureFrameLayoutTest {
     assertEquals(1280, frame.viewportHeight());
     assertFalse(frame.isFrozen());
   }
+
+  @Test
+  public void alreadyFullscreenResumeDoesNotRequestAnotherTraversalOrRewriteTransforms() {
+    var page = new Page(RuntimeEnvironment.getApplication());
+    var frame = new PictureInPictureFrame(RuntimeEnvironment.getApplication());
+    frame.addView(page, new FrameLayout.LayoutParams(-1, -1));
+    traverse(frame, 1080, 1920);
+    int transforms = page.transforms;
+    for (int round = 0; round < 120; round++) frame.resumeViewport();
+    assertFalse(frame.isLayoutRequested());
+    assertFalse(page.isLayoutRequested());
+    assertEquals(transforms, page.transforms);
+    assertEquals(1, page.measures);
+    assertEquals(1, page.layouts);
+  }
+
+  @Test
+  public void failedOrCanceledPictureEntryStillReleasesFrozenViewportOnce() {
+    var page = new Page(RuntimeEnvironment.getApplication());
+    var frame = new PictureInPictureFrame(RuntimeEnvironment.getApplication());
+    frame.addView(page, new FrameLayout.LayoutParams(-1, -1));
+    traverse(frame, 1080, 1920);
+    frame.freezeViewport();
+    traverse(frame, 720, 1280);
+    assertEquals(1080, frame.viewportWidth());
+    frame.resumeViewport();
+    assertFalse(frame.isFrozen());
+    assertTrue(frame.isLayoutRequested());
+    traverse(frame, 720, 1280);
+    assertEquals(720, frame.viewportWidth());
+    assertEquals(1280, frame.viewportHeight());
+    int transforms = page.transforms;
+    frame.resumeViewport();
+    assertFalse(frame.isLayoutRequested());
+    assertEquals(transforms, page.transforms);
+  }
 }

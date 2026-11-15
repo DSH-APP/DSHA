@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.3-20261031.0300-dsh0.2.1-rc.5 / build215
+
+- Fasciculus minor: DSH subsidiarius independens ex 0.2.1-rc.3 ad eandem 0.2.1-rc.5 quam ambitus principalis adducitur. Ambo archiva temporis exsecutionis nunc per singulos bytes congruunt, itaque APK unum tantum exemplar servat (uno archivo DSH circiter 127.7 MB minus); ambitus subsidiarius tamen in suum directorium extrahitur, sera, identitate, sessionibus ordineque initii propriis servatis.
+- Correctum est vitium quo prima praeparatio DSH subsidiarii independentis deficiebat, quia index initorum strati superpositi cum descriptore non congruebat (inde a build193): praecepta nunc ad versionem serae subsidiariae leguntur, addita probatione unitaria et collatione in parte aedificationis.
+- Remotae sunt opes BouncyCastle quas applicatio numquam onerat (tabulae constantium post-quanticae Picnic et nuntii recognitionis viae certificatorum, circiter 1.2 MB); AES-GCM, SHA-256 et PBKDF2 ad cryptographiam exemplorum tutelae adhibita non afficiuntur.
+- versionCode ad 215 tollitur; revisio DSHA manet 0.2.1-rc.3 et suffixum DSH inclusi est 0.2.1-rc.5; ambitus aedificationis et acceptationis hanc exsecutionem et acceptum Release sequitur.

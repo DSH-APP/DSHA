@@ -1,0 +1,1099 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-reduced="false">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>DSHA · 首次引导重构预览（应用内交互 · 仅模拟）</title>
+<style>
+  /* ============================================================
+     UI v5 token 离线副本：只用于本预览，不参与 Android 资源。
+     浅色 / 夜间与 app/src/main/res/values{,-night}/shell_ui.xml 对齐。
+     ============================================================ */
+  :root {
+    color-scheme: light;
+    --bg: #f3f6fb; --surface: #fcfdff; --raised: #e7edf6;
+    --line: rgba(29, 58, 96, .075); --line-2: rgba(29, 58, 96, .145);
+    --text: #18273f; --text-2: #50617a; --muted: #5a6b86;
+    --accent: #1e50d0; --accent-soft: rgba(30, 80, 208, .08); --accent-line: rgba(30, 80, 208, .28); --on-accent: #fff;
+    --good: #287453; --good-soft: rgba(40, 116, 83, .10);
+    --warn: #8c600d; --warn-soft: rgba(140, 96, 13, .10);
+    --bad: #af404b; --bad-soft: rgba(175, 64, 75, .10);
+    --shadow: 0 18px 50px rgba(17, 32, 62, .12); --shadow-soft: 0 6px 18px rgba(17, 32, 62, .07);
+    --page: #e6ebf3; --panel: #fbfcfe; --note: #fff7e2; --note-line: #d9b45f; --note-text: #6b4e0e;
+    --sans: system-ui, -apple-system, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --ease: cubic-bezier(.22, 1, .36, 1);
+  }
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0b0f16; --surface: #131923; --raised: #1b2432;
+    --line: rgba(203, 220, 255, .07); --line-2: rgba(203, 220, 255, .13);
+    --text: #edf1f7; --text-2: #b0bbcc; --muted: #8895aa;
+    --accent: #6aa4ff; --accent-soft: rgba(106, 164, 255, .14); --accent-line: rgba(106, 164, 255, .30); --on-accent: #091729;
+    --good: #93ccaf; --good-soft: rgba(147, 204, 175, .12);
+    --warn: #e4be83; --warn-soft: rgba(228, 190, 131, .12);
+    --bad: #eea3a6; --bad-soft: rgba(238, 163, 166, .12);
+    --shadow: 0 18px 50px rgba(0, 0, 0, .45); --shadow-soft: 0 6px 18px rgba(0, 0, 0, .28);
+    --page: #05080d; --panel: #0e131b; --note: #2a2312; --note-line: #8a6d33; --note-text: #f0d79c;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--page); color: var(--text); font: 400 14px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 2px solid var(--accent-line); outline-offset: 2px; }
+  code { font-family: var(--mono); font-size: .9em; background: var(--accent-soft); padding: .05em .32em; border-radius: 4px; word-break: break-word; }
+  a { color: var(--accent); }
+  [data-reduced="true"] *, [data-reduced="true"] *::before, [data-reduced="true"] *::after { animation: none !important; transition: none !important; }
+
+  /* ---------------- 预览外壳（不是应用界面） ---------------- */
+  .pv-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--line-2); }
+  .pv-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .pv-title i { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font: 700 13px/1 var(--mono); font-style: normal; flex: none; }
+  .pv-title b { font-size: 15px; display: block; }
+  .pv-title small { display: block; color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .pv-links { display: flex; gap: 14px; font-size: 13px; flex-wrap: wrap; }
+  .pv-wrap { display: grid; grid-template-columns: 312px minmax(0, 1fr); align-items: start; }
+  .pv-side { position: sticky; top: 0; max-height: 100vh; overflow: auto; padding: 14px 16px 40px; background: var(--panel); border-right: 1px solid var(--line-2); }
+  .pv-side > details > summary { cursor: pointer; font-weight: 700; font-size: 13px; padding: 4px 0 10px; list-style: none; }
+  .pv-side > details > summary::-webkit-details-marker { display: none; }
+  .ctl { margin: 0 0 12px; }
+  .ctl h4 { margin: 0 0 6px; font: 600 11px/1.2 var(--mono); letter-spacing: .06em; color: var(--muted); }
+  .seg { display: flex; flex-wrap: wrap; gap: 5px; }
+  .seg button { border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px; padding: 5px 10px; font-size: 12px; cursor: pointer; line-height: 1.3; }
+  .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .pv-reset { width: 100%; margin: 4px 0 14px; padding: 8px; border-radius: 10px; border: 1px dashed var(--line-2); background: transparent; cursor: pointer; font-size: 12.5px; }
+  .pv-notes h5 { margin: 16px 0 6px; font-size: 12.5px; }
+  .pv-notes ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text-2); }
+  .pv-notes li { margin: 0 0 6px; }
+  .pv-notes li b { color: var(--text); }
+  .pv-stage { display: flex; justify-content: center; padding: 20px; min-width: 0; }
+  .holder { position: relative; flex: none; }
+  .device { position: absolute; left: 0; top: 0; transform-origin: 0 0; background: #0b0d12; padding: 10px; border-radius: 36px; box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,.06) inset; }
+  .device.tablet { padding: 14px; border-radius: 30px; }
+  .device.fill { position: relative; width: 100% !important; height: 100% !important; transform: none !important; padding: 0; border-radius: 18px; box-shadow: var(--shadow-soft); background: transparent; }
+  .screen { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 27px; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+  .device.tablet .screen { border-radius: 18px; }
+  .device.fill .screen { border-radius: 18px; border: 1px solid var(--line-2); }
+  .sbar { flex: none; height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font: 600 12px/1 var(--sans); color: var(--text); }
+  .sbar span:last-child { letter-spacing: 2px; font-size: 10px; }
+  .gbar { flex: none; height: 18px; display: grid; place-items: center; }
+  .gbar i { width: 108px; height: 4px; border-radius: 9px; background: var(--text); opacity: .3; }
+  .device.fill .sbar, .device.fill .gbar { display: none; }
+  .live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .toast { position: absolute; left: 50%; bottom: 92px; transform: translate(-50%, 12px); max-width: min(86%, 460px); padding: 10px 14px; border-radius: 12px; background: #1d2533; color: #f2f5fa; font-size: 13px; line-height: 1.45; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .2s, transform .25s var(--ease); z-index: 50; text-align: center; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  @media (max-width: 880px) {
+    .pv-wrap { display: flex; flex-direction: column; align-items: stretch; }
+    .pv-stage { order: -1; width: 100%; }
+    .pv-side { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--line-2); }
+    .pv-stage { padding: 10px; }
+  }
+
+  /* ---------------- 应用界面（容器查询按“设备宽度”响应） ---------------- */
+  .app { --fs: 1; flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; container-type: size; container-name: app; font-size: calc(var(--fs) * 15px); line-height: 1.55; }
+  .iconbtn { width: 40px; height: 40px; border: 0; border-radius: 12px; background: transparent; display: grid; place-items: center; cursor: pointer; color: var(--text); flex: none; }
+  .iconbtn:hover { background: var(--accent-soft); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 18px; border-radius: 14px; border: 1px solid transparent; font-weight: 600; font-size: calc(var(--fs) * 14.5px); line-height: 1.3; text-align: center; cursor: pointer; transition: transform .12s, background .2s; }
+  .btn:active:not([disabled]) { transform: scale(.985); }
+  .btn.primary { background: var(--accent); color: var(--on-accent); }
+  .btn.secondary { min-height: 46px; background: var(--surface); border-color: var(--line-2); color: var(--text); }
+  .btn.ghost { min-height: 40px; background: transparent; color: var(--accent); padding: 0 10px; }
+  .btn.sm { min-height: 38px; border-radius: 11px; font-size: calc(var(--fs) * 13px); padding: 0 12px; }
+  .btn.ghost.sm { min-height: 34px; padding: 0 8px; }
+  .btn[disabled] { opacity: .45; cursor: not-allowed; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: var(--raised); color: var(--muted); font-size: calc(var(--fs) * 11.5px); font-weight: 600; line-height: 1.4; white-space: nowrap; }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .pill.acc { background: var(--accent-soft); color: var(--accent); }
+  .eyebrow { margin: 6px 0 0; font-size: calc(var(--fs) * 12px); letter-spacing: .15em; color: var(--accent); font-weight: 600; }
+  .h1 { margin: 12px 0 10px; font-size: calc(var(--fs) * 29px); line-height: 1.22; font-weight: 750; letter-spacing: -.01em; }
+  .h2 { margin: 10px 0 8px; font-size: calc(var(--fs) * 24px); line-height: 1.25; font-weight: 750; }
+  .lead { margin: 0; color: var(--text-2); font-size: calc(var(--fs) * 15px); }
+  .fine { margin: 14px 0 0; color: var(--muted); font-size: calc(var(--fs) * 12px); }
+  .hint { display: flex; gap: 8px; align-items: flex-start; margin: 14px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--accent-soft); color: var(--text-2); font-size: calc(var(--fs) * 13px); }
+  .hint svg { flex: none; margin-top: 2px; color: var(--accent); }
+  .hint.bad { background: var(--bad-soft); color: var(--bad); }
+  .hint.bad svg { color: var(--bad); }
+  .hint.warn { background: var(--warn-soft); color: var(--warn); }
+  .hint.warn svg { color: var(--warn); }
+  .sec { margin: 22px 0 8px; font-size: calc(var(--fs) * 12.5px); color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+  .badge { display: inline-flex; margin-top: 14px; padding: 6px 11px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: calc(var(--fs) * 12px); font-weight: 600; }
+  .content { width: 100%; max-width: 680px; margin: 0 auto; }
+
+  /* 引导骨架：手机单栏 */
+  .onb { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .onb-side { display: none; }
+  .onb-main { flex: 1; min-height: 0; display: flex; flex-direction: column; container-type: inline-size; container-name: pane; }
+  .onb-head { flex: none; display: grid; grid-template-columns: minmax(64px, auto) minmax(0, 1fr) minmax(40px, auto); align-items: center; gap: 6px; min-height: 52px; padding: 4px 16px 2px 8px; }
+  .brand { font-weight: 800; font-size: calc(var(--fs) * 18px); padding-left: 10px; }
+  .head-mid { display: flex; justify-content: center; min-width: 0; }
+  .stepc { justify-self: end; font: 600 calc(var(--fs) * 11.5px)/1 var(--mono); color: var(--muted); }
+  .steps-bar { flex: none; display: flex; gap: 4px; padding: 2px 20px 4px; }
+  .steps-bar i { flex: 1; height: 3px; border-radius: 3px; background: var(--raised); transition: background .3s; }
+  .steps-bar i.on { background: var(--accent); }
+  .onb-body { flex: 1; min-height: 0; overflow: auto; padding: 10px 20px 22px; overscroll-behavior: contain; }
+  .onb-foot { flex: none; padding: 10px 20px 12px; border-top: 1px solid var(--line); background: var(--surface); }
+  .btns { display: flex; flex-direction: column; gap: 8px; }
+  .btns .btn { width: 100%; }
+  .foot-note { margin: 0; text-align: center; font-size: calc(var(--fs) * 12px); color: var(--muted); }
+
+  /* 部署胶囊 */
+  .cap { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; min-height: 34px; padding: 0 10px 0 11px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface); box-shadow: var(--shadow-soft); cursor: pointer; font-size: calc(var(--fs) * 12.5px); font-weight: 650; white-space: nowrap; overflow: hidden; animation: capIn .35s var(--ease); }
+  .cap .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex: none; animation: pulse 1.6s ease-in-out infinite; }
+  .cap .lbl { flex: none; }
+  .cap .sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); font-weight: 500; }
+  .cap .cnt { flex: none; font: 600 calc(var(--fs) * 11px)/1 var(--mono); color: var(--muted); }
+  .cap svg { flex: none; color: var(--muted); }
+  .cap[data-st="done"] { border-color: var(--good); color: var(--good); }
+  .cap[data-st="done"] .dot { background: var(--good); animation: none; }
+  .cap[data-st="bad"] { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); }
+  .cap[data-st="bad"] .dot { background: var(--bad); animation: none; }
+  .cap[data-st="warn"] { border-color: var(--warn); color: var(--warn); background: var(--warn-soft); }
+  .cap[data-st="warn"] .dot { background: var(--warn); animation: none; }
+  @container app (max-width: 369px) { .cap .sub { display: none; } }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.78); } }
+  @keyframes capIn { from { opacity: 0; transform: translateY(-6px) scale(.96); } to { opacity: 1; transform: none; } }
+
+  .segbar { display: flex; gap: 3px; margin: 10px 0 0; }
+  .segbar i { flex: 1; height: 6px; border-radius: 3px; background: var(--raised); position: relative; overflow: hidden; }
+  .segbar i.done { background: var(--accent); }
+  .segbar i.cur::after { content: ""; position: absolute; top: 0; bottom: 0; width: 45%; left: -45%; border-radius: 3px; background: var(--accent); animation: sweep 1.9s ease-in-out infinite; }
+  .segbar i.err { background: var(--bad); }
+  .segbar.ok i { background: var(--good); }
+  .segbar.warn i.done { background: var(--warn); }
+  [data-reduced="true"] .segbar i.cur::after { left: 0; width: 34%; opacity: .7; }
+  @keyframes sweep { 0% { left: -45%; opacity: .35; } 50% { opacity: .95; } 100% { left: 100%; opacity: .35; } }
+  .stages { list-style: none; margin: 14px 0 0; padding: 0; }
+  .stages li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 6px 0; color: var(--muted); font-size: calc(var(--fs) * 13px); line-height: 1.45; }
+  .stages .ic { width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; border: 1.5px solid var(--line-2); display: grid; place-items: center; }
+  .stages li.done { color: var(--text-2); }
+  .stages li.done .ic { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .stages.ok li .ic { background: var(--good); border-color: var(--good); }
+  .stages li.cur { color: var(--text); font-weight: 650; }
+  .stages li.cur .ic { border-color: var(--accent); }
+  .stages li.cur .ic::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.4s infinite; }
+  .stages li.err { color: var(--bad); font-weight: 650; }
+  .stages li.err .ic { background: var(--bad); border-color: var(--bad); color: #fff; }
+
+  /* 欢迎页 */
+  .feats { display: grid; gap: 12px; margin-top: 22px; }
+  .feat { display: grid; grid-template-columns: 38px 1fr; gap: 12px; align-items: center; }
+  .feat > i, .gic, .perm-ic { display: grid; place-items: center; border-radius: 12px; background: var(--accent-soft); color: var(--accent); }
+  .feat > i { width: 38px; height: 38px; }
+  .feat b { display: block; font-size: calc(var(--fs) * 15px); }
+  .feat small { display: block; color: var(--muted); font-size: calc(var(--fs) * 12.5px); line-height: 1.45; }
+  .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .chk { padding: 11px 13px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); min-width: 0; }
+  .chk small { display: block; color: var(--muted); font-size: calc(var(--fs) * 11px); }
+  .chk b { display: block; margin-top: 3px; font-size: calc(var(--fs) * 14.5px); font-weight: 650; overflow-wrap: anywhere; }
+  .chk.warn { border-color: var(--bad); background: var(--bad-soft); }
+  .chk.warn b { color: var(--bad); }
+  .linkrow { display: grid; grid-template-columns: 38px 1fr 18px; gap: 12px; align-items: center; width: 100%; margin-top: 14px; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); text-align: left; cursor: pointer; }
+  .linkrow > svg:first-child { justify-self: center; color: var(--accent); }
+  .linkrow b { display: block; font-size: calc(var(--fs) * 14.5px); }
+  .linkrow small { display: block; color: var(--muted); font-size: calc(var(--fs) * 12.5px); }
+  .linkrow > svg:last-child { color: var(--muted); }
+  @container pane (min-width: 620px) {
+    .feats { grid-template-columns: repeat(3, 1fr); }
+    .feat { grid-template-columns: 1fr; align-items: start; gap: 8px; }
+    .checks { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  /* 用途 */
+  .goals { display: grid; gap: 10px; margin-top: 18px; }
+  .goal { display: grid; grid-template-columns: 24px minmax(0, 1fr) 34px; gap: 12px; align-items: center; width: 100%; padding: 13px 14px; border-radius: 16px; border: 1.5px solid var(--line-2); background: var(--surface); text-align: left; cursor: pointer; transition: border-color .2s, background .2s; }
+  .goal[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .goal[aria-disabled="true"] { cursor: default; opacity: .78; }
+  .goal .box { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--line-2); display: grid; place-items: center; color: var(--on-accent); }
+  .goal[aria-checked="true"] .box { background: var(--accent); border-color: var(--accent); }
+  .goal b { display: block; font-size: calc(var(--fs) * 15px); line-height: 1.35; }
+  .goal small { display: block; margin-top: 2px; color: var(--muted); font-size: calc(var(--fs) * 12.5px); line-height: 1.4; }
+  .gic { width: 34px; height: 34px; border-radius: 10px; }
+  .cap-hint .t-wide { display: none; }
+  @container pane (min-width: 620px) { .goals { grid-template-columns: 1fr 1fr; } }
+
+  /* 授权卡片 */
+  .sum { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding: 12px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); font-size: calc(var(--fs) * 13.5px); }
+  .sum b { font-size: calc(var(--fs) * 17px); }
+  .dots7 { display: flex; gap: 5px; }
+  .dots7 i { width: 9px; height: 9px; border-radius: 50%; background: var(--raised); }
+  .dots7 i.on { background: var(--good); }
+  .grp { margin-top: 22px; }
+  .grp-h { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .grp-h h2 { margin: 0; font-size: calc(var(--fs) * 13px); color: var(--muted); letter-spacing: .04em; }
+  .grp-d { margin: 0 0 10px; font-size: calc(var(--fs) * 12.5px); color: var(--muted); }
+  .req { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; }
+  .req span { white-space: nowrap; }
+  .req .y { color: var(--good); font-weight: 650; }
+  .req .n { color: var(--muted); }
+  .perm-grid { display: grid; gap: 10px; }
+  .perm { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px 12px; align-items: center; align-content: start; padding: 14px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+  .perm-body { grid-column: 1 / -1; }
+  .perm.rec { border-color: var(--accent-line); }
+  .perm-ic { width: 40px; height: 40px; }
+  .perm[data-ok="true"] .perm-ic { background: var(--good-soft); color: var(--good); }
+  .perm-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .perm h3 { margin: 0; font-size: calc(var(--fs) * 15.5px); line-height: 1.35; }
+  .rec-tag { display: inline-block; margin-top: 2px; font-size: calc(var(--fs) * 11px); font-weight: 650; color: var(--accent); }
+  .perm-why { margin: 0; color: var(--text-2); font-size: calc(var(--fs) * 13px); line-height: 1.5; }
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .tag { padding: 2px 8px; border-radius: 7px; background: var(--raised); color: var(--text-2); font-size: calc(var(--fs) * 11.5px); line-height: 1.5; }
+  .perm-status { margin: 10px 0 0; padding: 8px 10px; border-radius: 10px; background: var(--bg); color: var(--text-2); font-size: calc(var(--fs) * 12.5px); line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+  .perm[data-ok="true"] .perm-status { color: var(--good); }
+  .perm-out { display: flex; gap: 6px; align-items: flex-start; margin: 8px 0 0; color: var(--muted); font-size: calc(var(--fs) * 12px); line-height: 1.45; }
+  .perm-out svg { flex: none; margin-top: 2px; }
+  .perm-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 10px; padding: 3px; border-radius: 12px; background: var(--bg); }
+  .tabs button { flex: 1 1 auto; min-height: 36px; padding: 0 10px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: calc(var(--fs) * 12.5px); font-weight: 650; white-space: nowrap; cursor: pointer; }
+  .tabs button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-soft); }
+  .tabs .okdot { display: inline-block; width: 6px; height: 6px; margin-left: 5px; border-radius: 50%; background: var(--good); vertical-align: middle; }
+  .sw { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 48px; margin-top: 6px; padding: 0; border: 0; background: none; text-align: left; font-size: calc(var(--fs) * 14px); font-weight: 600; cursor: pointer; }
+  .sw i { position: relative; flex: none; width: 46px; height: 28px; border-radius: 999px; background: var(--raised); border: 1px solid var(--line-2); transition: background .2s; }
+  .sw i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: left .2s var(--ease); }
+  .sw[aria-checked="true"] i { background: var(--accent); border-color: var(--accent); }
+  .sw[aria-checked="true"] i::after { left: 21px; }
+  .mini-note { margin: 8px 0 0; color: var(--muted); font-size: calc(var(--fs) * 12px); line-height: 1.5; }
+  @container pane (min-width: 700px) {
+    .perm-grid { grid-template-columns: 1fr 1fr; }
+    .perm.wide, .perm-grid > .perm:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    .content.wide { max-width: 980px; }
+    .content.wide .lead { max-width: 680px; }
+  }
+
+  /* 完成页 */
+  .card { padding: 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+  .card + .card { margin-top: 12px; }
+  .card-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .card-h b { font-size: calc(var(--fs) * 15.5px); }
+  .card p { margin: 6px 0 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); font-size: calc(var(--fs) * 12px); }
+  .chip.on { border-color: transparent; background: var(--good-soft); color: var(--good); font-weight: 650; }
+  .err-box { margin-top: 12px; padding: 12px; border-radius: 12px; background: var(--bad-soft); color: var(--bad); font-size: calc(var(--fs) * 13px); white-space: pre-line; }
+  .warn-box { margin-top: 12px; padding: 12px; border-radius: 12px; background: var(--warn-soft); color: var(--warn); font-size: calc(var(--fs) * 13px); }
+
+  /* 两栏（平板 / 横屏 ≥ 600dp） */
+  .side-brand b { display: block; font-size: calc(var(--fs) * 22px); font-weight: 800; }
+  .side-brand small { color: var(--muted); font-size: calc(var(--fs) * 12.5px); }
+  .vsteps { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+  .vsteps li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; color: var(--muted); font-size: calc(var(--fs) * 14px); }
+  .vsteps li.cur { background: var(--accent-soft); color: var(--text); font-weight: 650; }
+  .vsteps .n { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--line-2); display: grid; place-items: center; font: 600 11px/1 var(--mono); }
+  .vsteps li.cur .n { border-color: var(--accent); color: var(--accent); }
+  .vsteps li.done .n { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .capcard { display: block; width: 100%; padding: 14px; border-radius: 16px; border: 1px solid var(--line-2); background: var(--bg); text-align: left; cursor: pointer; animation: capIn .35s var(--ease); }
+  .capcard.idle { cursor: default; border-style: dashed; animation: none; }
+  .capcard-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .capcard-top b { font-size: calc(var(--fs) * 14px); }
+  .capcard-sub { display: block; margin-top: 8px; color: var(--text-2); font-size: calc(var(--fs) * 12.5px); line-height: 1.45; }
+  .capcard-more { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; color: var(--accent); font-size: calc(var(--fs) * 12.5px); font-weight: 650; }
+  .capcard[data-st="bad"] { border-color: var(--bad); }
+  .capcard[data-st="warn"] { border-color: var(--warn); }
+  .capcard[data-st="done"] { border-color: var(--good); }
+  .side-foot { margin: auto 0 0; color: var(--muted); font-size: calc(var(--fs) * 12px); }
+  @container app (min-width: 600px) {
+    .onb { display: grid; grid-template-columns: minmax(240px, 30%) minmax(0, 1fr); }
+    .onb-side { display: flex; flex-direction: column; gap: 18px; min-height: 0; overflow: auto; padding: 22px 18px 18px; background: var(--surface); border-right: 1px solid var(--line); }
+    .onb-head { grid-template-columns: auto minmax(0, 1fr) auto; padding: 8px 22px 0 12px; }
+    .onb-head .brand, .onb-head .head-mid, .steps-bar { display: none; }
+    .onb-head .stepc { grid-column: 3; }
+    .onb-body { padding: 8px 28px 24px; }
+    .onb-foot { padding: 12px 28px 14px; }
+    .btns { flex-direction: row-reverse; flex-wrap: wrap; justify-content: flex-start; align-items: center; }
+    .btns .btn { width: auto; min-width: 168px; }
+    .btns .foot-note { width: 100%; text-align: right; order: -1; }
+    .cap-hint .t-narrow { display: none; }
+    .cap-hint .t-wide { display: inline; }
+  }
+
+  /* 横屏手机等矮屏：压缩页头、页脚和按钮高度 */
+  @container app (max-height: 480px) {
+    .onb-head { min-height: 40px; padding-top: 2px; }
+    .onb-body { padding-top: 2px; }
+    .onb-foot { padding-top: 7px; padding-bottom: 7px; }
+    .btn { min-height: 44px; }
+    .btn.secondary { min-height: 40px; }
+    .onb-side { gap: 12px; padding-top: 14px; }
+    .h1 { font-size: calc(var(--fs) * 24px); margin-top: 6px; }
+    .main-top { min-height: 44px; }
+  }
+
+  /* 主界面（受限 / 正常） */
+  .main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .main-top { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; min-height: 54px; padding: 4px 14px; }
+  .main-top .ttl { display: flex; align-items: center; gap: 2px; min-width: 0; }
+  .main-top h1 { margin: 0 0 0 4px; font-size: calc(var(--fs) * 20px); font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .main-top .cap-slot { display: flex; justify-content: center; min-width: 0; max-width: 62cqw; }
+  .main-body { flex: 1; min-height: 0; overflow: auto; padding: 6px 16px 18px; container-type: inline-size; container-name: pane; }
+  .bnav { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 8px 4px; background: var(--surface); border-top: 1px solid var(--line); }
+  .bnav button { display: grid; justify-items: center; gap: 2px; padding: 4px 0; border: 0; background: none; color: var(--muted); font-size: calc(var(--fs) * 11.5px); font-weight: 600; cursor: pointer; }
+  .bnav .nic { width: 54px; height: 30px; border-radius: 999px; display: grid; place-items: center; transition: background .2s; }
+  .bnav button.on { color: var(--accent); }
+  .bnav button.on .nic { background: var(--accent-soft); }
+  .webaddr { font-family: var(--mono); font-size: calc(var(--fs) * 12.5px); color: var(--text-2); overflow-wrap: anywhere; }
+  .row-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .linkcard { display: grid; grid-template-columns: 40px minmax(0, 1fr) 18px; gap: 12px; align-items: center; width: 100%; text-align: left; cursor: pointer; }
+  .linkcard .perm-ic { width: 40px; height: 40px; }
+  .linkcard small { display: block; color: var(--muted); font-size: calc(var(--fs) * 12.5px); }
+  .log { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--bg); font: calc(var(--fs) * 12px)/1.65 var(--mono); color: var(--text-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pagehead p { margin: 4px 0 0; color: var(--text-2); font-size: calc(var(--fs) * 13.5px); }
+  @container app (min-width: 600px) {
+    .main { display: grid; grid-template-columns: 92px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "nav top" "nav body"; }
+    .main-top { grid-area: top; grid-template-columns: minmax(0, 1fr) auto; padding: 8px 22px 4px; }
+    .main-top .cap-slot { max-width: 46cqw; }
+    .main-top .spacer { display: none; }
+    .main-body { grid-area: body; padding: 6px 22px 22px; }
+    .main-body > .content { max-width: 760px; margin: 0; }
+    .main-body > .content.wide { max-width: 1000px; }
+    .bnav { grid-area: nav; grid-template-columns: 1fr; align-content: start; gap: 8px; padding: 18px 6px; border-top: 0; border-right: 1px solid var(--line); }
+  }
+
+  /* 底部面板 / 对话框 */
+  .scrim { position: absolute; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center; background: rgba(6, 10, 18, .4); animation: fade .18s ease-out; }
+  .sheet { width: 100%; max-height: 88%; overflow: auto; padding: 8px 20px 18px; border-radius: 24px 24px 0 0; background: var(--surface); box-shadow: var(--shadow); animation: up .28s var(--ease); }
+  .grab { width: 38px; height: 4px; margin: 2px auto 12px; border-radius: 4px; background: var(--line-2); }
+  .sheet h3 { margin: 0; font-size: calc(var(--fs) * 18px); line-height: 1.35; }
+  .sheet > p { margin: 8px 0 0; color: var(--text-2); font-size: calc(var(--fs) * 13.5px); }
+  .sheet .btns { margin-top: 16px; }
+  .drow { display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: calc(var(--fs) * 13.5px); }
+  .drow b { font-weight: 650; }
+  .drow span { color: var(--text-2); }
+  .leave { border: 2px dashed var(--note-line); background: var(--note); color: var(--note-text); }
+  .leave h3 { display: flex; gap: 8px; align-items: flex-start; color: var(--text); }
+  .leave h3 svg { flex: none; margin-top: 3px; }
+  .leave > p { color: var(--text-2); }
+  .ann-chip { display: inline-block; margin: 4px 0 10px; padding: 3px 9px; border-radius: 6px; background: var(--note-line); color: #fff; font: 700 11px/1.4 var(--mono); letter-spacing: .04em; }
+  .ann-doc { font-size: calc(var(--fs) * 12.5px) !important; }
+  .ann-q { margin: 14px 0 6px !important; font-weight: 650; color: var(--text) !important; }
+  .ann-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+  @container app (min-width: 600px) {
+    .scrim { align-items: center; }
+    .sheet { max-width: 540px; max-height: 84%; border-radius: 24px; padding: 20px 24px 22px; }
+    .grab { display: none; }
+  }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes up { from { transform: translateY(24px); opacity: .6; } }
+</style>
+</head>
+<body>
+<header class="pv-top">
+  <div class="pv-title"><i>D</i><div><b>DSHA 首次引导重构预览</b><small>应用内页面交互原型 · 数据全部为模拟 · 不连接设备、不申请权限</small></div></div>
+  <nav class="pv-links" aria-label="配套文档">
+    <a href="README.md">重构方案说明</a>
+    <a href="external-authorizations.md">应用外授权步骤（7 类 + ADB）</a>
+  </nav>
+</header>
+<div class="pv-wrap">
+  <aside class="pv-side" aria-label="预览控制">
+    <details id="ctlbox" open>
+      <summary>预览控制 ▾</summary>
+      <div id="controls"></div>
+      <button class="pv-reset" type="button" id="reset">↺ 重置当前场景</button>
+    </details>
+    <div class="pv-notes">
+      <h5>本屏说明 · 源码对照</h5>
+      <ul id="notes"></ul>
+      <h5>设计要点</h5>
+      <ul>
+        <li><b>4 页 → 4 步</b>：原介绍 3 页 + 准备页（4/4）+ 维护页，合为「欢迎 → 用途 → 授权 → 完成」；部署和引导同时进行。</li>
+        <li><b>部署胶囊</b>：手机放顶栏正中，平板放左栏；按阶段分段显示，不显示伪造的百分比；点开可看阶段、维护记录和应急入口。</li>
+        <li><b>覆盖更新</b>：不再整屏挡住，改为受限主界面 + 顶部胶囊；Web、终端和插件仍要等环境检查通过。</li>
+        <li><b>按用途推荐授权</b>：7 项全部默认关闭、可以跳过；在系统里完成后回到 DSHA 自动复查。系统页内的步骤写在文档里。</li>
+        <li><b>自适应</b>：宽度 ≥ 600dp 时分两栏（左栏是步骤和胶囊）；内容区宽 ≥ 700dp 时授权卡片排成两列；可切换 1.3× 字体检查。</li>
+      </ul>
+    </div>
+  </aside>
+  <main class="pv-stage" id="stage">
+    <div class="holder" id="holder">
+      <div class="device" id="device">
+        <div class="screen" id="screen">
+          <div class="sbar" aria-hidden="true"><span>9:41</span><span>▲ ◆ ▮</span></div>
+          <div class="app" id="app"></div>
+          <div class="gbar" aria-hidden="true"><i></i></div>
+          <div class="toast" id="toast" role="status"></div>
+          <div class="live" id="live" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+(() => {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const nl = (v) => esc(v).replace(/\n/g, '<br>');
+
+  const ICONS = {
+    back: 'M15 5l-7 7 7 7',
+    chev: 'M9 6l6 6-6 6',
+    check: 'M5 12.5l4.5 4.5L19 7.5',
+    x: 'M6 6l12 12M18 6L6 18',
+    info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v5M12 7.5v.5',
+    alert: 'M12 3.5l9.5 16.5h-19zM12 10v4.5M12 17.2v.3',
+    ext: 'M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5',
+    shield: 'M12 3l8 3v6c0 5-3.4 8.1-8 9-4.6-.9-8-4-8-9V6z',
+    chat: 'M4 5h16v11H9l-5 4z',
+    term: 'M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM7 10l3 2-3 2M12.5 15H17',
+    grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+    folder: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+    bell: 'M6 9a6 6 0 0 1 12 0c0 6 2.5 8 2.5 8h-17S6 15 6 9zM10.2 20.5a2 2 0 0 0 3.6 0',
+    battery: 'M5 7h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zM22 10.5v3M6.5 10v4M9.5 10v4',
+    hand: 'M9 11.5V5.5a1.5 1.5 0 0 1 3 0V11m0-2a1.5 1.5 0 0 1 3 0v2.5m0-1a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.8a6 6 0 0 1-4.9-2.5L4 15.6a1.5 1.5 0 0 1 2.4-1.8L9 16',
+    layers: 'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5',
+    play: 'M7 5l12 7-12 7z',
+    gear: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1'
+  };
+  const svg = (n, s = 20) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICONS[n]}"/></svg>`;
+  const btn = (cls, label, act, data = {}, extra = '') => `<button type="button" class="btn ${cls}" data-act="${act}"${Object.entries(data).map(([k, v]) => ` data-${k}="${esc(v)}"`).join('')} ${extra}>${label}</button>`;
+
+  const DSH = '0.2.1-rc.5';
+  const DEVICES = {
+    phone: { w: 390, h: 844, label: '手机竖屏' },
+    phoneL: { w: 844, h: 390, label: '手机横屏' },
+    tablet: { w: 800, h: 1280, label: '平板竖屏', tablet: true },
+    tabletL: { w: 1280, h: 800, label: '平板横屏', tablet: true },
+    fill: { label: '跟随窗口' }
+  };
+  // 阶段名取自源码：ColdBundleExtractor / EnvironmentMaintenance / ManagedRuntimeAssets；试运行一项为示意命名。w = 正常速度秒数。
+  const INSTALL = [
+    { t: '准备解压', s: '准备解压', w: 2 },
+    { t: '解压 Ubuntu 与 Node', s: '解压 Ubuntu', w: 9 },
+    { t: '解压 dsh 与内置依赖', s: '解压 dsh', w: 6 },
+    { t: '安装 Python 与 pnpm', s: 'Python 与 pnpm', w: 4 },
+    { t: '准备应用工具', s: '应用工具', w: 2 },
+    { t: '安装离线 curl、git 与证书', s: 'curl · git', w: 3 },
+    { t: '检查启动配置…', s: '启动配置', w: 2 },
+    { t: '隔离试运行：端口、鉴权与会话写入', s: '试运行核验', w: 4 }
+  ];
+  const UPDATE = [
+    { t: '停止 Web 与终端任务', s: '停止 Web', w: 2 },
+    { t: '正在解压新版 dsh（保留现有 Ubuntu 与个人目录）…', s: '解压新版 dsh', w: 6 },
+    { t: '正在准备新版内置插件和界面适配…', s: '内置插件', w: 4 },
+    { t: '新版运行时准备完成，正在保留并切换受管文件…', s: '切换受管文件', w: 3 },
+    { t: '隔离试运行：端口、鉴权与会话写入', s: '试运行核验', w: 4 }
+  ];
+  const FAIL = {
+    install: { at: 1, text: '可用空间不足；原件未删除。请先清理可再生缓存或导出副本后重试。' },
+    update: { at: 4, text: '运行时更新未完成，原运行时及个人数据已保留：\n隔离试运行未通过（示意原因）' }
+  };
+  const UNREADY = '维护步骤已结束，但环境就绪检查未通过。已停止自动跳转，请查看原因或进入受限主界面。';
+  const LIMITED = '进入受限主界面 · 查看日志与配置';
+  const ORDER = ['welcome', 'goals', 'perms', 'finish'];
+  const STEP_NAMES = ['欢迎', '用途', '授权', '完成'];
+
+  const GOALS = [
+    { id: 'base', t: '对话、写代码、用终端', s: '无需任何设备授权', locked: true, ic: 'chat', perms: [] },
+    { id: 'files', t: '读写手机里的文件', s: '推荐：存储读写', ic: 'folder', perms: ['storage'] },
+    { id: 'screen', t: '让 AI 操作手机屏幕', s: '推荐：无障碍 · 悬浮窗 · 通知', ic: 'hand', perms: ['a11y', 'overlay', 'notify'] },
+    { id: 'shell', t: '执行设备命令', s: '推荐：Shizuku / Stellar 或 Root（任选其一）', ic: 'term', perms: ['channel'] },
+    { id: 'bg', t: '长时间在后台运行', s: '推荐：电池优化 · 通知', ic: 'battery', perms: ['battery', 'notify'] }
+  ];
+  const GROUPS = [
+    { id: 'basic', t: '基础', d: '让部署进度和后台任务可见，少被系统中断。', items: ['notify', 'battery'] },
+    { id: 'files', t: '文件', d: '', items: ['storage'] },
+    { id: 'screen', t: '屏幕操作（手机任务）', d: 'screen', items: ['a11y', 'overlay'] },
+    { id: 'shell', t: '设备命令通道', d: '普通对话和终端不依赖设备控制授权；设备命令白名单始终开启。', items: ['channel'] }
+  ];
+  const P = {
+    notify: { t: '通知', ic: 'bell', why: '部署与维护进度、手机任务的停止按钮、更新下载会显示在通知栏。', unlock: ['部署进度', '手机任务停止按钮', '更新下载'], out: 'Android 13+ 弹出系统权限框；拒绝两次后只能去系统通知设置开启。', doc: 5 },
+    battery: { t: '电池优化', ic: 'battery', why: '减少系统在后台结束 Web、终端与保活服务。', unlock: ['后台 Web 少被中断', 'ADB 保活更稳定'], out: '打开系统电池优化设置，把 DSH-A-Su 设为不限制（各厂商叫法不同）。', doc: 7 },
+    storage: { t: '存储读写', ic: 'folder', why: '让容器和工作区读写手机共享存储，例如 /sdcard 下的项目。', unlock: ['工作区可建在 /sdcard', '读写下载与文档目录'], out: '打开系统「所有文件访问」页，允许 DSH-A-Su。建议在首次启动 Web 前完成。', doc: 1 },
+    a11y: { t: '无障碍（屏幕操作）', ic: 'hand', why: '让助手读屏、点按和输入，在对话中使用 Computer Use。', unlock: ['读屏与点按', '截屏（Android 11+）'], out: '打开系统无障碍设置，开启「DSH-A-Su 屏幕控制」。', doc: 4 },
+    overlay: { t: '悬浮窗', ic: 'layers', why: '显示流式悬浮条、命令批准和手机任务状态窗。', unlock: ['流式悬浮条', '手机任务状态窗'], out: '打开系统「显示在其他应用上层」列表，找到并允许 DSH-A-Su。', doc: 6 }
+  };
+  const SEVEN = [['storage', '存储读写'], ['shizuku', 'Shizuku / Stellar'], ['root', 'Root'], ['a11y', '无障碍'], ['notify', '通知'], ['overlay', '悬浮窗'], ['battery', '电池优化']];
+  // 原型标注：离开 DSHA 的那一步只说明去向，并让评审选择“返回后的结果”；系统页本身不在 HTML 中模拟。
+  const LEAVE = {
+    storage: { title: '系统「所有文件访问」页', doc: 1, steps: '找到 DSH-A-Su，打开“允许访问所有文件”，然后返回。', results: [['on', '已开启后返回'], ['off', '未开启直接返回']] },
+    notify: { title: '系统通知权限弹窗（Android 13+）', doc: 5, steps: '系统弹窗中选择“允许”。', results: [['on', '允许'], ['denied', '不允许']] },
+    notifySettings: { title: '系统「应用通知」设置', doc: 5, steps: '打开“允许通知”，然后返回。', results: [['on', '已开启后返回'], ['denied', '未开启直接返回']] },
+    battery: { title: '系统电池优化设置', doc: 7, steps: '把 DSH-A-Su 设为“不优化 / 无限制”，然后返回。', results: [['on', '已设为不限制'], ['off', '未修改直接返回']] },
+    a11y: { title: '系统无障碍设置', doc: 4, steps: '已下载的应用 / 服务 →「DSH-A-Su 屏幕控制」→ 开启“使用服务”，并确认系统提示。Android 13+ 若提示“受限设置”，先在应用详情右上角菜单中允许。', results: [['on', '已开启并连接'], ['waiting', '已开启但未连接'], ['off', '未开启直接返回']] },
+    overlay: { title: '系统「显示在其他应用上层」列表', doc: 6, steps: 'Android 11+ 进入的是列表页：找到 DSH-A-Su 并允许，然后返回。', results: [['on', '已允许后返回'], ['off', '未允许直接返回']] },
+    root: { title: 'Root 管理器授权弹窗', doc: 3, steps: 'DSHA 执行一次 id 验证；在 root 管理器弹窗中允许 DSH-A-Su。', results: [['ok', '管理器已允许'], ['fail', '管理器已拒绝'], ['nosu', '设备未 root（找不到 su）']] },
+    shizukuOpen: { title: 'Shizuku / Stellar 管理器', doc: 2, steps: '安装管理器并启动服务；使用 Stellar 时需在其设置中开启「Shizuku 兼容层」。', results: [['connected', '服务已启动后返回'], ['installed', '已安装、服务未启动'], ['missing', '仍未安装']] },
+    shizukuGrant: { title: 'Shizuku 管理器授权弹窗', doc: 2, steps: '在管理器弹出的授权框中允许 DSH-A-Su。', results: [['ok', '已允许'], ['connected', '已拒绝或超时']] }
+  };
+
+  const NOTES = {
+    welcome: [
+      '<b>合并</b>：原 <code>WelcomeActivity</code>（3 页 ViewPager2）和 <code>OnboardingPrepareActivity</code>（“4 / 4”）合成 1 页；标题、要点、徽章沿用 <code>welcome_page1–3</code> 的 <code>ui2_*</code> 字符串。',
+      '<b>部署前检查</b>：4 项与 <code>OnboardingPrepareActivity</code> 相同（架构 / 系统与版本 / 可用空间 / 安装方式）。空间不足时先拦住，对应 <code>ColdBundleTransaction</code> 的 <code>COLD_INSTALL_SPACE_REQUIRED</code>。3.1 GB / 23.4 GB 是示意值。',
+      '<b>开始部署</b>：等同现在的 <code>setWelcomed(true)</code> + 启动应用级维护任务（<code>BackupTask</code>），之后不再停在 <code>ExtractActivity</code> 等。启动契约（未 welcomed 回欢迎页）不变。'
+    ],
+    goals: [
+      '<b>新增页</b>：只影响下一页的“推荐”标记和排序，不申请任何权限，符合最小权限默认。',
+      '<b>胶囊首次出现</b>：手机在顶栏正中，平板在左栏。点开可看阶段列表（底部面板 / 居中对话框）。',
+      '部署期间页面应保持屏幕常亮：现在由 <code>ExtractActivity</code> 设 <code>FLAG_KEEP_SCREEN_ON</code>，新引导页需要接过来。'
+    ],
+    perms: [
+      '<b>7 项全部默认关闭，可以跳过。</b>卡片里只画 DSHA 内的按钮和返回后的状态；系统 / 管理器里的步骤见 <code>external-authorizations.md</code> §1–§8。',
+      '<b>状态文案尽量用源码原文</b>：存储 <code>DeviceGrantsFragment.refreshAllFilesStatus</code>，无障碍 <code>refreshA11yStatus</code>，Shizuku <code>ShizukuShell.userStatus</code>，Root <code>RootShell.status</code>。通知、悬浮窗、电池是新文案。',
+      '<b>电池优化</b>：现有代码只跳转设置，没有 <code>isIgnoringBatteryOptimizations</code> 检测；原型里的“不受限制”需要新增这个只读检测。',
+      '<b>通知</b>：设备授权页目前没有通知入口（只在 <code>UpdateActivity</code> 申请），需要新增。',
+      '<b>无障碍</b>：现有步骤写的是“DSHA 配对助手”，系统列表实际显示「DSH-A-Su 屏幕控制」（<code>build197_language.xml</code>），原型已统一成后者。',
+      '<b>ADB</b> 依赖内置环境，部署完成前禁用；连接验证后会自动授予 <code>WRITE_SECURE_SETTINGS</code>，卡片里已写明。Root 档位在引导中固定为“严格（默认）”。'
+    ],
+    finish: [
+      '<b>成功</b>：“进入主界面”= 现有 <code>FirstRunWebStart.mainIntent(first_setup)</code>，进入后自动启动 Web。',
+      '<b>失败 / 环境检查未通过</b>：沿用 <code>ExtractActivity</code> 的入口（查看本次维护记录 / 启动应急 DSH / 受限主界面），不自动跳转。',
+      '首次安装失败时，现有重试按钮文案是“保护数据并重建”；建议首次安装改成“重试部署”（同一个任务）。'
+    ],
+    main: [
+      '<b>覆盖更新后</b>：原来是整屏 <code>ExtractActivity</code>“运行环境维护”，改为受限主界面 + 顶部胶囊。维护期间 Web、终端和插件仍按环境门禁禁用，受限入口不伪造就绪标记。',
+      '更新阶段文案取自 <code>ManagedRuntimeAssets</code> / <code>EnvironmentMaintenance</code>；失败文案取自 <code>EnvironmentMaintenance.java:163</code>。',
+      '完成后胶囊变绿，约 5 秒后收起。底部导航只有“启动”和“设置”能点，其他页沿用现有实现。'
+    ],
+    center: [
+      '引导和 设置 → 设备能力授权 共用同一组授权卡片。用它替换 <code>DeviceGrantsFragment</code> 的长表单是可选的后续工作。',
+      '标题和副标题沿用 <code>ui2_device_grants</code> / <code>ui2_grants_sub</code>；短信、位置、传感器、局域网等其他能力仍在原页面。'
+    ]
+  };
+
+  const S = {};
+  function reset(scenario) {
+    const keep = { device: S.device, theme: S.theme, font: S.font, reduced: S.reduced, speed: S.speed || 'normal', outcome: S.outcome || 'ok', space: S.space || 'ok' };
+    Object.assign(S, keep, {
+      scenario,
+      screen: scenario === 'update' ? 'main' : 'welcome',
+      goals: new Set(),
+      task: scenario === 'update' ? { kind: 'update', status: 'running', t: 0, stage: 0, dismissed: false } : { kind: 'install', status: 'idle', t: 0, stage: 0, dismissed: false },
+      perms: scenario === 'update'
+        ? { notify: 'on', battery: 'off', storage: 'on', a11y: 'off', overlay: 'off', root: 'off', shizuku: 'ok' }
+        : { notify: 'off', battery: 'off', storage: 'off', a11y: 'off', overlay: 'off', root: 'off', shizuku: 'missing' },
+      notifyDenials: 0,
+      channelTab: 'shizuku',
+      overlay: null,
+      web: 'stopped'
+    });
+    if (scenario === 'update' && S.space === 'low') S.space = 'ok';
+  }
+
+  const stagesOf = (k) => (k === 'update' ? UPDATE : INSTALL);
+  const okMap = () => {
+    const p = S.perms;
+    return { storage: p.storage === 'on', shizuku: p.shizuku === 'ok', root: p.root === 'ok', a11y: p.a11y === 'on', notify: p.notify === 'on', overlay: p.overlay === 'on', battery: p.battery === 'on' };
+  };
+  const okCount = () => Object.values(okMap()).filter(Boolean).length;
+  const recSet = () => { const r = new Set(); GOALS.forEach((g) => { if (S.goals.has(g.id)) g.perms.forEach((p) => r.add(p)); }); return r; };
+  const limited = () => ['running', 'failed', 'unready'].includes(S.task.status);
+
+  function startTask(kind) {
+    S.task = { kind, status: 'running', t: 0, stage: 0, dismissed: false };
+    announce(`${kind === 'update' ? '运行时更新' : '运行环境部署'}已开始`);
+  }
+
+  // ---------------- 胶囊 / 进度 ----------------
+  function segCls(j) {
+    const t = S.task;
+    if (t.status === 'idle') return '';
+    if (t.status === 'done' || t.status === 'unready') return 'done';
+    if (j < t.stage) return 'done';
+    if (j === t.stage) return t.status === 'failed' ? 'err' : 'cur';
+    return '';
+  }
+  function capInfo() {
+    const t = S.task, st = stagesOf(t.kind), up = t.kind === 'update';
+    switch (t.status) {
+      case 'running': return { st: 'run', label: up ? '更新中' : '部署中', sub: st[t.stage].s, cnt: `${t.stage + 1}/${st.length}`, title: up ? '运行时更新' : '运行环境部署', pill: ['acc', `${t.stage + 1} / ${st.length}`], line: st[t.stage].t };
+      case 'done': return { st: 'done', label: up ? '运行时已更新' : '环境已就绪', sub: '', cnt: '', title: up ? '运行时更新' : '运行环境部署', pill: ['good', up ? '已更新' : '已就绪'], line: up ? '新版运行时已通过隔离试运行。' : '运行环境已部署并通过检查。' };
+      case 'failed': return { st: 'bad', label: up ? '更新未完成' : '部署未完成', sub: up ? '已回切原运行时' : '点此查看', cnt: '', title: up ? '运行时更新' : '运行环境部署', pill: ['bad', '未完成'], line: FAIL[t.kind].text.split('\n')[0] };
+      case 'unready': return { st: 'warn', label: '环境检查未通过', sub: '点此查看', cnt: '', title: up ? '运行时更新' : '运行环境部署', pill: ['warn', '未通过'], line: '维护步骤已结束，但环境就绪检查未通过。' };
+      default: return null;
+    }
+  }
+  function capPill() {
+    const c = capInfo();
+    if (!c) return '';
+    return `<button type="button" class="cap" data-act="cap" data-st="${c.st}" aria-label="${esc(c.title)}：${esc(c.label)}${c.sub ? '，' + esc(c.sub) : ''}，点按查看详情"><span class="dot"></span><span class="lbl">${esc(c.label)}</span>${c.sub ? `<span class="sub">· ${esc(c.sub)}</span>` : ''}${c.cnt ? `<span class="cnt">${c.cnt}</span>` : ''}${svg('chev', 14)}</button>`;
+  }
+  function segbar() {
+    const t = S.task, st = stagesOf(t.kind);
+    const cls = t.status === 'done' ? 'ok' : t.status === 'unready' ? 'warn' : '';
+    const done = st.filter((_, j) => segCls(j) === 'done').length;
+    return `<div class="segbar ${cls}" role="progressbar" aria-valuemin="0" aria-valuemax="${st.length}" aria-valuenow="${done}" aria-valuetext="已完成 ${done} / ${st.length} 个阶段">${st.map((_, j) => `<i class="${segCls(j)}"></i>`).join('')}</div>`;
+  }
+  function stageList() {
+    const t = S.task, st = stagesOf(t.kind);
+    return `<ol class="stages ${t.status === 'done' ? 'ok' : ''}">${st.map((s, j) => { const c = segCls(j); return `<li class="${c}"><span class="ic">${c === 'done' ? svg('check', 12) : c === 'err' ? svg('x', 12) : ''}</span><span>${esc(s.t)}</span></li>`; }).join('')}</ol>`;
+  }
+  function capCard() {
+    const c = capInfo();
+    if (!c) return `<div class="capcard idle"><span class="capcard-top"><b>运行环境</b><span class="pill">未开始</span></span><span class="capcard-sub">点「开始部署」后在后台部署，期间可以继续完成引导。</span></div>`;
+    return `<button type="button" class="capcard" data-act="cap" data-st="${c.st}" aria-label="${esc(c.title)}详情"><span class="capcard-top"><b>${esc(c.title)}</b><span class="pill ${c.pill[0]}">${esc(c.pill[1])}</span></span>${segbar()}<span class="capcard-sub">${esc(c.line)}</span><span class="capcard-more">阶段与维护记录 ${svg('chev', 14)}</span></button>`;
+  }
+
+  // ---------------- 授权卡片 ----------------
+  function permState(id) {
+    const v = S.perms[id];
+    const L = (key, label, cls = 'primary sm') => btn(cls, label, 'leave', { key });
+    switch (id) {
+      case 'notify':
+        if (v === 'on') return { ok: true, cls: 'good', pill: '已开启', text: '已允许通知 · 部署进度和手机任务停止按钮会显示在通知栏', act: L('notifySettings', '系统通知设置', 'ghost sm') };
+        if (S.notifyDenials >= 2) return { ok: false, cls: 'warn', pill: '已拒绝', text: '系统不会再弹出申请框；如需开启，请在系统通知设置中允许。', act: L('notifySettings', '去系统通知设置') };
+        return { ok: false, cls: v === 'denied' ? 'warn' : '', pill: v === 'denied' ? '已拒绝' : '未开启', text: '未允许 · 部署进度和手机任务停止按钮不会显示在通知栏', act: L('notify', v === 'denied' ? '再请求一次' : '允许通知') };
+      case 'battery':
+        if (v === 'on') return { ok: true, cls: 'good', pill: '不受限制', text: '不受电池优化限制', act: L('battery', '电池优化设置', 'ghost sm') };
+        return { ok: false, cls: '', pill: '未设置', text: '受系统电池优化管理，后台 Web 和终端可能被系统中断。', act: L('battery', '打开电池优化设置') };
+      case 'storage':
+        if (v === 'on') return { ok: true, cls: 'good', pill: '已开启', text: '已开启：可读写系统允许的共享存储；其他应用私有目录仍受系统限制', act: L('storage', '系统设置', 'ghost sm') };
+        return { ok: false, cls: '', pill: '未开启', text: '未开启：仅能访问 App 私有目录；去系统设置开启后可访问全部文件', act: L('storage', '去开启所有文件访问') };
+      case 'a11y':
+        if (v === 'on') return { ok: true, cls: 'good', pill: '已连接', text: '已连接，可以在对话中使用 Computer Use。', act: L('a11y', '无障碍设置', 'ghost sm') };
+        if (v === 'waiting') return { ok: false, cls: 'warn', pill: '等待连接', text: '开关已开启，正在等待系统连接；可重新开关服务。', act: btn('primary sm', '检查连接', 'recheckA11y') + L('a11y', '重新打开无障碍设置', 'ghost sm') };
+        return { ok: false, cls: '', pill: '未开启', text: '未开启 · 开启后可在对话中让助手操作屏幕', act: L('a11y', '去开启屏幕操作') };
+      case 'overlay':
+        if (v === 'on') return { ok: true, cls: 'good', pill: '已允许', text: '已允许显示在其他应用上层', act: L('overlay', '系统设置', 'ghost sm') };
+        return { ok: false, cls: '', pill: '未允许', text: '未允许 · 悬浮条、命令批准和手机任务状态窗不可用', act: L('overlay', '去允许悬浮窗') };
+      default: return { ok: false, cls: '', pill: '', text: '', act: '' };
+    }
+  }
+  function permCard(id, rec) {
+    if (id === 'channel') return channelCard(rec);
+    const p = P[id], st = permState(id);
+    return `<article class="perm ${rec ? 'rec' : ''}" data-ok="${st.ok}">
+      <div class="perm-ic">${svg(p.ic, 20)}</div>
+      <div class="perm-head"><div class="perm-top"><h3>${p.t}</h3><span class="pill ${st.cls}">${st.pill}</span></div>${rec ? '<span class="rec-tag">按你的用途推荐</span>' : ''}</div>
+      <div class="perm-body">
+        <p class="perm-why">${p.why}</p>
+        <div class="tags">${p.unlock.map((u) => `<span class="tag">${u}</span>`).join('')}</div>
+        <p class="perm-status">${esc(st.text)}</p>
+        ${st.ok ? '' : `<p class="perm-out">${svg('ext', 14)}<span>${p.out}</span></p>`}
+        <div class="perm-actions">${st.act}</div>
+      </div></article>`;
+  }
+  function shizukuState() {
+    switch (S.perms.shizuku) {
+      case 'ok': return { cls: 'good', pill: '已授权', text: '已授权 · 设备 Shell 已连接，可直接使用，无需 ADB 配对', act: btn('secondary sm', '验证 Shizuku 连接', 'verifyShizuku') };
+      case 'connected': return { cls: 'warn', pill: '待授权', text: '服务已连接，尚未授权 DSHA。点击下方授权。', act: btn('primary sm', '授权 Shizuku', 'leave', { key: 'shizukuGrant' }) };
+      case 'installed': return { cls: 'warn', pill: '未连接', text: '管理器已安装，服务尚未连接。点击授权重新连接；若仍未连接，请启动管理器服务，并检查隐藏模式是否允许 DSHA。', act: btn('primary sm', '授权 Shizuku', 'leave', { key: 'shizukuGrant' }) + btn('ghost sm', '打开 Shizuku', 'leave', { key: 'shizukuOpen' }) };
+      default: return { cls: '', pill: '未安装', text: '尚未安装 Shizuku。安装并启动后可在这里授权。', act: btn('primary sm', '打开 Shizuku', 'leave', { key: 'shizukuOpen' }) };
+    }
+  }
+  function rootState() {
+    const policy = '\n命令拦截档位：严格（默认）';
+    switch (S.perms.root) {
+      case 'enabled': return { cls: 'warn', pill: '待验证', text: 'su：/system/bin/su\n尚未验证 root 授权' + policy, act: btn('primary sm', '验证 root 授权', 'leave', { key: 'root' }) };
+      case 'ok': return { cls: 'good', pill: '已响应', text: 'su：/system/bin/su\nroot 通道已响应 · 设备命令仍受策略保护' + policy, act: btn('secondary sm', '重新验证', 'leave', { key: 'root' }) };
+      case 'fail': return { cls: 'bad', pill: '失败', text: 'su：/system/bin/su\nroot 授权或执行失败：Permission denied（示意）' + policy, act: btn('primary sm', '再次验证', 'leave', { key: 'root' }) };
+      case 'nosu': return { cls: 'bad', pill: '无 su', text: '未找到 su，可使用 Shizuku 或 ADB 通道' + policy, act: btn('secondary sm', '改用 Shizuku / Stellar', 'tab', { tab: 'shizuku' }) };
+      default: return { cls: '', pill: '未启用', text: '未启用 · 开启后可直接申请 root 授权', act: '' };
+    }
+  }
+  function channelCard(rec) {
+    const m = okMap(), tab = S.channelTab;
+    const head = m.root ? ['good', 'Root 已就绪'] : m.shizuku ? ['good', 'Shizuku 已授权'] : ['', '未配置'];
+    const tabs = [['shizuku', 'Shizuku / Stellar', m.shizuku], ['root', 'Root', m.root], ['adb', 'ADB 配对', false]];
+    let panel = '';
+    if (tab === 'shizuku') {
+      const z = shizukuState();
+      panel = `<p class="perm-status">${esc(z.text)}</p>
+        <p class="perm-out">${svg('info', 14)}<span>Stellar 需在其管理器中开启「Shizuku 兼容层」。DSHA 目前按 Shizuku 协议识别管理器，只装 Stellar 时可能显示“尚未安装 Shizuku”（未验证，见文档 §2）。</span></p>
+        <div class="perm-actions">${z.act}</div>`;
+    } else if (tab === 'root') {
+      const r = rootState(), on = S.perms.root !== 'off';
+      panel = `<button type="button" class="sw" role="switch" aria-checked="${on}" data-act="rootToggle"><span>允许 Root Shell</span><i></i></button>
+        <p class="perm-status">${esc(r.text)}</p>
+        <p class="mini-note">手机已 root 时可直接使用 su，无需 ADB 配对。首次执行请在 root 管理器中授权 DSHA。引导中固定为严格档；放宽档位只在 设置 → 设备能力授权 中调整。</p>
+        ${r.act ? `<div class="perm-actions">${r.act}</div>` : ''}`;
+    } else {
+      const ready = S.task.status === 'done';
+      panel = ready
+        ? `<p class="perm-status">尚未配对：点下方「ADB 无线配对」，配对后还会验证连接。</p><p class="perm-out">${svg('info', 14)}<span>连接验证通过后，DSHA 会给自己授予 WRITE_SECURE_SETTINGS，用于开机后自动打开无线调试。</span></p><div class="perm-actions">${btn('primary sm', 'ADB 无线配对', 'adb')}</div>`
+        : `<p class="perm-status">运行环境就绪后可配对：配对和连接验证依赖内置环境。</p><div class="perm-actions">${btn('secondary sm', 'ADB 无线配对', 'adb', {}, 'disabled')}</div>`;
+    }
+    return `<article class="perm wide ${rec ? 'rec' : ''}" data-ok="${m.root || m.shizuku}">
+      <div class="perm-ic">${svg('term', 20)}</div>
+      <div class="perm-head"><div class="perm-top"><h3>设备命令通道</h3><span class="pill ${head[0] ? 'good' : ''}">${head[1]}</span></div>${rec ? '<span class="rec-tag">按你的用途推荐</span>' : ''}</div>
+      <div class="perm-body">
+        <p class="perm-why">让设备命令经 Shizuku / Stellar、Root 或 ADB 执行，任选其一。三种通道共用同一套命令白名单。</p>
+        <div class="tabs" role="tablist" aria-label="设备命令通道">${tabs.map(([k, t, ok]) => `<button type="button" role="tab" aria-selected="${tab === k}" data-act="tab" data-tab="${k}">${t}${ok ? '<span class="okdot" aria-label="已就绪"></span>' : ''}</button>`).join('')}</div>
+        <div role="tabpanel">${panel}</div>
+      </div></article>`;
+  }
+  function permGroups(rec) {
+    const m = okMap();
+    const ordered = GROUPS.slice().sort((a, b) => (b.items.some((i) => rec.has(i)) ? 1 : 0) - (a.items.some((i) => rec.has(i)) ? 1 : 0));
+    return ordered.map((g) => {
+      const has = g.items.some((i) => rec.has(i));
+      const d = g.d === 'screen'
+        ? `<span class="req">手机任务需要：<span class="${m.a11y ? 'y' : 'n'}">${m.a11y ? '✓' : '○'} 无障碍</span><span class="${m.overlay ? 'y' : 'n'}">${m.overlay ? '✓' : '○'} 悬浮窗</span><span class="${m.notify ? 'y' : 'n'}">${m.notify ? '✓' : '○'} 通知</span></span>`
+        : g.d;
+      return `<section class="grp"><div class="grp-h"><h2>${g.t}</h2>${has ? '<span class="pill acc">推荐</span>' : ''}</div>${d ? `<p class="grp-d">${d}</p>` : ''}<div class="perm-grid">${g.items.map((i) => permCard(i, rec.has(i))).join('')}</div></section>`;
+    }).join('');
+  }
+  const summary = () => {
+    const m = okMap();
+    return `<div class="sum"><span>已开启 <b>${okCount()}</b> / 7</span><span class="dots7" aria-hidden="true">${SEVEN.map(([k, t]) => `<i class="${m[k] ? 'on' : ''}" title="${t}"></i>`).join('')}</span></div>`;
+  };
+
+  // ---------------- 引导页 ----------------
+  function vWelcome() {
+    const low = S.space === 'low', started = S.task.status !== 'idle';
+    const chk = (k, v, w) => `<div class="chk ${w ? 'warn' : ''}"><small>${k}</small><b>${v}</b></div>`;
+    const html = `
+      <p class="eyebrow">DeepSeek Harness · 安卓</p>
+      <h1 class="h1">你的 AI 工作台，<br>就在手机里。</h1>
+      <p class="lead">写代码、处理文件、使用工具。<br>把完整的工作环境，随身带走。</p>
+      <span class="badge">离线部署 · 无需 ROOT · ${DSH}</span>
+      <div class="feats">
+        <div class="feat"><i>${svg('chat', 19)}</i><span><b>对话与任务</b><small>让模型理解问题，协作完成工作。</small></span></div>
+        <div class="feat"><i>${svg('term', 19)}</i><span><b>完整的终端</b><small>保留熟悉的 Ubuntu 命令与多会话。</small></span></div>
+        <div class="feat"><i>${svg('grid', 19)}</i><span><b>插件与设备能力</b><small>按需安装插件，连接手机能力。</small></span></div>
+      </div>
+      <h2 class="sec">部署前检查</h2>
+      <div class="checks">${chk('设备架构', 'arm64-v8a')}${chk('系统与版本', 'Android 14 · 标准版')}${chk('可用空间', low ? '1.2 GB' : '23.4 GB', low)}${chk('安装方式', '随包离线部署')}</div>
+      ${low ? `<p class="hint bad">${svg('alert', 16)}<span>可用空间不足：部署约需 3.1 GB，当前可用 1.2 GB。清理空间后点「重新检查」。</span></p>`
+        : `<p class="hint">${svg('info', 16)}<span>内置 Ubuntu 与运行组件将部署到应用私有目录。部署在后台进行，期间可以继续完成引导。</span></p>`}
+      <button type="button" class="linkrow" data-act="data">${svg('shield', 22)}<span><b>权限由你决定，数据有处可寻</b><small>开始使用不需要授予设备控制权限</small></span>${svg('chev', 18)}</button>
+      <p class="fine">使用在线模型时，消息及你选择的附件会发送到所配置的模型服务。</p>`;
+    const foot = low ? btn('primary', '重新检查', 'recheckSpace') : started ? btn('primary', '继续', 'go', { to: 'goals' }) : btn('primary', '开始部署', 'start');
+    return { html, foot };
+  }
+  function vGoals() {
+    const n = recSet().size;
+    const html = `
+      <p class="eyebrow">第 2 步 · 用途</p>
+      <h1 class="h2">你想用 DSHA 做什么？</h1>
+      <p class="lead">可多选。只用来推荐下一步的授权，不会自动申请任何权限。</p>
+      <div class="goals" role="group" aria-label="用途（可多选）">${GOALS.map((g) => {
+        const on = g.locked || S.goals.has(g.id);
+        return `<button type="button" class="goal" role="checkbox" aria-checked="${on}" ${g.locked ? 'aria-disabled="true"' : ''} data-act="goal" data-id="${g.id}"><span class="box">${on ? svg('check', 14) : ''}</span><span><b>${g.t}</b><small>${g.s}</small></span><span class="gic">${svg(g.ic, 18)}</span></button>`;
+      }).join('')}</div>
+      ${S.task.status === 'running' ? `<p class="hint cap-hint">${svg('info', 16)}<span><span class="t-narrow">运行环境正在后台部署，点顶部胶囊可查看进度。</span><span class="t-wide">运行环境正在后台部署，左侧可查看进度。</span></span></p>` : ''}`;
+    const foot = btn('primary', n ? `下一步：查看 ${n} 项推荐授权` : '下一步：查看授权', 'go', { to: 'perms' }) + btn('secondary', '跳过授权，稍后在设置中开启', 'go', { to: 'finish' });
+    return { html, foot };
+  }
+  function vPerms() {
+    const n = okCount();
+    const html = `
+      <p class="eyebrow">第 3 步 · 授权</p>
+      <h1 class="h2">按需授权</h1>
+      <p class="lead">全部可选。授权在系统设置或管理器中完成，回到 DSHA 后会自动重新检查；之后可在 设置 → 设备能力授权 中修改或撤销。</p>
+      ${summary()}
+      ${permGroups(recSet())}`;
+    const foot = btn('primary', n ? '完成授权' : '暂不授权，继续', 'go', { to: 'finish' });
+    return { html, foot };
+  }
+  function vFinish() {
+    const t = S.task, m = okMap(), c = capInfo();
+    const titles = { running: '马上就好', done: '准备就绪', failed: '部署未完成', unready: '需要处理环境', idle: '还未开始部署' };
+    const leads = {
+      running: '运行环境还在部署，完成后即可进入主界面并自动启动 Web。也可以先进入受限主界面查看配置和日志。',
+      done: '运行环境已部署并通过检查。进入主界面后会自动启动 Web。',
+      failed: '部署没有完成，本页不会自动覆盖环境。请按下方原因处理后重试。',
+      unready: UNREADY,
+      idle: '回到第 1 步开始部署。'
+    };
+    const st = stagesOf(t.kind);
+    let extra = '';
+    if (t.status === 'failed') extra = `<div class="err-box">未完成的操作：首次部署\n最后记录阶段：${esc(st[t.stage].t)}\n\n${esc(FAIL[t.kind].text)}</div>`;
+    if (t.status === 'unready') extra = `<div class="warn-box">${esc(UNREADY)}</div>`;
+    const html = `
+      <p class="eyebrow">第 4 步 · 完成</p>
+      <h1 class="h2">${titles[t.status]}</h1>
+      <p class="lead">${leads[t.status]}</p>
+      <div class="card" style="margin-top:18px">
+        <div class="card-h"><b>运行环境</b>${c ? `<span class="pill ${c.pill[0]}">${esc(c.pill[1])}</span>` : '<span class="pill">未开始</span>'}</div>
+        ${t.status === 'idle' ? '' : segbar() + stageList()}
+        ${extra}
+      </div>
+      <div class="card">
+        <div class="card-h"><b>授权</b><span class="pill ${okCount() ? 'good' : ''}">已开启 ${okCount()} / 7</span></div>
+        <div class="chips">${SEVEN.map(([k, l]) => `<span class="chip ${m[k] ? 'on' : ''}">${m[k] ? '✓' : '–'} ${l}</span>`).join('')}</div>
+        <p class="mini-note">授权可随时在 设置 → 设备能力授权 中修改或撤销。${btn('ghost sm', '返回授权', 'go', { to: 'perms' })}</p>
+      </div>`;
+    let foot;
+    switch (t.status) {
+      case 'done': foot = btn('primary', '进入主界面', 'enter'); break;
+      case 'running': foot = btn('primary', '等待部署完成…', 'noop', {}, 'disabled') + btn('secondary', LIMITED, 'limited'); break;
+      case 'failed': foot = btn('primary', '重试部署', 'retry') + btn('secondary', '查看本次维护记录', 'logs') + btn('ghost', '启动应急 DSH', 'emergency') + btn('ghost', LIMITED, 'limited'); break;
+      case 'unready': foot = btn('primary', '查看本次维护记录', 'logs') + btn('secondary', LIMITED, 'limited') + btn('ghost', '启动应急 DSH', 'emergency'); break;
+      default: foot = btn('primary', '回到第 1 步', 'go', { to: 'welcome' });
+    }
+    return { html, foot };
+  }
+  function renderOnb() {
+    const step = ORDER.indexOf(S.screen);
+    const view = { welcome: vWelcome, goals: vGoals, perms: vPerms, finish: vFinish }[S.screen]();
+    const started = S.task.status !== 'idle';
+    return `<div class="onb">
+      <aside class="onb-side" aria-label="引导步骤">
+        <div class="side-brand"><b>DSHA</b><small>首次引导 · ${step + 1} / 4</small></div>
+        <ol class="vsteps">${STEP_NAMES.map((n, i) => `<li class="${i < step ? 'done' : i === step ? 'cur' : ''}"${i === step ? ' aria-current="step"' : ''}><span class="n">${i < step ? svg('check', 13) : i + 1}</span><span>${n}</span></li>`).join('')}</ol>
+        ${capCard()}
+        <p class="side-foot">授权全部可选，可随时在 设置 → 设备能力授权 中修改。</p>
+      </aside>
+      <section class="onb-main">
+        <div class="onb-head">
+          ${step === 0 ? '<div class="brand">DSHA</div>' : `<button type="button" class="iconbtn" data-act="back" aria-label="返回上一步">${svg('back', 22)}</button>`}
+          <div class="head-mid">${started ? capPill() : ''}</div>
+          <div class="stepc">${step + 1} / 4</div>
+        </div>
+        <div class="steps-bar" aria-hidden="true">${ORDER.map((_, i) => `<i class="${i <= step ? 'on' : ''}"></i>`).join('')}</div>
+        <div class="onb-body" data-scroll><div class="content ${S.screen === 'perms' ? 'wide' : ''}">${view.html}</div></div>
+        <div class="onb-foot"><div class="content btns ${S.screen === 'perms' ? 'wide' : ''}">${view.foot}</div></div>
+      </section>
+    </div>`;
+  }
+
+  // ---------------- 主界面 ----------------
+  function renderMain() {
+    const center = S.screen === 'center', t = S.task, lim = limited();
+    const showCap = t.status !== 'idle' && !t.dismissed;
+    const up = t.kind === 'update';
+    let body;
+    if (center) {
+      body = `<div class="pagehead"><p>按需开启。普通对话和终端不依赖设备控制授权。</p></div>${summary()}${permGroups(new Set())}`;
+    } else {
+      const web = lim ? 'blocked' : S.web;
+      const pill = { blocked: t.status === 'running' ? ['warn', up ? '运行时更新中' : '运行环境部署中'] : ['bad', '维护未完成'], starting: ['acc', '正在启动'], running: ['good', '运行中'], stopped: ['', '未运行'] }[web];
+      const text = { blocked: 'Web、终端与插件需通过环境门禁，完成后可启动。', starting: '正在启动 Web…', running: 'http://127.0.0.1:43827', stopped: '运行环境已就绪，点下方启动 Web。' }[web];
+      const act = web === 'running' ? btn('primary sm', '打开 Web', 'openWeb') + btn('secondary sm', '停止', 'webStop') : web === 'starting' ? btn('primary sm', '正在启动…', 'noop', {}, 'disabled') : btn('primary sm', '启动 Web', 'web', {}, web === 'blocked' ? 'disabled' : '');
+      const st = stagesOf(t.kind);
+      const logLines = t.status === 'idle' ? '暂无维护记录' : st.map((s, j) => { const c = segCls(j); return `${c === 'done' ? '✓' : c === 'cur' ? '…' : c === 'err' ? '✗' : '·'} ${s.t}`; }).join('\n');
+      body = `${lim ? `<p class="hint warn" style="margin-top:4px">${svg('alert', 16)}<span>受限主界面：可以查看配置和日志；Web、终端与插件要等运行环境就绪。</span></p>` : ''}
+        <div class="card" style="margin-top:12px"><div class="card-h"><b>DSH Web</b><span class="pill ${pill[0]}">${pill[1]}</span></div><p class="${web === 'running' ? 'webaddr' : 'perm-why'}">${text}</p>${web === 'running' ? '<p class="mini-note">自动端口（<code>--port 0</code>），鉴权成功后记录实际端口；此处端口为示意。</p>' : ''}<div class="row-btns">${act}</div></div>
+        <div class="card"><button type="button" class="linkcard" data-act="center" style="border:0;background:none;padding:0"><span class="perm-ic">${svg('shield', 20)}</span><span><b>设备能力授权</b><small>已开启 ${okCount()} / 7 · 按需开启，可随时撤销</small></span>${svg('chev', 18)}</button></div>
+        <div class="card"><div class="card-h"><b>${up ? '本次运行时更新记录' : '本次部署记录'}</b>${btn('ghost sm', '查看完整记录', 'logs')}</div><pre class="log">${esc(logLines)}</pre></div>`;
+    }
+    const navs = [['launch', '启动', 'play'], ['plugins', '插件', 'grid'], ['settings', '设置', 'gear'], ['terminal', '终端', 'term']];
+    const active = center ? 'settings' : 'launch';
+    return `<div class="main">
+      <header class="main-top">
+        <div class="ttl">${center ? `<button type="button" class="iconbtn" data-act="go" data-to="main" aria-label="返回">${svg('back', 22)}</button>` : ''}<h1>${center ? '设备能力授权' : '启动'}</h1></div>
+        <div class="cap-slot">${showCap ? capPill() : ''}</div>
+        <div class="spacer"></div>
+      </header>
+      <div class="main-body" data-scroll><div class="content ${center ? 'wide' : ''}">${body}</div></div>
+      <nav class="bnav" aria-label="主导航">${navs.map(([k, l, ic]) => `<button type="button" class="${k === active ? 'on' : ''}" data-act="nav" data-name="${k}" aria-current="${k === active ? 'page' : 'false'}"><span class="nic">${svg(ic, 20)}</span>${l}</button>`).join('')}</nav>
+    </div>`;
+  }
+
+  // ---------------- 面板 ----------------
+  const sheet = (inner, label, cls = '') => `<div class="scrim" data-act="close"><div class="sheet ${cls}" role="dialog" aria-modal="true" aria-label="${esc(label)}"><div class="grab"></div>${inner}</div></div>`;
+  function taskSheet() {
+    const t = S.task, c = capInfo(), up = t.kind === 'update', st = stagesOf(t.kind), inOnb = ORDER.includes(S.screen);
+    const desc = up ? '相同基础环境只更新 dsh 与内置插件，个人目录、会话和配置保持原位；验证失败回切原运行时。' : '内置 Ubuntu 与运行组件部署到应用私有目录。可以继续完成引导，部署期间屏幕保持常亮。';
+    const line = t.status === 'running' ? `第 ${t.stage + 1} / ${st.length} 步 · ${st[t.stage].t}` : c.line;
+    const err = t.status === 'failed' ? `<div class="err-box">最后记录阶段：${esc(st[t.stage].t)}\n\n${esc(FAIL[t.kind].text)}</div>` : t.status === 'unready' ? `<div class="warn-box">${esc(UNREADY)}</div>` : '';
+    const notif = S.perms.notify === 'on' ? '<p class="mini-note">通知栏会同步显示进度。</p>' : `<p class="mini-note">开启通知后，可在通知栏查看进度。${btn('ghost sm', '允许通知', 'leave', { key: S.notifyDenials >= 2 ? 'notifySettings' : 'notify' })}</p>`;
+    let acts;
+    if (t.status === 'failed') acts = btn('primary', up ? '重试更新运行时' : '重试部署', 'retry') + btn('secondary', '查看本次维护记录', 'logs') + btn('ghost', '启动应急 DSH', 'emergency') + (inOnb ? btn('ghost', LIMITED, 'limited') : '');
+    else if (t.status === 'unready') acts = btn('primary', '查看本次维护记录', 'logs') + (inOnb ? btn('secondary', LIMITED, 'limited') : '') + btn('ghost', '启动应急 DSH', 'emergency');
+    else acts = btn('primary', '收起', 'close') + btn('ghost', '查看本次维护记录', 'logs');
+    return sheet(`<div class="card-h"><h3>${c.title}</h3><span class="pill ${c.pill[0]}">${esc(c.pill[1])}</span></div><p>${desc}</p><p style="color:var(--text);font-weight:650">${esc(line)}</p>${segbar()}${stageList()}${err}${t.status === 'running' ? notif : ''}<div class="btns">${acts}</div>`, c.title);
+  }
+  function dataSheet() {
+    const rows = [['对话与文件', '保存在本机，可手动导出。'], ['模型与凭据', '模型与 API Key 在 Web UI 中配置；原有本机凭据保留。'], ['设备操作', 'Root、Shizuku、ADB 与短信单独授权。']];
+    return sheet(`<h3>权限由你决定，数据有处可寻</h3><p>开始使用不需要授予设备控制权限。</p><div style="margin-top:8px">${rows.map(([k, v]) => `<div class="drow"><b>${k}</b><span>${v}</span></div>`).join('')}</div><p class="fine">使用在线模型时，消息及你选择的附件会发送到所配置的模型服务。</p><div class="btns">${btn('primary', '知道了', 'close')}</div>`, '数据与权限');
+  }
+  function leaveSheet(key) {
+    const L = LEAVE[key];
+    return sheet(`<span class="ann-chip">原型标注 · 这不是应用界面</span><h3>${svg('ext', 18)}<span>将离开 DSHA：${L.title}</span></h3><p>${L.steps}</p><p class="ann-doc">完整步骤、返回判定与撤销方法见 <b>external-authorizations.md §${L.doc}</b></p><p class="ann-q">模拟用户回到 DSHA 时的结果：</p><div class="ann-btns">${L.results.map(([v, l]) => btn('secondary sm', l, 'result', { key, res: v })).join('')}</div><div class="btns">${btn('ghost sm', '取消（留在 DSHA）', 'close')}</div>`, '原型标注：离开 DSHA', 'leave');
+  }
+
+  // ---------------- 渲染 ----------------
+  let lastScreen = null;
+  function render() {
+    const app = $('#app');
+    const sc = app.querySelector('[data-scroll]');
+    const keepTop = sc && lastScreen === S.screen ? sc.scrollTop : 0;
+    app.style.setProperty('--fs', S.font);
+    let html = ORDER.includes(S.screen) ? renderOnb() : renderMain();
+    if (S.overlay) html += S.overlay.type === 'task' ? (capInfo() ? taskSheet() : '') : S.overlay.type === 'data' ? dataSheet() : leaveSheet(S.overlay.key);
+    app.innerHTML = html;
+    const nsc = app.querySelector('[data-scroll]');
+    if (nsc) nsc.scrollTop = keepTop;
+    lastScreen = S.screen;
+    $('#notes').innerHTML = (NOTES[S.screen] || []).map((n) => `<li>${n}</li>`).join('');
+    syncControls();
+  }
+  function go(to) {
+    if (ORDER.includes(to) && to !== 'welcome' && S.task.status === 'idle' && S.scenario === 'fresh' && S.space !== 'low') startTask('install');
+    S.overlay = null;
+    S.screen = to;
+    render();
+    const sc = $('#app [data-scroll]');
+    if (sc) sc.scrollTop = 0;
+  }
+  let toastTimer = 0;
+  function toast(msg) {
+    const el = $('#toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+  const announce = (msg) => { $('#live').textContent = msg; };
+  function startWeb() {
+    S.web = 'starting';
+    render();
+    setTimeout(() => { if (S.web === 'starting') { S.web = 'running'; render(); toast('Web 已就绪'); } }, 2200);
+  }
+
+  function act(a, d) {
+    switch (a) {
+      case 'start': startTask('install'); go('goals'); break;
+      case 'go': go(d.to); break;
+      case 'back': { const i = ORDER.indexOf(S.screen); go(ORDER[Math.max(0, i - 1)]); break; }
+      case 'goal': {
+        const g = GOALS.find((x) => x.id === d.id);
+        if (!g || g.locked) return;
+        S.goals.has(g.id) ? S.goals.delete(g.id) : S.goals.add(g.id);
+        if (g.id === 'shell' && S.goals.has('shell')) S.channelTab = 'shizuku';
+        render(); break;
+      }
+      case 'leave': S.overlay = { type: 'leave', key: d.key }; render(); break;
+      case 'result': {
+        const k = d.key, r = d.res;
+        if (k === 'notify') { if (r === 'denied') { S.notifyDenials++; S.perms.notify = 'denied'; } else S.perms.notify = 'on'; }
+        else if (k === 'notifySettings') S.perms.notify = r === 'on' ? 'on' : 'denied';
+        else if (k === 'shizukuOpen' || k === 'shizukuGrant') S.perms.shizuku = r;
+        else S.perms[k] = r;
+        S.overlay = null; render(); toast('已回到 DSHA，状态已重新检查'); break;
+      }
+      case 'rootToggle': S.perms.root = S.perms.root === 'off' ? 'enabled' : 'off'; render(); break;
+      case 'recheckA11y': S.perms.a11y = 'on'; render(); toast('已连接，可以在对话中使用 Computer Use。'); break;
+      case 'verifyShizuku': toast('验证通过：uid=2000(shell)（示意）'); break;
+      case 'tab': S.channelTab = d.tab; render(); break;
+      case 'cap': S.overlay = { type: 'task' }; render(); break;
+      case 'data': S.overlay = { type: 'data' }; render(); break;
+      case 'close': S.overlay = null; render(); break;
+      case 'retry': S.overlay = null; startTask(S.task.kind); render(); break;
+      case 'logs': toast('打开本次维护记录（沿用 DiagnosticActivity，原型未绘制）'); break;
+      case 'emergency': toast('打开应急 DSH（沿用 RecoveryActivity，原型未绘制）'); break;
+      case 'limited': go('main'); break;
+      case 'enter': S.task.dismissed = true; go('main'); startWeb(); break;
+      case 'web': startWeb(); break;
+      case 'webStop': S.web = 'stopped'; render(); break;
+      case 'openWeb': toast('打开 Web（沿用 WebPreviewActivity，原型未绘制）'); break;
+      case 'center': go('center'); break;
+      case 'nav':
+        if (d.name === 'launch') go('main');
+        else if (d.name === 'settings') go('center');
+        else toast(`「${d.name === 'plugins' ? '插件' : '终端'}」沿用现有实现，原型未绘制`);
+        break;
+      case 'adb': toast('进入现有 ADB 无线配对页（AdbPairActivity，原型未绘制）'); break;
+      case 'recheckSpace': toast('可用空间仍不足（可在左侧「可用空间」切换模拟值）'); break;
+      default: break;
+    }
+  }
+  $('#app').addEventListener('click', (e) => {
+    const t = e.target.closest('[data-act]');
+    if (!t || t.disabled) return;
+    if (t.classList.contains('scrim') && e.target.closest('.sheet')) return;
+    act(t.dataset.act, t.dataset);
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && S.overlay) { S.overlay = null; render(); } });
+
+  // ---------------- 模拟任务时钟 ----------------
+  let last = performance.now();
+  setInterval(() => {
+    const now = performance.now(), dt = Math.min(1, (now - last) / 1000);
+    last = now;
+    const t = S.task;
+    if (t.status !== 'running' || S.speed === 'pause') return;
+    t.t += dt * (S.speed === 'fast' ? 5 : 1);
+    const st = stagesOf(t.kind);
+    let acc = 0, idx = st.length;
+    for (let i = 0; i < st.length; i++) { if (t.t < acc + st[i].w) { idx = i; break; } acc += st[i].w; }
+    const f = FAIL[t.kind];
+    if (S.outcome === 'fail' && idx >= f.at && (idx > f.at || t.t - acc >= st[f.at].w * 0.5)) {
+      t.status = 'failed'; t.stage = f.at; announce(`${t.kind === 'update' ? '运行时更新' : '运行环境部署'}未完成`); render(); return;
+    }
+    if (idx >= st.length) {
+      t.stage = st.length - 1;
+      t.status = S.outcome === 'unready' ? 'unready' : 'done';
+      announce(t.status === 'done' ? (t.kind === 'update' ? '运行时已更新' : '运行环境已就绪') : '环境就绪检查未通过');
+      if (t.status === 'done' && !ORDER.includes(S.screen)) {
+        if (t.kind === 'update') toast('运行时已更新');
+        setTimeout(() => { if (S.task === t && !ORDER.includes(S.screen)) { t.dismissed = true; render(); } }, 5000);
+      }
+      render(); return;
+    }
+    if (idx !== t.stage) { t.stage = idx; announce(st[idx].t); render(); }
+  }, 120);
+
+  // ---------------- 预览控制 ----------------
+  const CTL = [
+    ['scenario', '场景', [['fresh', '全新安装'], ['update', '覆盖更新后首次打开']]],
+    ['device', '设备', Object.entries(DEVICES).map(([k, v]) => [k, v.w ? `${v.label} ${v.w}×${v.h}` : v.label])],
+    ['jump', '跳到页面', [['welcome', '1 欢迎'], ['goals', '2 用途'], ['perms', '3 授权'], ['finish', '4 完成'], ['main', '主界面'], ['center', '授权中心']]],
+    ['speed', '部署 / 更新速度', [['fast', '快速 ×5'], ['normal', '正常'], ['pause', '暂停']]],
+    ['outcome', '任务结果', [['ok', '成功'], ['fail', '失败'], ['unready', '结束但环境检查未通过']]],
+    ['space', '可用空间（全新安装）', [['ok', '充足'], ['low', '不足']]],
+    ['theme', '主题', [['light', '浅色'], ['dark', '深色']]],
+    ['font', '系统字体', [['1', '1.0×'], ['1.3', '1.3×']]],
+    ['reduced', '动效', [['false', '正常'], ['true', '减少动效']]]
+  ];
+  function buildControls() {
+    $('#controls').innerHTML = CTL.map(([k, label, opts]) => `<div class="ctl"><h4>${label}</h4><div class="seg" data-ctl="${k}">${opts.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="false">${l}</button>`).join('')}</div></div>`).join('');
+    $('#controls').addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-v]');
+      if (!b) return;
+      const k = b.parentElement.dataset.ctl, v = b.dataset.v;
+      if (k === 'scenario') { reset(v); }
+      else if (k === 'jump') {
+        if (S.scenario === 'update' && ORDER.includes(v)) reset('fresh');
+        go(v); return;
+      }
+      else if (k === 'font') S.font = Number(v);
+      else if (k === 'reduced') { S.reduced = v === 'true'; document.documentElement.dataset.reduced = String(S.reduced); }
+      else if (k === 'theme') { S.theme = v; document.documentElement.dataset.theme = v; }
+      else S[k] = v;
+      if (k === 'device') fit();
+      render();
+    });
+    $('#reset').addEventListener('click', () => { reset(S.scenario); render(); });
+  }
+  function syncControls() {
+    document.querySelectorAll('#controls .seg').forEach((seg) => {
+      const k = seg.dataset.ctl;
+      const cur = k === 'jump' ? S.screen : String(S[k]);
+      seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === cur)));
+    });
+  }
+  function fit() {
+    const dev = $('#device'), holder = $('#holder'), stage = $('#stage');
+    const d = DEVICES[S.device];
+    dev.classList.toggle('tablet', !!d.tablet);
+    dev.classList.toggle('fill', S.device === 'fill');
+    const availH = Math.max(480, window.innerHeight - (window.innerWidth > 880 ? 110 : 40));
+    if (S.device === 'fill') {
+      holder.style.width = '100%';
+      holder.style.maxWidth = '1400px';
+      holder.style.height = `${availH}px`;
+      dev.style.width = dev.style.height = dev.style.transform = '';
+      return;
+    }
+    const pad = d.tablet ? 14 : 10, W = d.w + pad * 2, H = d.h + pad * 2;
+    const aw = stage.clientWidth - 40;
+    const s = Math.min(1, aw / W, availH / H);
+    dev.style.width = `${W}px`;
+    dev.style.height = `${H}px`;
+    dev.style.transform = `scale(${s})`;
+    holder.style.maxWidth = '';
+    holder.style.width = `${Math.floor(W * s)}px`;
+    holder.style.height = `${Math.floor(H * s)}px`;
+  }
+
+  S.device = window.innerWidth < 700 ? 'fill' : 'phone';
+  S.theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  S.font = 1; S.reduced = false;
+  document.documentElement.dataset.theme = S.theme;
+  if (window.innerWidth < 880) $('#ctlbox').removeAttribute('open');
+  reset('fresh');
+  buildControls();
+  fit();
+  render();
+  window.addEventListener('resize', fit);
+})();
+</script>
+</body>
+</html>

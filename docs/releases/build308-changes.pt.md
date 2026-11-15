@@ -1,0 +1,4 @@
+# DSHA 0.2.1-rc.5-20261104.1830-dsh0.2.1-rc.5 / build308
+
+- Experimental: as notificações da ilha corrigem o envio sem efeito na escolha múltipla e o excesso do limite de botões de ação do sistema (colaborador Ralsei1337); a proteção de leitura Root verifica os caminhos de ficheiros de padrões grep -f/-nfFILE (upstream #215); a página de diagnóstico ativa Copiar quando os resultados chegam após uma falha inicial (upstream #213); o painel do plug-in de destino de arranque deixa de mostrar um grande espaço sob o rótulo no layout vertical estreito e o controlo segmentado passa a ocupar a linha inteira (experimental, não verificado num dispositivo).
+- Âmbito da verificação: apenas testes unitários direcionados, Lint e verificações de código locais; não verificado num dispositivo. versionCode elevado para 308 (com base no build307). A revisão DSHA passa de 0.2.1-rc.3 para 0.2.1-rc.5, alinhada com o DSH incluído 0.2.1-rc.5.

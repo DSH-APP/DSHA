@@ -29,7 +29,7 @@ import org.robolectric.annotation.Config;
 public final class VirtualScreenStartReceiptTest {
   @org.junit.Before
   public void standardVirtualScreenFeatureOnly() {
-    org.junit.Assume.assumeFalse(com.deepseekharness.app.BuildConfig.LOW_ANDROID);
+    org.junit.Assume.assumeFalse(false);
   }
 
   private static final String BOOT = "11111111-2222-3333-4444-555555555555";
@@ -209,6 +209,48 @@ public final class VirtualScreenStartReceiptTest {
         f.manager.start("portrait");
         assertEquals(1, f.calls);
       }
+  }
+
+  @Test
+  public void knownCoreStageIsDiagnosticOnlyAndDoesNotPermitReplay() throws Exception {
+    try (Fixture f = new Fixture()) {
+      f.receipt =
+          DeviceTransportResult.unknown(
+              "shizuku",
+              "EXECUTION_UNKNOWN",
+              "DSHA_VSCREEN_ERROR=CORE_BOOTSTRAP_SDK36_DISPLAY_IO\nprivate-token-value",
+              true,
+              DeviceTransportIdentity.unknown());
+      JSONObject result = f.manager.start("portrait");
+      assertEquals("VSCREEN_START_UNKNOWN", result.getString("error"));
+      assertEquals("VSCREEN_CORE_BOOTSTRAP_SDK36_DISPLAY_IO", result.getString("diagnostic"));
+      assertEquals(
+          result.getString("diagnostic"),
+          VirtualScreenManager.safeStartOutcome(result).getString("diagnostic"));
+      assertFalse(result.toString().contains("private-token-value"));
+      assertTrue(result.optBoolean("cleanupPending"));
+      assertEquals("START_UNKNOWN", f.journal().getString("state"));
+      f.manager.start("portrait");
+      assertEquals(1, f.calls);
+    }
+  }
+
+  @Test
+  public void unrecognizedCoreOutputDoesNotLeakThroughDiagnostic() throws Exception {
+    try (Fixture f = new Fixture()) {
+      f.receipt =
+          DeviceTransportResult.unknown(
+              "shizuku",
+              "EXECUTION_UNKNOWN",
+              "DSHA_VSCREEN_ERROR=CORE_PRIVATE_SECRET_SDK36_DISPLAY_IO\n",
+              true,
+              DeviceTransportIdentity.unknown());
+      JSONObject result = f.manager.start("portrait");
+      assertEquals("VSCREEN_START_UNKNOWN", result.getString("error"));
+      assertFalse(result.has("diagnostic"));
+      assertFalse(result.toString().contains("PRIVATE_SECRET"));
+      assertEquals("START_UNKNOWN", f.journal().getString("state"));
+    }
   }
 
   @Test

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 维护页次要入口：独立描边小按钮（常规）。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="@dimen/extract_chip_radius" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/shell_surface" />
+            <corners android:radius="@dimen/extract_chip_radius" />
+            <stroke
+                android:width="@dimen/stroke"
+                android:color="@color/shell_line_strong" />
+        </shape>
+    </item>
+</ripple>

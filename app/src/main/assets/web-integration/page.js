@@ -24,7 +24,7 @@ window.__dshaPageBack = function () {
 
 /* 原生展示只读主题；会话选择交给签名集成插件的真实 Host，消息绑定本次页面。 */
 window.__dshaNativePresentation = window.__dshaNativePresentation || (function () {
-  let binding, sequence = 0, observer, frame = 0, pending, deadline, lastColor = '', lastComputed = '', colorCanvas;
+  let binding, sequence = 0, observer, frame = 0, pending, deadline, lastColor = '', lastComputed = '', lastCandidate = '', colorCanvas;
   const send = (type, data) => {
     if (!binding || window.top !== window) return;
     const text = JSON.stringify(Object.assign({type, nonce:binding.nonce,
@@ -41,11 +41,16 @@ window.__dshaNativePresentation = window.__dshaNativePresentation || (function (
     const css = getComputedStyle(body);
     let value = css.getPropertyValue('--dsw-alias-bg-base').trim() || meta && meta.content || css.backgroundColor;
     if (!value || value === 'transparent') return;
+    // IME/分屏 resize 常只改变几何。先比较计算后的颜色输入，避免每帧插拔探针、
+    // 强制样式计算及唤醒其他插件的 DOM 观察器。主题/样式/系统配色事件仍强制核验。
+    const candidate = JSON.stringify([value, css.color, css.backgroundColor, css.colorScheme]);
+    if (candidate === lastCandidate) return;
     const probe = document.createElement('span');
     probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none';
     probe.style.backgroundColor = value;
     if (!probe.style.backgroundColor) return;
     body.appendChild(probe); value = getComputedStyle(probe).backgroundColor; probe.remove();
+    lastCandidate = candidate;
     if (value === lastComputed) return; lastComputed = value;
     // 只将 CSS 颜色规范化为 sRGB；此画布没有网页图像，不读取屏幕或用户内容。
     try {
@@ -59,7 +64,10 @@ window.__dshaNativePresentation = window.__dshaNativePresentation || (function (
     } catch (_) {}
     if (value !== lastColor) { lastColor = value; send('theme-color', {color:value}); }
   };
-  const schedule = () => { if (!frame) frame = requestAnimationFrame(color); };
+  const schedule = (invalidate = true) => {
+    if (invalidate) lastCandidate = '';
+    if (binding && !document.hidden && !frame) frame = requestAnimationFrame(color);
+  };
   const dispatchRoute = () => {
     if (!pending || !binding) return;
     document.dispatchEvent(new CustomEvent('dsha-native-open-session', {detail:JSON.stringify(pending)}));
@@ -79,8 +87,12 @@ window.__dshaNativePresentation = window.__dshaNativePresentation || (function (
     } catch (_) {}
   });
   document.addEventListener('dsha-native-route-ready', dispatchRoute);
-  window.addEventListener('resize', schedule);
-  document.addEventListener('visibilitychange', schedule);
+  window.addEventListener('resize', () => schedule(false));
+  document.addEventListener('visibilitychange', () => {
+    if (frame) cancelAnimationFrame(frame);
+    frame = 0;
+    schedule();
+  });
   const scheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
   if (scheme && typeof scheme.addEventListener === 'function') scheme.addEventListener('change',schedule);
   else if (scheme && typeof scheme.addListener === 'function') scheme.addListener(schedule);
@@ -92,7 +104,8 @@ window.__dshaNativePresentation = window.__dshaNativePresentation || (function (
           && binding.instance === next.instance) { schedule(); return; }
       if (observer) observer.disconnect();
       if (frame) cancelAnimationFrame(frame);
-      cancelRoute(); binding = next; sequence = 0; lastColor = ''; lastComputed = '';
+      frame = 0;
+      cancelRoute(); binding = next; sequence = 0; lastColor = ''; lastComputed = ''; lastCandidate = '';
       window.__dshaIme?.bind(next);
       document.documentElement.setAttribute('data-dsha-native-nonce', next.nonce);
       observer = new MutationObserver(schedule);

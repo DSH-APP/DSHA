@@ -1,0 +1,49 @@
+name: Unit tests (on demand)
+
+# 手动定向单测：inputs → unit。tests 为空时是完整固定输入运行并要求七个夹具用例；
+# 给出 --tests 模式时只是筛选运行，回执标为 full 但不能当发布门禁。
+on:
+  workflow_dispatch:
+    inputs:
+      tests:
+        description: Space-separated Gradle --tests patterns (empty = all tests)
+        required: false
+        type: string
+        default: ''
+      mode:
+        description: full uses restored fixed inputs; source-only skips asset preparation
+        required: false
+        type: choice
+        default: full
+        options: [full, source-only]
+      forks:
+        description: Test JVM forks (1 = same as the release gate)
+        required: false
+        type: choice
+        default: '2'
+        options: ['1', '2', '3', '4']
+      rerun:
+        description: Pass --rerun-tasks
+        required: false
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: unit-tests-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  inputs:
+    uses: ./.github/workflows/_node-inputs.yml
+    with:
+      rebuild_runtime: true
+  unit:
+    needs: inputs
+    uses: ./.github/workflows/_node-unit-tests.yml
+    with:
+      mode: ${{ inputs.mode }}
+      handoff: ${{ needs.inputs.outputs.artifact }}
+      tests: ${{ inputs.tests }}
+      rerun: ${{ inputs.rerun }}
+      require_fixtures: ${{ inputs.mode == 'full' && inputs.tests == '' }}
+      forks: ${{ fromJSON(inputs.forks) }}

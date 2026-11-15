@@ -24,9 +24,10 @@ for(const entry of fs.readdirSync(path.join(raw,'node_modules/@deepseek-ai'),{wi
 }
 function apply(source,recipe,base){for(const part of recipe.patches){assert.equal(source.split(part.before).length,2);const after=(part.prependAsset?fs.readFileSync(path.join(base,part.prependAsset),'utf8')+'\n':'')+part.after;source=source.replace(part.before,after);}return source;}
 const inventoryName='@deepseek-ai/dsh-host-plugin-inventory/lib/index.js',managerName='@deepseek-ai/dsh-plugin-manager/lib/index.js';
+const currentDshVersion=JSON.parse(fs.readFileSync(path.join(assets,'runtime-patches.json'))).dshVersion;
 const originalInventory=fs.readFileSync(path.join(raw,'node_modules',inventoryName),'utf8').replaceAll('\r\n','\n');
 const inventoryRecipe=JSON.parse(fs.readFileSync(path.join(recipes,'plugin-inventory-entries-patch.json')));
-assert.equal(inventoryRecipe.module,inventoryName);assert.equal(inventoryRecipe.dshVersion,'0.2.1-rc.2');
+assert.equal(inventoryRecipe.module,inventoryName);assert.equal(inventoryRecipe.dshVersion,currentDshVersion);
 assert.equal(sha(originalInventory),inventoryRecipe.sourceSha256);
 const inventorySource=apply(originalInventory,inventoryRecipe,assets);
 let reversedInventory=inventorySource;for(const part of [...inventoryRecipe.patches].reverse()){assert.equal(reversedInventory.split(part.after).length,2);reversedInventory=reversedInventory.replace(part.after,part.before);}assert.equal(reversedInventory,originalInventory,'unrelated full-inventory projection/semantics changed');
@@ -37,7 +38,7 @@ let beforeManager=fs.readFileSync(path.join(raw,'node_modules',managerName),'utf
 const rawManagerSha=sha(beforeManager);
 for(const row of JSON.parse(fs.readFileSync(path.join(assets,'runtime-patches.json'))).active){const recipe=JSON.parse(fs.readFileSync(path.join(assets,row.asset)));if(row.asset==='plugin-manager-entries-patch.json')continue;if((row.module??recipe.module)===managerName)beforeManager=apply(beforeManager,recipe,assets);}
 const managerRecipe=JSON.parse(fs.readFileSync(path.join(recipes,'plugin-manager-entries-patch.json')));
-assert.equal(managerRecipe.module,managerName);assert.equal(managerRecipe.dshVersion,'0.2.1-rc.2');assert.equal(managerRecipe.sourceSha256,rawManagerSha);
+assert.equal(managerRecipe.module,managerName);assert.equal(managerRecipe.dshVersion,currentDshVersion);assert.equal(managerRecipe.sourceSha256,rawManagerSha);
 const afterManager=apply(beforeManager,managerRecipe,assets);
 let reversed=afterManager;for(const part of [...managerRecipe.patches].reverse()){assert.equal(reversed.split(part.after).length,2);reversed=reversed.replace(part.after,part.before);}assert.equal(reversed,beforeManager,'unrelated manager/proof/lifecycle code changed');
 const beforeFile=path.join(owned,'manager-before.mjs'),afterFile=path.join(owned,'manager-after.mjs');
@@ -60,7 +61,7 @@ const live=(id,extra={})=>({id,name:pathToFileURL(pluginFile).href,config:{id},.
 const rows=[live('active'),live('disabled',{disabled:true}),{id:'pending',name:pathToFileURL(pendingFile).href},live('failed',{config:{fail:true}})];
 function bundle(name,entries){const root=path.join(owned,name);fs.mkdirSync(root);fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({name,version:'1.0.0',dsh:{bundle:{patch:'cordis.patch.yml'}}}));fs.writeFileSync(path.join(root,'cordis.patch.yml'),JSON.stringify([{insert:entries}]));link(root,path.join(profileDir,'node_modules',name));}
 bundle('fixture-base-bundle',rows);bundle('fixture-toggle-bundle',[live('toggled')]);
-const installAnchor=path.join(owned,'installation.json');fs.writeFileSync(installAnchor,JSON.stringify({name:'@deepseek-ai/dsh',version:'0.2.1-rc.2'}));
+const installAnchor=path.join(owned,'installation.json');fs.writeFileSync(installAnchor,JSON.stringify({name:'@deepseek-ai/dsh',version:currentDshVersion}));
 const profile={name:'web',dir:profileDir,home,patchPath:path.join(profileDir,'cordis.patch.yml'),overlays:[],startedBundles:['fixture-base-bundle'],installAnchor};
 fs.writeFileSync(path.join(profileDir,'package.json'),JSON.stringify({name:'entries-proof',private:true,dsh:{profile:{bundles:['fixture-base-bundle']}}}));fs.writeFileSync(profile.patchPath,'[]\n');
 const configPath=path.join(profileDir,'cordis.yml');fs.writeFileSync(configPath,'[]\n');

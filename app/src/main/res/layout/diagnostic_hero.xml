@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  自检状态卡：图标 + 一句结论 + 唯一主按钮。手机与平板（layout-sw600dp）共用。
+  diagnostic_headline / diagnostic_status / diagnostic_refresh 的 id 与类型保持不变。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" style="@style/ShellCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/shell_card_pad">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+    <ImageView android:id="@+id/diagnostic_badge" android:layout_width="48dp" android:layout_height="48dp" android:background="@drawable/bg_diag_badge" android:importantForAccessibility="no" android:padding="12dp" android:src="@drawable/ic_onb_info" app:tint="@color/shell_text_muted" />
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:layout_weight="1" android:orientation="vertical">
+      <TextView android:id="@+id/diagnostic_headline" style="@style/ShellCardTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityLiveRegion="polite" android:textSize="17sp" android:text="@string/diag248_idle_title" />
+      <TextView android:id="@+id/diagnostic_status" style="@style/ShellCardBody" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="@string/diag248_idle_sub" />
+    </LinearLayout>
+  </LinearLayout>
+  <ProgressBar android:id="@+id/diagnostic_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="14dp" android:indeterminate="true" android:indeterminateTint="@color/shell_accent" android:visibility="gone" />
+  <Button android:id="@+id/diagnostic_refresh" style="@style/ShellPrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:text="@string/diag248_start" />
+</LinearLayout>

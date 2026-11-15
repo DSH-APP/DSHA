@@ -12,8 +12,12 @@ import org.json.JSONObject;
 /** Agent-see-only immutable raw snapshots. Native preview frames never enter this owner. */
 @androidx.annotation.RequiresApi(30)
 final class VirtualScreenObservedPixels {
-  static final long BYTE_LIMIT = 24L * 1024 * 1024, TTL_MS = 30_000;
-  static final int COUNT_LIMIT = 2;
+  // 预算常量与显示规格白名单共用同一来源：白名单的预算核算不能和执行层的实际上限漂移。
+  static final long
+      BYTE_LIMIT = com.deepseekharness.app.util.VirtualScreenDisplayPreset.OBSERVED_BYTE_LIMIT,
+      TTL_MS = 30_000;
+  static final int COUNT_LIMIT =
+      com.deepseekharness.app.util.VirtualScreenDisplayPreset.OBSERVED_COUNT_LIMIT;
   private final LinkedHashMap<String, Entry> entries = new LinkedHashMap<>();
   private long allocated;
 

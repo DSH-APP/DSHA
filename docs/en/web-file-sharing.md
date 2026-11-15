@@ -2,7 +2,7 @@
 
 Review date: 2026-10-21. Reference baseline: published F10 `087724c` and the current build190 working tree. This page is not a receipt for system-chooser or recipient-application testing during this work.
 
-Since build164, DSHA's production chat page has provided file APIs. The bundled mobile UI 3.0.5 integrated them at that time; the current locked mobile UI is 3.2.1. Tapping Share in the file tree or preview opens the Android chooser flow. See [bridge and files](bridge-and-files.md) for the native bridge, DocumentsProvider, and file read/export boundaries.
+Since build164, DSHA's production chat page has provided file APIs. The bundled mobile UI 3.0.5 integrated them at that time; the current locked mobile UI is 3.3.1. Tapping Share in the file tree or preview opens the Android chooser flow. See [bridge and files](bridge-and-files.md) for the native bridge, DocumentsProvider, and file read/export boundaries.
 
 Third-party Web plugins can pass a `File` or `Blob`:
 

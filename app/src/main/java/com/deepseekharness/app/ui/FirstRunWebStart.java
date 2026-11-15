@@ -22,7 +22,7 @@ final class FirstRunWebStart {
   private FirstRunWebStart() {}
 
   static Intent mainIntent(Context context, boolean firstSetup) {
-    Intent intent = new Intent(context, MainActivity.class).putExtra("open_launch", true);
+    Intent intent = MainActivity.homeIntent(context);
     if (firstSetup) {
       synchronized (FirstRunWebStart.class) {
         var prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
@@ -67,7 +67,8 @@ final class FirstRunWebStart {
           () -> {
             // Installation itself stops the old runtime. This is the user's one setup request;
             // the generation fence still rejects it if a later explicit Stop wins.
-            controller.startProtectedWeb(ticket, false, false, null);
+            if (!controller.startProtectedWeb(ticket, false, false, null))
+              HarnessService.finishVisibleStart(app, ticket);
           });
     } catch (RuntimeException rejected) {
       HarnessService.finishVisibleStart(app, ticket);
@@ -81,7 +82,7 @@ final class FirstRunWebStart {
       boolean safe,
       boolean recover,
       java.util.function.Consumer<String> status,
-      Runnable completed) {
+      java.util.function.Consumer<Boolean> completed) {
     Context app = activity.getApplicationContext();
     com.deepseekharness.app.util.WebStartProtection.Ticket ticket;
     try {
@@ -102,10 +103,14 @@ final class FirstRunWebStart {
             } catch (java.io.IOException | RuntimeException unavailable) {
               protectionFailure(app, status, unavailable);
             } finally {
-              // Recovery retains this ticket across its own Stop; its controller continuation
-              // owns cleanup. An ordinary accepted start has already handed off atomically.
-              if (!accepted || !recover) HarnessService.finishVisibleStart(app, ticket);
-              if (completed != null) MAIN.post(completed);
+              // Recovery retains this ticket across its own Stop; a start deferred behind the
+              // old-instance check retains it across that read-only check. Both controller
+              // continuations own cleanup; an ordinary accepted start already handed off.
+              boolean deferred = accepted && ticket.isDeferred();
+              if (!accepted || (!recover && !deferred))
+                HarnessService.finishVisibleStart(app, ticket);
+              boolean submitted = accepted;
+              if (completed != null) MAIN.post(() -> completed.accept(submitted));
             }
           });
       return true;

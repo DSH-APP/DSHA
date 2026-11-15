@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 终端“结束全部”等软危险按钮：危险浅底 + 危险描边 + 主题涟漪；
+     禁用态同样变灰（结束全部进行中不允许重复触发）。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/terminal_ripple">
+
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="@dimen/radius_control" />
+        </shape>
+    </item>
+
+    <item>
+        <selector>
+            <item android:state_enabled="false">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/disabled" />
+                    <corners android:radius="@dimen/radius_control" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/terminal_danger_soft" />
+                    <corners android:radius="@dimen/radius_control" />
+                    <stroke
+                        android:width="@dimen/stroke"
+                        android:color="@color/terminal_danger" />
+                </shape>
+            </item>
+        </selector>
+    </item>
+</ripple>

@@ -1,0 +1,7 @@
+# DSHA 0.2.1-rc.3-20261101.1430-dsh0.2.1-rc.5 / build245
+
+- Recover interrupted maintenance now tells pending transactions apart from unreadable records. When a record cannot be read it says which kind, why, and what to do next, instead of showing only a raw error code, and it no longer repeats a scan that is bound to fail.
+- When plugin transaction journals cannot be read, the maintenance page offers Isolate unreadable plugin journals. After you confirm the listed records natively, they are moved unchanged into `plugin-install-quarantine` with a manifest; nothing is deleted or replayed, and the action is refused if the records changed after confirmation. Sessions and settings are not affected; the related plugins may need to be reinstalled. The emergency repair page offers the same action.
+- Host data, runtime and environment-rebuild transactions may be half-applied, so when they cannot be read DSHA does not isolate them; it reports the exact reason and suggests exporting diagnostics for support, rather than skipping a rollback and leaving personal data inconsistent.
+- Fixes a deadlock when both the old and new data directories exist: every check failed to read, and Select data directory was then refused. Selecting the data directory is no longer blocked by that state; other pending transactions still come first.
+- Verification scope: local unit tests and plugin-transaction Python regressions pass; no device verification. Raises versionCode to 245. The DSHA revision remains 0.2.1-rc.3 and bundled DSH remains 0.2.1-rc.5.

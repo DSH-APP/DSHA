@@ -1,0 +1,53 @@
+{
+  "engine": "chromium",
+  "passed": true,
+  "cases": [
+    {
+      "name": "unknown",
+      "pass": true
+    },
+    {
+      "name": "fallback outside Host ids",
+      "pass": true
+    },
+    {
+      "name": "archived",
+      "pass": true
+    },
+    {
+      "name": "old queued nonce cannot select after rebind",
+      "pass": true
+    },
+    {
+      "name": "native hide cancellation prevents later catalogue opening",
+      "pass": true
+    },
+    {
+      "name": "wait for real workspace archive baseline before opening",
+      "pass": true
+    },
+    {
+      "name": "confirmed real rc2 selection closes drawer once and retains draft",
+      "pass": true
+    },
+    {
+      "name": "already current confirmed selection closes drawer without replaying retain",
+      "pass": true
+    },
+    {
+      "name": "stale incoming native nonce is rejected",
+      "pass": true
+    }
+  ],
+  "sourceHashes": {
+    "app/src/main/assets/app-integration/client.js": "efb90327ebcffaa655150e07e8816296bfec08fcce565aa47558da4f9ea3a72d",
+    "app/src/main/assets/web-integration/page.js": "d900a265e77b9f19d7b34c9fae5997fa45582620e5b0d591e1153ae1f12db381",
+    "app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/client.js": "6197a0ce14c04043c7a60022c95c519234956ee07542742d7264879528f3ecc2",
+    "<local-workspace>\\cache\\host-runtimes\\dsh-0.2.1-rc.3-win32-x64\\raw\\node_modules\\@deepseek-ai\\dsh-client-ui-workspace\\lib\\client.js": "9c2c17a66a5c20de00ac2852cb76debb5237439e97f877403bcaa2a471086544",
+    "tools/rc1-browser-fixture.mjs": "02955da5dfe9136fdd55f98bb8326d098c253e62f06d06a2aa349a710fd3c5c9",
+    "<local-workspace>\\source\\build198-sunset-20261027\\tools\\test-mobile-native-route.mjs": "b87330f0ab09599707b2feab062174158fd27156403488e31c2eef6f439a9972"
+  },
+  "scope": "Real locked rc2 UiWorkspaceService.openSession/replaceMain and snapshot store; current mobile drawer close and production native route JS; synthetic catalogue/reference transport",
+  "deviceAcceptance": false,
+  "liveModelRequests": false
+}

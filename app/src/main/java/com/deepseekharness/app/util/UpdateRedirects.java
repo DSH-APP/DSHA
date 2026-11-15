@@ -46,7 +46,11 @@ public final class UpdateRedirects {
           target = next;
           continue;
         }
-        if (code != 200 && !(offset > 0 && code == 206)) throw new IOException("HTTP " + code);
+        // An absent feed means no published candidates. An absent APK is still a download failure.
+        if (code != 200
+            && !(offset > 0 && code == 206)
+            && !(UpdateLocations.feed(original) && (code == 404 || code == 410)))
+          throw new UpdateFailures.HttpFailure(code);
         keep = true;
         return conn;
       } finally {

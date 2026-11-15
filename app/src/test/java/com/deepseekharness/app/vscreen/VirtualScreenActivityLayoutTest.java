@@ -145,6 +145,7 @@ public final class VirtualScreenActivityLayoutTest {
     outcome.setText("操作完成");
     layout(384, 780);
     int before = preview.getTop();
+    int heightBefore = preview.getHeight();
     int parentBefore = ((View) preview.getParent()).getTop();
     String failure = frameError();
     outcome.setText(failure);
@@ -154,7 +155,8 @@ public final class VirtualScreenActivityLayoutTest {
         parentBefore,
         ((View) preview.getParent()).getTop());
     assertEquals(before, preview.getTop());
-    assertEquals(1, outcome.getLineCount());
+    assertEquals("Failure text must not resize the preview", heightBefore, preview.getHeight());
+    assertTrue("Result strip is bounded to two lines", outcome.getLineCount() <= 2);
     assertTrue("Truncated status must open its full detail", outcome.performClick());
     drain();
     var dialog = ShadowDialog.getLatestDialog();
@@ -169,10 +171,12 @@ public final class VirtualScreenActivityLayoutTest {
     View preview = (View) field(activity, "preview");
     layout(320, 600);
     int before = ((View) preview.getParent()).getTop();
+    int height = preview.getHeight();
     ((TextView) field(activity, "state")).setText("状态说明".repeat(80));
     ((TextView) field(activity, "detail")).setText("com.example.longpackage.".repeat(30));
     layout(320, 600);
     assertEquals(before, ((View) preview.getParent()).getTop());
+    assertEquals(height, preview.getHeight());
     assertEquals(1, ((TextView) field(activity, "state")).getLineCount());
     assertEquals(1, ((TextView) field(activity, "detail")).getLineCount());
   }
@@ -258,6 +262,112 @@ public final class VirtualScreenActivityLayoutTest {
             & android.view.WindowManager.LayoutParams.SOFT_INPUT_MASK_ADJUST);
   }
 
+  @Test
+  public void stoppedPageShowsCreateActionsAndHidesRunningTools() throws Exception {
+    assertEquals(View.VISIBLE, activity.findViewById(R.id.vscreen_create_group).getVisibility());
+    assertEquals(View.GONE, activity.findViewById(R.id.vscreen_tool_group).getVisibility());
+    assertEquals(View.GONE, activity.findViewById(R.id.vscreen_verify_close).getVisibility());
+    assertEquals(View.VISIBLE, activity.findViewById(R.id.vscreen_stage_card).getVisibility());
+    assertEquals("未开启", ((TextView) field(activity, "state")).getText().toString());
+  }
+
+  @Test
+  public void operatorCreateNeverReadsOrWritesTheAssistantScreenMode() throws Exception {
+    var prefs =
+        activity.getSharedPreferences(
+            com.deepseekharness.app.util.Constants.PREFS, android.content.Context.MODE_PRIVATE);
+    prefs.edit().putString(com.deepseekharness.app.screen.ScreenMode.KEY, "off").commit();
+    var create = VirtualScreenActivity.class.getDeclaredMethod("create", String.class);
+    create.setAccessible(true);
+    create.invoke(activity, "portrait");
+    for (int i = 0; i < 40 && (boolean) field(activity, "busy"); i++) {
+      Thread.sleep(50);
+      drain();
+    }
+    assertEquals(false, field(activity, "busy"));
+    // 操作者自己创建虚拟屏不能顺带把助手授权切到虚拟屏（ADR0003 决定六）。
+    assertEquals("off", prefs.getString(com.deepseekharness.app.screen.ScreenMode.KEY, null));
+  }
+
+  @Test
+  public void pageExplainsWhetherTheAssistantMayUseThisScreen() throws Exception {
+    var line = VirtualScreenActivity.class.getDeclaredMethod("assistantLine");
+    line.setAccessible(true);
+    var render = VirtualScreenActivity.class.getDeclaredMethod("render");
+    render.setAccessible(true);
+    field(activity, "assistantMode", null);
+    assertEquals("", line.invoke(activity));
+    field(activity, "assistantMode", com.deepseekharness.app.util.ScreenModePolicy.Mode.OFF);
+    assertEquals("助手：不可使用本屏（识屏模式 = 关闭）", line.invoke(activity));
+    field(activity, "assistantMode", com.deepseekharness.app.util.ScreenModePolicy.Mode.PHYSICAL);
+    assertEquals("助手：不可使用本屏（识屏模式 = 实体识屏）", line.invoke(activity));
+    field(activity, "assistantMode", com.deepseekharness.app.util.ScreenModePolicy.Mode.VIRTUAL);
+    assertEquals("助手：可使用本屏（识屏模式 = 虚拟识屏）", line.invoke(activity));
+    render.invoke(activity);
+    assertEquals(View.VISIBLE, activity.findViewById(R.id.vscreen_assistant_row).getVisibility());
+    assertEquals(
+        "识屏模式", ((Button) activity.findViewById(R.id.vscreen_assistant_open)).getText().toString());
+  }
+
+  @Test
+  public void startUnknownOffersDiagnosticsAndDoesNotRepeatTheCardMessage() throws Exception {
+    var manager = (VirtualScreenManager) field(activity, "manager");
+    var life = VirtualScreenManager.class.getDeclaredField("lifecycleState");
+    life.setAccessible(true);
+    life.set(manager, com.deepseekharness.app.util.VirtualScreenLifecycleState.START_UNKNOWN);
+    TextView outcome = (TextView) field(activity, "operationResult");
+    outcome.setText("上次启动结果未知");
+    var render = VirtualScreenActivity.class.getDeclaredMethod("render");
+    render.setAccessible(true);
+    render.invoke(activity);
+    Button verify = activity.findViewById(R.id.vscreen_verify_close);
+    assertEquals(View.VISIBLE, verify.getVisibility());
+    assertEquals("查看启动记录", verify.getText().toString());
+    assertEquals(View.GONE, outcome.getVisibility());
+    assertEquals(View.GONE, activity.findViewById(R.id.vscreen_create_group).getVisibility());
+    assertEquals("待清理", ((TextView) field(activity, "state")).getText().toString());
+    life.set(manager, com.deepseekharness.app.util.VirtualScreenLifecycleState.STOPPED);
+  }
+
+  @Test
+  public void startRecordsKeepOnlyVirtualScreenLinesNewestFirst() {
+    String history =
+        "11-03 06:15:01 [WEB_START] ok\n"
+            + "11-03 06:15:02 [VSCREEN_START] VSCREEN_START_RESULT_UNKNOWN\n"
+            + "11-03 06:15:03 [RUNTIME_TRIAL] IO_FAILURE\n"
+            + "11-03 06:15:04 [VSCREEN_START_RESULT] epoch=1 {\"error\":\"VSCREEN_START_UNKNOWN\"}\n";
+    String out = VirtualScreenActivity.startRecords(history, 8);
+    assertFalse(out.contains("WEB_START"));
+    assertFalse(out.contains("RUNTIME_TRIAL"));
+    assertTrue(out.indexOf("06:15:04") < out.indexOf("06:15:02"));
+    assertEquals("", VirtualScreenActivity.startRecords("x [OTHER] y", 8));
+  }
+
+  @Test
+  public void viewStateFollowsLifecycleFactsWithCleanupFirst() {
+    var S = com.deepseekharness.app.util.VirtualScreenLifecycleState.class;
+    assertEquals(
+        VirtualScreenActivity.ViewState.UNSUPPORTED,
+        VirtualScreenActivity.viewState(false, null, true, true));
+    assertEquals(
+        VirtualScreenActivity.ViewState.STOPPED,
+        VirtualScreenActivity.viewState(
+            true, com.deepseekharness.app.util.VirtualScreenLifecycleState.STOPPED, false, false));
+    assertEquals(
+        VirtualScreenActivity.ViewState.STARTING,
+        VirtualScreenActivity.viewState(
+            true, com.deepseekharness.app.util.VirtualScreenLifecycleState.STOPPED, false, true));
+    assertEquals(
+        VirtualScreenActivity.ViewState.RUNNING,
+        VirtualScreenActivity.viewState(
+            true, com.deepseekharness.app.util.VirtualScreenLifecycleState.READY, true, true));
+    for (var life : S.getEnumConstants())
+      if (life.cleanupPending())
+        assertEquals(
+            VirtualScreenActivity.ViewState.CLEANUP,
+            VirtualScreenActivity.viewState(true, life, true, true));
+  }
+
   private static final class PendingExecutor extends AbstractExecutorService {
     final ArrayList<Runnable> queued = new ArrayList<>();
     boolean stopped;
@@ -303,5 +413,29 @@ public final class VirtualScreenActivityLayoutTest {
     send.performClick();
     send.performClick();
     assertEquals("A second busy click must not enqueue a replay", 1, pending.queued.size());
+  }
+
+  @Test
+  public void displaySizeRowShowsTheWhitelistSelectionAndAppliesOnNextCreate() throws Exception {
+    var render = VirtualScreenActivity.class.getDeclaredMethod("render");
+    render.setAccessible(true);
+    VirtualScreenDisplaySettings.setPreset(
+        activity, com.deepseekharness.app.util.VirtualScreenDisplayPreset.DEFAULT_ID);
+    render.invoke(activity);
+    drain();
+    View row = activity.findViewById(R.id.vscreen_display_spec_row);
+    TextView sub = (TextView) activity.findViewById(R.id.vscreen_display_spec_sub);
+    assertNotNull(row);
+    assertNotNull(sub);
+    assertEquals(View.VISIBLE, row.getVisibility());
+    assertTrue(sub.getText().toString(), sub.getText().toString().contains("1008×1792 @320"));
+    assertTrue("默认也要显示逻辑 dp", sub.getText().toString().contains("504×896 dp"));
+
+    VirtualScreenDisplaySettings.setPreset(activity, "compat-720");
+    render.invoke(activity);
+    drain();
+    assertTrue(sub.getText().toString(), sub.getText().toString().contains("720×1600 @320"));
+    assertTrue(sub.getText().toString(), sub.getText().toString().contains("360×800 dp"));
+    assertEquals("compat-720", VirtualScreenDisplaySettings.preset(activity).id);
   }
 }

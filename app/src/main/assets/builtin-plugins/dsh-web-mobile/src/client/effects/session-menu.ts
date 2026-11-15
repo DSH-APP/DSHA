@@ -9,11 +9,10 @@
  * The host menu is React-owned (ui-workspace) with no extension slot, so the
  * item is injected into the portaled `[role="menu"]` list by cloning the
  * host's own item markup (reusing the hashed classes keeps the styling
- * identical), and re-injected whenever React recreates the menu. Two menu
- * shapes are supported: rc.2 nests icon/label spans in the item, while 0.1.5
- * renders the label directly in the item button (shared `_item_1nxmc_92`
- * menu component, no child elements) — label reads and the injected text
- * fall back across both.
+ * identical), and re-injected whenever React recreates the menu. The item
+ * shape is the primitives Menu's: `_itemIcon` + `_itemLabel` spans inside the
+ * `role="menuitem"` button (dsh-client-ui-primitives 0.2.2 lib/index.js
+ * MenuItem). The 0.1.5 bare-text item shape was dropped with the host floor.
  *
  * Row → session id: session rows carry no id in the DOM, so the id is read
  * off the host's own stable anchors (see `rowSessionId`).
@@ -27,7 +26,7 @@ import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import { MOBILE_QUERY, TOUCH_QUERY, installMobileEffect } from '../platform/breakpoints.ts'
 import { getFrame } from '../platform/frame.ts'
 import { toggleDrawer } from './drawer-close.ts'
-import { currentSessionIdOf, sessionsCanClear, verifySessionDeleted } from '../core/sessions-compat.ts'
+import { currentSessionIdOf, verifySessionDeleted } from '../core/sessions-compat.ts'
 import { NS } from '../i18n/locales.ts'
 import { findSessionIdInFiber, reactFiberOf } from './session-row-fiber.ts'
 
@@ -98,7 +97,7 @@ export function installSessionMenuDelete(ctx: ClientContext): void {
     let closeDialogOnKey: ((event: KeyboardEvent) => void) | null = null
 
     // 请求身份（epoch），每次确认点击自增。更晚的删除一发起，在途响应即过期 ——
-    // 过期结果不得 closeDialog / clear / 收抽屉，否则会拿旧响应改新对话框与新当前会话。
+    // 过期结果不得 closeDialog / 收抽屉，否则会拿旧响应改新对话框与新当前会话。
     let deleteEpoch = 0
 
     /**
@@ -132,17 +131,9 @@ export function installSessionMenuDelete(ctx: ClientContext): void {
       return findSessionIdInFiber(reactFiberOf(row), isKnownSessionId)
     }
 
-    /**
-     * Read one menu item's visible label across host generations: rc.2 nests
-     * the text in an `_itemLabel` span (beside an `_itemIcon`), while 0.1.5
-     * puts it directly in the button (`_item_1nxmc_92`, no child elements).
-     * Falling back to the item's own textContent covers both — svg icons
-     * contribute no text, so rc.2 items read identically either way.
-     */
-    const itemLabel = (item: HTMLElement): string => {
-      const label = item.querySelector<HTMLElement>('[class*="_itemLabel"]')
-      return (label ?? item).textContent?.trim() ?? ''
-    }
+    /** Read one menu item's visible label from its `_itemLabel` span. */
+    const itemLabel = (item: HTMLElement): string =>
+      item.querySelector<HTMLElement>('[class*="_itemLabel"]')?.textContent?.trim() ?? ''
 
     /**
      * Whether a menu list is the host's per-session row menu. Containment
@@ -291,12 +282,12 @@ export function installSessionMenuDelete(ctx: ClientContext): void {
           }
         }
         // 「是否仍是当前会话」必须在**请求完成时**重新核对：请求期间用户可能已经切到
-        // 别的会话，用请求前算好的旧值 clear() 会把新当前会话的选中态清掉（2026-10-11）。
+        // 别的会话，用请求前算好的旧值会把新当前会话所在的抽屉收掉（2026-10-11）。
+        // （宿主 >=0.2.2 没有 sessions.clear()，旧代的「清选中态」一步已随下限删除。）
         const wasCurrent = currentSessionIdOf(ctx.sessions.list.getSnapshot()) === sessionId
         // 过期结果（期间又发起过删除）只丢弃，不关别人的对话框、也不动状态。
         if (epoch !== deleteEpoch) return
         closeDialog()
-        if (wasCurrent && sessionsCanClear(ctx.sessions)) ctx.sessions.clear()
         // Repull the baseline so the deleted row disappears; called AS A METHOD
         // on ctx.sessions because refresh() reads `this.manager`.
         const sessions = ctx.sessions as { refresh?: () => Promise<void> }
@@ -378,19 +369,12 @@ export function installSessionMenuDelete(ctx: ClientContext): void {
         icon.innerHTML = TRASH_SVG
         icon.style.color = DANGER_COLOR
       }
+      // A template without a label span is an unknown shape: inject nothing
+      // rather than ship a delete item that reads as the cloned host action.
       const label = button.querySelector<HTMLElement>('[class*="_itemLabel"]')
-      if (label !== null) {
-        label.textContent = navT('deleteSession')
-        label.style.color = DANGER_COLOR
-      } else if (button.firstElementChild === null) {
-        // 0.1.5 shape: the menuitem button carries its text directly (no
-        // `_itemLabel` span, no icon element). Replace the whole text and let
-        // the danger color ride the button itself. A button WITH element
-        // children but no label span is an unknown future shape — leave its
-        // text alone rather than guess.
-        button.textContent = navT('deleteSession')
-        button.style.color = DANGER_COLOR
-      }
+      if (label === null) return
+      label.textContent = navT('deleteSession')
+      label.style.color = DANGER_COLOR
       button.setAttribute('data-mobile-nav', 'session-delete')
       button.addEventListener('click', (event) => {
         event.preventDefault()

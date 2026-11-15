@@ -1,7 +1,7 @@
 # 运行环境、数据与插件机制
 
 本文面向准备修改 DSHA 的开发者，说明环境从哪里来、数据归谁、插件如何进入真实启动链。
-核验日期：2026-10-21。当前说明以已发布F10 `087724c`为来源基线，按 build190 / F13工作树维护：Ubuntu base10、官方 DSH `0.2.1-rc.2`、Node 24、随包 pnpm `10.34.5`。F11为未上传的本地检查点，不能称新增已发布版本；最终身份与执行范围见[README](../README.md)；[F12记录](releases/v0.2.1-rc.2-build190-fix12-20261021.md)保留已发布历史归属，不从本页推导新设备或真实账号验收。 本批最终软件与产物范围由[F13记录](releases/v0.2.1-rc.2-build190-fix13-20261021.md)统一填写；本文不预填最终版本或正式总数。
+> 核验基线：2026-11-05（S1 运行时切换前后的源码与固定输入核对）。当前 S1 运行时身份为单一 Standard：Ubuntu base10、官方 DSH `0.2.2-rc.1`、Node 24、随包 pnpm `10.34.5`；APK 发布版本/版本码仍以发布提交和 [README](../README.md) 为准。F10–F13、build190 与 Low 相关段落属于历史记录，不代表当前构建；本文不预填测试总数或设备验收结论。
 默认引擎是 `proot`，用户可显式选择 `proroot`；当前生产方案不使用 bxroot。
 这里的流程和约束属于 DSHA 实现，不代表 Ubuntu、Node、pnpm 或 DSH 上游对 Android 的保证。
 本文是源码导航，不是一次新的构建、设备验收或所有旧数据兼容性证明。
@@ -74,6 +74,27 @@ guest 中的 `/root` 不是 Android UID0；工具审批模式也不会改变应�
 Android 宿主、guest bash 与实际 Node 的 PID 不能混作同一个进程身份。
 当前 proroot vendor 为 `v1.2.8`，受[本地 ABI 锁](../tools/proroot-compat/abi.lock.json)约束；它与历史 DSHA 应用版本号无关。
 厂商二进制、兼容适配器和可从源码生成的部分需分别看来源说明，不能承诺全部 vendor 可源码重建。
+
+### 1.3 环境更新与整树重建会动哪些目录（明文契约）
+
+覆盖升级有两条路径，替换范围不同：
+
+1. **受管运行时更新**（[`EnvironmentMaintenance.update`](../app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java)）：`.offline-identity` 的 Ubuntu 基础版本未变时走这条，只替换 [`ManagedRuntimeLayout.paths()`](../app/src/main/java/com/deepseekharness/app/util/ManagedRuntimeLayout.java) 列出的受管路径。versionCode 或内置 DSH 版本变化本身不会把 `/opt`、工作区或其它数据当作重建目标。
+2. **整树重建**（`EnvironmentMaintenance.rebuild`）：首次部署、Ubuntu 基础环境版本变化、用户显式“重建环境”或恢复指定现场时，整个 `files/linux` 先移为 `previous-linux`，再解压新 rootfs；随后 (a) 受管资产重新注入，(b) 数据快照恢复。
+
+| 目录 | 受管更新 | 整树重建 | 归属 |
+|---|---|---|---|
+| `ManagedRuntimeLayout.paths()`（如 `root/dsh-bin/gh`、`usr/local/share/dsha/gh-proxy.mjs`、`opt/gh/bin/gh`） | 替换 | 由受管注入重建 | 受管 |
+| `/usr/local/share/dsha/**` | 同受管路径 | 受管注入 | 受管；不要放用户文件 |
+| `/opt/**`（`opt/gh/bin/gh` 受管路径除外） | 不动 | 作为用户工具数据复制并恢复 | 用户工具 |
+| `/usr/**`（含 `/usr/local/bin`） | 不动（受管子路径除外） | 新系统树整段替换，**不保留** | 系统 |
+| `/root/**`、`/data/**`、工作区等 | 不动 | 数据快照逐项恢复（机器状态/凭据按现有规则排除） | 数据 |
+
+判定单点是 [`util/MaintenanceToolPaths`](../app/src/main/java/com/deepseekharness/app/util/MaintenanceToolPaths.java)（`SYSTEM_ROOTS` / `USER_TOOL_ROOTS` / `managed()`），回归见 `MaintenanceToolPathsTest` 与 `NativeEnvironmentRebuildTest`。
+
+**实测成本与上限**：整树重建把 `/opt` 当数据复制（本机实测 **3.5 GB、48,294 条目**）。快照受 `BackupLimits.ENTRIES = 100,000` 的硬上限约束，大 SDK/缓存会让重建失败或耗尽空间；`rebuild` 在切换旧树前做有界预检，超限时给出“用户工具目录超过环境重建快照上限”的可操作错误，而不是写到一半才失败。建议把大体积工具放在 `/opt/<tool>/…` 并定期清理；不要把用户可执行文件放到 `/usr/local/bin`（重建会丢）。
+
+**受管 gh 的供给链**：第 12 项固定输入 `gh-cli.tar.gz`（官方 linux-arm64 release 归档）由 `RuntimeTools` 只提取固定成员到受管路径 `opt/gh/bin/gh` 并二次校验摘要；源固定输入名是 `gh-cli.tar.gz`，APK 内的成员名是 `assets/gh-cli.bin`：AGP 9.1.1 的资产合并会把 `.gz` 自动 gunzip 并去掉扩展名（build328/329 只剩 `assets/gh-cli.tar`），所以 `RuntimeTools` 按打包名打开、旧包回退源名，`tools/verify-apk-managed-assets.py` 在发布链核对实际成员。包装脚本在二进制缺失/损坏时按固定 URL + 固定摘要自举兜底，失败打印确切恢复命令。gh 是静态 Go 二进制，绕过 proroot 路径翻译、只能用宿主路径读取 CA 与配置：`RuntimeTools` 用 rootfs 的 canonical 路径设置 `DSHA_GH_HOST_ROOT`（`/data/user/0` 别名视图在 guest 内不可达），包装脚本再按 `/data/user/0` 与 `/data/data` 两个数据视图依次寻找受管 CA，两处都缺时打印明确错误并退出，不再静默回退旧系统 CA。事故根因、三件套协作与手工恢复命令见 [build328 回执](releases/v0.2.1-rc.5-build328-gh-provision-20261105.md)。
 
 ## 二、首次启动与普通启动
 
@@ -164,6 +185,8 @@ UNKNOWN保留原DOM或Gecko会话与后台保护，撤屏幕epoch、旧任务票
 `StartupRecoveryModel`读取恢复状态、快照和可处理插件，界面本身不持有后台维护所有权。
 短暂 `RECOVERY_BUSY` 在任务结束后应重新读取，成功读取要清除旧 error。
 普通插件只读查询的忙状态不能冒充“正在修改环境”。
+
+插件只读查询的就绪检查（`RuntimeTools.queryReady`）与 Python 动态库修复（`RootfsInstaller.python`）共用 `util/GuestRegularFile`：在 Ubuntu 运行根内按 guest 语义逐级解析符号链接，只接受落在运行根内、本 UID 可读的普通文件；apt/dpkg 或外部 root 把 soname 换成链接不再被误判为“运行工具或资产不完整”，外部绑定、越界和循环链接仍为未就绪。结论变化时写 `PLUGIN_QUERY_READINESS` 诊断并注明具体文件与原因（build217）。
 Main 对显式插件/设置导航保留故障提示，但不应抢走修复界面的前台。
 真实 pending 事务、Start/Stop 和环境维护仍是有效屏障；界面可用不等于绕过插件加载检查。
 
@@ -228,7 +251,7 @@ proroot 的 `--link2symlink` 会改变部分文件链接语义，Node 可能将�
 
 [builtin-plugins.json](../app/src/main/assets/builtin-plugins.json)声明随包插件及其 guest 位置。
 官方核心 bundle、APK 提供的内置 wrapper 与用户第三方包分别识别，不用同名目录混为一层。
-当前内置移动插件为 `3.2.1`，锁定来源及本地差异由构包输入管理。
+当前内置移动插件为 `3.3.5`（适配宿主 0.2.2），锁定来源及本地差异由构包输入管理。
 系统插件字节从当前 APK 的受管证明重建；用户备份保存其启停意图，不复制系统实体充当用户源码。
 用户插件归档包含实际源码、依赖、包装和来源关系，不能恢复时重新解析依赖后仍声称是原件。
 
@@ -314,9 +337,21 @@ proroot 中 Git 源码 prepare 调用原生 Go 工具时，可能遇到内核可
 
 ### 5.7 附件resolver的注册对象与退休
 
-原raw/F12的`FileUploads.registerAgentResolver`把函数直接保存在Service属性；Cordis tracing读取后包装为新Proxy，使disposer的函数`===`比对失败，旧slot残留。实际Cordis及原raw/managed模块已复现registry/`SessionController`停启后重复注册错误。这是独立于目录组合的已证路径，不能由健康启动或目录专项结果覆盖，也不能推广成所有插件故障或手机截图唯一原因。
+原raw/F12的`FileUploads.registerAgentResolver`曾把函数直接保存在Service属性；Cordis tracing读取后包装为新Proxy，使disposer的函数`===`比对失败，旧slot残留。该历史路径已由 DSH 0.2.2-rc.1 上游改为稳定的 `agentResolution={resolver}` 数据对象，`file-upload-resolver-lifecycle-patch.json` 已退休；退休证明见 [test-file-upload-resolver-lifecycle.mjs](../tools/test-file-upload-resolver-lifecycle.mjs)。这是独立于目录组合的历史证据，不能推广成所有插件故障或手机截图唯一原因。
 
-[窄生命周期补丁](../app/src/main/assets/file-upload-resolver-lifecycle-patch.json)只在锁定file-upload模块使用稳定`{ resolve }`对象持有该次注册，disposer按对象身份清理，调用时解出函数。保留live重复注册拒绝、旧disposer围栏、真实上传接收与session回执检查，不重播上传、不删旧附件或工作区内容。专项已完成原CLI（不含目录补丁）重复错误负控，以及只加载附件补丁的两轮workspace停启applied、raw/typed上传实际字节落盘读回、冷进程同Session上传/列表保留；鉴权、foreignOrigin、415/400及未知Session拒绝仍保留。真实Cordis/Commands/LocalAttachmentStore核对live重复、旧disposer、owner退休与同Session回执，入口为[test-file-upload-resolver-lifecycle.mjs](../tools/test-file-upload-resolver-lifecycle.mjs)。这不是目录+附件组合或最终共享运行时/APK通过；软件范围不扩大为所有附件端到端、账号/模型或真机矩阵，最终组合门禁由负责人另跑。
+DSHA 不再对当前 0.2.2-rc.1 file-upload 模块套用该窄生命周期补丁；当前启动链以受管 runtime 版本和 `runtime-patches.json` 的 retired 记录为准。保留live重复注册拒绝、旧disposer围栏、真实上传接收与session回执检查，不重播上传、不删旧附件或工作区内容。专项已完成原CLI（不含目录补丁）重复错误负控，以及只加载附件补丁的两轮workspace停启applied、raw/typed上传实际字节落盘读回、冷进程同Session上传/列表保留；鉴权、foreignOrigin、415/400及未知Session拒绝仍保留。真实Cordis/Commands/LocalAttachmentStore核对live重复、旧disposer、owner退休与同Session回执，入口为[test-file-upload-resolver-lifecycle.mjs](../tools/test-file-upload-resolver-lifecycle.mjs)。这不是目录+附件组合或最终共享运行时/APK通过；软件范围不扩大为所有附件端到端、账号/模型或真机矩阵，最终组合门禁由负责人另跑。
+
+### 5.8 运行时升级后的用户插件版本不匹配
+
+APK 覆盖更新替换的是受管运行时与随包内置插件登记，不重写用户 profile 的第三方插件清单或 `node_modules`；用户安装的插件必须与升级后的 DSH 版本兼容。DSH 在加载前做兼容性预检：插件自带 `engines.dsh` 时按它判定，否则要求所有 `@deepseek-ai/dsh` / `@deepseek-ai/dsh-*` 的 `peerDependencies` 范围满足当前运行时。不满足的 bundle 被跳过，命中的条目被逐条禁用（stderr 的 `skipping profile bundle …` / `disabling profile plugin …`）；这是 fail-safe，不会让 Web 带着不兼容代码启动，也不会自动删除或改写用户插件。
+
+常见两态：用户插件仍是旧 DSH 版本（如 `0.2.1-rc.5` 的 subagent 链与 `0.2.2-rc.1` 的精确 peer 不匹配）；或 profile 已声明新版本、但 pnpm 安装未完成（清单新、`node_modules` 旧）。两种状态都按“先核对实际解析版本，再重装”处理：用插件管理把受影响插件重装/更新到与当前 DSH 兼容的版本（走受管 pnpm 与既有安装事务，失败会回切），重启 Web 后确认启动页不再出现该插件的跳过/禁用行。不要手工改 profile 的 `package.json`、`node_modules` 或 `pnpm-lock.yaml` 绕过预检。确需运行与当前运行时版本不匹配的插件时，只能使用 profile 的 `compatibility.json` 精确版本豁免（exact `package@version` ↔ exact DSH 版本，须显式确认风险）；豁免只表示用户接受风险，不改变插件代码的兼容性。
+
+升级路径不自动写用户 profile：能改用户 profile 的入口仍受既有事务与原生确认约束（插件安装事务、`profile-settings` 修复）。启动日志的“配置检查/已加载插件”报告实际解析版本，不能拿清单声明代替加载证据。2026-11-06 的 build333 现场即：更新前旧 profile 解析到 `0.2.1-rc.5` 的 subagent 依赖并被跳过；更新完成后的启动日志里配置与已加载插件均已是 `0.2.2-rc.1`，本次调查未发现打包或升级路径缺陷。
+
+启动日志里同一插件出现多次“正在加载插件/插件加载完成”不等于模块被重复导入：[startup-observer.cjs](../app/src/main/assets/startup-observer.cjs)按 cordis 的每个 entry 记录一行，同一个 bundle 可以插入 group 与多个子项（例如 terminal 包的 group 加四个子项），因此会有多行同名日志；同一解析目标的模块经 Node ESM 缓存只求值一次，插件实例按 entry 设计。[StartupTrace.java](../app/src/main/java/com/deepseekharness/app/util/StartupTrace.java)还会丢弃与上一行渲染完全相同的相邻行，所以日志行数不是事件计数；判定“重复加载”要看启动页结构化证据与实际加载结果，而不是数行数。
+
+本次调查还核对了 `TypeError: … reading 'getJsStatus'`：该名字不在 0.2.1-rc.5 与 0.2.2-rc.1 两棵锁定运行时树、当前仓库或随包内置插件中，更像客户端插件与运行时版本错配、或旧客户端缓存造成的调用方错误，而不是 DSH 运行时接口缺失。profile 版本一致并重启后不再出现；若再复现，先记录当时加载的客户端插件版本与浏览器控制台堆栈，再按具体插件定位。
 
 ## 六、配置与凭据
 
