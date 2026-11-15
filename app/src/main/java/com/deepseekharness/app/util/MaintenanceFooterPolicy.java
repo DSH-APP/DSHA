@@ -86,7 +86,9 @@ public final class MaintenanceFooterPolicy {
 
   /** 只有已识别的运行阶段才能增加半步填充，未知阶段不能伪造进度。 */
   public static int progressLevel(DeployStages.View view) {
-    return progressLevel(view.completed(), view.total(),
+    return progressLevel(
+        view.completed(),
+        view.total(),
         view.phase == DeployStages.Phase.RUNNING && view.current >= 0);
   }
 

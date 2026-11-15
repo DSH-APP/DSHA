@@ -13,8 +13,14 @@ public class DeployStagesTest {
 
   @Test
   public void unknownFailedStageDoesNotInventAStopFailure() {
-    var view = DeployStages.view(DeployStages.Mode.REBUILD, DeployStages.Phase.FAILED,
-        -1, "PERMISSION_DENIED", "unrecognized legacy progress", 42);
+    var view =
+        DeployStages.view(
+            DeployStages.Mode.REBUILD,
+            DeployStages.Phase.FAILED,
+            -1,
+            "PERMISSION_DENIED",
+            "unrecognized legacy progress",
+            42);
     assertEquals(-1, view.current);
     assertEquals(0, view.completed());
     for (var step : view.steps) assertEquals(DeployStages.Step.TODO, step);
@@ -22,8 +28,14 @@ public class DeployStagesTest {
 
   @Test
   public void unknownRunningStageHasNoInventedFirstStepCounter() {
-    var view = DeployStages.view(DeployStages.Mode.REBUILD, DeployStages.Phase.RUNNING,
-        -1, "unrecognized progress", "", 42);
+    var view =
+        DeployStages.view(
+            DeployStages.Mode.REBUILD,
+            DeployStages.Phase.RUNNING,
+            -1,
+            "unrecognized progress",
+            "",
+            42);
     assertEquals(-1, view.current);
     assertEquals("", view.counter());
     assertEquals("", view.sub());

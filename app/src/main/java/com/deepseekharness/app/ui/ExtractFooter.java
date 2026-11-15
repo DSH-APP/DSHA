@@ -235,9 +235,7 @@ final class ExtractFooter {
       Drawable bg = busy.getBackground();
       if (bg instanceof LayerDrawable) {
         Drawable fill = ((LayerDrawable) bg).findDrawableByLayerId(R.id.extract_busy_fill);
-        if (fill != null)
-          fill.setLevel(
-              MaintenanceFooterPolicy.progressLevel(view));
+        if (fill != null) fill.setLevel(MaintenanceFooterPolicy.progressLevel(view));
       }
       return;
     }

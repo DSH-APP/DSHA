@@ -15,17 +15,24 @@ public class BackupTaskStateTest {
       UiText.setLanguage(language);
       BackupTaskState state = new BackupTaskState();
       long id = state.start(BackupTaskKinds.REBUILD);
-      String protecting = UiText.choose(
-          "正在由 Android 保护应用数据与个人目录；不执行旧环境…",
-          "Android is protecting application data and personal folders without executing the old environment…");
+      String protecting =
+          UiText.choose(
+              "正在由 Android 保护应用数据与个人目录；不执行旧环境…",
+              "Android is protecting application data and personal folders without executing the old environment…");
       state.update(id, BackupTaskState.Status.RUNNING, protecting);
       state.update(id, BackupTaskState.Status.RUNNING, "正在核验受管文件… 3 MB");
       state.update(id, BackupTaskState.Status.FAILED, "PERMISSION_DENIED");
       var snapshot = state.snapshot();
       assertEquals(protecting, snapshot.lastStage);
       assertEquals("PERMISSION_DENIED", snapshot.detail);
-      var view = DeployStages.view(DeployStages.Mode.REBUILD, DeployStages.Phase.FAILED,
-          -1, snapshot.detail, snapshot.lastStage, id);
+      var view =
+          DeployStages.view(
+              DeployStages.Mode.REBUILD,
+              DeployStages.Phase.FAILED,
+              -1,
+              snapshot.detail,
+              snapshot.lastStage,
+              id);
       assertEquals(1, view.current);
       assertEquals(DeployStages.Step.DONE, view.steps[0]);
       assertEquals(DeployStages.Step.FAILED, view.steps[1]);
@@ -47,8 +54,14 @@ public class BackupTaskStateTest {
     restored.restoreStage(saved.lastStage);
     var snapshot = restored.snapshot();
     assertEquals(BackupTaskState.Status.INTERRUPTED, snapshot.status);
-    var view = DeployStages.view(DeployStages.Mode.REBUILD, DeployStages.Phase.FAILED,
-        -1, snapshot.detail, snapshot.lastStage, snapshot.id);
+    var view =
+        DeployStages.view(
+            DeployStages.Mode.REBUILD,
+            DeployStages.Phase.FAILED,
+            -1,
+            snapshot.detail,
+            snapshot.lastStage,
+            snapshot.id);
     assertEquals(1, view.current);
     assertFalse(restored.busy());
   }
@@ -72,15 +85,22 @@ public class BackupTaskStateTest {
     state.update(id, BackupTaskState.Status.RUNNING, "解压 Ubuntu 与 Node");
     state.update(id, BackupTaskState.Status.RUNNING, "未知的细粒度进度");
     var snapshot = state.snapshot();
-    var view = DeployStages.view(DeployStages.Mode.UPDATE, DeployStages.Phase.FAILED,
-        -1, "FAILED", snapshot.lastStage, id);
+    var view =
+        DeployStages.view(
+            DeployStages.Mode.UPDATE,
+            DeployStages.Phase.FAILED,
+            -1,
+            "FAILED",
+            snapshot.lastStage,
+            id);
     assertEquals(DeployStages.Mode.INSTALL, view.mode);
     assertEquals(1, view.current);
   }
 
   @Test
   public void ordinaryBackupStillRecordsEveryProgressMessage() {
-    for (String kind : new String[] {BackupTaskKinds.BACKUP, BackupTaskKinds.RECOVER, BackupTaskKinds.ROLLBACK}) {
+    for (String kind :
+        new String[] {BackupTaskKinds.BACKUP, BackupTaskKinds.RECOVER, BackupTaskKinds.ROLLBACK}) {
       BackupTaskState state = new BackupTaskState();
       long id = state.start(kind);
       state.update(id, BackupTaskState.Status.RUNNING, "first");
