@@ -647,6 +647,8 @@ public final class PictureInPictureOptInTest {
     browser.pauseAndStop();
     var info = new android.app.ActivityManager.RecentTaskInfo();
     info.id = browser.getTaskId();
+    info.persistentId = browser.getTaskId();
+    if (android.os.Build.VERSION.SDK_INT >= 29) info.taskId = browser.getTaskId();
     info.baseActivity = new android.content.ComponentName(app, Browser.class);
     var task = org.robolectric.shadows.ShadowAppTask.newInstance();
     Shadow.<org.robolectric.shadows.ShadowAppTask>extract(task).setTaskInfo(info);
