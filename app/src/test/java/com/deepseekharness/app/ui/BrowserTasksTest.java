@@ -232,6 +232,49 @@ public final class BrowserTasksTest {
   }
 
   @Test
+  public void explicitDispatchFindsRetainedTaskWhoseRunningIdIsAbsent() {
+    var retained = task(3, MainActivity.class, 0);
+    retained.getTaskInfo().id = -1;
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(retained));
+    Intent intent = BrowserTasks.homeIntent(context);
+    assertTrue(BrowserTasks.startInTask(context, 3, intent));
+    assertEquals(1, context.starts.size());
+    assertEquals(MainActivity.class.getName(), context.starts.get(0).getComponent().getClassName());
+    assertFalse(Shadow.<ShadowAppTask>extract(retained).isFinishedAndRemoved());
+  }
+
+  @Test
+  public void retainedNativeTasksKeepThePreferredRecentCardWithoutRemovingTasks() {
+    var oldMain = task(3, MainActivity.class, 0);
+    var currentMain = task(8, MainActivity.class, 0);
+    var browser = task(7, WebPreviewActivity.class, 0);
+    for (var retained : List.of(oldMain, currentMain, browser)) retained.getTaskInfo().id = -1;
+    Shadow.<ShadowActivityManager>extract(manager)
+        .setAppTasks(List.of(oldMain, currentMain, browser));
+    assertTrue(BrowserTasks.reconcileRecents(context, 8));
+    assertTrue(Shadow.<ShadowAppTask>extract(oldMain).isExcludedFromRecents());
+    assertFalse(Shadow.<ShadowAppTask>extract(currentMain).isExcludedFromRecents());
+    assertTrue(Shadow.<ShadowAppTask>extract(browser).isExcludedFromRecents());
+    for (var retained : List.of(oldMain, currentMain, browser))
+      assertFalse(Shadow.<ShadowAppTask>extract(retained).isFinishedAndRemoved());
+  }
+
+  @Test
+  public void stableTaskIdentityRecognizesLiveMainInsideAWebRootedTask() throws Exception {
+    var main = liveMainIn(7);
+    var shared = task(7, WebPreviewActivity.class, 2);
+    shared.getTaskInfo().id = -1;
+    var legacyMain = task(3, MainActivity.class, 1);
+    Shadow.<ShadowActivityManager>extract(manager).setAppTasks(List.of(legacyMain, shared));
+    assertTrue(BrowserTasks.reconcileRecents(context, -1));
+    assertFalse(Shadow.<ShadowAppTask>extract(shared).isExcludedFromRecents());
+    assertTrue(Shadow.<ShadowAppTask>extract(legacyMain).isExcludedFromRecents());
+    assertFalse(main.finished);
+    assertFalse(Shadow.<ShadowAppTask>extract(shared).isFinishedAndRemoved());
+  }
+
+
+  @Test
   public void explicitHomeReordersExistingNativeTaskWithoutClearingWeb() {
     var nativeTask = task(3, MainActivity.class, 2);
     var webTask = task(7, WebPreviewActivity.class, 3);
