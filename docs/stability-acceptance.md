@@ -65,7 +65,7 @@ $env:GRADLE_USER_HOME='<gradle-user-home>'
 
 实际工具目录虽名为 `jdk-17`，执行返回的是 **Oracle JDK 25.0.4**，Gradle 9.3.1 的 JVM 也指向 `D:/develop/JDK`；代码仍保持 Java 17 source/target，未升级项目语言要求。两项旧进程夹具此前依赖 Windows 标准输出默认编码，重跑出现 GBK/UTF-8 差异；现显式声明夹具 stdout/stderr UTF-8，保留原字节/保密断言。新增报告模板测试发现较短模板抢先匹配，现按完整模板特异性排序，未对任意用户文本做替换。
 
-独立设备复测：先用 `--init-script tools/device-backup-audit.init.gradle '-Pdsha.auditPackage=dsh.android.client.stabilityaudit' :app:assembleStandardDeviceAudit :app:assembleLowDeviceAudit` 构建；在新测试设备允许安装后用 `tools/run-backup-device-audit.py --serial <serial> --package dsh.android.client.stabilityaudit --apk <对应审计APK> --mode <模式>`。现有已授权审计包使用默认 `.rc21audit`，不传正式包名。
+独立设备复测：先用 `--init-script tools/device-backup-audit.init.gradle '-Pdsha.auditPackage=io.github.sunsetrne.dsha.stabilityaudit' :app:assembleStandardDeviceAudit` 构建（旧 Low 审计任务已随 low 变体删除）；在新测试设备允许安装后用 `tools/run-backup-device-audit.py --serial <serial> --package io.github.sunsetrne.dsha.stabilityaudit --apk <对应审计APK> --mode <模式>`。现有已授权审计包使用默认 `.rc21audit`，不传正式包名。
 
 最低 API 23/24/30、Android 16 平板与 16 KiB 设备：运行支持 flavor 的 `core,runtime,network,bridge,credential,plugins,plugin_workflow,plugin_recovery,retained,workflow,io,ui,issue67,attachments`；`style --language zh/en` 验证所有原生样式。补测终端标签/维护、真实多文件/图片/流式附件、系统文件回调、息屏后 Web/终端恢复。真机数据必须为合成或明确获准的数据，不提高最低 API 绕过。
 

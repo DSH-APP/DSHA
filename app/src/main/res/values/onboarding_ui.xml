@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  首次引导 / 部署胶囊 token（2026-10-31 重构，原型见 docs/design/onboarding-20261031/preview.html）。
+  颜色全部派生自 shell_*，夜间值写在 values-night/onboarding_ui.xml；尺寸日夜共用。
+  断点：宽 ≥ 600dp 两栏；授权卡片内容区 ≥ 700dp 两列；高 ≤ 480dp 压缩页头页脚（由代码按 Configuration 判定）。
+-->
+<resources>
+    <!-- 推荐卡片描边 onb_accent_line 随调色板切换，见 theme_palettes.xml。 -->
+
+    <!-- 圆角 -->
+    <dimen name="onb_radius_card">18dp</dimen>
+    <dimen name="onb_radius_tile">14dp</dimen>
+    <dimen name="onb_radius_capcard">16dp</dimen>
+
+    <!-- 版式 -->
+    <dimen name="onb_page_pad">20dp</dimen>
+    <dimen name="onb_page_pad_wide">28dp</dimen>
+    <dimen name="onb_content_max">680dp</dimen>
+    <dimen name="onb_content_max_wide">980dp</dimen>
+    <dimen name="onb_side_min">240dp</dimen>
+    <dimen name="onb_head_height">52dp</dimen>
+    <dimen name="onb_head_height_short">40dp</dimen>
+    <dimen name="onb_btn_primary">52dp</dimen>
+    <dimen name="onb_btn_secondary">46dp</dimen>
+    <dimen name="onb_btn_primary_short">44dp</dimen>
+    <dimen name="onb_btn_small">38dp</dimen>
+    <dimen name="onb_btn_min_wide">168dp</dimen>
+    <dimen name="onb_capsule_height">34dp</dimen>
+    <dimen name="onb_icon_box">40dp</dimen>
+    <dimen name="onb_seg_height">6dp</dimen>
+
+    <!-- 字阶（sp 随系统字号缩放；1.3 倍字体由布局滚动承接） -->
+    <dimen name="onb_text_eyebrow">12sp</dimen>
+    <dimen name="onb_text_h1">29sp</dimen>
+    <dimen name="onb_text_h1_short">24sp</dimen>
+    <dimen name="onb_text_h2">24sp</dimen>
+    <dimen name="onb_text_lead">15sp</dimen>
+    <dimen name="onb_text_body">13sp</dimen>
+    <dimen name="onb_text_card_title">15sp</dimen>
+    <dimen name="onb_text_small">12sp</dimen>
+    <dimen name="onb_text_pill">11sp</dimen>
+    <dimen name="onb_text_capsule">12.5sp</dimen>
+</resources>

@@ -7,33 +7,47 @@ import java.util.Map;
 public final class UiStateText {
   private UiStateText() {}
 
-  private static final Map<String, String> ZH = new LinkedHashMap<>();
-  private static final UiMessageFormat[][] FORMATS =
-      new UiMessageFormat[UiMessages.FORMATS.length][2];
+  private static final Map<String, String> SOURCE = new LinkedHashMap<>();
+  private static final Map<String, UiMessageFormat[]> FORMATS = new LinkedHashMap<>();
 
   static {
-    UiMessages.EN.forEach((zh, en) -> ZH.putIfAbsent(en, zh));
-    for (int i = 0; i < FORMATS.length; i++)
-      for (int lang = 0; lang < 2; lang++)
-        FORMATS[i][lang] = new UiMessageFormat(UiMessages.FORMATS[i][lang]);
+    for (String language : UiLanguagePreference.LANGUAGES)
+      UiMessages.forLanguage(language)
+          .forEach((zh, translated) -> SOURCE.putIfAbsent(translated, zh));
+  }
+
+  private static synchronized UiMessageFormat[] formats(String language) {
+    UiMessageFormat[] compiled = FORMATS.get(language);
+    if (compiled != null) return compiled;
+    String[] templates = UiMessages.formatsForLanguage(language);
+    compiled = new UiMessageFormat[templates.length];
+    for (int i = 0; i < templates.length; i++) compiled[i] = new UiMessageFormat(templates[i]);
+    FORMATS.put(language, compiled);
+    return compiled;
+  }
+
+  /** Exact application text only; inserted user/plugin payloads never enter this lookup. */
+  static String exact(String value, String language) {
+    String source = SOURCE.get(value);
+    return source == null ? value : UiMessages.forLanguage(language).getOrDefault(source, value);
   }
 
   public static String render(String value) {
     if (value == null) return "";
-    boolean english = "en".equals(UiText.language());
-    String task = BackupTaskKinds.display(value, english);
-    if (task != null) return task;
-    String direct = (english ? UiMessages.EN : ZH).get(value);
-    if (direct != null) return direct;
-    // 已翻译的同语言完整文案无需继续套模板。
-    if ((english ? ZH : UiMessages.EN).containsKey(value)) return value;
+    String language = UiText.language();
+    String task = BackupTaskKinds.display(value, false);
+    if (task != null) return UiText.text(task);
+    String direct = exact(value, language);
+    if (!direct.equals(value) || SOURCE.containsKey(value)) return direct;
+    UiMessageFormat[] target = formats(language);
     String chosen = null;
     int literalLength = -1, arguments = Integer.MAX_VALUE;
-    for (int i = 0; i < FORMATS.length; i++)
-      for (int source = 0; source < 2; source++) {
-        String result = FORMATS[i][source].reformat(value, FORMATS[i][english ? 1 : 0]);
+    for (String sourceLanguage : UiLanguagePreference.LANGUAGES) {
+      UiMessageFormat[] source = formats(sourceLanguage);
+      for (int i = 0; i < source.length; i++) {
+        String result = source[i].reformat(value, target[i]);
         if (result == null) continue;
-        UiMessageFormat matched = FORMATS[i][source];
+        UiMessageFormat matched = source[i];
         // 按实际匹配语言的固定文本排序，不能让更长的英文译句抢走具体中文状态；
         // 固定文本相同则优先参数更少的完整模板，防止空的首参数吞掉另一种状态。
         if (matched.literalLength() > literalLength
@@ -43,6 +57,7 @@ public final class UiStateText {
           arguments = matched.argumentCount();
         }
       }
+    }
     return chosen == null ? value : chosen;
   }
 }

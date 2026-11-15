@@ -11,7 +11,26 @@ import java.util.zip.GZIPOutputStream;
 
 /** Bounded standard tar/gzip diagnostics; records carry checksums and explicit capture limits. */
 public final class DiagnosticExportArchive {
-  private static final int MAX_ENTRIES = 32, MAX_ENTRY_BYTES = 256 * 1024, MAX_BYTES = 1024 * 1024;
+  /**
+   * 单次导出的硬上限。正式诊断导出固定用 {@link #PRODUCTION}（总上限 1 MB）；测试包反馈导出用
+   * {@link #testFeedback()} 的参数化版本，正式路径的上限不得跟着放宽。
+   */
+  public static final class Limits {
+    public final int maxEntries, maxEntryBytes, maxTotalBytes;
+
+    public Limits(int maxEntries, int maxEntryBytes, int maxTotalBytes) {
+      if (maxEntries <= 0
+          || maxEntryBytes <= 0
+          || maxTotalBytes <= 0
+          || maxEntryBytes > maxTotalBytes)
+        throw new IllegalArgumentException("DIAGNOSTIC_EXPORT_LIMITS");
+      this.maxEntries = maxEntries;
+      this.maxEntryBytes = maxEntryBytes;
+      this.maxTotalBytes = maxTotalBytes;
+    }
+
+    public static final Limits PRODUCTION = new Limits(32, 256 * 1024, 1024 * 1024);
+  }
 
   private DiagnosticExportArchive() {}
 
@@ -21,7 +40,19 @@ public final class DiagnosticExportArchive {
       Map<String, Object> status,
       BackupControl control)
       throws IOException {
-    if (content == null || content.size() > MAX_ENTRIES)
+    write(output, content, status, control, Limits.PRODUCTION);
+  }
+
+  /** 参数化上限版本；<b>正式诊断导出只能使用无参重载</b>，测试包反馈导出显式传入自身边界。 */
+  public static void write(
+      OutputStream output,
+      Map<String, byte[]> content,
+      Map<String, Object> status,
+      BackupControl control,
+      Limits limits)
+      throws IOException {
+    if (limits == null) throw new IOException("DIAGNOSTIC_EXPORT_LIMITS");
+    if (content == null || content.size() > limits.maxEntries)
       throw new IOException("DIAGNOSTIC_EXPORT_ENTRIES");
     Map<String, byte[]> selected = new LinkedHashMap<>();
     var records = new ArrayList<Map<String, Object>>();
@@ -35,8 +66,8 @@ public final class DiagnosticExportArchive {
           || name.length() > 100
           || !name.matches("[A-Za-z0-9_./-]+")
           || bytes == null
-          || bytes.length > MAX_ENTRY_BYTES) throw new IOException("DIAGNOSTIC_EXPORT_ENTRY");
-      total = BackupLimits.add(total, bytes.length, MAX_BYTES);
+          || bytes.length > limits.maxEntryBytes) throw new IOException("DIAGNOSTIC_EXPORT_ENTRY");
+      total = BackupLimits.add(total, bytes.length, limits.maxTotalBytes);
       byte[] snapshot = bytes.clone();
       selected.put(name, snapshot);
       records.add(
@@ -55,8 +86,8 @@ public final class DiagnosticExportArchive {
     manifest.put("automaticUpload", false);
     manifest.put("capture", status);
     manifest.put("entries", records);
-    byte[] metadata = BackupJson.write(manifest, MAX_ENTRY_BYTES);
-    BackupLimits.add(total, metadata.length, MAX_BYTES);
+    byte[] metadata = BackupJson.write(manifest, limits.maxEntryBytes);
+    BackupLimits.add(total, metadata.length, limits.maxTotalBytes);
     control.check();
     try (GZIPOutputStream gzip = new GZIPOutputStream(output, 65536)) {
       for (var entry : selected.entrySet()) {

@@ -6,7 +6,6 @@
   <string name="ui134_candidate">View candidate release</string>
   <string name="ui134_candidate_sub">Release notes, size and installation</string>
   <string name="ui134_changelog">This release</string>
-  <string name="ui134_changelog_sub">0.2.0-rc2 · Plugins enable automatically after installation</string>
   <string name="ui134_check_ready">Ready to check</string>
   <string name="ui134_results">Results</string>
   <string name="ui134_start_records">Startup records</string>
@@ -15,7 +14,7 @@
   <string name="ui134_startup_recovery">Startup recovery</string>
   <string name="ui134_startup_recovery_sub">Review issues and recovery options</string>
   <string name="ui134_disconnect">Disconnect ADB</string>
-  <string name="ui134_root_hint">Rooted device: enable, authorize DSHA in Magisk / KernelSU, then verify. Other devices can use the channels below.</string>
+  <string name="ui134_root_hint">On a rooted phone, use su directly without ADB pairing. Authorize DSHA in your root manager on first use. Choose the command interception mode below; native gates such as SMS reading apply in all three modes.</string>
   <string name="ui134_shizuku_hint">Start Shizuku in its manager, then authorize DSHA here. Usually restart the service after reboot.</string>
   <string name="ui134_adb_hint">Android 11+: pair wireless debugging on the same Wi-Fi. No root needed. Verify or re-pair after network changes.</string>
   <string name="ui134_screen_setup">Set up screen control · Two steps</string>

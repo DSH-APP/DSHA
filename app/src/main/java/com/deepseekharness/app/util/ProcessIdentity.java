@@ -71,6 +71,6 @@ public final class ProcessIdentity {
     if (executable.endsWith(" (deleted)"))
       executable = executable.substring(0, executable.length() - 10);
     String name = executable.substring(executable.lastIndexOf('/') + 1);
-    return name.equals("libproot.so") || name.equals("libproot_legacy.so");
+    return name.equals("libproot.so");
   }
 }

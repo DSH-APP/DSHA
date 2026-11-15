@@ -16,9 +16,10 @@ assert.equal(await fs.realpath(sourcePath),
  await fs.realpath(path.join(runtime,'node_modules/@deepseek-ai/dsh-storage-json/lib/index.js')),
  'the direct-path fixture must execute the verified current managed module');
 const source=await fs.readFile(sourcePath,'utf8');
-assert.match(source,/DSHA_PROROOT_DIRENT_FALLBACK_V2/);
-assert.match(source,/DSHA_PROROOT_DIRECT_RECORD_HINTS_V1/);
-assert.doesNotMatch(source,/withFileTypes:\s*true/);
+assert.match(source,/DSHA_PROROOT_DIRENT_FALLBACK_V3/);
+assert.match(source,/DSHA_PROROOT_DIRECT_RECORD_HINTS_V2/);
+assert.doesNotMatch(source,/withFileTypes/);
+assert.doesNotMatch(source,/isDirectory\(\)/);
 assert.match(source,/const DSHA_RECORD_HINT_LIMIT = 4096;/);
 assert.match(source,/dshaRecordHints = new DshaRecordHints\(\)/);
 assert.match(source,/this\.dshaRecordHints\.clear\(\)/);
@@ -48,8 +49,16 @@ try{
   'the owned backend copy must contain the verified current managed bytes');
  await fs.writeFile(fakePath,`import * as real from 'node:fs/promises';
 import path from 'node:path';
-export const mkdir=real.mkdir,open=real.open,rename=real.rename,rm=real.rm;
+export const mkdir=real.mkdir,open=real.open,rm=real.rm;
 export let unitRootCalls=0,hiddenTableCalls=0;
+// 批量删除注入：按 from/to 基名决定某次 rename 失败，用于回滚与 unusable 路径。
+export const renameFailures=new Map();
+export async function rename(from,to){
+ const key=path.basename(String(from))+'>'+path.basename(String(to));
+ const code=renameFailures.get(key);
+ if(code){renameFailures.delete(key);const error=Error('simulated rename failure '+key);error.code=code;throw error;}
+ return real.rename(from,to);
+}
 export async function readFile(target,...args){
  const text=String(target);
  if(text.includes('dsha_io_${nonce}')&&text.endsWith(path.sep+'probe.json')){
@@ -63,7 +72,7 @@ export async function readdir(target,options){
  if(parent==='storage'&&base.startsWith('dsha_')){
   unitRootCalls++;const error=Error('unit root enumeration is forbidden');error.code='EUNITROOT';throw error;
  }
- if((text.includes('dsha_hint_${nonce}')||text.includes('dsha_fresh_${nonce}'))&&base==='items'){
+ if((text.includes('dsha_hint_${nonce}')||text.includes('dsha_fresh_${nonce}')||(text.includes('dsha_batch')&&text.includes('${nonce}')))&&base==='items'){
   hiddenTableCalls++;return [];
  }
  return real.readdir(target,options);
@@ -174,6 +183,64 @@ export async function readdir(target,options){
  unit=await backend.kv.open(foreign);
  assert.deepEqual((await unit.loadAll()).tables.items,{});
  await unit.close();
+
+ // 0.2.2 上游语义：已声明表目录存在（即使为空）就抑制 legacy bootstrap；
+ // 没有任何表目录与 global 时才从旧整单元文件播种，旧文件保持不变。
+ const empty=descriptor('dsha_empty');
+ await fs.mkdir(path.join(storageRoot,empty.name,'items'),{recursive:true});
+ await fs.writeFile(path.join(storageRoot,`${empty.name}.json`),legacy(empty.name,{nonce,kind:'legacy'}),'utf8');
+ unit=await backend.kv.open(empty);
+ assert.deepEqual((await unit.loadAll()).tables.items,{});
+ await unit.close();
+ assert.deepEqual(await fs.readdir(path.join(storageRoot,empty.name,'items')),[]);
+ const seeded=descriptor('dsha_seed');
+ const seededLegacy=legacy(seeded.name,{nonce,kind:'legacy'});
+ await fs.writeFile(path.join(storageRoot,`${seeded.name}.json`),seededLegacy,'utf8');
+ unit=await backend.kv.open(seeded);
+ assert.deepEqual((await unit.loadAll()).tables.items.legacy,{nonce,kind:'legacy'});
+ await unit.close();
+ assert.equal(await fs.readFile(path.join(storageRoot,`${seeded.name}.json`),'utf8'),seededLegacy);
+
+ // 批量删除在表枚举永远为空时仍按提示定位；重复与缺失键是无害的，
+ // 删除完成后提示被移除，暂存残留不可读。
+ const batch=descriptor('dsha_batch');
+ const batchDir=path.join(storageRoot,batch.name,'items');
+ unit=await backend.kv.open(batch);
+ for(const key of ['a','b','c'])await unit.putRecord('items',key,{nonce,key});
+ await unit.deleteRecords('items',['a','b','missing','a']);
+ // 先于 loadAll 断言：删除路径本身必须撤销提示，而不是依赖重读时的自愈。
+ assert.deepEqual([...backend.dshaRecordHints.get(batchDir)],['c']);
+ assert.deepEqual(Object.keys((await unit.loadAll()).tables.items),['c']);
+ assert.deepEqual((await fs.readdir(batchDir)).sort(),['c.json']);
+ await unit.close();
+ unit=await backend.kv.open(batch);
+ assert.deepEqual(Object.keys((await unit.loadAll()).tables.items),['c']);
+
+ // 回滚成功：被 rename 回原路径的文档是新的目录项，必须重新登记为直达提示。
+ // f 由“进程外”直接写盘（无提示，隐藏枚举下读不到），回滚后应可重开读回。
+ await fs.writeFile(path.join(batchDir,'f.json'),record({nonce,key:'f'}),'utf8');
+ await unit.putRecord('items','e',{nonce,key:'e'});
+ assert.equal((await unit.loadAll()).tables.items.f,undefined);
+ fake.renameFailures.set('e.json>e.json.deleting','EIO');
+ await assert.rejects(unit.deleteRecords('items',['f','e']),error=>error?.code==='EIO');
+ assert.deepEqual([...backend.dshaRecordHints.get(batchDir)].sort(),['c','e','f']);
+ await unit.close();
+ unit=await backend.kv.open(batch);
+ assert.deepEqual(Object.keys((await unit.loadAll()).tables.items).sort(),['c','e','f']);
+
+ // 回滚失败：上游把 unit 置为 unknown-state，后续操作全部拒绝；已停留在
+ // .deleting 的键必须忘记提示，未暂存的键保持提示，close 仍可释放。
+ fake.renameFailures.set('e.json>e.json.deleting','EIO');
+ fake.renameFailures.set('f.json.deleting>f.json','EIO');
+ await assert.rejects(unit.deleteRecords('items',['f','e']),error=>error?.code==='unknown-state');
+ await assert.rejects(unit.loadAll(),error=>error?.code==='unknown-state');
+ assert.deepEqual([...backend.dshaRecordHints.get(batchDir)].sort(),['c','e']);
+ assert.deepEqual((await fs.readdir(batchDir)).sort(),['c.json','e.json','f.json.deleting']);
+ await unit.close();
+ unit=await backend.kv.open(batch);
+ assert.deepEqual(Object.keys((await unit.loadAll()).tables.items).sort(),['c','e']);
+ await unit.close();
+ assert.equal(fake.renameFailures.size,0);
 
  // 真实文件系统读取错误不能被吞掉并折叠成“空表”。
  const io=descriptor('dsha_io');

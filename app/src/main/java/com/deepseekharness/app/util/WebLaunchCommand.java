@@ -5,19 +5,14 @@ public final class WebLaunchCommand {
   private WebLaunchCommand() {}
 
   public static String build(
-      String permissionMode,
-      boolean confirmShell,
-      String language,
-      String profile,
-      int listenPort,
-      long generation) {
+      boolean confirmShell, String language, String profile, int listenPort, long generation) {
     if (listenPort < 0 || listenPort > 65535 || generation < 0)
       throw new IllegalArgumentException("WEB_LAUNCH_IDENTITY");
     return "export PATH=\"/root/dsh-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin${PATH:+:$PATH}\" && "
         + "export DSH_HOME=/root/.dsh && "
         + "export DSHA_WORKSPACE_DOCUMENTS=/root/Documents && "
         + "export DSH_PERMISSION_MODE="
-        + ShellQuote.arg(permissionMode)
+        + ShellQuote.arg(PermissionMode.DEFAULT)
         + " && "
         + "export DSH_CONFIRM="
         + (confirmShell ? "1" : "0")

@@ -62,12 +62,11 @@ type HostIcon = (props: { size?: number; className?: string }) => ReactElement |
 type HostToast = (props: { text: string; icon?: ReactNode; onDone: () => void }) => ReactElement | null
 
 const hostTable = primitives as unknown as Record<string, unknown>
-const hostShareIcon = (['IconShareOutlineRegular', 'IconShareOutline16']
-  .map(name => hostTable[name])
-  .find(value => typeof value === 'function') as HostIcon | undefined)
-const hostWarningIcon = (['IconWarningOutlineRegular', 'IconWarningOutline16']
-  .map(name => hostTable[name])
-  .find(value => typeof value === 'function') as HostIcon | undefined)
+// 宿主下限 0.2.2-rc.1 只导出 *OutlineRegular（*16 是 0.1.x 的名字，永远取不到）。
+const asIcon = (value: unknown): HostIcon | undefined =>
+  typeof value === 'function' ? value as HostIcon : undefined
+const hostShareIcon = asIcon(hostTable.IconShareOutlineRegular)
+const hostWarningIcon = asIcon(hostTable.IconWarningOutlineRegular)
 const HostToastComponent = typeof hostTable.Toast === 'function' ? hostTable.Toast as HostToast : undefined
 
 /** Inline share glyph for injected DOM rows and hosts without a share icon (currentColor). */

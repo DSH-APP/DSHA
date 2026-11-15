@@ -1,24 +1,22 @@
-// Sessions service shape drifted in 0.1.6-alpha.2 (audit doc §10.1): a2
-// removed `ISessions.open`/`clear` and `SessionListState.current` /
-// `currentAddress`, moving selection to per-session `retainedBy` counters
-// (upstream reads it as
+// Sessions service shape on supported hosts (>=0.2.2-rc.1): there is no
+// `ISessions.open`/`clear` and no `SessionListState.current`; selection lives in
+// per-session `retainedBy` counters (dsh-api-session-controller
+// `projectList()`; dsh-client-ui-layout reads it as
 // `Object.values(byId).find(s => (s.retainedBy.mainView ?? 0) > 0)?.id`).
-// These helpers let call sites stay compile-green against rc.2 typings while
-// degrading explicitly on an a2 host instead of throwing or silently dying.
+// The repo type-checks against pinned 0.1.0-rc.6 typings that still describe
+// the old shape, so the read stays structural instead of importing types.
 
-/** Structural view across generations — never import service types here, so
- *  the helper compiles against either generation's typings. */
+/** Structural view of the list snapshot — never import service types here. */
 interface SessionListLike {
-  current?: unknown
   byId?: Record<string, { id?: unknown; retainedBy?: { mainView?: unknown } }>
 }
 
-/** The current session id: rc.2's `current` field when present, else the a2
- *  main-view-retained session. Undefined when the shape matches neither. */
+/** The current session id: the main-view-retained session. Undefined when no
+ *  session is retained by the main view or the shape is foreign. The rc.2
+ *  `current` field read was removed with the host floor (0.2.2 never sets it). */
 export function currentSessionIdOf(list: unknown): string | undefined {
   if (typeof list !== 'object' || list === null) return undefined
   const snapshot = list as SessionListLike
-  if (typeof snapshot.current === 'string') return snapshot.current
   for (const key in snapshot.byId) {
     const summary = snapshot.byId[key]
     // for-in guarantees the key exists, not the value — an explicitly
@@ -28,17 +26,6 @@ export function currentSessionIdOf(list: unknown): string | undefined {
     if (typeof mainView === 'number' && mainView > 0 && typeof summary.id === 'string') return summary.id
   }
   return undefined
-}
-
-/** a2 removed `clear()` (selection lifecycle moved to the retain model). */
-export function sessionsCanClear(sessions: unknown): boolean {
-  return typeof (sessions as { clear?: unknown } | null | undefined)?.clear === 'function'
-}
-
-/** a2 removed `open()`; callers must degrade (armNav fallback in
- *  phone-chrome) instead of throwing inside the capture pointerup listener. */
-export function sessionsCanOpen(sessions: unknown): boolean {
-  return typeof (sessions as { open?: unknown } | null | undefined)?.open === 'function'
 }
 
 /** How many times an unanswered delete request is re-checked against the list. */

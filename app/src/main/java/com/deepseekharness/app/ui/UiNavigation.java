@@ -22,18 +22,17 @@ final class UiNavigation {
     return button;
   }
 
+  /**
+   * 内页顶部只放返回键：页面标题由 CardPage 的大标题承担，避免同一标题在一屏出现两次。
+   * 标题仍作为无障碍窗格名保留。
+   */
   static void addHeader(Context context, LinearLayout root, String title, Runnable action) {
     LinearLayout row = new LinearLayout(context);
     row.setGravity(Gravity.CENTER_VERTICAL);
     row.setPadding(dp(context, 6), 0, dp(context, 18), 0);
     row.addView(
         back(context, action), new LinearLayout.LayoutParams(dp(context, 48), dp(context, 52)));
-    TextView label = new TextView(context);
-    label.setText(title);
-    label.setTextSize(18);
-    label.setTextColor(context.getColor(R.color.text));
-    label.setTypeface(null, android.graphics.Typeface.BOLD);
-    row.addView(label);
+    androidx.core.view.ViewCompat.setAccessibilityPaneTitle(row, title);
     root.addView(row, 0);
   }
 

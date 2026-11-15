@@ -18,7 +18,7 @@ test('alpha.2 使用驻留 Session binding，不能遍历 WeakMap 或激活冷�
  conversation:{input:{shells:new WeakMap(),for(context){calls.push(context);return context===a?shellA:shellB;}}}};
  const inputs=api.residentInputs(ctx);assert.equal(inputs.size,2);assert.equal(inputs.get('a'),shellA);assert.equal(inputs.get('b'),shellB);assert.deepEqual(calls,[a,b]);
 });
-test('阅读位置把一帧内的滚动合并，并延迟一次写入',()=>{
+test('阅读位置不调度逐帧工作，并在滚动结束精确写入一次',()=>{
   class TestElement {
     constructor(slot,parent=null){this.slot=slot;this.parentElement=parent;this.children=[];this.scrollTop=12;this.scrollLeft=0;if(parent)parent.children.push(this)}
     hasAttribute(name){return name==='data-slot'&&this.slot!==null}
@@ -39,12 +39,11 @@ test('阅读位置把一帧内的滚动合并，并延迟一次写入',()=>{
   const stop=api.installReadingPosition(ctx);
   listeners.get('pointerdown').fn({});
   for(let i=0;i<24;i++)listeners.get('scroll').fn({target:scroller});
-  assert.equal(writes,0);assert.equal(rafs.size,1);
+  assert.equal(writes,0);assert.equal(rafs.size,0);
   assert.equal(listeners.get('scroll').options.capture,true);
   assert.equal(listeners.get('scroll').options.passive,true);
-  [...rafs.values()][0]();
   assert.equal(writes,0);assert.equal(timeouts.size,1);
-  [...timeouts.values()][0]();
+  listeners.get('scrollend').fn({target:scroller});
   assert.equal(writes,1);
   stop();
 });

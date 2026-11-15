@@ -1,0 +1,4 @@
+# DSHA 0.2.1-rc.3-20261102.0200-dsh0.2.1-rc.5 / build257
+
+- Correção dos bloqueios de ficheiros no proroot: o runtime do motor proroot comunicava todas as falhas de fcntl como EPERM (permissão negada), mesmo quando outro processo apenas detinha o bloqueio, pelo que ferramentas que dependem de bloqueios entre processos, como o Gradle, falhavam. A camada de compatibilidade devolve agora o código de erro correto e um bloqueio ocupado indica tentar de novo. O motor proot predefinido não é afetado.
+- Âmbito da verificação: o pacote de teste foi verificado com proroot num tablet Android 16 com uma sonda de bloqueio e uma conversa Web; o pacote oficial não foi instalado em dispositivo. versionCode elevado para 257 (com base no build256). A revisão DSHA mantém-se 0.2.1-rc.3 e o DSH incluído mantém-se 0.2.1-rc.5.

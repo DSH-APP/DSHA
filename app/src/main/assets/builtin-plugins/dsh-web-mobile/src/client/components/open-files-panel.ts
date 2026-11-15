@@ -47,9 +47,15 @@ export function openFilesPanel(
   // already open — the exact "tap does nothing / position looks wrong" report.
   // Closing first also keeps the control reachable: the full-screen panel
   // covers the header, so a second tap could never reach our button.
+  // 0.2.2 (dsh-client-ui-sidebar-right ExpandButton): on mobile devices the
+  // expand button is NOT unmounted while the panel is open - it stays rendered
+  // with `disabled`, so clicking it is a no-op and the panel could never be
+  // closed from the header (real device 2026-11-05: repeated taps on the files
+  // button left the panel open). A disabled opener counts as absent.
   const closer = doc.querySelector(HOST_FILES_CLOSER) as { click?: () => void } | null
-  const opener = doc.querySelector(HOST_FILES_OPENER) as { click?: () => void } | null
-  const hostControl = typeof opener?.click === 'function' ? opener : closer
+  const opener = doc.querySelector(HOST_FILES_OPENER) as { click?: () => void; disabled?: unknown } | null
+  const openerUsable = typeof opener?.click === 'function' && opener.disabled !== true
+  const hostControl = openerUsable ? opener : closer
   // Duck-typed on purpose: any element exposing click() acts as the control.
   if (typeof hostControl?.click === 'function') {
     hostControl.click()

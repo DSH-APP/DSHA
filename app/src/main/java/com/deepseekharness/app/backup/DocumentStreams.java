@@ -219,7 +219,16 @@ public final class DocumentStreams {
     AutoCloseable reading = null;
     try {
       control.check();
-      cursor = resolver.query(uri, columns, null, null, null, signal);
+      // The framework's final DocumentsProvider Bundle dispatch does not forward a child
+      // query's CancellationSignal. Preserve it for our same-process provider call only.
+      try (AutoCloseable scope =
+          com.deepseekharness.app.DshaDocumentsProvider.withQueryCancellation(signal)) {
+        cursor = resolver.query(uri, columns, null, null, null, signal);
+      } catch (IOException | RuntimeException error) {
+        throw error;
+      } catch (Exception error) {
+        throw new IOException("SAF_QUERY_SCOPE", error);
+      }
       if (cursor == null) {
         control.check();
         if (!optional) throw new IOException("SAF_UNREADABLE");

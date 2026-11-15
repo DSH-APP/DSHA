@@ -72,6 +72,6 @@ Gecko 文件树的 Android 无障碍点击反馈不稳定，自动标签定位�
 | `dsha-1.5-alpha.2.apk` | 184531921 | `0d09051781869a4461a7a54213e60ac3cefbb9f09f1be4f6fea02cee6581b871` |
 | `dsha-1.5-alpha.2low.apk` | 265047519 | `53acad21a9fb40bd5d333757f62dae57aa8dbbf4a469d97931549864a078d873` |
 
-交付目录 `F:\DSHA_RESTART\release`，每包旁有同名 `.apk.sha256`。仅本地交付，未上传远程仓库或发布站点。
+交付目录 `<local-workspace>`，每包旁有同名 `.apk.sha256`。仅本地交付，未上传远程仓库或发布站点。
 
 收尾已按摘要校验并移除预览夹具，清理独立冷环境与测试源码。最终安装的是交付目录中的标准版 Release（非 debuggable），版本码 115，启动主页面成功。历史 alpha.1 两个 APK 的 SHA-256 与任务开始前一致。

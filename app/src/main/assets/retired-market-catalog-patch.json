@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-plugin-manager/lib/index.js",
-  "sourceSha256": "1b8bf9eb266d7b3b7f899175e3f435c89ed8baa8aabc677212759f8c6cd23132",
+  "sourceSha256": "6f0fdc6a6e4cd2bc9d969ba582636729ade450e415f0fc20bbef9da3f65823f3",
   "patches": [
     {
       "before": "\t\t\tconst names = [...new Set([\n\t\t\t\t...selected,\n\t\t\t\t...dependencies,\n\t\t\t\t...Object.keys(installation.dependencies ?? {}),\n\t\t\t\t...catalog.keys()\n\t\t\t])];",

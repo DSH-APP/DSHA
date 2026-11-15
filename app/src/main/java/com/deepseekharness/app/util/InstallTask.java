@@ -32,14 +32,14 @@ public final class InstallTask {
   private boolean repair, cancelRequested, cancellable = true, privateKey, truncated;
   private int selected, current, logSize;
   private long started, stageStarted, finished, revision;
-  private String phase = com.deepseekharness.app.util.UiText.text("尚未检查"), failure = "";
+  private String phase = com.deepseekharness.app.util.UiText.text("未检查"), failure = "";
   // 页面每秒轮询一次；日志只有 append 时才变化，复用渲染结果避免反复拼接 48 KiB。
   private long cachedLogRevision = -1;
   private String cachedLog = "";
 
   public InstallTask() {
     Arrays.fill(steps, Step.PENDING);
-    Arrays.fill(details, com.deepseekharness.app.util.UiText.text("尚未检查"));
+    Arrays.fill(details, com.deepseekharness.app.util.UiText.text("未检查"));
   }
 
   public synchronized boolean start(boolean repair, int selected) {
@@ -60,7 +60,7 @@ public final class InstallTask {
     lines.clear();
     logSize = 0;
     Arrays.fill(steps, Step.PENDING);
-    Arrays.fill(details, com.deepseekharness.app.util.UiText.text("尚未检查"));
+    Arrays.fill(details, com.deepseekharness.app.util.UiText.text("未检查"));
     revision++;
     cachedLogRevision = -1;
     cachedLog = "";

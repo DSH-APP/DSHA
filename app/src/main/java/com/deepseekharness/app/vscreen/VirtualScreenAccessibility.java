@@ -35,7 +35,7 @@ public final class VirtualScreenAccessibility {
       JSONObject args,
       com.deepseekharness.app.screen.ScreenRequestContext context,
       ObservedPixels pixels) {
-    if (com.deepseekharness.app.BuildConfig.LOW_ANDROID) return fail("VSCREEN_UNSUPPORTED_LOW");
+    if (false) return fail("VSCREEN_UNSUPPORTED_LOW");
     if (android.os.Build.VERSION.SDK_INT < 30) return fail("VSCREEN_API_30_REQUIRED");
     return observedOwner()
         .run(
@@ -284,6 +284,9 @@ public final class VirtualScreenAccessibility {
         if (target == null || !target.refresh() || target.getWindowId() != root.getWindowId())
           return fail("STALE_NODE");
         String action = args.optString("action");
+        // 密码节点上的文本写入是硬边界：与 editor/set_text 一致，不提供「仍然允许」。
+        if (action.equals("set_text") && target.isPassword())
+          return fail("PASSWORD_INPUT_UNAVAILABLE");
         if (nativeAction != null
             && (!target.isEnabled()
                 || action.equals("click") && !target.isClickable()

@@ -1,6 +1,6 @@
 # DSHA 0.1.7-rc2 全局审计、修复与本地正式交付
 
-本轮基线是 `F:\DSHA_RESTART` 的实际工作树，不是只看 Git HEAD。先封存 `audit-seal.json`、`findings-before-fixes.md` 和 `architecture-before-fixes.md`，再统一修复。封存前 1,306 项文件有摘要与审查层级：119 项关键入口深读、232 项 Java import/风险模式扫描、405 项文本语法检查、17 项二进制摘要/元数据核验，其余资源与测试按 `coverage.csv` 列举或抽查。**全量列举不等于每一行都经过人工深读**。历史 APK、构建缓存和上游临时快照不计为当前自研源文件。
+本轮基线是 `<local-workspace>` 的实际工作树，不是只看 Git HEAD。先封存 `audit-seal.json`、`findings-before-fixes.md` 和 `architecture-before-fixes.md`，再统一修复。封存前 1,306 项文件有摘要与审查层级：119 项关键入口深读、232 项 Java import/风险模式扫描、405 项文本语法检查、17 项二进制摘要/元数据核验，其余资源与测试按 `coverage.csv` 列举或抽查。**全量列举不等于每一行都经过人工深读**。历史 APK、构建缓存和上游临时快照不计为当前自研源文件。
 
 ## 架构定性与“屎味”来源
 

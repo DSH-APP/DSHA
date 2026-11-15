@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 首次引导构件使用的视图标签 / 状态 id。 -->
+<resources>
+    <item name="onb_grid_wide" type="id" />
+    <item name="onb_capsule" type="id" />
+    <item name="onb_capcard" type="id" />
+</resources>

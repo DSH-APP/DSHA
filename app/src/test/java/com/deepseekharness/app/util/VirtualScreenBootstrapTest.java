@@ -122,6 +122,9 @@ public class VirtualScreenBootstrapTest {
         "VSCREEN_FAILURE_UNCLASSIFIED",
         VirtualScreenBootstrap.diagnosticCode("VSCREEN_CORE_CONTEXT_SDK37_SecurityException"));
     assertEquals(
+        "VSCREEN_FAILURE_UNCLASSIFIED",
+        VirtualScreenBootstrap.diagnosticCode("VSCREEN_CORE_PRIVATE_SECRET_SDK36_DISPLAY_IO"));
+    assertEquals(
         "VSCREEN_ADB_START_BRIDGE_TIMEOUT",
         VirtualScreenBootstrap.diagnosticCode("VSCREEN_ADB_START_BRIDGE_TIMEOUT"));
     assertEquals(

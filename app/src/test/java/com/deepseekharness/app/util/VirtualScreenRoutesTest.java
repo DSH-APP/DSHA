@@ -60,4 +60,35 @@ public class VirtualScreenRoutesTest {
           "/vscreen/../tap"
         }) assertFalse(String.valueOf(invalid), VirtualScreenRoutes.mutatesCore(invalid));
   }
+
+  @Test
+  public void sensitiveClassificationCoversReadsAndWritesButNotLifecycleRoutes() {
+    for (String read : new String[] {"see", "tree", "editor", "anchor", "anchored-click"})
+      assertTrue(read, VirtualScreenRoutes.readsContent(read));
+    for (String write : new String[] {"type", "edit"})
+      assertTrue(write, VirtualScreenRoutes.writesText(write));
+    for (String action :
+        new String[] {
+          "tap",
+          "swipe",
+          "touch",
+          "key",
+          "type",
+          "node",
+          "edit",
+          "submit",
+          "see",
+          "tree",
+          "editor",
+          "anchor",
+          "anchored-click"
+        }) assertTrue(action, VirtualScreenRoutes.classified(action));
+    for (String lifecycle : new String[] {"create", "status", "launch", "preview", "close", ""})
+      assertFalse(lifecycle, VirtualScreenRoutes.classified(lifecycle));
+    assertFalse(VirtualScreenRoutes.classified(null));
+    // 只读端点绝不写入文本；status/close 不读内容。
+    assertFalse(VirtualScreenRoutes.writesText("see"));
+    assertFalse(VirtualScreenRoutes.readsContent("status"));
+    assertFalse(VirtualScreenRoutes.readsContent("node"));
+  }
 }

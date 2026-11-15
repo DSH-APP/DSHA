@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 插件卡片展开箭头：level 0 向下（收起态），level 1 向上（展开态），颜色由使用处 tint。 -->
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:maxLevel="0">
+        <vector android:width="18dp" android:height="18dp" android:viewportWidth="24" android:viewportHeight="24"><path android:pathData="M6,9l6,6 6,-6" android:fillColor="@android:color/transparent" android:strokeColor="#FF000000" android:strokeWidth="1.9" android:strokeLineCap="round" android:strokeLineJoin="round" /></vector>
+    </item>
+    <item android:maxLevel="1">
+        <vector android:width="18dp" android:height="18dp" android:viewportWidth="24" android:viewportHeight="24"><path android:pathData="M6,15l6,-6 6,6" android:fillColor="@android:color/transparent" android:strokeColor="#FF000000" android:strokeWidth="1.9" android:strokeLineCap="round" android:strokeLineJoin="round" /></vector>
+    </item>
+</level-list>

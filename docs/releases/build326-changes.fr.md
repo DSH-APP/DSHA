@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.5-20261105.2200-dsh0.2.2-rc.1 / build326
+
+- Correction de la décision de maintenance après une installation par-dessus : une installation par-dessus qui conserve la même version de DSH et ne remplace que les correctifs gérés intégrés ouvre désormais correctement la page de maintenance de l’environnement, avec « mettre à jour l’environnement » de nouveau en action principale ; « entrer dans l’écran principal » ne prime plus sur la mise à jour.
+- Après une installation par-dessus, si une ancienne session web non confirmée est détectée, seul le démarrage automatique de la mise à jour est bloqué ; la page de maintenance reste affichée et une mise à jour manuelle en un geste reste possible — les instances inconnues ne sont pas rejouées automatiquement.
+- Portée de la vérification : tests hôte, groupe contracts complet, 11 classes de tests ciblés et contrôles de source/descripteurs ; les conclusions sur appareil suivent le relevé réellement confirmé et aucun succès n’est préécrit. versionCode porté à 326 (basé sur build325).

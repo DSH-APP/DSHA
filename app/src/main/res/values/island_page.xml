@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  任务状态上岛页（docs/design/island-status-20261102 方案 B）专用尺寸。
+  行、卡片、按钮沿用 values/config_page.xml 的 Config* 样式；颜色只引用 shell_* token。
+-->
+<resources>
+    <!-- 详情窗格达到该宽度时两列（状态 + 行为 / 上岛顺序）；按实际窗格宽度判断。 -->
+    <integer name="island_two_column_dp">700</integer>
+    <integer name="island_max_content_dp">880</integer>
+    <dimen name="island_preview_pad">12dp</dimen>
+    <dimen name="island_strip_height">32dp</dimen>
+    <dimen name="island_capsule_height">22dp</dimen>
+    <dimen name="island_dot">10dp</dimen>
+    <dimen name="island_level_badge">24dp</dimen>
+    <dimen name="island_level_row_min">48dp</dimen>
+</resources>

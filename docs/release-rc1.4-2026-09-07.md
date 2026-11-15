@@ -5,7 +5,7 @@
 
 此页记录首次 rc1.4 交付，其原文件现保留在 `release/history/rc1.4-before-theme-20260907`。其后追加了主题、排版及功能修复，仍为 rc1.4 / 113；当前安装包和 SHA-256 以 [2026-09-08 功能验收](functional-audit-rc1.4.md)为准。
 
-本轮清单中的应用、备份和网页优化已完成。双版本本地交付位于 `F:\DSHA_RESTART\release`，历史 APK/摘要保留。官网修复已上线；尚未创建 rc1.4 GitHub Release，公开更新接口继续提供已发布 rc1.3。
+本轮清单中的应用、备份和网页优化已完成。双版本本地交付位于 `<local-workspace>`，历史 APK/摘要保留。官网修复已上线；尚未创建 rc1.4 GitHub Release，公开更新接口继续提供已发布 rc1.3。
 
 ## 交付文件
 

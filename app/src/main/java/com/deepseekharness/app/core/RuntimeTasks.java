@@ -135,20 +135,24 @@ public final class RuntimeTasks implements com.deepseekharness.app.util.RuntimeW
   }
 
   private void waitForRetainedExit(Process process) {
-    boolean interrupted = Thread.interrupted();
+    boolean[] reportedUnknown = {false};
     try {
-      while (true) {
-        try {
-          process.exitValue();
-          break;
-        } catch (IllegalThreadStateException running) {
-        }
-        try {
-          Thread.sleep(1000);
-        } catch (InterruptedException retry) {
-          interrupted = true;
-        }
-      }
+      com.deepseekharness.app.util.RetainedProcessObserver.awaitExit(
+          process,
+          observed -> {
+            boolean unknown =
+                observed == com.deepseekharness.app.util.RetainedProcessObserver.State.UNKNOWN;
+            token.describe(
+                unknown
+                    ? com.deepseekharness.app.util.UiText.format(
+                        "无法确认后台进程退出，保留环境保护：%s", "EXIT_PROBE_UNAVAILABLE")
+                    : "等待进程退出后释放环境保护");
+            if (unknown && !reportedUnknown[0] && context != null) {
+              reportedUnknown[0] = true;
+              DiagnosticLog.record(
+                  context, "RUNTIME_EXIT_OBSERVATION", "state=UNKNOWN code=EXIT_PROBE_UNAVAILABLE");
+            }
+          });
       synchronized (RuntimeTasks.class) {
         if (retainedProcess == process) {
           retainedProcess = null;
@@ -162,8 +166,6 @@ public final class RuntimeTasks implements com.deepseekharness.app.util.RuntimeW
           com.deepseekharness.app.util.UiText.format(
               "无法确认后台进程退出，保留环境保护：%s",
               com.deepseekharness.app.util.SensitiveData.redact(String.valueOf(failure))));
-    } finally {
-      if (interrupted) Thread.currentThread().interrupt();
     }
   }
 

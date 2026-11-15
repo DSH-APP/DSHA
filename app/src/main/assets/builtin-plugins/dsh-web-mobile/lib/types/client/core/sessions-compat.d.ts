@@ -1,11 +1,7 @@
-/** The current session id: rc.2's `current` field when present, else the a2
- *  main-view-retained session. Undefined when the shape matches neither. */
+/** The current session id: the main-view-retained session. Undefined when no
+ *  session is retained by the main view or the shape is foreign. The rc.2
+ *  `current` field read was removed with the host floor (0.2.2 never sets it). */
 export declare function currentSessionIdOf(list: unknown): string | undefined;
-/** a2 removed `clear()` (selection lifecycle moved to the retain model). */
-export declare function sessionsCanClear(sessions: unknown): boolean;
-/** a2 removed `open()`; callers must degrade (armNav fallback in
- *  phone-chrome) instead of throwing inside the capture pointerup listener. */
-export declare function sessionsCanOpen(sessions: unknown): boolean;
 /** How many times an unanswered delete request is re-checked against the list. */
 export declare const DELETE_VERIFY_ATTEMPTS = 4;
 /** Delay between two re-checks of the session list. */

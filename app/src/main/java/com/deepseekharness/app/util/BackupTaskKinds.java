@@ -13,6 +13,7 @@ public final class BackupTaskKinds {
       RESET = "DSHA_RESET_CONFIG_V1",
       REPAIR = "DSHA_REPAIR_STARTUP_V1",
       REMOVE_PLUGIN = "DSHA_REMOVE_FAULTY_PLUGIN_V1",
+      ISOLATE_PLUGIN_JOURNALS = "DSHA_ISOLATE_PLUGIN_JOURNALS_V1",
       RECORD = "DSHA_TASK_RECORD_V1";
   private static final String[][] ROWS = {
     {BACKUP, "创建备份", "Create backup"},
@@ -26,6 +27,7 @@ public final class BackupTaskKinds {
     {RESET, "重置配置", "Reset settings"},
     {REPAIR, "修复启动配置", "Repair startup configuration"},
     {REMOVE_PLUGIN, "卸载故障插件", "Remove faulty plugin"},
+    {ISOLATE_PLUGIN_JOURNALS, "隔离无法读取的插件日志", "Isolate unreadable plugin journals"},
     {RECORD, "任务记录", "Task record"}
   };
 

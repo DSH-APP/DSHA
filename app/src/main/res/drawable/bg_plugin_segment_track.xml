@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 插件页分段轨道：raised 底，与白色选中滑块形成一档层次；尺寸由布局给。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_raised" />
+    <corners android:radius="@dimen/radius_control" />
+</shape>

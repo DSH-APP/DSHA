@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 授权已完成时的图标底：良好色软底。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="@color/shell_good_soft" /><corners android:radius="12dp" /></shape>

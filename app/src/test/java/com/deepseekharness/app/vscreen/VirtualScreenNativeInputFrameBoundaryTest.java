@@ -235,7 +235,7 @@ public final class VirtualScreenNativeInputFrameBoundaryTest {
   }
 
   private static void standardNativeControls() {
-    org.junit.Assume.assumeFalse(com.deepseekharness.app.BuildConfig.LOW_ANDROID);
+    org.junit.Assume.assumeFalse(false);
   }
 
   @Test

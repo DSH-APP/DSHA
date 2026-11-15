@@ -42,17 +42,34 @@ class PackageBinding(unittest.TestCase):
             log=self.reports/(name+'.log');log.write_text(name+' passed\n')
             self.commands.append(dict(name=name,exitCode=0,sha256=gate.digest(log)))
         rows=[]
-        for flavor in ('standard','low'):
+        for flavor in ('standard',):
             apk=self.root/f'app-{flavor}-release-unsigned.apk';apk.write_bytes(flavor.encode())
             rows.append(dict(flavor=flavor,sha256=gate.digest(apk),certificateSha256=None))
         self.receipt=dict(verificationSchema=2,status='PASS_UNSIGNED_PACKAGE',commit='abc',dirty=False,
                           sourceSnapshot=dict(sha256=gate.digest(snapshot)),apks=rows,
                           commands=self.commands,
-                          junit={flavor:dict(tests=2,skipped=0,failures=0,errors=0)
-                                 for flavor in ('Standard','Low')})
+                          junit={'Standard':dict(tests=2,skipped=0,failures=0,errors=0)})
     def validate(self):return gate.validate_receipt(self.receipt,self.root,'abc',self.source,
                                                   {'app/build.gradle'},set())
-    def test_exact_pair_is_selected(self):self.assertEqual(2,len(self.validate()))
+    def test_exact_standard_package_is_selected(self):self.assertEqual(1,len(self.validate()))
+    def test_standard_scope_keeps_all_gates_and_rejects_extra_or_legacy_flavor(self):
+        selected = gate.validate_receipt(self.receipt, self.root, 'abc', self.source,
+                                         {'app/build.gradle'}, set())
+        self.assertEqual([self.root / 'app-standard-release-unsigned.apk'], selected)
+        # 旧的 low 包范围必须被拒绝，不能只靠 workflow 参数约定。
+        with self.assertRaisesRegex(ValueError, 'PACKAGE_EXPECTED_FLAVORS'):
+            gate.validate_receipt(self.receipt, self.root, 'abc', self.source,
+                                  {'app/build.gradle'}, set(),
+                                  expected_flavors=('standard', 'low'))
+        legacy = dict(self.receipt, apks=self.receipt['apks'] + [
+            dict(flavor='low', sha256='0' * 64, certificateSha256=None)])
+        with self.assertRaisesRegex(ValueError, 'PACKAGE_FLAVORS'):
+            gate.validate_receipt(legacy, self.root, 'abc', self.source,
+                                  {'app/build.gradle'}, set())
+        self.receipt['commands'] = [row for row in self.receipt['commands'] if row['name'] != 'standard-elf']
+        with self.assertRaisesRegex(ValueError, 'PACKAGE_CHECK_INCOMPLETE'):
+            gate.validate_receipt(self.receipt, self.root, 'abc', self.source,
+                                  {'app/build.gradle'}, set())
     def test_actual_uuid_report_layout_is_selected_and_duplicate_receipts_rejected(self):
         manifest=self.reports/'manifest.json';manifest.write_text(json.dumps(self.receipt))
         self.assertEqual(manifest,gate.select_manifest(self.root))
@@ -60,7 +77,7 @@ class PackageBinding(unittest.TestCase):
         duplicate.parent.mkdir();duplicate.write_text('{}')
         with self.assertRaisesRegex(ValueError,'MANIFEST_COUNT'):gate.select_manifest(self.root)
     def test_apk_tamper_and_failed_gate_are_rejected(self):
-        (self.root/'app-low-release-unsigned.apk').write_bytes(b'tampered')
+        (self.root/'app-standard-release-unsigned.apk').write_bytes(b'tampered')
         with self.assertRaisesRegex(ValueError,'APK_CHANGED'):self.validate()
         self.receipt['commands'][0]['exitCode']=1
         with self.assertRaisesRegex(ValueError,'FAILED_CHECK'):self.validate()
@@ -80,7 +97,7 @@ class PackageBinding(unittest.TestCase):
         self.receipt['commands']=[dict(name=name,exitCode=0,
                                       sha256=gate.digest(self.reports/(name+'.log')))
                                   for name in sorted(gate.REQUIRED_CHECKS)]
-        self.receipt['junit']['Low']['skipped']=2
+        self.receipt['junit']['Standard']['skipped']=2
         with self.assertRaisesRegex(ValueError,'JUNIT_INCOMPLETE'):self.validate()
     def test_omitted_deleted_and_unsafe_source_cannot_be_hidden(self):
         snapshot=self.reports/'source-sha256.json'

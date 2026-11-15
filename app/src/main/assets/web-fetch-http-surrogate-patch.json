@@ -1,0 +1,10 @@
+{
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-web-fetch-http/lib/index.js",
+  "patches": [
+    {
+      "before": "\t\tconst content = truncatedByChars ? decoded.slice(0, this.limits.maxBodyChars) : decoded;",
+      "after": "\t\t// DSHA_WEB_FETCH_HTTP_SURROGATE_BOUNDARY_V1\n\t\tlet end = this.limits.maxBodyChars;\n\t\tif (truncatedByChars && end > 0 && decoded.charCodeAt(end - 1) >= 0xD800 && decoded.charCodeAt(end - 1) <= 0xDBFF && decoded.charCodeAt(end) >= 0xDC00 && decoded.charCodeAt(end) <= 0xDFFF) end -= 1;\n\t\tconst content = truncatedByChars ? decoded.slice(0, end) : decoded;"
+    }
+  ]
+}

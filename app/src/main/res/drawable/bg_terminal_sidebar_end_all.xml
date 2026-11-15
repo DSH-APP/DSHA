@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- “结束全部”软危险胶囊：danger_soft 底 + danger 描边 + 全圆角 + 主题涟漪；
+     禁用态变灰，避免结束全部进行中看起来还能点（原型 .danger-pill）。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/terminal_ripple">
+
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="999dp" />
+        </shape>
+    </item>
+
+    <item>
+        <selector>
+            <item android:state_enabled="false">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/disabled" />
+                    <corners android:radius="999dp" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/terminal_danger_soft" />
+                    <corners android:radius="999dp" />
+                    <stroke
+                        android:width="@dimen/stroke"
+                        android:color="@color/terminal_danger" />
+                </shape>
+            </item>
+        </selector>
+    </item>
+</ripple>

@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+  设备执行通道（从设备能力授权页拆出的独立页面）：
+  - 每个通道 = 左列（标题 + 状态胶囊，状态按剩余宽度自行换行）+ 行内短动作 + 开关。
+    左列按权重让出动作宽度，动作按钮先测量，长状态文案不会把按钮挤出屏幕（T125）。
+  - Root 档位分段与风险提示紧跟 Root 行；外接设备由 Fragment 作为第四行追加到 channels_card。
+  - 页面大标题交给顶栏，页内只保留带折叠说明的分区标签。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/channels_page_root" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/shell_bg" android:orientation="vertical">
+
+  <ScrollView android:id="@+id/channels_scroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false" android:fillViewport="true">
+    <LinearLayout android:id="@+id/channels_content" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="@dimen/grants_page_pad" android:paddingTop="@dimen/grants_page_top" android:paddingEnd="@dimen/grants_page_pad" android:paddingBottom="@dimen/shell_page_bottom">
+
+      <LinearLayout android:id="@+id/grants_section_channels" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+        <TextView android:id="@+id/grants_channels_label" style="@style/ShellSectionIconLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/grants_section_margin" android:drawableStart="@drawable/ic_section_channels" android:text="@string/ui2_device_channels" />
+        <LinearLayout android:id="@+id/channels_card" style="@style/ShellGroup" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="@dimen/grants_card_pad_h" android:paddingTop="0dp" android:paddingEnd="@dimen/grants_card_pad_h" android:paddingBottom="2dp">
+          <!-- Root -->
+          <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="@dimen/grants_channel_row" android:orientation="horizontal">
+            <!-- 标题与状态叠成左列：行内动作先测量，状态胶囊在剩余宽度内自行换行，长文案不会把按钮挤出屏幕（T125）。 -->
+            <LinearLayout android:id="@+id/device_root_text" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingTop="6dp" android:paddingBottom="6dp">
+              <TextView android:id="@+id/device_root_title" style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:importantForAccessibility="no" android:text="@string/ui_m0062" />
+              <TextView android:id="@+id/device_root_status" style="@style/ShellChannelStatusPill" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/device_checking" />
+            </LinearLayout>
+            <Button android:id="@+id/device_root_verify" style="@style/ShellTextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="0dp" android:paddingStart="10dp" android:paddingEnd="10dp" />
+            <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_root_shell" style="@style/ShellSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:minHeight="@dimen/touch_min" />
+          </LinearLayout>
+          <RadioGroup android:id="@+id/device_root_modes" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/bg_plugin_segment_track" android:orientation="horizontal" android:padding="2dp" />
+          <TextView android:id="@+id/device_root_policy_warning" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:accessibilityLiveRegion="polite" android:background="@drawable/bg_action_plain" android:drawableStart="@drawable/ic_section_warning" android:drawablePadding="6dp" android:drawableTint="@color/shell_bad" android:ellipsize="end" android:gravity="center_vertical" android:includeFontPadding="false" android:maxLines="2" android:minHeight="32dp" android:paddingTop="4dp" android:paddingBottom="4dp" android:textColor="@color/shell_bad" android:textSize="12sp" android:textStyle="bold" android:visibility="gone" />
+          <TextView android:id="@+id/config_guard_status" style="@style/ShellStatusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:ellipsize="end" android:maxLines="2" android:visibility="gone" />
+
+          <View style="@style/ShellDivider" android:layout_marginStart="0dp" android:layout_marginTop="6dp" />
+
+          <!-- Shizuku / Stellar -->
+          <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="@dimen/grants_channel_row" android:orientation="horizontal">
+            <LinearLayout android:id="@+id/device_shizuku_text" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingTop="6dp" android:paddingBottom="6dp">
+              <TextView android:id="@+id/device_shizuku_title" style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_brand_shizuku" />
+              <TextView android:id="@+id/workspace_shizuku_status" style="@style/ShellChannelStatusPill" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/ui_m0039" />
+            </LinearLayout>
+            <Button android:id="@+id/workspace_shizuku_auth" style="@style/ShellTextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="0dp" android:paddingStart="10dp" android:paddingEnd="10dp" />
+            <Button android:id="@+id/device_shizuku_open" style="@style/ShellTextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="0dp" android:paddingStart="10dp" android:paddingEnd="10dp" />
+          </LinearLayout>
+
+          <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+
+          <!-- ADB -->
+          <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="@dimen/grants_channel_row" android:orientation="horizontal">
+            <LinearLayout android:id="@+id/config_adb_text" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingTop="6dp" android:paddingBottom="6dp">
+              <TextView android:id="@+id/config_adb_title" style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:importantForAccessibility="no" />
+              <TextView android:id="@+id/config_adb_status" style="@style/ShellChannelStatusPill" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/ui_m0030" />
+            </LinearLayout>
+            <Button android:id="@+id/config_adb_pair" style="@style/ShellTextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minWidth="0dp" android:paddingStart="10dp" android:paddingEnd="10dp" />
+            <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_adb_enable" style="@style/ShellSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:minHeight="@dimen/touch_min" />
+          </LinearLayout>
+        </LinearLayout>
+      </LinearLayout>
+    </LinearLayout>
+  </ScrollView>
+</LinearLayout>

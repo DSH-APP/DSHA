@@ -61,7 +61,7 @@ class GeneratedAssetDirectoryTest(unittest.TestCase):
                 # No offline rootfs/runtime/tool archive is needed by this test.
                 if name.endswith('.json') or name in compatibility:shutil.copyfile(original/name,target)
                 else:target.write_bytes(b'fixture member\n')
-            for name in ['glibc-python.tar.gz','adb-wheels.tar.gz']:
+            for name in ['glibc-python.tar.gz','adb-wheels.tar.gz','gh-cli.tar.gz']:
                 with tarfile.open(source/name,'w:gz') as archive:
                     info=tarfile.TarInfo('fixture.txt');body=b'owned small archive\n';info.size=len(body)
                     archive.addfile(info,io.BytesIO(body))
@@ -77,7 +77,7 @@ class GeneratedAssetDirectoryTest(unittest.TestCase):
 
             generate()
             self.assertTrue((output / 'web-integration' / marker.name).is_file())
-            for name in ['glibc-python.bin','adb-wheels.bin']:
+            for name in ['glibc-python.bin','adb-wheels.bin','gh-cli.bin']:
                 with tarfile.open(output/name,'r:gz') as archive:
                     self.assertEqual(archive.extractfile('fixture.txt').read(),b'owned small archive\n')
             marker.unlink()

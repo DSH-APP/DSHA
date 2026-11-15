@@ -108,7 +108,7 @@ def java_findings(source):
 
 def inventory(root):
     rows, dynamic = [], 0
-    for source_set in ('main', 'standard', 'low'):
+    for source_set in ('main', 'standard'):
         source_root = root / 'app/src' / source_set
         for path in sorted((source_root / 'java').rglob('*.java')):
             content = path.read_bytes()

@@ -1,13 +1,96 @@
 <?xml version='1.0' encoding='utf-8'?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/gap_control" android:background="@drawable/bg_card" android:orientation="vertical" android:padding="@dimen/card_pad">
-    <TextView android:id="@+id/pluginName" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="sans" android:breakStrategy="simple" android:textSize="14sp" android:textStyle="bold" />
-    <TextView android:id="@+id/pluginDesc" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_tight" android:maxLines="3" android:ellipsize="end" android:textSize="12sp" />
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_control" android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/pluginStatus" style="@style/DshaText.Caption" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/gap_tight" />
-        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/pluginSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="48dp" android:showText="false" />
-        <TextView android:id="@+id/pluginActions" style="@style/PluginAction" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:background="@drawable/bg_polished_action" android:text="@string/ui_m0146" />
+<!--
+  插件卡片（2026-11-01 重构，原型见 docs/design/plugin-card-20261101/preview.html）。
+  一个布局、三种密度，由 PluginFragment.bindCard 按 CardDensity 切换：
+    LIST    手机单栏：标题行（图标 / 名称 / 来源徽标 / 版本 / 开关）+ 说明 + 状态 + 进度 + 提示条 + 展开属性表 + 底栏
+    COMPACT 平板左栏：只留摘要、状态与首条提示，点卡片在右侧查看
+    DETAIL  平板右栏：完整说明、属性表与操作，复用同一视图树
+  pluginName / pluginDesc / pluginStatus / pluginSwitch / pluginActions / pluginExpand /
+  pluginDelete / pluginDetails 的 id 与点击语义保留；颜色全部取 shell_* token。
+  来源 / 版本 / 配置 / 当前 Web 各用一枚 shell_* 语义色胶囊（T129）；重启待办用警示胶囊，
+  窄屏与 1.3 倍字体下由 PluginFlowRow 整枚换行，不省略关键状态词。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="10dp" android:background="@drawable/bg_shell_card" android:orientation="vertical" android:paddingStart="@dimen/shell_card_pad" android:paddingTop="14dp" android:paddingEnd="10dp" android:paddingBottom="4dp">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+
+        <ImageView android:id="@+id/pluginGlyph" android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_plugin_glyph" android:contentDescription="@null" android:importantForAccessibility="no" android:padding="9dp" android:src="@drawable/ic_plugins" app:tint="@color/shell_accent" />
+
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical" android:paddingTop="1dp">
+
+            <TextView android:id="@+id/pluginName" style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:breakStrategy="simple" android:accessibilityHeading="true" />
+
+            <com.deepseekharness.app.ui.PluginFlowRow android:id="@+id/pluginMetaRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" app:flowGapHorizontal="6dp" app:flowGapVertical="6dp">
+
+                <TextView android:id="@+id/pluginBadge" style="@style/ShellPluginBadge" android:layout_width="wrap_content" android:layout_height="wrap_content" android:maxLines="1" />
+
+                <TextView android:id="@+id/pluginVersion" style="@style/ShellPluginBadgeMono" android:layout_width="wrap_content" android:layout_height="wrap_content" android:maxLines="1" />
+            </com.deepseekharness.app.ui.PluginFlowRow>
+        </LinearLayout>
+
+        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/pluginSwitch" style="@style/ShellSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="-4dp" android:minHeight="48dp" android:saveEnabled="false" android:showText="false" />
     </LinearLayout>
-    <Button android:id="@+id/pluginExpand" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="44dp" />
-    <TextView android:id="@+id/pluginDetails" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:textIsSelectable="true" android:visibility="gone" />
-    <Button android:id="@+id/pluginDelete" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="44dp" android:textColor="@color/err" android:visibility="gone" />
+
+    <TextView android:id="@+id/pluginDesc" style="@style/ShellCardBody" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:layout_marginEnd="6dp" android:ellipsize="end" android:maxLines="2" />
+
+    <com.deepseekharness.app.ui.PluginFlowRow android:id="@+id/pluginStatusRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginEnd="6dp" app:flowGapHorizontal="8dp" app:flowGapVertical="6dp">
+
+        <!-- 配置徽章：圆点合进文字胶囊，作为装饰不单独暴露给 TalkBack；文字由 PluginFragment 按语义着色。 -->
+        <TextView android:id="@+id/pluginStatus" style="@style/ShellPluginBadge" android:layout_width="wrap_content" android:layout_height="wrap_content" android:drawableStart="@drawable/bg_plugin_dot" android:drawablePadding="5dp" android:maxLines="3" />
+
+        <!-- 当前 Web 徽章：放不下时整枚换到下一行，不省略关键状态词。 -->
+        <TextView android:id="@+id/pluginRuntime" style="@style/ShellPluginBadge" android:layout_width="wrap_content" android:layout_height="wrap_content" android:lineSpacingExtra="2dp" android:maxLines="4" android:textStyle="normal" />
+    </com.deepseekharness.app.ui.PluginFlowRow>
+
+    <com.deepseekharness.app.ui.PluginTaskProgress android:id="@+id/pluginProgress" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="10dp" android:layout_marginEnd="6dp" android:importantForAccessibility="yes" android:visibility="gone" />
+
+    <LinearLayout android:id="@+id/pluginNotes" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginEnd="6dp" android:orientation="vertical" android:visibility="gone" />
+
+    <LinearLayout android:id="@+id/pluginDetails" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:layout_marginEnd="6dp" android:orientation="vertical" android:visibility="gone">
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/bg_plugin_details" android:orientation="vertical" android:paddingStart="10dp" android:paddingTop="2dp" android:paddingEnd="2dp" android:paddingBottom="2dp">
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="32dp" android:orientation="horizontal">
+
+                <TextView android:id="@+id/pluginVersionLabel" style="@style/ShellStatusText" android:layout_width="44dp" android:layout_height="wrap_content" android:includeFontPadding="false" android:textSize="12sp" />
+
+                <TextView android:id="@+id/pluginDetailVersion" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginEnd="8dp" android:layout_weight="1" android:fontFamily="monospace" android:includeFontPadding="false" android:textColor="@color/shell_text" android:textIsSelectable="true" android:textSize="12sp" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/shell_line" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="32dp" android:orientation="horizontal">
+
+                <TextView android:id="@+id/pluginLocationLabel" style="@style/ShellStatusText" android:layout_width="44dp" android:layout_height="wrap_content" android:includeFontPadding="false" android:textSize="12sp" />
+
+                <TextView android:id="@+id/pluginDetailLocation" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:includeFontPadding="false" android:maxLines="2" android:textColor="@color/shell_text" android:textIsSelectable="true" android:textSize="12sp" />
+
+                <ImageButton android:id="@+id/pluginCopyLocation" android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_plugin_icon_button" android:padding="8dp" android:scaleType="fitCenter" android:src="@drawable/ic_ui_copy" app:tint="@color/shell_text_muted" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/shell_line" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="32dp" android:orientation="horizontal">
+
+                <TextView android:id="@+id/pluginSourceLabel" style="@style/ShellStatusText" android:layout_width="44dp" android:layout_height="wrap_content" android:includeFontPadding="false" android:textSize="12sp" />
+
+                <TextView android:id="@+id/pluginDetailSource" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:includeFontPadding="false" android:maxLines="2" android:textColor="@color/shell_text" android:textIsSelectable="true" android:textSize="12sp" />
+
+                <ImageButton android:id="@+id/pluginCopySource" android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_plugin_icon_button" android:padding="8dp" android:scaleType="fitCenter" android:src="@drawable/ic_ui_copy" app:tint="@color/shell_text_muted" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Button android:id="@+id/pluginDelete" style="@style/ShellDangerButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:layout_marginBottom="6dp" android:visibility="gone" />
+    </LinearLayout>
+
+    <View android:id="@+id/pluginFootLine" android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="10dp" android:background="@color/shell_line" />
+
+    <LinearLayout android:id="@+id/pluginFoot" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="-8dp" android:gravity="center_vertical" android:orientation="horizontal">
+
+        <TextView android:id="@+id/pluginExpand" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/bg_plugin_icon_button" android:clickable="true" android:drawableStart="@drawable/ic_plugin_chevron" android:drawablePadding="6dp" android:drawableTint="@color/shell_text_secondary" android:focusable="true" android:gravity="center_vertical" android:includeFontPadding="false" android:minHeight="44dp" android:paddingStart="8dp" android:paddingEnd="12dp" android:textColor="@color/shell_text_secondary" android:textSize="13.5sp" android:textStyle="bold" />
+
+        <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+
+        <ImageButton android:id="@+id/pluginActions" android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_plugin_icon_button" android:padding="11dp" android:scaleType="fitCenter" android:src="@drawable/ic_plugin_more" app:tint="@color/shell_text_secondary" />
+    </LinearLayout>
 </LinearLayout>

@@ -1,4 +1,5 @@
 import { TEXT_MUTATION_SCOPE, type ReconcilerTask } from '../core/reconciler-core.ts'
+import { locateRing } from '../platform/composer-anchor.ts'
 
 // The official conversation status row (turns / steps / LLM time / TTFT /
 // cache) has a hashed class, so the stylesheet cannot target it directly.
@@ -246,25 +247,6 @@ export function createStatsLineTask(): ReconcilerTask {
   // 环读数的选取判据：dock 里第一个「不含统计条 + 文本带百分比」的子节点。
   // 单独提出来是要让快路径的身份校验与 measureRing 用**同一条**判据 —— 两处漂移就会漏掉
   // 被 React 换掉的那个环（见 ringIdentitySettled）。
-  const isRingCandidate = (child: Element, stats: Element): boolean =>
-    !child.contains(stats) && /\d\s*%/.test(child.textContent ?? '')
-  // 环坐在统计条**所在的同一行**（dock）里，但中间隔着几层包装并不固定：0.1.7–0.2.0 的
-  // 统计条是 bOPqQW_root，外面还套着 slot 包装层（固定两级上溯刚好落到 dock）；0.2.1 把
-  // 统计条拆成两个 slot 条目、没有共同 _root，标记落在 slot 包装本身，固定两级就越过 dock
-  // 指到 composer 根，环永远找不到（实测 0.2.1-rc.1：dock 里 ring 明明在，measureRing 返回 null）。
-  // 所以按「谁的 children 里有环候选」向上找，包装层几层都不影响。
-  // 必须封顶在 composerStack：不封顶会一路扫到 body，而会话正文里带「50%」的块正好是
-  // isRingCandidate 的形状（不含 stats、文本有百分比），宿主结构再变一次就会把消息区
-  // 当成环、把 composer 根当成 dock 去叠绝对定位。
-  const locateRing = (stats: Element): { dock: Element; ring: Element } | null => {
-    const stack = stats.closest('[class*="_composerStack"]')
-    for (let node = stats.parentElement; node !== null; node = node.parentElement) {
-      const ring = [...node.children].find((child) => isRingCandidate(child, stats))
-      if (ring !== undefined) return { dock: node, ring }
-      if (node === stack) break
-    }
-    return null
-  }
   const measureRing = (stats: Element): RingFold | null => {
     const located = locateRing(stats)
     if (located === null) return null

@@ -1,0 +1,4 @@
+# DSHA 0.2.1-rc.3-20261103.2330-dsh0.2.1-rc.5 / build304
+
+- Experimental: a concorrência, a limpeza por tempo limite, a recuperação após substituição e a recolha de provas dos helpers ADB/root são limitadas; as cópias de segurança e exportações deixam de incluir chaves locais de emparelhamento ADB; os comandos do dispositivo e o ecrã virtual partilham a mesma ordem de canais; a página Web junta-se à tarefa principal e o modo de janelas do ambiente de trabalho deixa de mostrar duas janelas; um plugin corretivo incluído faz o glob ignorar worktrees aninhados.
+- Âmbito da verificação: apenas testes unitários direcionados, Lint e verificações de código locais; não verificado num dispositivo. versionCode elevado para 304 (com base no build303). A revisão DSHA mantém-se 0.2.1-rc.3 e o DSH incluído mantém-se 0.2.1-rc.5.

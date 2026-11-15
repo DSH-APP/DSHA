@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 平板横屏左栏可选行：当前右栏显示的是这一行时用 activated 态（强调色软底），按下仍是 shell ripple。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/shell_nav_ripple">
+    <item android:id="@android:id/mask">
+        <color android:color="#FFFFFFFF" />
+    </item>
+    <item>
+        <selector>
+            <item android:state_activated="true">
+                <color android:color="@color/shell_accent_soft" />
+            </item>
+            <item>
+                <color android:color="@android:color/transparent" />
+            </item>
+        </selector>
+    </item>
+</ripple>

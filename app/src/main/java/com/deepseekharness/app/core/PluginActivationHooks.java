@@ -60,6 +60,7 @@ public final class PluginActivationHooks {
     if (!"ok".equals(result.optString("status")))
       throw new IOException(
           UiStateText.render(result.optString("message", "PLUGIN_ACTIVATION_FAILED")));
+    PluginRepository.get(controller.context()).invalidateInstalledState();
   }
 
   public static void beforeLaunch(HarnessController controller, String id) throws Exception {

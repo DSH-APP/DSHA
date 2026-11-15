@@ -1,5 +1,8 @@
 package com.deepseekharness.app.util;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 /** Process-local, one-cycle accessibility repair. No persisted write or request can be replayed. */
@@ -36,9 +39,16 @@ public final class AccessibilityRepairState {
 
   public record Snapshot(long epoch, String phase, String code, boolean mayRemainDisabled) {}
 
+  /** Fixed state metadata only. Never contains a settings value, component list or screen data. */
+  public record Event(
+      long repairEpoch, String phase, String code, long elapsedMillis, boolean mayRemainDisabled) {}
+
+  private static final int EVENT_LIMIT = 32;
+
   public static final class Attempt {
     public final String deviceInstanceId;
     private final long epoch;
+    private final long startedAt;
     private final long deadline;
     private final Ports ports;
     private String disabled;
@@ -46,9 +56,11 @@ public final class AccessibilityRepairState {
     private boolean disableClaimed;
     private boolean restoreClaimed;
 
-    private Attempt(String deviceInstanceId, long epoch, long deadline, Ports ports) {
+    private Attempt(
+        String deviceInstanceId, long epoch, long startedAt, long deadline, Ports ports) {
       this.deviceInstanceId = deviceInstanceId;
       this.epoch = epoch;
+      this.startedAt = startedAt;
       this.deadline = deadline;
       this.ports = ports;
     }
@@ -60,6 +72,7 @@ public final class AccessibilityRepairState {
   private boolean uncertainWrite;
   private int writesInFlight;
   private Snapshot snapshot = new Snapshot(0, "IDLE", "NOT_ATTEMPTED", false);
+  private final ArrayDeque<Event> events = new ArrayDeque<>();
 
   public synchronized Snapshot snapshot() {
     return snapshot;
@@ -67,6 +80,32 @@ public final class AccessibilityRepairState {
 
   public synchronized long intentEpoch() {
     return epoch;
+  }
+
+  /** The Android owner drains this bounded buffer on its separate diagnostic worker. */
+  public synchronized List<Event> drainEvents() {
+    List<Event> result = new ArrayList<>(events);
+    events.clear();
+    return result;
+  }
+
+  public synchronized boolean hasEvents() {
+    return !events.isEmpty();
+  }
+
+  private void observed(Attempt attempt, Snapshot next) {
+    snapshot = next;
+    // No active attempt means this is an ordinary lifecycle notification, not a repair event.
+    if (attempt == null) return;
+    long elapsed = 0;
+    try {
+      elapsed = Math.max(0, attempt.ports.now() - attempt.startedAt);
+    } catch (RuntimeException unavailableClock) {
+      // Optional diagnostic metadata cannot change a repair's result or authority.
+    }
+    if (events.size() == EVENT_LIMIT) events.removeFirst();
+    events.addLast(
+        new Event(attempt.epoch, next.phase(), next.code(), elapsed, next.mayRemainDisabled()));
   }
 
   /** Only the Android owner may offer a freshly authenticated, live-device proof. */
@@ -82,9 +121,9 @@ public final class AccessibilityRepairState {
         || uncertainWrite
         || (lastAttempt != Long.MIN_VALUE && now - lastAttempt < 30_000)) return null;
     lastAttempt = now;
-    Attempt next = new Attempt(deviceInstanceId, ++epoch, now + 5_000, ports);
+    Attempt next = new Attempt(deviceInstanceId, ++epoch, now, now + 5_000, ports);
     active = next;
-    snapshot = new Snapshot(epoch, "CHECKING", "CHECKING_LIVE_FACTS", false);
+    observed(next, new Snapshot(epoch, "CHECKING", "CHECKING_LIVE_FACTS", false));
     return next;
   }
 
@@ -110,13 +149,13 @@ public final class AccessibilityRepairState {
         a.disableClaimed = true;
         uncertainWrite = true;
         writesInFlight++;
-        snapshot = new Snapshot(epoch, "DISABLE_SENT", "WRITE_MAY_HAVE_OCCURRED", true);
+        observed(a, new Snapshot(epoch, "DISABLE_SENT", "WRITE_MAY_HAVE_OCCURRED", true));
       }
       // Cancellation after the claim cannot recall an in-flight Binder transaction.
       if (!writeOnce(a, a.disabled)) return stop(a, "UNKNOWN", "DISABLE_RESULT_UNKNOWN");
       synchronized (this) {
         if (!current(a)) return false;
-        snapshot = new Snapshot(epoch, "DISABLED_WAIT", "WAITING_BOUNDED_RESTORE", true);
+        observed(a, new Snapshot(epoch, "DISABLED_WAIT", "WAITING_BOUNDED_RESTORE", true));
         return true;
       }
     } catch (Exception failure) {
@@ -140,7 +179,7 @@ public final class AccessibilityRepairState {
         if (!current(a) || !a.disableClaimed || a.restoreClaimed) return;
         a.restoreClaimed = true;
         writesInFlight++;
-        snapshot = new Snapshot(epoch, "RESTORE_SENT", "WRITE_MAY_HAVE_OCCURRED", true);
+        observed(a, new Snapshot(epoch, "RESTORE_SENT", "WRITE_MAY_HAVE_OCCURRED", true));
       }
       String restored = a.disabled.isEmpty() ? a.ownEntry : a.disabled + ":" + a.ownEntry;
       if (!writeOnce(a, restored)) {
@@ -149,8 +188,8 @@ public final class AccessibilityRepairState {
       }
       synchronized (this) {
         if (current(a))
-          snapshot =
-              new Snapshot(epoch, "WAITING_CONNECTED", "AWAITING_REAL_SERVICE_CALLBACK", true);
+          observed(
+              a, new Snapshot(epoch, "WAITING_CONNECTED", "AWAITING_REAL_SERVICE_CALLBACK", true));
       }
     } catch (Exception failure) {
       failed(a, "RESTORE", failure);
@@ -201,7 +240,7 @@ public final class AccessibilityRepairState {
   private synchronized boolean stop(Attempt a, String phase, String code) {
     if (!current(a)) return false;
     active = null;
-    snapshot = new Snapshot(++epoch, phase, code, a.disableClaimed);
+    observed(a, new Snapshot(++epoch, phase, code, a.disableClaimed));
     return false;
   }
 
@@ -216,9 +255,10 @@ public final class AccessibilityRepairState {
   public synchronized void cancel(CancelCause cause) {
     Attempt old = active;
     active = null;
-    snapshot =
+    observed(
+        old,
         new Snapshot(
-            ++epoch, "CANCELLED", cause.name(), old != null ? old.disableClaimed : uncertainWrite);
+            ++epoch, "CANCELLED", cause.name(), old != null ? old.disableClaimed : uncertainWrite));
   }
 
   public synchronized void deviceStopped(String deviceInstanceId) {
@@ -233,15 +273,17 @@ public final class AccessibilityRepairState {
 
   /** Called exclusively by the real AccessibilityService.onServiceConnected callback. */
   public synchronized void connected() {
+    Attempt previous = active;
     active = null;
     // A callback cannot retire a still-running old write, which might complete afterwards.
     uncertainWrite = writesInFlight != 0;
-    snapshot =
+    observed(
+        previous,
         new Snapshot(
             ++epoch,
             "CONNECTED",
             uncertainWrite ? "REAL_SERVICE_CONNECTED_WRITE_PENDING" : "REAL_SERVICE_CONNECTED",
-            uncertainWrite);
+            uncertainWrite));
   }
 
   static final class Plan {

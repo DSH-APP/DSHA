@@ -1,39 +1,20 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-host-frontend-static/lib/index.js",
+  "sourceSha256": "6bb17c239f48fc26d4cf990af3139e7b64ae9f06fc5249bce7b58a3130edaed4",
   "patches": [
     {
-      "before": "import { readFile } from \"node:fs/promises\";",
-      "after": "import { readFile, open } from \"node:fs/promises\"; // DSHA_STATIC_CACHE_V2"
-    },
-    {
       "before": "const STATIC_MISS_CODES = new Set([",
-      "after": "/** DSHA_STATIC_CACHE_V2: fstat identities, never truncated millisecond timestamps. */\nfunction requestHeader(req, name) {\n\tconst headers = req?.headers;\n\tconst value = typeof headers?.get === \"function\" ? headers.get(name) : headers?.[name];\n\treturn Array.isArray(value) ? value.join(\",\") : typeof value === \"string\" ? value : void 0;\n}\nfunction staticTag(meta) {\n\treturn `W/\"${[meta.dev, meta.ino, meta.size, meta.mtimeNs, meta.ctimeNs].map(value => value.toString(16)).join(\"-\")}\"`;\n}\nfunction staticRevalidated(req, tag) {\n\tconst value = requestHeader(req, \"if-none-match\");\n\tif (value === void 0) return false;\n\tif (value.trim() === \"*\") return true;\n\tconst opaque = tag.replace(/^W\\//, \"\");\n\tconst candidates = value.match(/(?:W\\/)?\"[^\"\\r\\n]*\"/g) ?? [];\n\treturn candidates.some(candidate => candidate.replace(/^W\\//, \"\") === opaque);\n}\nfunction staticCacheHeaders(index, tag) {\n\tif (index) return { \"cache-control\": \"no-store\" };\n\treturn { \"cache-control\": \"no-cache\", vary: \"Accept-Encoding\", ...(tag === void 0 ? {} : { etag: tag }) };\n}\nconst STATIC_MISS_CODES = new Set(["
+      "after": "/**\n* DSHA_STATIC_CACHE_V3: upstream (0.2.2) owns the content-hash weak ETag, 304 and HEAD.\n* DSHA only adds RFC 9110 If-None-Match list/wildcard matching (older WebViews merge\n* candidates) and an explicit no-store on the rendered index, whose inline boot\n* injection must never be reused from a WebView cache.\n*/\nfunction dshaRevalidated(value, tag) {\n\tif (typeof value !== \"string\") return false;\n\tif (value.trim() === \"*\") return true;\n\tconst opaque = tag.replace(/^W\\//, \"\");\n\treturn (value.match(/(?:W\\/)?\"[^\"\\r\\n]*\"/g) ?? []).some((candidate) => candidate.replace(/^W\\//, \"\") === opaque);\n}\nconst STATIC_MISS_CODES = new Set(["
     },
     {
-      "before": "async function serveStatic(pathname, res, distRoot, distIndex, authorizeIndex, renderIndex) {",
-      "after": "async function serveStatic(pathname, res, distRoot, distIndex, authorizeIndex, renderIndex, req) { // DSHA_STATIC_CACHE_V2"
+      "before": "\t\t\tif (request.headers.get(\"if-none-match\") === cache.etag) return new Response(null, {",
+      "after": "\t\t\tif (dshaRevalidated(request.headers.get(\"if-none-match\"), cache.etag)) return new Response(null, {"
     },
     {
-      "before": "\tlet body;\n\tlet type;\n\ttry {",
-      "after": "\tlet body;\n\tlet type;\n\tlet index = false; // DSHA_STATIC_CACHE_V2\n\tlet tag;\n\ttry {"
-    },
-    {
-      "before": "\t\t\tif (!authorizeIndex()) return;\n\t\t\tbody = await renderIndex();",
-      "after": "\t\t\tif (!authorizeIndex()) return;\n\t\t\tindex = true; // DSHA_STATIC_CACHE_V2\n\t\t\tbody = await renderIndex();"
-    },
-    {
-      "before": "\t\t\tbody = await readFile(target);\n\t\t\ttype = MIME[extname(target)] ?? \"application/octet-stream\";\n\t\t}",
-      "after": "\t\t\t/* DSHA_STATIC_CACHE_V2: one open file binds validator and bytes. */\n\t\t\tconst file = await open(target, \"r\");\n\t\t\ttry {\n\t\t\t\tconst before = await file.stat({ bigint: true });\n\t\t\t\tif (!before.isFile()) throw Object.assign(new Error(\"static target is not a file\"), { code: \"EISDIR\" });\n\t\t\t\ttype = MIME[extname(target)] ?? \"application/octet-stream\";\n\t\t\t\ttag = staticTag(before);\n\t\t\t\tif (staticRevalidated(req, tag)) {\n\t\t\t\t\tres.writeHead(304, staticCacheHeaders(false, tag));\n\t\t\t\t\tres.end();\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tif (req?.method !== \"HEAD\") {\n\t\t\t\t\tbody = await file.readFile();\n\t\t\t\t\tif (tag !== staticTag(await file.stat({ bigint: true }))) {\n\t\t\t\t\t\tres.writeHead(503, { \"cache-control\": \"no-store\" });\n\t\t\t\t\t\tres.end();\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t} finally { await file.close(); }\n\t\t}"
-    },
-    {
-      "before": "\tres.writeHead(200, { \"content-type\": type });",
-      "after": "\tres.writeHead(200, { \"content-type\": type, ...staticCacheHeaders(index, tag) }); // DSHA_STATIC_CACHE_V2"
-    },
-    {
-      "before": "\t\tawait serveStatic(decodeURIComponent(rawPath), res, distRoot, distIndex, () => ctx.connection.authorizeIndex(req, res), renderIndex);",
-      "after": "\t\tawait serveStatic(decodeURIComponent(rawPath), res, distRoot, distIndex, () => ctx.connection.authorizeIndex(req, res), renderIndex, req); // DSHA_STATIC_CACHE_V2"
+      "before": "\t\t\theaders = { \"content-type\": HTML_MIME };",
+      "after": "\t\t\theaders = { \"content-type\": HTML_MIME, \"cache-control\": \"no-store\" };"
     }
   ]
 }

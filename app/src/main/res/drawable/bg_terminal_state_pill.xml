@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 会话状态胶囊：raised 底 + 细描边 + 全圆角。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/terminal_raised" />
+    <corners android:radius="999dp" />
+    <stroke android:width="@dimen/stroke" android:color="@color/terminal_line" />
+</shape>

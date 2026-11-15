@@ -1,6 +1,7 @@
 package com.deepseekharness.app.util;
 
 import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,19 @@ public final class LanAddressPolicy {
   public record Candidate(
       String interfaceName, String address, boolean up, boolean loopback, boolean pointToPoint) {}
 
+  public enum Failure {
+    NONE,
+    PERMISSION,
+    INTERFACES
+  }
+
+  /** No credentials; IPv6 is observed separately because the LAN listener is IPv4-only. */
+  public record Discovery(List<String> addresses, boolean ipv6Only, Failure failure) {
+    public Discovery {
+      addresses = List.copyOf(addresses);
+    }
+  }
+
   static int priority(String name) {
     if (name == null) return -1;
     name = name.toLowerCase(java.util.Locale.ROOT);
@@ -24,25 +38,55 @@ public final class LanAddressPolicy {
   }
 
   public static String choose(Iterable<Candidate> candidates) {
-    Candidate selected = null;
-    int best = -1;
+    List<String> addresses = discover(candidates).addresses();
+    return addresses.isEmpty() ? null : addresses.get(0);
+  }
+
+  public static Discovery discover(Iterable<Candidate> candidates) {
+    List<Candidate> usable = new ArrayList<>();
+    boolean ipv6 = false;
     for (Candidate candidate : candidates) {
       if (candidate == null
           || !candidate.up
           || candidate.loopback
           || candidate.pointToPoint
-          || !privateIpv4(candidate.address)) continue;
-      int rank = priority(candidate.interfaceName);
-      if (rank > best) {
-        best = rank;
-        selected = candidate;
+          || priority(candidate.interfaceName) < 0) continue;
+      if (privateIpv4(candidate.address)) usable.add(candidate);
+      else if (candidate.address != null && candidate.address.indexOf(':') >= 0) {
+        try {
+          // A numeric IPv6 literal never needs a DNS lookup. Do not infer IPv6
+          // listener support or manufacture an IPv6 URL from its presence.
+          String literal = candidate.address.split("%", 2)[0];
+          if (!literal.matches("[0-9a-fA-F:]+")) continue;
+          var address = java.net.InetAddress.getByName(literal);
+          if (address instanceof Inet6Address
+              && !address.isAnyLocalAddress()
+              && !address.isLoopbackAddress()
+              && !address.isMulticastAddress()) ipv6 = true;
+        } catch (java.net.UnknownHostException invalid) {
+          // A malformed candidate cannot become a usable address.
+        }
       }
     }
-    return selected == null ? null : selected.address;
+    usable.sort(
+        java.util.Comparator.comparingInt((Candidate c) -> priority(c.interfaceName))
+            .reversed()
+            .thenComparing(Candidate::interfaceName)
+            .thenComparing(Candidate::address));
+    List<String> addresses = new ArrayList<>();
+    for (Candidate candidate : usable)
+      if (!addresses.contains(candidate.address)) addresses.add(candidate.address);
+    return new Discovery(addresses, addresses.isEmpty() && ipv6, Failure.NONE);
   }
 
   /** Conservative display discovery; OEM names/VPN routing still require actual-device checks. */
   public static String currentPrivateAddress() {
+    List<String> addresses = currentDiscovery().addresses();
+    return addresses.isEmpty() ? null : addresses.get(0);
+  }
+
+  /** Preserve discovery failures so UI can distinguish a denied read from no Wi-Fi address. */
+  public static Discovery currentDiscovery() {
     try {
       List<Candidate> candidates = new ArrayList<>();
       var interfaces = NetworkInterface.getNetworkInterfaces();
@@ -54,15 +98,17 @@ public final class LanAddressPolicy {
         var addresses = network.getInetAddresses();
         while (addresses.hasMoreElements()) {
           var address = addresses.nextElement();
-          if (address instanceof Inet4Address)
+          if (address instanceof Inet4Address || address instanceof Inet6Address)
             candidates.add(
                 new Candidate(
                     network.getName(), address.getHostAddress(), up, loopback, pointToPoint));
         }
       }
-      return choose(candidates);
-    } catch (java.net.SocketException | SecurityException unavailable) {
-      return null;
+      return discover(candidates);
+    } catch (SecurityException denied) {
+      return new Discovery(List.of(), false, Failure.PERMISSION);
+    } catch (java.net.SocketException unavailable) {
+      return new Discovery(List.of(), false, Failure.INTERFACES);
     }
   }
 

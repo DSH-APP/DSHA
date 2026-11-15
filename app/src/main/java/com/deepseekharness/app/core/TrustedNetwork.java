@@ -1,11 +1,10 @@
 package com.deepseekharness.app.core;
 
 import android.content.Context;
+import com.deepseekharness.app.util.PemCertificates;
 import java.io.InputStream;
 import java.security.KeyStore;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import javax.net.ssl.SSLContext;
@@ -29,8 +28,7 @@ public final class TrustedNetwork {
     roots.load(null, null);
     try (InputStream stream = context.getAssets().open("ca-certificates.crt")) {
       int index = 0;
-      for (Certificate certificate :
-          CertificateFactory.getInstance("X.509").generateCertificates(stream))
+      for (X509Certificate certificate : PemCertificates.read(stream))
         roots.setCertificateEntry("dsha-ca-" + index++, certificate);
     }
     TrustManagerFactory bundled =

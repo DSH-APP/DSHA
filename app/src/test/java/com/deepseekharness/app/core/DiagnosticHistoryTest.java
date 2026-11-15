@@ -124,4 +124,34 @@ public class DiagnosticHistoryTest {
       cleanup.removeOwned(directory.getParentFile(), directory.getName());
     }
   }
+
+  @Test
+  public void exportReadsStoredOperationRowsOnceWithoutDisplayCompaction() throws Exception {
+    File directory = Files.createTempDirectory("diagnostic-export-tail").toFile();
+    JvmBackupFileSystem fs = new JvmBackupFileSystem();
+    try {
+      StringBuilder raw = new StringBuilder();
+      for (int i = 0; i < 80; i++)
+        raw.append("10-23 20:30:39 [RECOVERY_FAILED] evidence-")
+            .append(i)
+            .append("x".repeat(120))
+            .append('\n');
+      raw.append("10-23 20:30:40 [STARTUP_ERROR] YAMLException: bad indentation (92:1)\n")
+          .append(" 92 | private-business-config\n");
+      Files.writeString(new File(directory, "diagnostic-events.txt").toPath(), raw);
+      String exported = DiagnosticLog.exportTail(fs, directory);
+      String[] records =
+          new String(
+                  com.deepseekharness.app.backup.DiagnosticExportArchive.operationEvents(exported),
+                  StandardCharsets.UTF_8)
+              .strip()
+              .split("\\n");
+      assertEquals(81, records.length);
+      assertFalse(exported.contains("private-business-config"));
+      assertFalse(exported.contains("Failure clues") || exported.contains("上下文"));
+      assertTrue(exported.contains("evidence-0") && exported.contains("evidence-79"));
+    } finally {
+      fs.removeOwned(directory.getParentFile(), directory.getName());
+    }
+  }
 }

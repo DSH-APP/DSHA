@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 虚拟识屏顶栏：返回 · 标题 + 一行状态 · 悬浮预览 · 使用说明。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="56dp" android:gravity="center_vertical" android:orientation="horizontal">
+  <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/vscreen_back" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_ui_back" app:tint="@color/shell_text" />
+  <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="4dp" android:orientation="vertical">
+    <TextView android:id="@+id/vscreen_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityHeading="true" android:includeFontPadding="false" android:singleLine="true" android:ellipsize="end" android:textColor="@color/shell_text" android:textSize="@dimen/shell_title_text" android:textStyle="bold" />
+    <TextView android:id="@+id/vscreen_state" style="@style/ShellStatusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:drawablePadding="6dp" android:gravity="center_vertical" />
+  </LinearLayout>
+  <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/vscreen_float" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_vscreen_float" app:tint="@color/shell_text_secondary" />
+  <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/vscreen_help" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_terminal_help" app:tint="@color/shell_text_secondary" />
+</LinearLayout>

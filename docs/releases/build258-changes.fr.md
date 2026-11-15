@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.3-20261102.0400-dsh0.2.1-rc.5 / build258
+
+- Écran de chargement au démarrage et icône vers Web : dans Réglages → Configuration d'exécution, ou dans le nouveau plugin intégré dsh-launch-target (détails des plugins Web), choisissez si l'icône de l'app ouvre l'écran principal ou Web (écran principal par défaut). Avec Web, un écran de chargement s'affiche d'abord et Web s'ouvre dès que l'environnement est prêt ; revenir en arrière depuis Web ramène à l'écran d'accueil.
+- La maintenance, la récupération au démarrage et les liens de plugin en attente ouvrent toujours d'abord l'écran principal, et un retour depuis une notification ou la carte de tâche ne passe jamais directement à Web. Ce choix est stocké uniquement sur cet appareil et n'est pas sauvegardé.
+- Portée de la vérification : tests unitaires ciblés et contrôles de source locaux uniquement ; le DSH de secours et ce paquet n'ont pas été installés sur un appareil. versionCode porté à 258 (basé sur build257). La révision DSHA reste 0.2.1-rc.3 et le DSH intégré reste 0.2.1-rc.5.

@@ -8,8 +8,13 @@ public final class ScreenSemanticNode implements AutoCloseable {
   public final AccessibilityNodeInfo node;
   private final String viewId, uniqueId, className, text, description;
   private final boolean password, editable, clickable, scrollable;
+  private final int actionMask;
 
   public ScreenSemanticNode(AccessibilityNodeInfo source) {
+    this(source, ScreenNodeActions.snapshot(source).mask());
+  }
+
+  ScreenSemanticNode(AccessibilityNodeInfo source, int actionMask) {
     viewId = source.getViewIdResourceName();
     uniqueId = android.os.Build.VERSION.SDK_INT >= 33 ? source.getUniqueId() : null;
     className = String.valueOf(source.getClassName());
@@ -19,7 +24,12 @@ public final class ScreenSemanticNode implements AutoCloseable {
     editable = source.isEditable();
     clickable = source.isClickable();
     scrollable = source.isScrollable();
+    this.actionMask = actionMask;
     node = AccessibilityNodeInfo.obtain(source);
+  }
+
+  boolean supports(int action) {
+    return ScreenNodeActions.supportsMask(actionMask, action);
   }
 
   public boolean refreshMatches(int window) {
@@ -30,6 +40,7 @@ public final class ScreenSemanticNode implements AutoCloseable {
         && editable == node.isEditable()
         && clickable == node.isClickable()
         && scrollable == node.isScrollable()
+        && actionMask == ScreenNodeActions.snapshot(node).mask()
         && Objects.equals(viewId, node.getViewIdResourceName())
         && Objects.equals(className, String.valueOf(node.getClassName()))
         && (android.os.Build.VERSION.SDK_INT < 33 || Objects.equals(uniqueId, node.getUniqueId()))

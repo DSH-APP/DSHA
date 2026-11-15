@@ -38,9 +38,10 @@ public final class AppDeviceActions {
           confirmationFailure.apply(
               com.deepseekharness.app.util.UiText.format("启动应用：%s", pkg), pkg);
       if (failure != null) return "[ERR] " + failure;
-      android.content.Intent i = ctx.getPackageManager().getLaunchIntentForPackage(pkg);
+      android.content.Intent i = launchIntent(ctx, pkg);
       if (i == null)
-        return com.deepseekharness.app.util.UiText.format("NOT_FOUND: %s（该应用没有启动入口或未安装）", pkg);
+        return com.deepseekharness.app.util.UiText.format("NOT_FOUND: %s（该应用没有启动入口或未安装）", pkg)
+            + (installed(ctx, pkg) ? " [installed=1]" : " [installed=0]");
       i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
       if (!current.getAsBoolean()) return "[ERR] SCREEN_RUN_CHANGED";
       if (broker == null || broker.claimDispatch(request) == null)
@@ -54,8 +55,59 @@ public final class AppDeviceActions {
     }
   }
 
-  /** /app/clip 读剪贴板；/app/clip?text=xxx 写剪贴板 */
+  /**
+   * 先用系统的启动入口；个别 ROM 偶发返回空时，再按 MAIN/LAUNCHER 显式解析同一包内的可导出入口。
+   * 只解析调用方指定的包，不改用别的应用。
+   */
+  static android.content.Intent launchIntent(Context ctx, String pkg) {
+    var pm = ctx.getPackageManager();
+    android.content.Intent direct = pm.getLaunchIntentForPackage(pkg);
+    if (direct != null) return direct;
+    android.content.Intent query =
+        new android.content.Intent(android.content.Intent.ACTION_MAIN)
+            .addCategory(android.content.Intent.CATEGORY_LAUNCHER)
+            .setPackage(pkg);
+    for (var info : pm.queryIntentActivities(query, 0)) {
+      if (info.activityInfo == null
+          || !pkg.equals(info.activityInfo.packageName)
+          || !info.activityInfo.exported) continue;
+      return new android.content.Intent(android.content.Intent.ACTION_MAIN)
+          .addCategory(android.content.Intent.CATEGORY_LAUNCHER)
+          .setClassName(pkg, info.activityInfo.name);
+    }
+    return null;
+  }
+
+  private static boolean installed(Context ctx, String pkg) {
+    try {
+      ctx.getPackageManager().getPackageInfo(pkg, 0);
+      return true;
+    } catch (Exception missing) {
+      return false;
+    }
+  }
+
+  /** /app/clip 读剪贴板；/app/clip?text=xxx 写剪贴板。旧入口默认拒绝读取。 */
   public static String clipboard(Context ctx, Handler mainHandler, String text) {
+    return clipboard(ctx, mainHandler, text, () -> false);
+  }
+
+  /** 原生读取闸门由调用方传入；写剪贴板不经过读取授权。 */
+  public static String clipboard(
+      Context ctx,
+      Handler mainHandler,
+      String text,
+      java.util.function.BooleanSupplier readAllowed) {
+    return clipboard(ctx, mainHandler, text, !text.isEmpty(), readAllowed);
+  }
+
+  /** 显式区分「text 参数缺失（读取）」和「text 参数为空（写入空串）」。 */
+  public static String clipboard(
+      Context ctx,
+      Handler mainHandler,
+      String text,
+      boolean write,
+      java.util.function.BooleanSupplier readAllowed) {
     try {
       // HTTP 工作线程有界等待。不能在排队后先报成功，也不能因等待超时就假定尚未写入。
       if (Looper.myLooper() == Looper.getMainLooper())
@@ -74,11 +126,14 @@ public final class AppDeviceActions {
                 }
               },
               () -> {
+                if (!write && (readAllowed == null || !readAllowed.getAsBoolean()))
+                  return com.deepseekharness.app.util.UiText.text(
+                      "DEVICE_CLIPBOARD_OFF: 读取剪贴板已关闭，请在设备能力授权中开启");
                 android.content.ClipboardManager cm =
                     (android.content.ClipboardManager)
                         ctx.getSystemService(Context.CLIPBOARD_SERVICE);
                 if (cm == null) return "NO_SERVICE";
-                if (!text.isEmpty()) {
+                if (write) {
                   cm.setPrimaryClip(
                       com.deepseekharness.app.bridge.SensitiveClipboard.text("DSHA", text));
                   return com.deepseekharness.app.util.UiText.format(

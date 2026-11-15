@@ -49,6 +49,8 @@ public final class StartupRecoveryModel extends AndroidViewModel {
                           JSONObject snapshots = StartupRepairs.list(c);
                           out.put("snapshots", snapshots.getJSONArray("snapshots"));
                           out.put("pending", snapshots.optBoolean("pending"));
+                          JSONObject retained = snapshots.optJSONObject("retained");
+                          if (retained != null) out.put("retained", retained);
                           // 配置损坏时仍显示诊断与配置快照；插件清单单独报告读取失败。
                           try {
                             if (c.isEnvironmentReady()

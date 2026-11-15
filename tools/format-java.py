@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+from git_guard import git_output
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "tools/java-format.lock.json"
@@ -70,11 +71,11 @@ def checked_path(name, root=ROOT, protected=()):
 
 def changed_files(root=ROOT):
     """Tracked staged/unstaged changes and new unignored files, never a source-tree scan."""
-    tracked = subprocess.check_output(
-        ["git", "diff", "--name-only", "-z", "--diff-filter=ACMRT", "HEAD", "--", "*.java"], cwd=root
+    tracked = git_output(
+        ["diff", "--name-only", "-z", "--diff-filter=ACMRT", "HEAD", "--", "*.java"], cwd=root
     )
-    untracked = subprocess.check_output(
-        ["git", "ls-files", "--others", "--exclude-standard", "-z", "--", "*.java"], cwd=root
+    untracked = git_output(
+        ["ls-files", "--others", "--exclude-standard", "-z", "--", "*.java"], cwd=root
     )
     return sorted(set(item for item in (tracked + untracked).decode("utf-8").split("\0") if item))
 
@@ -162,7 +163,8 @@ def atomic_write(path, data):
 
 def token_helper(java, javac):
     # Cache the compile by exact helper bytes. It has no Android/Gradle dependency.
-    destination = CACHE / ("tokens-" + sha256(HELPER.read_bytes())[:24])
+    # Per-process directory: parallel tree batches must never share javac output.
+    destination = CACHE / ("tokens-" + sha256(HELPER.read_bytes())[:24]) / str(os.getpid())
     destination.mkdir(parents=True, exist_ok=True)
     # Recompile rather than trusting an executable helper left in a mutable build cache.
     result = subprocess.run(
@@ -183,6 +185,69 @@ def verify_tokens(command, before, after):
             or not re.fullmatch("[0-9a-f]{64}", lines[0])):
         raise FormatError("FORMAT_TOKEN_CHANGE: exact Java tokens must remain identical")
     return lines[0]
+
+
+def format_one(java, jar, lock, relative, before):
+    """Single-file stdin mode: the reference behavior, also used to localize batch failures."""
+    output = subprocess.run(
+        [str(java), "-Dfile.encoding=UTF-8", "-jar", str(jar), *lock["flags"], "--assume-filename", relative, "-"],
+        input=before, capture_output=True, timeout=60
+    )
+    if output.returncode:
+        raise FormatError("FORMAT_PARSE_FAILED: " + relative + "\n" + output.stderr.decode("utf-8", errors="replace"))
+    return output.stdout.replace(b"\r\n", b"\n")
+
+
+def format_batch(java, jar, lock, selected, befores, work):
+    """One formatter JVM for the whole batch, on private copies; sources are never touched here."""
+    copies = []
+    for (_, relative), before in zip(selected, befores):
+        copy = work / "formatted" / relative
+        copy.parent.mkdir(parents=True, exist_ok=True)
+        copy.write_bytes(before)
+        copies.append(copy)
+    result = subprocess.run(
+        [str(java), "-Dfile.encoding=UTF-8", "-jar", str(jar), *lock["flags"], "-i", *map(str, copies)],
+        capture_output=True, timeout=60 + 2 * len(copies)
+    )
+    if result.returncode:
+        # 逐文件重跑以给出与单文件模式相同的定位信息。
+        for (_, relative), before in zip(selected, befores):
+            format_one(java, jar, lock, relative, before)
+        raise FormatError("FORMAT_BATCH_FAILED\n" + result.stderr.decode("utf-8", errors="replace"))
+    afters = []
+    for copy in copies:
+        after = copy.read_bytes().replace(b"\r\n", b"\n")
+        copy.write_bytes(after)
+        afters.append(after)
+    return afters, copies
+
+
+def verify_tokens_batch(command, work, selected, befores, afters, copies):
+    """One lexer JVM compares every before/after pair of the batch."""
+    lines = []
+    for (_, relative), before, after, copy in zip(selected, befores, afters, copies):
+        if b"\0" in before or b"\0" in after:
+            raise FormatError("FORMAT_NUL_SOURCE: " + relative)
+        original = work / "original" / relative
+        original.parent.mkdir(parents=True, exist_ok=True)
+        original.write_bytes(before)
+        for path in (original, copy):
+            if "\t" in str(path) or "\n" in str(path):
+                raise FormatError("FORMAT_BATCH_PATH: " + relative)
+        lines.append(f"{original}\t{copy}\n")
+    result = subprocess.run([*command, "--pairs"], input="".join(lines).encode("utf-8"),
+                            capture_output=True, timeout=60 + len(lines))
+    rows = result.stdout.decode("ascii", errors="replace").splitlines()
+    if result.returncode or len(rows) != len(selected):
+        raise FormatError("FORMAT_TOKEN_BATCH_FAILED: " + result.stderr.decode("utf-8", errors="replace"))
+    digests = []
+    for (_, relative), row in zip(selected, rows):
+        parts = row.split(" ")
+        if len(parts) != 2 or parts[0] != parts[1] or not re.fullmatch("[0-9a-f]{64}", parts[0]):
+            raise FormatError("FORMAT_TOKEN_CHANGE: exact Java tokens must remain identical: " + relative)
+        digests.append(parts[0])
+    return digests
 
 
 def main(argv=None):
@@ -216,18 +281,19 @@ def main(argv=None):
     helper = token_helper(java, javac)
     entries = []
     prepared = []
-    # Validate the whole batch before writing any source. No formatter -i is used.
+    befores = []
     for path, relative in selected:
         before = path.read_bytes()
         before.decode("utf-8", errors="strict")
-        output = subprocess.run(
-            [str(java), "-Dfile.encoding=UTF-8", "-jar", str(jar), *lock["flags"], "--assume-filename", relative, "-"],
-            input=before, capture_output=True, timeout=60
-        )
-        if output.returncode:
-            raise FormatError("FORMAT_PARSE_FAILED: " + relative + "\n" + output.stderr.decode("utf-8", errors="replace"))
-        after = output.stdout.replace(b"\r\n", b"\n")
-        token_sha = verify_tokens(helper, before, after)
+        befores.append(before)
+    # Validate the whole batch before writing any source. Formatter -i only touches private
+    # copies under app/build; one formatter JVM and one lexer JVM serve the whole batch.
+    CACHE.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="batch-", dir=CACHE) as directory:
+        work = Path(directory)
+        afters, copies = format_batch(java, jar, lock, selected, befores, work)
+        tokens = verify_tokens_batch(helper, work, selected, befores, afters, copies)
+    for (path, relative), before, after, token_sha in zip(selected, befores, afters, tokens):
         changed = before != after
         entries.append({
             "file": relative, "beforeSha256": sha256(before), "formattedSha256": sha256(after),

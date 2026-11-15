@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>DSHA · 安装与环境压缩重构（交互原型）</title>
+<style>
+/* UI v5 token 离线副本（与 plugin-card-20261101/preview.html 相同），只用于本预览。 */
+:root{color-scheme:light;--page:#e9eef6;--bg:#f3f6fb;--surface:#fcfdff;--raised:#e7edf6;--line:rgba(29,58,96,.075);--line-2:rgba(29,58,96,.145);
+--text:#18273f;--text-2:#50617a;--muted:#5a6b86;--accent:#1e50d0;--accent-soft:rgba(30,80,208,.08);--on-accent:#fff;
+--good:#287453;--good-soft:rgba(40,116,83,.10);--warn:#8c600d;--warn-soft:rgba(140,96,13,.10);--bad:#af404b;--bad-soft:rgba(175,64,75,.10);
+--bezel:#1b2333;--shadow:0 18px 50px rgba(17,32,62,.14);--sans:system-ui,-apple-system,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;--ease:cubic-bezier(.22,1,.36,1);--fs:1}
+[data-theme=dark]{color-scheme:dark;--page:#070a10;--bg:#0b0f16;--surface:#131923;--raised:#1b2432;--line:rgba(203,220,255,.07);--line-2:rgba(203,220,255,.13);
+--text:#edf1f7;--text-2:#b0bbcc;--muted:#8895aa;--accent:#6aa4ff;--accent-soft:rgba(106,164,255,.10);--on-accent:#091729;
+--good:#93ccaf;--good-soft:rgba(147,204,175,.10);--warn:#e4be83;--warn-soft:rgba(228,190,131,.10);--bad:#eea3a6;--bad-soft:rgba(238,163,166,.10);--bezel:#2a3446;--shadow:0 18px 50px rgba(0,0,0,.5)}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--page);color:var(--text);font:14px/1.45 var(--sans)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* —— 外层工具栏 —— */
+.top{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 16px;background:color-mix(in srgb,var(--page) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top h1{font-size:15px;margin:0 8px 0 0}
+.seg{display:inline-flex;background:var(--raised);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;padding:5px 11px;border-radius:999px;font-size:12px;cursor:pointer;color:var(--text-2)}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12);font-weight:600}
+.stage{display:grid;grid-template-columns:auto minmax(300px,420px);gap:24px;padding:24px;justify-content:center;align-items:start}
+body[data-device=tablet] .stage{grid-template-columns:1fr}
+.inspector{display:grid;gap:14px;position:sticky;top:70px;max-height:calc(100vh - 90px);overflow:auto}
+body[data-device=tablet] .inspector{position:static;max-height:none;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+.panel h2{font-size:13px;margin:0 0 8px}.panel p,.panel li{font-size:12px;color:var(--text-2);margin:4px 0}.panel ul{padding-left:18px;margin:4px 0}
+.panel code{font:11px var(--mono);background:var(--raised);padding:1px 4px;border-radius:4px}
+.panel .seg{flex-wrap:wrap;border-radius:14px}
+/* —— 设备 —— */
+.device{--dw:380px;--dh:800px;width:var(--dw);height:var(--dh);border:10px solid var(--bezel);border-radius:40px;background:var(--bg);overflow:hidden;position:relative;box-shadow:var(--shadow);font-size:calc(14px*var(--fs));display:flex;flex-direction:column}
+.device[data-device=phone-l]{--dw:432px;--dh:880px}
+.device[data-device=tablet]{--dw:1180px;--dh:740px;border-radius:28px}
+.sbar{height:28px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:12px;color:var(--text-2)}
+.shell{flex:1;display:flex;min-height:0}
+.rail{width:84px;flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:12px;border-right:1px solid var(--line)}
+.rail div{width:64px;padding:10px 0;border-radius:16px;text-align:center;font-size:11px;color:var(--text-2)}
+.rail div.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.rail svg{display:block;margin:0 auto 4px}
+.list-pane{width:330px;flex:none;border-right:1px solid var(--line);padding:20px 18px;overflow:auto}
+.list-pane h3{font-size:24px;margin:0 0 4px}.list-pane .cap{font-size:12px;color:var(--text-2);margin:0 0 16px}
+.sitem{display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;margin-bottom:4px}
+.sitem.on{background:var(--raised)}.sitem b{display:block;font-size:14px}.sitem small{color:var(--text-2);font-size:12px}
+.screen{flex:1;min-width:0;overflow:auto;position:relative;scroll-behavior:smooth}
+.page{padding:4px 16px 28px}
+.device[data-device=tablet] .page{padding:18px 26px 32px;max-width:1000px}
+/* —— 新设计组件 —— */
+.appbar{display:flex;align-items:center;gap:6px;padding:6px 8px 6px 4px;position:sticky;top:0;background:var(--bg);z-index:2}
+.appbar h4{margin:0;font-size:1.25em;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ibtn{width:40px;height:40px;border:0;border-radius:12px;background:none;display:grid;place-items:center;cursor:pointer;color:var(--text-2);flex:none}
+.ibtn:hover{background:var(--raised)}
+.hero{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px;display:grid;gap:12px}
+.hero-top{display:flex;gap:12px;align-items:center}
+.orb{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;flex:none;background:var(--good-soft);color:var(--good)}
+.orb.warn{background:var(--warn-soft);color:var(--warn)}.orb.bad{background:var(--bad-soft);color:var(--bad)}.orb.run{background:var(--accent-soft);color:var(--accent)}
+.hero-top b{font-size:1.14em;display:block}.hero-top small{color:var(--text-2);font-size:.86em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:0;background:var(--raised);border-radius:999px;padding:4px 10px;font-size:.8em;color:var(--text-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.chip em{font-style:normal;color:var(--text);font-weight:600;margin-left:4px;font-family:var(--mono);font-size:.95em}
+.acts{display:flex;gap:8px}
+.btn{flex:1;min-height:44px;border-radius:14px;border:1px solid var(--line-2);background:var(--surface);font-weight:600;cursor:pointer;padding:0 12px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{border-color:transparent;background:var(--raised)}
+.meter{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.meter i{height:5px;border-radius:3px;background:var(--raised)}
+.meter i.ok{background:var(--good)}.meter i.bad{background:var(--bad)}.meter i.skip{background:var(--warn)}
+.meter i.run{background:linear-gradient(90deg,var(--accent) 40%,var(--accent-soft) 40%);background-size:200% 100%;animation:mv 1s linear infinite}
+@keyframes mv{to{background-position:-200% 0}}
+.runline{display:flex;justify-content:space-between;font-size:.82em;color:var(--text-2);gap:8px}
+.banner{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-radius:16px;background:var(--warn-soft);color:var(--warn);font-size:.88em;margin-top:10px}
+.banner.bad{background:var(--bad-soft);color:var(--bad)}
+.banner b{display:block;color:var(--text)}.banner p{margin:2px 0 0;color:var(--text-2)}
+.banner button{margin-left:auto;flex:none;border:0;background:var(--surface);border-radius:10px;padding:6px 10px;font-weight:600;cursor:pointer;color:var(--text)}
+.sec{display:flex;align-items:center;justify-content:space-between;margin:18px 4px 7px;font-size:.84em;font-weight:700;color:var(--text-2)}
+.sec span{font-weight:500;color:var(--muted)}
+.group{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.row{display:flex;align-items:center;gap:11px;width:100%;min-height:52px;padding:8px 12px;border:0;background:none;text-align:left;cursor:pointer;border-top:1px solid var(--line)}
+.group>.row:first-child,.group>.cmp:first-child>.row{border-top:0}
+.row:hover{background:color-mix(in srgb,var(--raised) 55%,transparent)}
+.row:disabled{opacity:.45;cursor:not-allowed}
+.row .ico{width:30px;height:30px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.row .tx{flex:1;min-width:0}.row .tx b{display:block;font-size:.97em;font-weight:600}
+.row .tx small{display:block;color:var(--text-2);font-size:.8em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row.danger .ico{background:var(--bad-soft);color:var(--bad)}.row.danger b{color:var(--bad)}
+.pill{font-size:.76em;padding:3px 8px;border-radius:999px;background:var(--raised);color:var(--muted);white-space:nowrap;flex:none}
+.pill.ok{background:var(--good-soft);color:var(--good)}.pill.bad{background:var(--bad-soft);color:var(--bad)}.pill.run{background:var(--accent-soft);color:var(--accent)}.pill.skip{background:var(--warn-soft);color:var(--warn)}
+.chev{color:var(--muted);flex:none;transition:transform .2s var(--ease)}
+[aria-expanded=true] .chev{transform:rotate(90deg)}
+.num{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font:600 .82em var(--mono);background:var(--raised);color:var(--text-2);flex:none}
+.num.ok{background:var(--good-soft);color:var(--good)}.num.bad{background:var(--bad-soft);color:var(--bad)}.num.run{background:var(--accent-soft);color:var(--accent)}.num.skip{background:var(--warn-soft);color:var(--warn)}
+.det{padding:0 12px 12px 53px;font-size:.84em;color:var(--text-2);animation:fade .2s var(--ease)}
+.det p{margin:0 0 8px;white-space:pre-line}
+.det .links{display:flex;gap:6px;flex-wrap:wrap}
+.tbtn{border:1px solid var(--line-2);background:none;border-radius:10px;padding:6px 11px;font-size:.92em;font-weight:600;cursor:pointer;color:var(--accent)}
+.tbtn:disabled{opacity:.45;cursor:not-allowed}
+@keyframes fade{from{opacity:0;transform:translateY(-3px)}}
+.log{margin-top:0;border-top:1px solid var(--line);background:var(--bg);font:.76em/1.55 var(--mono);color:var(--text-2);padding:10px 12px;max-height:180px;overflow:auto;white-space:pre-wrap}
+.cols{display:block}
+.device[data-device=tablet] .cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.device[data-device=tablet] .cols>div>.sec:first-child{margin-top:0}
+.foot{font-size:.76em;color:var(--muted);text-align:center;margin-top:16px}
+/* 子页 */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px}
+.facts{display:grid;gap:8px;margin:10px 0 0;padding:0;list-style:none}
+.facts li{display:flex;gap:9px;font-size:.86em;color:var(--text-2)}
+.facts li svg{flex:none;color:var(--accent);margin-top:2px}
+.big{font:700 2.2em/1 var(--mono);letter-spacing:-.02em}.big small{font:500 .4em var(--sans);color:var(--text-2);margin-left:4px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:.84em}.kv dt{color:var(--text-2)}.kv dd{margin:0;text-align:right;font-family:var(--mono);word-break:break-all}
+.att{display:flex;gap:10px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--muted)}.dot.ok{background:var(--good)}.dot.bad{background:var(--bad)}.dot.warn{background:var(--warn)}
+/* 弹层 */
+.scrim{position:absolute;inset:0;background:rgba(5,10,20,.42);z-index:10;animation:fadeIn .18s}
+@keyframes fadeIn{from{opacity:0}}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:11;background:var(--surface);border-radius:24px 24px 0 0;padding:10px 18px 18px;max-height:82%;overflow:auto;animation:up .25s var(--ease)}
+@keyframes up{from{transform:translateY(30%);opacity:0}}
+.device[data-device=tablet] .sheet{left:50%;right:auto;bottom:auto;top:50%;width:440px;border-radius:24px;transform:translate(-50%,-50%);animation:fadeIn .2s}
+.grip{width:36px;height:4px;border-radius:2px;background:var(--line-2);margin:0 auto 12px}
+.device[data-device=tablet] .grip{display:none}
+.sheet h5{font-size:1.1em;margin:0 0 6px}.sheet p{margin:0 0 10px;color:var(--text-2);font-size:.88em}
+.sheet .facts li svg{color:var(--warn)}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:.86em;padding:10px;border-radius:12px;background:var(--raised);margin:10px 0;cursor:pointer}
+.sheet .acts{margin-top:12px}.btn.dangerous{background:var(--bad);border-color:var(--bad);color:#fff}
+.toast{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:20;background:var(--text);color:var(--bg);padding:9px 16px;border-radius:12px;font-size:.84em;animation:fadeIn .2s;white-space:nowrap}
+/* —— 旧实现近似 —— */
+.lg h2{font-size:1.85em;margin:18px 0 6px}.lg .sub{color:var(--text-2);font-size:.93em;margin:0 0 18px}
+.lg .speed{display:block;width:100%;min-height:48px;border:0;background:none;color:var(--accent);font-size:1.05em;margin-bottom:14px}
+.lg .info{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:16px}
+.lg .info div{display:flex;justify-content:space-between;gap:20px;padding:8px 0;font-size:.86em}.lg .info span:first-child{color:var(--text-2)}
+.lg .info span:last-child{text-align:right;word-break:break-all}
+.lg .lsec{margin:22px 0 8px;font-weight:700;font-size:.9em;color:var(--text-2)}
+.lg .lrow{display:flex;align-items:center;gap:12px;min-height:64px;padding:13px;border-top:1px solid var(--line);font-weight:700}
+.lg .lrow:first-child{border-top:0}.lg .lrow small{display:block;font-weight:400;color:var(--text-2);font-size:.8em;margin-top:4px}
+.lg .lrow .r{margin-left:auto;color:var(--muted);font-size:.8em;font-weight:400}
+.lg .lbtn{display:block;width:100%;min-height:48px;margin-top:16px;border:0;border-radius:14px;background:var(--accent);color:var(--on-accent);font-weight:600}
+.lg .lbtn.dg{background:var(--bad-soft);color:var(--bad)}
+.lg .llog{height:220px;background:var(--raised);border-radius:12px;margin-top:8px;padding:12px;font:.75em var(--mono);color:var(--muted)}
+.measure{position:absolute;right:10px;top:36px;z-index:3;background:var(--text);color:var(--bg);font-size:11px;padding:4px 8px;border-radius:8px;opacity:.85;pointer-events:none}
+@media (max-width:860px){.stage{grid-template-columns:1fr;padding:12px}.inspector{position:static;max-height:none}.device[data-device^=phone]{margin:0 auto}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body data-device="phone">
+<header class="top">
+  <h1>安装与环境 · 压缩重构</h1>
+  <div class="seg" role="group" aria-label="方案"><button data-set="design" data-v="new">新方案</button><button data-set="design" data-v="legacy">当前实现</button></div>
+  <div class="seg" role="group" aria-label="设备"><button data-set="device" data-v="phone">手机 360</button><button data-set="device" data-v="phone-l">手机 412</button><button data-set="device" data-v="tablet">平板双栏</button></div>
+  <div class="seg" role="group" aria-label="主题"><button data-set="theme" data-v="light">浅色</button><button data-set="theme" data-v="dark">夜间</button></div>
+  <div class="seg" role="group" aria-label="语言"><button data-set="lang" data-v="zh">中文</button><button data-set="lang" data-v="en">EN</button></div>
+  <div class="seg" role="group" aria-label="字体倍数"><button data-set="fs" data-v="1">1.0×</button><button data-set="fs" data-v="1.15">1.15×</button><button data-set="fs" data-v="1.3">1.3×</button></div>
+</header>
+<main class="stage">
+  <div class="device" id="device" data-device="phone">
+    <div class="sbar"><span>20:31</span><span>VPN · 100%</span></div>
+    <div class="shell" id="shell"></div>
+  </div>
+  <aside class="inspector" aria-label="实验台与说明">
+    <section class="panel">
+      <h2>状态场景</h2>
+      <div class="seg" role="group" aria-label="场景">
+        <button data-set="scene" data-v="idle">可用 · 未检查</button><button data-set="scene" data-v="ok">全部正常</button>
+        <button data-set="scene" data-v="fail">第 4 步失败</button><button data-set="scene" data-v="pending">中断维护</button><button data-set="scene" data-v="broken">环境未就绪</button>
+      </div>
+      <p>「检查全部」「按需修复」「重新检查单步」都会实际模拟逐步推进；场景「第 4 步失败」会在 pnpm 处失败并给出修复入口。</p>
+      <div class="seg" role="group" aria-label="页面"><button data-set="page" data-v="main">主页</button><button data-set="page" data-v="speed">首次安装测速</button><button data-set="page" data-v="maint">运行环境维护</button><button data-set="page" data-v="recovery">环境修复与恢复</button></div>
+    </section>
+    <section class="panel">
+      <h2>主页改了什么</h2>
+      <ul>
+        <li>四行版本表 → 状态卡：一句结论 + 版本胶囊（点按复制完整版本，长版本不再折行）。</li>
+        <li>「首次安装测速」从标题下的独立大按钮移到「维护与工具」组，诊断工具不再占首屏。</li>
+        <li>「检查全部」「按需修复」并排进状态卡；运行时卡内显示 6 段进度、阶段耗时与取消。原「按需修复组件」行删除。</li>
+        <li>六个步骤：同一图标 → 序号徽标 + 状态色；行高 64→52dp；点按在行内展开详情与「重新检查 / 按需修复」，不再弹窗。</li>
+        <li>「备份并重建环境」从全宽危险按钮改为组内红色行，确认改为底部弹层并要求勾选知情。</li>
+        <li>日志默认收起成一行（含行数与复制），运行或失败时自动展开。</li>
+        <li>中断维护 / 环境未就绪：状态卡上方给出唯一下一步横幅，其余按钮按门禁置灰。</li>
+      </ul>
+      <p>首屏（手机 360、1.0×）可见内容：当前实现到第 1 步为止；新方案能完整看到状态卡和全部六步。</p>
+    </section>
+    <section class="panel">
+      <h2>相关扩展页</h2>
+      <ul>
+        <li><b>首次安装测速</b>（<code>ColdSetupSpeedActivity</code>）：说明段 → 三条要点；结果用大号秒数，并保留最近一次。</li>
+        <li><b>运行环境维护</b>（<code>ExtractActivity</code> review_only）：本机环境 kv 卡 + 唯一主按钮；「复制给支持」放进标题栏。</li>
+        <li><b>环境修复与恢复</b>（<code>StartupRecoveryActivity</code>）：十余个平铺按钮分为「启动 / 配置 / 插件 / 工具」四组；最近启动记录用状态点一行一条。</li>
+      </ul>
+    </section>
+    <section class="panel">
+      <h2>实现约束</h2>
+      <ul>
+        <li>只改 <code>ui/</code> 与 <code>res/layout</code>：<code>InstallFragment</code>、<code>fragment_install.xml</code>、上述三个 Activity；均不在 launcherInputs 钉住清单内（落地前再用团队笔记的自查命令复核）。</li>
+        <li>保留全部现有 view id 与门禁逻辑（<code>busy / environmentBusy / pending</code> 置灰规则不变），只换呈现。</li>
+        <li>新增文案走 <code>tools/i18n/messages.json</code>，英文长度按 i18n-length-policy 复核；本原型英文为草稿。</li>
+        <li>落地后跑 <code>LayoutAuditInstrumentation</code>（日夜、短屏、1.3×）。</li>
+      </ul>
+    </section>
+  </aside>
+</main>
+<script>
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const S = { design: 'new', device: 'phone', theme: 'light', lang: 'zh', fs: '1', scene: 'idle', page: 'main',
+  steps: Array(6).fill('idle'), details: Array(6).fill(''), open: -1, busy: false, repair: false, cancel: false,
+  selected: 0, elapsed: 0, stage: 0, log: [], logOpen: false, lastCheck: '', overlay: null, ack: false,
+  speed: { state: 'idle', secs: 0, last: 41.27 }, recOpen: { attempts: true }, toast: '' };
+const t = (zh, en) => S.lang === 'en' ? en : zh;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const NAMES = [['Ubuntu 环境', 'Ubuntu environment'], ['离线基础工具', 'Offline base tools'], ['Node.js 24', 'Node.js 24'], ['pnpm', 'pnpm'], ['DeepSeek Harness', 'DeepSeek Harness'], ['启动与环境检查', 'Startup and environment check']];
+const OKDETAIL = [['rootfs 摘要一致 · 基础版本 10', 'rootfs digest matches · base 10'], ['curl / git / 证书 已校验', 'curl / git / certificates verified'], ['v24.11.0 · 原生模块可加载', 'v24.11.0 · native modules load'], ['10.20.0 · store 可写', '10.20.0 · store writable'], ['0.2.1-rc.5 · 受管描述符一致', '0.2.1-rc.5 · managed descriptor matches'], ['Bash ELF 与加载器正常', 'Bash ELF and loader OK']];
+const VERSION = '0.2.1-rc.3-20261101.1430-dsh0.2.1-rc.5-SunsetTest';
+const ICONS = {
+  back: '<path d="M15 5l-7 7 7 7"/>', chev: '<path d="M9 6l6 6-6 6"/>', ok: '<path d="M5 12.5l4.2 4L19 7"/>', warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>', run: '<path d="M12 3a9 9 0 1 0 9 9"/>', box: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
+  up: '<path d="M12 19V5M6 11l6-6 6 6"/>', wrench: '<path d="M14.5 5.5a4 4 0 0 0 4.9 4.9L20 11l-9 9-3-3 9-9z"/>', gauge: '<path d="M4 15a8 8 0 1 1 16 0"/><path d="M12 15l4-5"/>',
+  life: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M6 6l3.5 3.5M18 6l-3.5 3.5M6 18l3.5-3.5M18 18l-3.5-3.5"/>', rebuild: '<path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/>',
+  log: '<path d="M6 4h9l3 3v13H6z"/><path d="M9 10h6M9 14h6M9 18h3"/>', copy: '<rect x="8" y="8" width="11" height="11" rx="2"/><path d="M5 15V5h10"/>', play: '<path d="M8 5v14l11-7z"/>',
+  shield: '<path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/>', file: '<path d="M6 3h8l4 4v14H6z"/><path d="M12 10v6M9 13h6"/>', plug: '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.5"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>'
+};
+const ic = (n, s = 18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
+const STATE_LABEL = { idle: ['未检查', 'Not checked'], run: ['进行中', 'Running'], ok: ['成功', 'OK'], bad: ['失败', 'Failed'], skip: ['未完成', 'Incomplete'] };
+const lbl = s => t(...STATE_LABEL[s]);
+const pending = () => S.scene === 'pending';
+const notReady = () => S.scene === 'broken';
+const gated = () => S.busy || pending();
+
+function applyScene() {
+  stopRun();
+  S.open = -1; S.logOpen = false; S.log = []; S.lastCheck = ''; S.overlay = null;
+  S.steps = Array(6).fill('idle'); S.details = Array(6).fill('');
+  if (S.scene === 'ok') { S.steps.fill('ok'); S.details = OKDETAIL.map(d => t(...d)); S.lastCheck = '20:29'; S.log = demoLog(6); }
+  if (S.scene === 'fail') { S.steps = ['ok', 'ok', 'ok', 'bad', 'skip', 'skip']; S.details = OKDETAIL.map(d => t(...d)); S.details[3] = failText(); S.details[4] = S.details[5] = t('前一步失败，未执行', 'Skipped after a failed step'); S.lastCheck = '20:24'; S.log = demoLog(4, true); S.logOpen = true; }
+  if (S.scene === 'broken') { S.steps = ['ok', 'ok', 'ok', 'ok', 'ok', 'bad']; S.details = OKDETAIL.map(d => t(...d)); S.details[5] = t('/bin/bash 的加载器 ld-linux-aarch64.so.1 缺失。', 'The loader ld-linux-aarch64.so.1 for /bin/bash is missing.'); S.lastCheck = '20:18'; }
+}
+const failText = () => t('pnpm store 校验失败：3 个包摘要不一致。\n按需修复会只重装 pnpm 与受影响的包，其他组件保留。', 'pnpm store verification failed: 3 package digests differ.\nRepair reinstalls only pnpm and the affected packages.');
+function demoLog(n, fail) {
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    out.push(`[20:2${i}:0${i}] ▶ ${NAMES[i][S.lang === 'en' ? 1 : 0]}`);
+    out.push(fail && i === n - 1 ? `[20:2${i}:1${i}] ✗ store integrity: 3 mismatch (sha512)` : `[20:2${i}:1${i}] ✓ ${OKDETAIL[i][1]}`);
+  }
+  return out;
+}
+
+/* —— 模拟安装任务 —— */
+let timer = null, tick = null;
+function stopRun() { clearTimeout(timer); clearInterval(tick); S.busy = false; S.cancel = false; }
+function startRun(repair, step) {
+  if (gated()) { toast(pending() ? t('请先恢复中断维护，再检查或修复环境', 'Recover the interrupted maintenance first') : t('已有环境任务进行中', 'An environment task is running')); return; }
+  S.busy = true; S.repair = repair; S.selected = step; S.elapsed = 0; S.stage = 0; S.cancel = false; S.logOpen = true;
+  const idx = step ? [step - 1] : [0, 1, 2, 3, 4, 5];
+  idx.forEach(i => { S.steps[i] = 'idle'; });
+  S.log = [`[20:31:00] ${repair ? t('检查与按需修复', 'Check and repair') : t('仅检查', 'Check only')} · ${step ? t(...NAMES[step - 1]) : t('全部组件', 'all components')}`];
+  tick = setInterval(() => { S.elapsed++; S.stage++; render(); }, 1000);
+  let k = 0;
+  const next = () => {
+    if (k >= idx.length || S.cancel) {
+      if (S.cancel) idx.slice(k).forEach(i => { S.steps[i] = 'skip'; S.details[i] = t('已取消，未执行', 'Cancelled before running'); });
+      stopRun(); S.lastCheck = '20:31';
+      if (!S.steps.includes('bad') && !S.steps.includes('skip') && (S.scene === 'fail' || S.scene === 'broken') && repair) S.scene = 'ok';
+      render(); return;
+    }
+    const i = idx[k]; S.steps[i] = 'run'; S.stage = 0; S.log.push(`[20:31:${String(S.elapsed).padStart(2, '0')}] ▶ ${t(...NAMES[i])}`); render();
+    timer = setTimeout(() => {
+      const willFail = !repair && ((S.scene === 'fail' && i === 3) || (S.scene === 'broken' && i === 5));
+      S.steps[i] = willFail ? 'bad' : 'ok';
+      S.details[i] = willFail ? (i === 3 ? failText() : t('/bin/bash 的加载器缺失。', 'Loader for /bin/bash is missing.')) : t(...OKDETAIL[i]);
+      S.log.push(`[20:31:${String(S.elapsed).padStart(2, '0')}] ${willFail ? '✗' : '✓'} ${willFail ? 'failed' : OKDETAIL[i][1]}`);
+      if (willFail) { idx.slice(k + 1).forEach(j => { S.steps[j] = 'skip'; S.details[j] = t('前一步失败，未执行', 'Skipped after a failed step'); }); k = idx.length; }
+      else k++;
+      next();
+    }, repair && S.steps.includes('bad') ? 1600 : 900);
+  };
+  render(); setTimeout(next, 300);
+}
+
+/* —— 新方案：主页 —— */
+function summary() {
+  const done = S.steps.filter(s => s === 'ok').length, bad = S.steps.filter(s => s === 'bad').length;
+  if (S.busy) return { cls: 'run', icon: 'run', title: S.repair ? t('正在检查并按需修复', 'Checking and repairing') : t('正在检查组件', 'Checking components'), sub: t(`总耗时 ${S.elapsed} 秒 · 当前阶段 ${S.stage} 秒`, `${S.elapsed}s total · stage ${S.stage}s`) };
+  if (pending()) return { cls: 'warn', icon: 'warn', title: t('上次维护未完成', 'Maintenance interrupted'), sub: t('恢复原环境前，检查与修复不可用', 'Check and repair are locked until recovery') };
+  if (bad) return { cls: 'bad', icon: 'x', title: t(`${bad} 个组件需要修复`, `${bad} component${bad > 1 ? 's' : ''} need repair`), sub: t(`上次检查 ${S.lastCheck} · ${done}/6 正常`, `Checked ${S.lastCheck} · ${done}/6 OK`) };
+  if (notReady()) return { cls: 'bad', icon: 'x', title: t('环境未就绪', 'Environment not ready'), sub: t('检查后按需修复', 'Check, then repair what is missing') };
+  if (done === 6) return { cls: '', icon: 'ok', title: t('环境可用 · 全部正常', 'Ready · all components OK'), sub: t(`上次检查 ${S.lastCheck} · 6/6`, `Checked ${S.lastCheck} · 6/6`) };
+  return { cls: '', icon: 'ok', title: t('环境可用', 'Environment ready'), sub: t('组件尚未检查，可随时检查或按需修复', 'Components not checked yet') };
+}
+function heroHTML() {
+  const s = summary();
+  const meter = S.busy || S.steps.some(x => x !== 'idle') ? `<div class="meter" aria-hidden="true">${S.steps.map(x => `<i class="${x}"></i>`).join('')}</div>` : '';
+  const acts = S.busy
+    ? `<div class="acts"><button class="btn ghost" data-act="cancel" ${S.cancel ? 'disabled' : ''}>${S.cancel ? t('等待停止…', 'Stopping…') : S.repair ? t('安全停止后续修复', 'Stop after safe point') : t('取消检查', 'Cancel check')}</button></div>`
+    : `<div class="acts"><button class="btn primary" data-act="check" ${gated() ? 'disabled' : ''}>${t('检查全部', 'Check all')}</button><button class="btn" data-act="repair" ${gated() ? 'disabled' : ''}>${t('按需修复', 'Repair')}</button></div>`;
+  return `<section class="hero" aria-live="polite">
+    <div class="hero-top"><div class="orb ${s.cls}">${ic(s.icon, 22)}</div><div><b>${esc(s.title)}</b><small>${esc(s.sub)}</small></div></div>
+    <div class="chips">
+      <button class="chip" data-act="copy" data-v="Ubuntu 10">Ubuntu<em>10</em></button>
+      <button class="chip" data-act="copy" data-v="dsh 0.2.1-rc.5">dsh<em>0.2.1-rc.5</em></button>
+      <button class="chip" data-act="copy" data-v="${VERSION}" title="${VERSION}" aria-label="${t('应用版本，点按复制', 'App version, tap to copy')}">App<em>rc.3 · 1101.1430</em></button>
+    </div>${meter}${acts}</section>`;
+}
+function bannerHTML() {
+  if (pending()) return `<div class="banner" role="alert">${ic('warn')}<div><b>${t('上次环境维护尚未完成', 'Last maintenance did not finish')}</b><p>${t('先停止 Web 再回切旧环境；安全备份保留。', 'Stops Web and switches back; the safety backup is kept.')}</p></div><button data-act="rebuild">${t('恢复', 'Recover')}</button></div>`;
+  if (notReady() && !S.busy) return `<div class="banner bad" role="alert">${ic('x')}<div><b>${t('启动依赖缺失', 'Startup dependency missing')}</b><p>${t('Bash 或加载器缺失，按需修复只补齐缺项。', 'Bash or its loader is missing. Repair fills in only what is missing.')}</p></div><button data-act="repair">${t('修复', 'Repair')}</button></div>`;
+  return '';
+}
+function stepsHTML() {
+  const done = S.steps.filter(s => s === 'ok').length;
+  return `<div class="sec">${t('组件', 'Components')}<span>${S.steps.every(s => s === 'idle') ? t('点按查看详情', 'Tap for details') : `${done}/6`}</span></div>
+  <div class="group">${S.steps.map((st, i) => {
+    const open = S.open === i;
+    const sub = S.details[i] && st !== 'idle' ? S.details[i].split('\n')[0] : '';
+    return `<div class="cmp"><button class="row" data-act="step" data-i="${i}" aria-expanded="${open}" aria-controls="det${i}" aria-label="${esc(t(...NAMES[i]) + '，' + lbl(st))}">
+      <span class="num ${st}">${st === 'ok' ? ic('ok', 15) : st === 'bad' ? ic('x', 15) : i + 1}</span>
+      <span class="tx"><b>${esc(t(...NAMES[i]))}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span>
+      <span class="pill ${st}">${lbl(st)}</span>${ic('chev', 16).replace('<svg', '<svg class="chev"')}</button>
+      ${open ? `<div class="det" id="det${i}"><p>${esc(S.details[i] || t('尚未检查。重新检查只运行这一步，不影响其他组件。', 'Not checked yet. Re-checking runs only this step.'))}</p>
+        <div class="links"><button class="tbtn" data-act="step-check" data-i="${i}" ${gated() ? 'disabled' : ''}>${t('重新检查', 'Re-check')}</button><button class="tbtn" data-act="step-repair" data-i="${i}" ${gated() ? 'disabled' : ''}>${t('按需修复', 'Repair')}</button></div></div>` : ''}</div>`;
+  }).join('')}</div>`;
+}
+function maintHTML() {
+  const row = (act, icon, zh, en, subzh, suben, extra = '', dis = false) => `<button class="row ${extra}" data-act="${act}" ${dis ? 'disabled' : ''}><span class="ico">${ic(icon, 17)}</span><span class="tx"><b>${t(zh, en)}</b><small>${t(subzh, suben)}</small></span>${ic('chev', 16).replace('<svg', '<svg class="chev"')}</button>`;
+  const lines = S.log.length;
+  return `<div class="sec">${t('维护与工具', 'Maintenance and tools')}</div>
+  <div class="group">
+    ${row('go-maint', 'up', '更新受管运行时', 'Update managed runtime', '只更新随包组件，保留个人数据', 'Bundled parts only; data stays')}
+    ${row('go-recovery', 'life', '环境修复与恢复', 'Repair and recovery', '启动记录、配置快照、应急 DSH', 'Startup records, snapshots, rescue')}
+    ${row('go-speed', 'gauge', '首次安装测速', 'First-install benchmark', S.speed.last ? `上次 ${S.speed.last.toFixed(2)} 秒 · 独立目录` : '独立目录，不影响当前环境', S.speed.last ? `Last ${S.speed.last.toFixed(2)}s · isolated` : 'Isolated, current environment kept')}
+    ${row('rebuild', pending() ? 'life' : 'rebuild', pending() ? '恢复中断维护' : '备份并重建环境', pending() ? 'Recover interrupted maintenance' : 'Back up and rebuild', pending() ? '回切旧环境，保留安全备份' : '完整备份后重建，失败自动回切', pending() ? 'Switch back, keep safety backup' : 'Full backup first; rolls back on failure', 'danger', S.busy)}
+  </div>
+  <div class="sec">${t('检查与安装日志', 'Check and install log')}<span>${lines ? t(`${lines} 行`, `${lines} lines`) : ''}</span></div>
+  <div class="group">
+    <button class="row" data-act="log" aria-expanded="${S.logOpen}"><span class="ico">${ic('log', 17)}</span><span class="tx"><b>${S.logOpen ? t('收起日志', 'Hide log') : t('查看日志', 'Show log')}</b><small>${lines ? esc(S.log[lines - 1]) : t('执行后逐行显示脱敏输出', 'Redacted output appears here')}</small></span>
+      ${lines ? `<span class="ibtn" role="button" tabindex="0" data-act="copy-log" aria-label="${t('复制日志', 'Copy log')}">${ic('copy', 16)}</span>` : ''}${ic('chev', 16).replace('<svg', '<svg class="chev"')}</button>
+    ${S.logOpen ? `<div class="log" id="logbox">${esc(lines ? S.log.join('\n') : t('执行后将在此逐行显示脱敏输出。', 'Redacted output will appear here line by line.'))}</div>` : ''}
+  </div>`;
+}
+function mainNew() {
+  const tablet = S.device === 'tablet';
+  return `${tablet ? `<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><div class="orb run" style="border-radius:16px">${ic('box', 22)}</div><div><h4 style="margin:0;font-size:1.5em">${t('安装与环境', 'Environment')}</h4></div></div>`
+    : `<div class="appbar"><button class="ibtn" aria-label="${t('返回', 'Back')}">${ic('back')}</button><h4>${t('安装与环境', 'Environment')}</h4></div>`}
+  <div class="cols"><div>${heroHTML()}${bannerHTML()}${stepsHTML()}</div><div>${maintHTML()}</div></div>
+  <p class="foot">${t('检查只读不改；按需修复只补齐缺项，保留可用组件。', 'Checking never changes anything; repair only fills in what is missing.')}</p>`;
+}
+
+/* —— 新方案：扩展页 —— */
+const subbar = (zh, en, extra = '') => `<div class="appbar"><button class="ibtn" data-act="home" aria-label="${t('返回', 'Back')}">${ic('back')}</button><h4>${t(zh, en)}</h4>${extra}</div>`;
+function speedPage() {
+  const sp = S.speed, run = sp.state === 'run';
+  return `${subbar('首次安装测速', 'First-install benchmark')}
+  <section class="card"><div class="runline" style="margin-bottom:6px"><span>${run ? t('正在完整执行首次安装…', 'Running a full first install…') : sp.state === 'done' ? t('本次结果', 'This run') : t('上次结果', 'Last result')}</span><span>${run ? '' : '2026-11-01 19:52'}</span></div>
+    <div class="big">${run ? sp.secs : (sp.last ?? '—')}<small>${t('秒', 's')}</small></div>
+    ${run ? `<div class="meter" style="margin-top:12px">${[0, 1, 2, 3, 4, 5].map(i => `<i class="${i < Math.floor(sp.secs / 5) ? 'ok' : i === Math.floor(sp.secs / 5) ? 'run' : ''}"></i>`).join('')}</div>` : ''}
+    <ul class="facts">
+      <li>${ic('box', 15)}${t('在独立目录完整执行，当前环境、数据和设置不受影响', 'Runs in an isolated directory; current environment, data and settings stay')}</li>
+      <li>${ic('info', 15)}${t('开始时会正常停止 DSH 和终端', 'DSH and terminals are stopped normally at start')}</li>
+      <li>${ic('clock', 15)}${t('测速期间请保持应用在前台，完成后临时环境自动清理', 'Keep the app in front; the temporary environment is removed afterwards')}</li>
+    </ul></section>
+  <div class="acts" style="margin-top:14px">${run ? `<button class="btn ghost" data-act="speed-cancel">${t('取消', 'Cancel')}</button>` : `<button class="btn primary" data-act="speed-start" ${gated() ? 'disabled' : ''}>${t('开始测速', 'Start benchmark')}</button>`}</div>`;
+}
+function maintPage() {
+  return `${subbar('运行环境维护', 'Runtime maintenance', `<button class="ibtn" data-act="copy" data-v="env-summary" aria-label="${t('复制给支持', 'Copy for support')}">${ic('copy')}</button>`)}
+  <section class="hero"><div class="hero-top"><div class="orb ${pending() ? 'warn' : ''}">${ic(pending() ? 'warn' : 'ok', 22)}</div><div><b>${pending() ? t('上次维护未完成', 'Maintenance interrupted') : t('受管运行时已是最新', 'Managed runtime is current')}</b><small>${pending() ? t('最后阶段：切换新环境', 'Last stage: switching environment') : t('相同基础环境只更新 dsh 与内置插件', 'Same base: only dsh and bundled plugins update')}</small></div></div>
+    <dl class="kv"><dt>${t('基础环境', 'Base')}</dt><dd>Ubuntu 10</dd><dt>${t('已安装', 'Installed')}</dt><dd>dsh 0.2.1-rc.5</dd><dt>${t('随包', 'Bundled')}</dt><dd>dsh 0.2.1-rc.5</dd><dt>${t('前代保留', 'Kept previous')}</dt><dd>2</dd></dl>
+    <div class="acts"><button class="btn primary" data-act="${pending() ? 'rebuild' : 'noop'}">${pending() ? t('恢复中断维护', 'Recover maintenance') : t('重新验证并更新', 'Verify and update')}</button></div></section>
+  <div class="sec">${t('其他', 'More')}</div>
+  <div class="group">
+    <button class="row" data-act="noop"><span class="ico">${ic('log', 17)}</span><span class="tx"><b>${t('查看本次维护记录', 'View maintenance record')}</b><small>${t('步骤、耗时与脱敏日志', 'Steps, timing and redacted log')}</small></span>${ic('chev', 16)}</button>
+    <button class="row" data-act="go-recovery"><span class="ico">${ic('life', 17)}</span><span class="tx"><b>${t('启动应急 DSH', 'Start rescue DSH')}</b><small>${t('独立运行根，不读取正式环境', 'Separate root; formal environment untouched')}</small></span>${ic('chev', 16)}</button>
+    <button class="row" data-act="noop"><span class="ico">${ic('shield', 17)}</span><span class="tx"><b>${t('进入受限主界面', 'Open limited main screen')}</b><small>${t('只查看日志与配置，不写就绪标记', 'Logs and config only; not marked ready')}</small></span>${ic('chev', 16)}</button>
+  </div>
+  <p class="foot">${t('基础环境变更时先保护数据再重建；验证失败可恢复原环境。', 'Base changes protect data first; failed verification can roll back.')}</p>`;
+}
+function recoveryPage() {
+  const att = [['ok', '11-01 20:12:07', t('就绪', 'Ready'), 9], ['bad', '11-01 19:58:41', t('失败', 'Failed'), 31], ['ok', '11-01 14:30:02', t('就绪', 'Ready'), 12], ['warn', '10-31 23:10:55', t('启动中／已中断', 'Interrupted'), 4], ['ok', '10-31 18:02:19', t('就绪', 'Ready'), 10]];
+  const grp = (key, zh, en, rows, hint = '') => {
+    const open = S.recOpen[key] !== false;
+    return `<div class="sec"><span style="color:var(--text-2);font-weight:700">${t(zh, en)}</span><button class="tbtn" style="border:0;padding:2px 6px" data-act="rec-toggle" data-k="${key}" aria-expanded="${open}">${open ? t('收起', 'Less') : hint || t('展开', 'More')}</button></div>${open ? `<div class="group">${rows}</div>` : ''}`;
+  };
+  const r = (icon, zh, en, subzh = '', suben = '', act = 'noop', danger = '') => `<button class="row ${danger}" data-act="${act}"><span class="ico">${ic(icon, 17)}</span><span class="tx"><b>${t(zh, en)}</b>${subzh ? `<small>${t(subzh, suben)}</small>` : ''}</span>${ic('chev', 16)}</button>`;
+  return `${subbar('环境修复与恢复', 'Repair and recovery')}
+  ${notReady() ? `<div class="banner bad" style="margin-top:0">${ic('x')}<div><b>${t('运行环境的 Bash 或加载器缺失', 'Bash or its loader is missing')}</b><p>${t('先修复运行环境；对话和配置会单独保护。', 'Repair the runtime first; conversations and config are protected.')}</p></div><button data-act="home">${t('去修复', 'Repair')}</button></div>` : ''}
+  ${grp('start', '启动', 'Startup', r('play', '重试启动', 'Retry startup', '按当前配置重新启动 Web', 'Restart Web with current config') + r('shield', '安全启动基础界面', 'Safe-mode start', '暂停第三方插件，只启动基础界面', 'Third-party plugins paused'))}
+  ${grp('attempts', '最近启动', 'Recent starts', att.map(a => `<button class="row" data-act="attempt"><span class="dot ${a[0]}"></span><span class="tx"><b style="font-family:var(--mono);font-weight:500;font-size:.9em">${a[1]}</b></span><span class="pill ${a[0] === 'ok' ? 'ok' : a[0] === 'bad' ? 'bad' : 'skip'}">${a[2]} · ${a[3]}s</span>${ic('chev', 16)}</button>`).join(''), t('5 条', '5'))}
+  ${grp('config', '配置', 'Configuration', r('clock', t('健康启动', 'Healthy start') + ' · 11-01 20:12', t('健康启动', 'Healthy start') + ' · 11-01 20:12', '恢复这份配置快照', 'Restore this snapshot') + r('clock', '修复之前 · 11-01 19:59', 'Before repair · 11-01 19:59', '恢复这份配置快照', 'Restore this snapshot') + r('file', '新建配置文件', 'Create configuration file', 'Web 启动配置 / settings.yaml / cordis.patch.yml', 'Web / settings.yaml / cordis.patch.yml') + r('wrench', '恢复中断的配置修复', 'Recover interrupted config repair'), t('4 项', '4'))}
+  ${grp('plugins', '插件', 'Plugins', r('plug', 'koishi-plugin-weather', 'koishi-plugin-weather', '仅卸载所选插件，由插件管理器核验', 'Remove only this plugin; verified', 'noop', 'danger'), t('1 个可卸载', '1'))}
+  ${grp('tools', '工具', 'Tools', r('gear', '环境安装与修复', 'Environment install and repair', '', '', 'go-maint') + r('rebuild', '回退兼容运行时', 'Roll back compatible runtime') + r('shield', '宿主备份与只读救援', 'Host backup and read-only rescue') + r('life', '启动独立应急 DSH', 'Start standalone rescue DSH') + r('log', '查看并下载日志', 'View and download logs'), t('5 项', '5'))}`;
+}
+
+/* —— 当前实现近似 —— */
+function legacyMain() {
+  const rows = NAMES.map((n, i) => `<div class="lrow"><span class="ico" style="width:44px;height:44px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center">${ic('box', 20)}</span>${t(...n)}<span class="r">${lbl(S.steps[i])} ›</span></div>`).join('');
+  const m = [['更新受管运行时', '只更新随包组件，保留个人数据'], ['按需修复组件', '检查缺失部分，保留可用组件'], ['环境修复与恢复', '查看启动依赖与中断维护']].map(x => `<div class="lrow"><span class="ico" style="width:44px;height:44px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center">${ic('wrench', 20)}</span><div>${x[0]}<small>${x[1]}</small></div><span class="r">›</span></div>`).join('');
+  return `<div class="lg"><h2>${t('安装与环境', 'Install and environment')}</h2><p class="sub">按组件检查状态，修复需要处理的部分。</p>
+  <button class="speed">首次安装测速</button>
+  <div class="info"><div><span>环境状态</span><span>${notReady() ? '等待检查' : '可用'}</span></div><div><span>Ubuntu 基础环境</span><span>10</span></div><div><span>受管运行时</span><span>0.2.1-rc.5</span></div><div><span>应用版本</span><span>${VERSION}</span></div></div>
+  <div class="lsec">六个安装步骤</div><div class="info" style="padding:0">${rows}</div>
+  <button class="lbtn">检查全部组件</button><p style="font-size:.86em;margin:12px 0">${pending() ? '上次环境维护尚未完成，请先恢复原环境' : '检查环境，或按需修复缺项'}</p>
+  <div class="lsec">维护与恢复</div><div class="info" style="padding:0">${m}</div>
+  <button class="lbtn dg">${pending() ? '恢复中断维护' : '备份并重建环境'}</button>
+  <div class="lsec">检查与安装日志</div><div class="llog">执行后将在此逐行显示脱敏输出。</div></div>`;
+}
+
+/* —— 弹层 —— */
+function overlayHTML() {
+  if (!S.overlay) return '';
+  if (S.overlay === 'rebuild') {
+    const rec = pending();
+    return `<div class="scrim" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t"><div class="grip"></div>
+      <h5 id="sh-t">${rec ? t('恢复中断维护？', 'Recover interrupted maintenance?') : t('备份并重建环境？', 'Back up and rebuild?')}</h5>
+      ${rec ? `<p>${t('先停止 Web，再回切旧环境；安全备份和失败的新环境均保留。', 'Stops Web, then switches back. The safety backup and failed environment are kept.')}</p>`
+        : `<ul class="facts">
+        <li>${ic('warn', 15)}${t('停止 Web，并中断正在执行的任务', 'Stops Web and interrupts running tasks')}</li>
+        <li>${ic('warn', 15)}${t('完整备份并校验配置、会话和本地插件后才重建', 'Backs up and verifies config, sessions and local plugins first')}</li>
+        <li>${ic('warn', 15)}${t('备份失败不切换；后续失败自动回切旧环境', 'Backup failure keeps the old one; later failures roll back')}</li>
+        <li>${ic('warn', 15)}${t('额外安装的系统软件留在旧环境，旧环境会占用额外空间', 'Extra system packages stay in the old environment, which uses extra space')}</li></ul>
+        <label class="chk"><input type="checkbox" id="ack" ${S.ack ? 'checked' : ''}> ${t('我了解会停止 Web 并占用额外空间', 'I understand Web will stop and extra space is used')}</label>`}
+      <div class="acts"><button class="btn" data-act="close">${t('取消', 'Cancel')}</button><button class="btn dangerous" data-act="rebuild-go" ${rec || S.ack ? '' : 'disabled'}>${rec ? t('恢复原环境', 'Recover') : t('备份并重建', 'Back up and rebuild')}</button></div></div>`;
+  }
+  if (S.overlay === 'attempt') return `<div class="scrim" data-act="close"></div><div class="sheet" role="dialog" aria-modal="true"><div class="grip"></div><h5>11-01 19:58:41 · ${t('失败', 'Failed')}</h5>
+    <p>${t('阶段：等待鉴权 · 31 秒', 'Stage: waiting for auth · 31s')}</p><div class="log" style="border-radius:12px;border:0">[19:58:41] start web --port 0\n[19:59:10] plugin koishi-plugin-weather: require() failed\n[19:59:12] exit 1 before auth</div>
+    <div class="acts"><button class="btn" data-act="copy" data-v="attempt">${t('复制', 'Copy')}</button><button class="btn primary" data-act="close">${t('关闭', 'Close')}</button></div></div>`;
+  return '';
+}
+
+/* —— 渲染 —— */
+function settingsPane() {
+  const it = (icon, zh, sub, on) => `<div class="sitem ${on ? 'on' : ''}"><span class="row" style="padding:0;min-height:0;border:0;width:auto"><span class="ico">${ic(icon, 17)}</span></span><div><b>${zh}</b><small>${sub}</small></div></div>`;
+  return `<div class="list-pane"><h3>${t('设置', 'Settings')}</h3><p class="cap">${t('让工作台按你的习惯运行。', 'Make the workbench work your way.')}</p>
+    ${it('box', t('安装与环境', 'Install and environment'), t('安装与修复运行环境', 'Install and repair'), true)}${it('gear', t('运行配置', 'Run config'), t('接口、显示与运行', 'Ports, display'))}${it('file', t('数据与备份', 'Data and backup'), t('备份恢复 · 文件共享', 'Backup · sharing'))}${it('shield', t('设备能力授权', 'Device grants'), 'Root · Shizuku · ADB')}</div>`;
+}
+let lastPage = null;
+function render() {
+  document.documentElement.dataset.theme = S.theme;
+  document.documentElement.lang = S.lang === 'en' ? 'en' : 'zh-CN';
+  document.body.dataset.device = S.device;
+  const dev = $('#device'); dev.dataset.device = S.device; dev.style.setProperty('--fs', S.fs);
+  document.querySelectorAll('[data-set]').forEach(b => b.setAttribute('aria-pressed', String(S[b.dataset.set] === b.dataset.v)));
+  const scr = $('#screen'); const keep = scr && lastPage === S.page ? scr.scrollTop : 0;
+  const logKeep = $('#logbox'); const follow = !logKeep || logKeep.scrollTop + logKeep.clientHeight >= logKeep.scrollHeight - 8;
+  let body;
+  if (S.design === 'legacy') body = legacyMain();
+  else body = { main: mainNew, speed: speedPage, maint: maintPage, recovery: recoveryPage }[S.page]();
+  const tablet = S.device === 'tablet';
+  $('#shell').innerHTML = `${tablet ? `<nav class="rail"><div>${ic('play', 20)}${t('启动', 'Start')}</div><div>${ic('plug', 20)}${t('插件', 'Plugins')}</div><div class="on">${ic('gear', 20)}${t('设置', 'Settings')}</div><div>${ic('log', 20)}${t('终端', 'Terminal')}</div></nav>${settingsPane()}` : ''}
+    <div class="screen" id="screen"><div class="page">${body}</div>${overlayHTML()}${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}</div>`;
+  const ns = $('#screen'); ns.style.scrollBehavior = 'auto'; ns.scrollTop = keep; ns.style.scrollBehavior = '';
+  const lb = $('#logbox'); if (lb && follow) lb.scrollTop = lb.scrollHeight;
+  lastPage = S.page;
+}
+let toastT = null;
+function toast(m) { S.toast = m; render(); clearTimeout(toastT); toastT = setTimeout(() => { S.toast = ''; render(); }, 1800); }
+let spT = null;
+
+document.addEventListener('click', e => {
+  const set = e.target.closest('[data-set]');
+  if (set) {
+    const k = set.dataset.set, v = set.dataset.v;
+    S[k] = v;
+    if (k === 'scene') applyScene();
+    if (k === 'lang') applyScene();
+    if (k === 'page') S.design = 'new';
+    if (k === 'design' && v === 'legacy') S.page = 'main';
+    render(); return;
+  }
+  const el = e.target.closest('[data-act]'); if (!el || !$('#device').contains(el)) return;
+  const a = el.dataset.act, i = +el.dataset.i;
+  switch (a) {
+    case 'check': startRun(false, 0); break;
+    case 'repair': startRun(true, 0); break;
+    case 'cancel': S.cancel = true; render(); break;
+    case 'step': S.open = S.open === i ? -1 : i; render(); break;
+    case 'step-check': startRun(false, i + 1); break;
+    case 'step-repair': startRun(true, i + 1); break;
+    case 'log': if (e.target.closest('[data-act=copy-log]')) { toast(t('已复制脱敏日志', 'Redacted log copied')); break; } S.logOpen = !S.logOpen; render(); break;
+    case 'copy-log': toast(t('已复制脱敏日志', 'Redacted log copied')); break;
+    case 'copy': toast(el.dataset.v === VERSION ? t('已复制应用版本', 'App version copied') : el.dataset.v === 'env-summary' ? t('已复制本机环境摘要', 'Environment summary copied') : t('已复制', 'Copied')); break;
+    case 'rebuild': if (S.busy) break; S.ack = false; S.overlay = 'rebuild'; render(); break;
+    case 'rebuild-go': S.overlay = null; if (pending()) { S.scene = 'idle'; applyScene(); toast(t('已回切原环境', 'Switched back to the previous environment')); } else { S.page = 'maint'; render(); toast(t('维护已开始（原型不执行）', 'Maintenance started (prototype)')); } break;
+    case 'close': S.overlay = null; render(); break;
+    case 'attempt': S.overlay = 'attempt'; render(); break;
+    case 'go-maint': S.page = 'maint'; render(); break;
+    case 'go-recovery': S.page = 'recovery'; render(); break;
+    case 'go-speed': S.page = 'speed'; render(); break;
+    case 'home': S.page = 'main'; render(); break;
+    case 'rec-toggle': S.recOpen[el.dataset.k] = S.recOpen[el.dataset.k] === false; render(); break;
+    case 'speed-start': S.speed = { ...S.speed, state: 'run', secs: 0 }; spT = setInterval(() => { S.speed.secs++; if (S.speed.secs >= 30) { clearInterval(spT); S.speed = { state: 'done', secs: 0, last: 29.84 }; } render(); }, 120); render(); break;
+    case 'speed-cancel': clearInterval(spT); S.speed.state = 'idle'; render(); toast(t('测速已取消，临时目录已清理', 'Benchmark cancelled; temp directory removed')); break;
+    default: toast(t('原型：此入口不执行', 'Prototype: not executed'));
+  }
+});
+document.addEventListener('change', e => { if (e.target.id === 'ack') { S.ack = e.target.checked; render(); } });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && S.overlay) { S.overlay = null; render(); }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('span[data-act=copy-log]')) { e.preventDefault(); e.stopPropagation(); toast(t('已复制脱敏日志', 'Redacted log copied')); }
+});
+applyScene(); render();
+</script>
+</body>
+</html>

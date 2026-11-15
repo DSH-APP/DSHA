@@ -98,7 +98,7 @@ The following are **design inferences** from current code and constraints, not c
 
 ## Affected files and maintenance invariants
 
-Entry/protocol: `dsh-tool-vscreen/lib/server.cjs`, HttpShellService. Orchestration/persistence: VirtualScreenManager, Launcher, Transport, SessionJournal. Device side: VirtualScreenCore, DisplaySession, Input, Pixels, ObservedPixels. Semantics/UI: SemanticAdapter, Accessibility, AnchorProof, ObservedControl, NativeControls, VirtualScreenActivity, NativeScreenControlLease. These responsibilities do not imply this ADR modifies the files.
+Entry/protocol: `dsh-tool-vscreen/lib/server.cjs`, HttpShellService. Orchestration/persistence: VirtualScreenManager, Launcher, Transport, SessionJournal. Device side: VirtualScreenCore, DisplaySession, Input, Pixels, ObservedPixels. Semantics/UI: SemanticAdapter, Accessibility, AnchorProof, ObservedControl, NativeControls, VirtualScreenActivity, NativeScreenControlLease; in-page preview form (added 2026-11-06): VirtualScreenForeground, VirtualScreenStrip, VirtualScreenPreviewSettings, VirtualScreenPreviewPolicy. These responsibilities do not imply this ADR modifies the files.
 
 Preserve these invariants:
 
@@ -108,6 +108,8 @@ Preserve these invariants:
 4. Consume IDs once before dispatch. UNKNOWN is not replayed, and a new instance cannot relabel an old failure response.
 5. Collect display-release acknowledgment, Core EXITED, journal commit, guest exit, and launcher exit separately. Success in one cannot clear another unknown barrier.
 6. Updates/process reconstruction restore cleanup facts only: no backup grants, old observations, or replay of unconfirmed actions. Low remains explicitly unsupported.
+7. Screen modes are mutually exclusive and constrain the assistant only: an assistant screen request whose mode does not match is rejected without fallback; the operator panel neither reads nor writes the mode; while the virtual screen is cleanup-pending, the mode cannot leave virtual.
+8. In-page preview form (strip / full preview / off) is UI and preference only: the strip shows the Manager's read-only target and generation state, but issues no frame or node credential and forwards no touch; the persisted collapse intent changes no observation, input, or authorization gate.
 
 ## Regression cases
 

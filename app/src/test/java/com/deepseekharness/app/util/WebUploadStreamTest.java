@@ -1,12 +1,13 @@
 package com.deepseekharness.app.util;
 
+import static org.junit.Assert.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 public class WebUploadStreamTest {
   private InputStream bytes(long size) {
@@ -46,6 +47,66 @@ public class WebUploadStreamTest {
       assertEquals(size, result);
       assertEquals(size, written.get());
     }
+  }
+
+  @Test
+  public void decimalFileBoundaryIsIndependentOfBatchAndUnknownLength() throws Exception {
+    assertEquals(5_000_000_000L, WebTransferPolicy.UPLOAD_FILE_LIMIT);
+    AtomicLong written = new AtomicLong();
+    long result =
+        WebUploadStream.copy(
+            bytes(WebTransferPolicy.UPLOAD_FILE_LIMIT),
+            0,
+            WebTransferPolicy.UPLOAD_LIMIT,
+            WebTransferPolicy.UPLOAD_FILE_LIMIT,
+            (b, n) -> written.addAndGet(n),
+            () -> {});
+    assertEquals(WebTransferPolicy.UPLOAD_FILE_LIMIT, result);
+    assertEquals(result, written.get());
+    written.set(0);
+    WebUploadStream.LimitExceededException tooLarge =
+        assertThrows(
+            WebUploadStream.LimitExceededException.class,
+            () ->
+                WebUploadStream.copy(
+                    bytes(WebTransferPolicy.UPLOAD_FILE_LIMIT + 1),
+                    0,
+                    WebTransferPolicy.UPLOAD_LIMIT,
+                    WebTransferPolicy.UPLOAD_FILE_LIMIT,
+                    (b, n) -> written.addAndGet(n),
+                    () -> {}));
+    assertTrue(tooLarge.fileLimit());
+    assertTrue(written.get() <= WebTransferPolicy.UPLOAD_FILE_LIMIT);
+    // A second smaller file may still fill the independent 5GiB batch allowance.
+    long remaining = WebTransferPolicy.UPLOAD_LIMIT - result;
+    assertEquals(
+        WebTransferPolicy.UPLOAD_LIMIT,
+        WebUploadStream.copy(
+            bytes(remaining),
+            result,
+            WebTransferPolicy.UPLOAD_LIMIT,
+            WebTransferPolicy.UPLOAD_FILE_LIMIT,
+            (b, n) -> {},
+            () -> {}));
+  }
+
+  @Test
+  public void fileLimitResetsAndOverflowNeverWritesCrossingChunk() throws Exception {
+    AtomicLong written = new AtomicLong();
+    WebUploadStream.LimitExceededException file =
+        assertThrows(
+            WebUploadStream.LimitExceededException.class,
+            () ->
+                WebUploadStream.copy(
+                    bytes(65537), 12, 200000, 65536, (b, n) -> written.addAndGet(n), () -> {}));
+    assertTrue(file.fileLimit());
+    assertEquals(65536, written.get());
+    WebUploadStream.LimitExceededException batch =
+        assertThrows(
+            WebUploadStream.LimitExceededException.class,
+            () -> WebUploadStream.copy(bytes(2), 9, 10, 20, (b, n) -> fail(), () -> {}));
+    assertFalse(batch.fileLimit());
+    assertEquals(15, WebUploadStream.copy(bytes(5), 10, 20, 5, (b, n) -> {}, () -> {}));
   }
 
   @Test

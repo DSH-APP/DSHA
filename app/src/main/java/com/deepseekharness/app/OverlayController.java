@@ -199,6 +199,9 @@ public final class OverlayController {
    *             · {@code reasoning} 思考过程 · {@code done} 本轮收尾 · {@code clear} 立刻收起
    */
   public static void push(Context ctx, String sessionKey, String kind, String text) {
+    // The selected assistant already displays exact-session progress. Do not place a
+    // second unbound lyric window over its chat or over a controlled target.
+    if (com.deepseekharness.app.assistant.AssistantSessionController.active() != null) return;
     if (ctx == null || !enabled(ctx) || !permitted(ctx)) return;
     // Overlay content is display-only. Keep any credentials in streamed
     // diagnostics out of both the transient buffer and the window.
@@ -540,6 +543,7 @@ public final class OverlayController {
 
   /** 彻底移除窗口（关开关 / 撤权限 / 改样式后重建时用）。 */
   public static void teardown(Context ctx) {
+    com.deepseekharness.app.control.OwnedScreenOverlay.clear("status-overlay");
     long epoch = WINDOW_EPOCH.incrementAndGet();
     frames.clear();
     synchronized (LOCK) {
@@ -757,6 +761,17 @@ public final class OverlayController {
     int padH = dp(app, 12), padV = dp(app, 6);
     box.setPadding(padH, padV, padH, padV);
     box.setVisibility(View.GONE);
+    box.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> publishGeometry(v));
+    box.addOnAttachStateChangeListener(
+        new View.OnAttachStateChangeListener() {
+          public void onViewAttachedToWindow(View view) {
+            publishGeometry(view);
+          }
+
+          public void onViewDetachedFromWindow(View view) {
+            com.deepseekharness.app.control.OwnedScreenOverlay.clear("status-overlay");
+          }
+        });
 
     TextView tv = new TextView(app);
     tv.setTextColor(Color.WHITE);
@@ -874,6 +889,26 @@ public final class OverlayController {
       label = null;
       confirmRow = null;
       confirmHint = null;
+    }
+  }
+
+  private static void publishGeometry(View view) {
+    if (view == null || !view.isAttachedToWindow() || view.getVisibility() != View.VISIBLE) {
+      com.deepseekharness.app.control.OwnedScreenOverlay.clear("status-overlay");
+      return;
+    }
+    int[] origin = new int[2];
+    view.getLocationOnScreen(origin);
+    var node = view.createAccessibilityNodeInfo();
+    try {
+      com.deepseekharness.app.control.OwnedScreenOverlay.publish(
+          "status-overlay",
+          node.getWindowId(),
+          new com.deepseekharness.app.util.ScreenWindowRegion.Bounds(
+              origin[0], origin[1], origin[0] + view.getWidth(), origin[1] + view.getHeight()),
+          false);
+    } finally {
+      node.recycle();
     }
   }
 

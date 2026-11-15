@@ -34,10 +34,13 @@ public final class RecoveryStatusText {
         };
     if (prefix == null) return detail;
     for (String[] notice : NOTICES)
-      for (int source = 0; source < 2; source++) {
-        if (!detail.equals(prefix[source] + notice[source])) continue;
-        int target = "en".equals(UiText.language()) ? 1 : 0;
-        return prefix[target] + notice[target];
+      for (String source : UiLanguagePreference.LANGUAGES) {
+        String expected =
+            UiText.choose(source, prefix[0], prefix[1])
+                + (notice[0].isEmpty() ? "" : UiText.choose(source, notice[0], notice[1]));
+        if (!detail.equals(expected)) continue;
+        return UiText.choose(prefix[0], prefix[1])
+            + (notice[0].isEmpty() ? "" : UiText.choose(notice[0], notice[1]));
       }
     return detail;
   }

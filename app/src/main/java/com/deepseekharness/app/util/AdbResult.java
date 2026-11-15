@@ -44,6 +44,16 @@ public final class AdbResult {
     return value;
   }
 
+  /** 后台探活使用的显式端口：保存的连接端口无效时用 ADB 默认 5555，绝不返回 0（0 会让原生层改走 root / Shizuku）。 */
+  public static int probePort(String saved) {
+    String s = saved == null ? "" : saved.trim();
+    if (s.matches("[0-9]{1,5}")) {
+      int value = Integer.parseInt(s);
+      if (value >= 1 && value <= 65535) return value;
+    }
+    return 5555;
+  }
+
   public static boolean code(String code) {
     return code != null && code.matches("[0-9]{6}");
   }

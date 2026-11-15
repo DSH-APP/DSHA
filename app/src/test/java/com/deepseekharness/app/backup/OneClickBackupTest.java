@@ -101,4 +101,16 @@ public final class OneClickBackupTest {
     assertFalse(text.contains("Backup complete;"));
     assertFalse(text.contains("备份完成，"));
   }
+
+  @Test
+  public void failureCodeIgnoresActiveAndCancelledRuns() {
+    var failed = new NativeBackupJobs.State("id", "FINISHED", "", "NO_SPACE", "", 0, 0, false);
+    var running = new NativeBackupJobs.State("id", "WRITING", "", "", "", 1, 2, true);
+    assertEquals("", OneClickBackup.failureCode(true, "NO_SPACE", failed));
+    assertEquals("", OneClickBackup.failureCode(false, "CANCELLED", failed));
+    assertEquals("SAF_TREE_REQUIRED", OneClickBackup.failureCode(false, "SAF_TREE_REQUIRED", null));
+    assertEquals("NO_SPACE", OneClickBackup.failureCode(false, "", failed));
+    assertEquals("", OneClickBackup.failureCode(false, "", running));
+    assertEquals("", OneClickBackup.failureCode(false, "", null));
+  }
 }

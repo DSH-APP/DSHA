@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.3-20261102.0800-dsh0.2.1-rc.5 / build266
+
+- Assistant flottant repensé : il devient une capsule déplaçable avec une carte de conversation, et déplier, replier ou changer de session n'annule plus une conversation en cours. Vous pouvez écrire directement dans la fenêtre ; si l'IA est en train d'agir sur le téléphone, elle attend sur place que vous envoyiez, puis intègre votre message au tour en cours. ✕ masque la fenêtre et les réponses se poursuivent par la notification.
+- Protection contre les touchers accidentels : arrêter une tâche demande une confirmation, et seule la ligne d'état permet de déplacer la fenêtre ; sa position est mémorisée et reste à l'écran.
+- Les confirmations d'actions sur le téléphone ajoutent Autoriser cette app pour ce tour, pour ne plus reconfirmer la même app à chaque action d'un même tour ; les apps sensibles redemandent toutes les 5 actions.
+- Portée de la vérification : vérifié sur appareil que déplier n'annule plus la conversation, la nouvelle carte de jour et de nuit, l'autorisation par tour et la confirmation de lancement ; l'enchaînement du clavier pour la saisie dans la fenêtre, les réponses par notification et par îlot n'ont pas été vérifiés sur appareil. versionCode porté à 266 (basé sur build265). La révision DSHA reste 0.2.1-rc.3 et le DSH intégré reste 0.2.1-rc.5.

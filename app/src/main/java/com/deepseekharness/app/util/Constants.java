@@ -39,7 +39,7 @@ public final class Constants {
    * 当前 APK 内置 dsh 版本（不是远端 latest 标签）。
    * 对应上游 deepseek-ai/deepseek-harness 仓库。
    */
-  public static final String DSH_VERSION = "0.2.1-rc.2";
+  public static final String DSH_VERSION = "0.2.2-rc.1";
 
   public static final String DSH_RUNTIME_ID = "dsh-v" + DSH_VERSION;
 
@@ -64,11 +64,29 @@ public final class Constants {
   /** 允许 root shell（--su 提权）。 */
   public static final String KEY_ALLOW_ROOT_SHELL = "allow_root_shell";
 
+  /** Root 命令拦截档位：strict（默认）/ relaxed / full；缺失或非法回落 strict。 */
+  public static final String KEY_ROOT_POLICY_MODE = "root_policy_mode";
+
   /** 启动时检查更新。 */
   public static final String KEY_CHECK_UPDATE = "check_update";
 
   /** 电脑模式（预览用桌面浏览器 UA）。 */
   public static final String KEY_DESKTOP_MODE = "desktop_mode";
+
+  /** 屏幕常亮：仅本机 UI 行为，默认关闭，不进入备份。 */
+  public static final String KEY_KEEP_SCREEN_ON = "ui_keep_screen_on";
+
+  /** 隐藏后台：从最近任务隐藏本应用任务；仅本机 UI 行为，默认关闭，不进入备份。 */
+  public static final String KEY_HIDE_FROM_RECENTS = "hide_from_recents";
+
+  /** 隐藏后台严格模式（实验）：离开应用时结束 UI 任务，让当前卡片也不再保留；默认关闭。 */
+  public static final String KEY_HIDE_RECENTS_STRICT = "hide_recents_strict";
+
+  /** 任务状态上岛（Android 16 实时活动 / promoted ongoing），默认开启。 */
+  public static final String KEY_TASK_ISLAND = "task_island";
+
+  /** 岛上用系统计时器显示耗时，省掉 1Hz 重绘；默认关闭。 */
+  public static final String KEY_TASK_ISLAND_CHRONOMETER = "task_island_chronometer";
 
   /** 仅内置 DSH 网页支持画中画，默认关闭。 */
   public static final String KEY_PICTURE_IN_PICTURE = "picture_in_picture";
@@ -78,6 +96,15 @@ public final class Constants {
       "picture_in_picture_user_choice_v1";
 
   public static final String KEY_PICTURE_IN_PICTURE_LAYOUT = "picture_in_picture_layout";
+
+  /** 桌面图标启动后进入的页面（main / web），默认 main；仅本机，不进入任何备份。 */
+  public static final String KEY_ENTRY_TARGET = "entry_target_v1";
+
+  /** 最近一次已核验网页上报的背景色，供直启加载页衔接 DSH 主题；仅本机。 */
+  public static final String KEY_ENTRY_WEB_BACKGROUND = "entry_web_background_v1";
+
+  /** 用户最近一次离开应用时停在 Web（true）还是原生页面；只用于系统回收后的恢复去向，不进备份。 */
+  public static final String KEY_ENTRY_LAST_WEB = "entry_last_foreground_web_v1";
 
   /** 备份是否包含 API key。 */
   public static final String KEY_BACKUP_KEY = "backup_key";

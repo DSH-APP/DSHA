@@ -1,75 +1,99 @@
 package com.deepseekharness.app.util;
 
-/**
- * 界面语言偏好：<b>跟随系统</b> / 中文 / 英文。
- *
- * <p>构建契约见 AGENTS.md「中英文界面默认中文」：仅当用户显式选择语言时才偏离系统，
- * 其余情况都跟随系统 —— 系统是中文（或无法识别）落中文，系统的首选语言是英文落英文，
- * 其他语言也落英文（英语是唯一可用的国际语言，比中文更可能被看懂）。
- *
- * <p>偏好值只有三个：{@code system}（默认）、{@code zh}、{@code en}。旧版本只写过
- * {@code zh}/{@code en}，所以老用户升级后保持原语言；从未设置过的用户视为 {@code system}。
- */
+import java.util.List;
+import java.util.Locale;
+
+/** Stable saved preferences and the supported BCP-47 application locales. */
 public final class UiLanguagePreference {
 
-  /** 跟随系统语言（默认值）。 */
   public static final String SYSTEM = "system";
-
-  /** 简体中文。 */
   public static final String ZH = "zh";
-
-  /** 英文。 */
+  public static final String ZH_HANT = "zh-Hant";
   public static final String EN = "en";
+  public static final String RU = "ru";
+  public static final String JA = "ja";
+  public static final String KO = "ko";
+  public static final String AR = "ar";
+  public static final String PT = "pt";
+  public static final String LA = "la";
+  public static final String FR = "fr";
+
+  /** The menu and generated dictionaries share this order; callers cannot mutate it. */
+  public static final List<String> LANGUAGES = List.of(ZH, ZH_HANT, EN, RU, JA, KO, AR, PT, LA, FR);
 
   private UiLanguagePreference() {}
 
-  /** 规范化偏好值：只认显式选择的 en/zh，其余（含 null、旧脏值）一律跟随系统。 */
+  /** Preserve explicit historical zh/en choices; absent or invalid preferences follow the system. */
   public static String normalize(String value) {
-    if (EN.equals(value)) return EN;
-    if (ZH.equals(value)) return ZH;
-    return SYSTEM;
+    return isSupportedLanguage(value) ? value : SYSTEM;
   }
 
-  /** 这个值是否是可保存的偏好（三个之一）。 */
   public static boolean supported(String value) {
-    return SYSTEM.equals(value) || ZH.equals(value) || EN.equals(value);
+    return SYSTEM.equals(value) || isSupportedLanguage(value);
   }
 
-  /** 偏好是否表示「跟随系统」。 */
+  /** Only canonical, resolved languages may enter resource writers and script bridges. */
+  public static boolean isSupportedLanguage(String value) {
+    return value != null && LANGUAGES.contains(value);
+  }
+
   public static boolean followsSystem(String value) {
     return SYSTEM.equals(normalize(value));
   }
 
-  /**
-   * 把系统首选语言映射到应用实际语言（只有 {@code zh} 与 {@code en}）。
-   *
-   * <p>规则：首选语言是中文（{@code zh}、{@code zh-CN}、{@code zh-Hant}…）→ 中文；
-   * 无法识别 → 中文；其他语言（含 {@code en}、{@code fr}）→ 英文。
-   *
-   * @param languageTag 系统 Locale 的 BCP-47 标签，可以为 null
-   */
-  public static String resolveLanguage(String languageTag) {
-    if (languageTag == null
-        || languageTag.trim().isEmpty()
-        || "und".equalsIgnoreCase(languageTag.trim())
-        || !languageTag.trim().matches("(?i)[a-z]{2,8}([_-][a-z0-9]{1,8})*")) return ZH;
-    return isChinese(languageTag) ? ZH : EN;
+  /** Map a valid locale tag to an available language, or return null when it is unavailable. */
+  public static String canonicalLanguage(String languageTag) {
+    if (!validTag(languageTag)) return null;
+    Locale locale = Locale.forLanguageTag(languageTag.trim().replace('_', '-'));
+    String primary = locale.getLanguage();
+    if (ZH.equals(primary)) {
+      String script = locale.getScript(), region = locale.getCountry();
+      if ("Hant".equals(script)) return ZH_HANT;
+      if ("Hans".equals(script)) return ZH;
+      return "TW".equals(region) || "HK".equals(region) || "MO".equals(region) ? ZH_HANT : ZH;
+    }
+    return isSupportedLanguage(primary) ? primary : null;
   }
 
-  /** 由偏好 + 系统语言算出实际生效语言。 */
+  /** Unknown valid system languages use English; an unavailable system source retains Chinese. */
+  public static String resolveLanguage(String languageTag) {
+    if (!validTag(languageTag)) return ZH;
+    String available = canonicalLanguage(languageTag);
+    return available == null ? EN : available;
+  }
+
   public static String resolve(String preference, String languageTag) {
     String chosen = normalize(preference);
     return SYSTEM.equals(chosen) ? resolveLanguage(languageTag) : chosen;
   }
 
-  /** 语言标签的主语言子标签是否为 {@code zh}（大小写不敏感）。 */
   public static boolean isChinese(String languageTag) {
-    if (languageTag == null) return false;
-    String value = languageTag.trim();
-    if (value.isEmpty()) return false;
-    int dash = value.indexOf('-');
-    if (dash < 0) dash = value.indexOf('_');
-    String primary = dash < 0 ? value : value.substring(0, dash);
-    return "zh".equalsIgnoreCase(primary);
+    String canonical = canonicalLanguage(languageTag);
+    return ZH.equals(canonical) || ZH_HANT.equals(canonical);
+  }
+
+  public static boolean isRtl(String language) {
+    return AR.equals(canonicalLanguage(language));
+  }
+
+  /** Native names keep the selector discoverable in every interface language. */
+  public static String nativeName(String language) {
+    if (ZH.equals(language)) return "简体中文";
+    if (ZH_HANT.equals(language)) return "繁體中文";
+    if (EN.equals(language)) return "English";
+    if (RU.equals(language)) return "Русский";
+    if (JA.equals(language)) return "日本語";
+    if (KO.equals(language)) return "한국어";
+    if (AR.equals(language)) return "العربية";
+    if (PT.equals(language)) return "Português";
+    if (LA.equals(language)) return "Latina";
+    if (FR.equals(language)) return "Français";
+    throw new IllegalArgumentException("UI_LANGUAGE");
+  }
+
+  private static boolean validTag(String tag) {
+    return tag != null
+        && !"und".equalsIgnoreCase(tag.trim())
+        && tag.trim().matches("(?i)[a-z]{2,8}([_-][a-z0-9]{1,8})*");
   }
 }

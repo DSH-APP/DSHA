@@ -91,7 +91,7 @@ export interface PickerVisibleBand {
  *
  * 为什么是「带」而不是「视口高」：`getBoundingClientRect()` 与 `position: fixed` 的
  * top/left 都是 layout 视口坐标，与视觉视口可能只差一个平移（iOS 键盘滚动模型，Safari
- * 不认 `interactive-widget`；Chromium 自 2026-10-18 起键盘缩 layout 视口，两条通道重合）
+ * 不认 `interactive-widget`（本仓 2026-10-30 起也不再声明它）；键盘模型统一按 visualViewport 处理，两条通道重合）
  * —— 锚点盒与返回值都**不需要**换算，只有「夹进哪一段」得用视觉视口那一段（`visibleBand()`）。
  * @param anchor - 锚点（回形针）盒，layout 视口坐标。
  * @param own - 浮层自身尺寸。
@@ -103,7 +103,7 @@ export declare function computePickerPlacement(anchor: PickerAnchorBox, own: Pic
     left: number;
 };
 /**
- * 安装手机档的输入框文件入口弹层。
+ * 安装输入框文件入口弹层。按 TOUCH_QUERY 武装（#259 ②：平板 ≥1024 原生布局同样没有拖放/hover；落位不依赖手机壳）。
  * @param ctx - client 上下文。
  */
 export declare function installComposerFilePicker(ctx: ClientContext): void;

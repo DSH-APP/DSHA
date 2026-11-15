@@ -13,9 +13,7 @@ final class PluginNavigation {
     if (PluginInstallLink.management(url)) {
       com.deepseekharness.app.core.PluginRepository.get(activity).invalidateInstalledState();
       activity.startActivity(
-          new Intent(activity, MainActivity.class)
-              .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-              .putExtra("open_plugins", true));
+          MainActivity.navigationIntent(activity).putExtra("open_plugins", true));
       return true;
     }
     try {

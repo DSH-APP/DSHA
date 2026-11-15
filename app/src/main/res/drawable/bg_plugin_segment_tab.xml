@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 插件页分段按钮：选中时是白色滑块（surface + 1dp 描边），未选中透明；按下用 shell ripple。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/shell_nav_ripple">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFFFF" />
+            <corners android:radius="9dp" />
+        </shape>
+    </item>
+    <item>
+        <selector>
+            <item android:state_selected="true">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/shell_surface" />
+                    <corners android:radius="9dp" />
+                    <stroke android:width="1dp" android:color="@color/shell_line" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="@android:color/transparent" />
+                    <corners android:radius="9dp" />
+                </shape>
+            </item>
+        </selector>
+    </item>
+</ripple>

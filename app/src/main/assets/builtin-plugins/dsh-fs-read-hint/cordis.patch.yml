@@ -1,0 +1,6 @@
+# DSHA fs read-hint bundle patch: one host row. It only appends a same-name path hint to
+# FS_NOT_OBSERVED tool errors; disabling or removing this bundle restores upstream text exactly.
+# Temporary fix; removal criteria in docs/fs-read-hint-plugin.md.
+- insert:
+    - id: dsh-fs-read-hint
+      name: 'dsh-fs-read-hint'

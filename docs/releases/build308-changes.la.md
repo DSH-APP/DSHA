@@ -1,0 +1,4 @@
+# DSHA 0.2.1-rc.5-20261104.1830-dsh0.2.1-rc.5 / build308
+
+- Experimentale: nuntii insulae emendant missionem inertem in electione multiplici et excessum limitis bullarum actionum (auctor Ralsei1337); custodia lectionis Root vias fasciculorum exemplarium grep -f/-nfFILE probat (fons #215); pagina diagnosis «Exscribe» activat cum eventus post defectum praematurum adveniunt (fons #213); tabula additamenti scopi initii in dispositione angusta verticali non iam magnum spatium vacuum sub titulo relinquit, et moderamen segmentatum nunc per totum ordinem extenditur (experimentale, in instrumento non probatum).
+- Ambitus probationis: solum probationes unitatum destinatae, Lint et inspectiones fontis locales; in instrumento non probatum. versionCode ad 308 auctus (in build307 fundatum). Revisio DSHA ex 0.2.1-rc.3 in 0.2.1-rc.5 mutatur, cum DSH incluso 0.2.1-rc.5 congruens.

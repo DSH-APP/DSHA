@@ -5,6 +5,7 @@ public final class CredentialPaths {
   public static final String BRIDGE_TOKEN = CredentialPathRules.BRIDGE_TOKEN,
       BRIDGE_HEADERS = CredentialPathRules.BRIDGE_HEADERS,
       BRIDGE_STATUS = CredentialPathRules.BRIDGE_STATUS,
+      BRIDGE_PORT = CredentialPathRules.BRIDGE_PORT,
       LEGACY_API_KEY = CredentialPathRules.LEGACY_API_KEY;
 
   private CredentialPaths() {}

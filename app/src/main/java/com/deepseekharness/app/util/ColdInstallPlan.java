@@ -93,6 +93,7 @@ public final class ColdInstallPlan {
       Observation probe = runner.run(mode, true);
       recorder.record(mode, true, probe);
       if (!probe.exited) throw new IOException("COLD_INSTALL_PROCESS_EXIT_UNCONFIRMED");
+      if (probe.timedOut) throw new IOException("COLD_RUNTIME_PROBE_TIMED_OUT");
       if (!probe.ready(PROBE_READY)) continue;
       Observation installed = runner.run(mode, false);
       recorder.record(mode, false, installed);
@@ -129,11 +130,13 @@ public final class ColdInstallPlan {
       Observation result = runner.run(mode, true);
       recorder.record(mode, true, result);
       if (!result.exited) throw new IOException("COLD_INSTALL_PROCESS_EXIT_UNCONFIRMED");
+      if (result.timedOut) throw new IOException("COLD_RUNTIME_PROBE_TIMED_OUT");
       if (result.ready(PROBE_READY) && result.ready(INSTALL_READY)) return mode;
       if (allowDynamicLoaderRetry && mode == Mode.PROROOT && staticSignalStackFailure(result)) {
         Observation dynamic = runner.run(Mode.PROROOT_DYNAMIC, true);
         recorder.record(Mode.PROROOT_DYNAMIC, true, dynamic);
         if (!dynamic.exited) throw new IOException("COLD_INSTALL_PROCESS_EXIT_UNCONFIRMED");
+        if (dynamic.timedOut) throw new IOException("COLD_RUNTIME_PROBE_TIMED_OUT");
         if (dynamic.ready(PROBE_READY) && dynamic.ready(INSTALL_READY)) return Mode.PROROOT_DYNAMIC;
       }
     }

@@ -106,7 +106,7 @@ public final class BrowserOriginRestoreActivity extends AppCompatActivity {
                         container.addView(surface.view(), new LinearLayout.LayoutParams(-1, 0, 1));
                         status.setText(
                             UiText.choose(
-                                "正在读取旧端口的数据候选；原数据不会删除。",
+                                "正在读取旧端口候选；原数据不删除",
                                 "Reading previous-port candidates; source data will be retained."));
                         surface.load(
                             server.origin() + "/__dsha/browser-origin-restore",
@@ -133,7 +133,7 @@ public final class BrowserOriginRestoreActivity extends AppCompatActivity {
                             UiText.format(
                                 "%s\n%s · %s",
                                 UiText.choose(
-                                    "旧端口正被占用，草稿仍保留。请待端口释放后从“恢复旧端口草稿”重试。",
+                                    "旧端口被占用，草稿仍保留",
                                     "The previous port is occupied. Drafts were retained. Retry after the port is released."),
                                 phase,
                                 code)));
@@ -145,14 +145,14 @@ public final class BrowserOriginRestoreActivity extends AppCompatActivity {
                         status.setText(
                             ("RESTORE_PREVIEW_CLOSE_UNCONFIRMED".equals(code)
                                     ? UiText.choose(
-                                        "未确认旧网页已关闭，恢复尚未开始。请关闭其它对话页后重试。",
+                                        "未确认旧网页关闭，恢复未开始",
                                         "Previous pages have not confirmed closure. Restore has not started. Close other conversation pages and retry.")
                                     : code.startsWith("RESTORE_BUDGET")
                                         ? UiText.choose(
-                                            "恢复候选达到保留上限，旧草稿仍保留。请保留原图并联系维护者检查候选。",
+                                            "候选达到上限，旧草稿保留",
                                             "Retained recovery candidates reached their limit. Old drafts remain. Keep original images and contact the maintainer to inspect candidates.")
                                         : UiText.choose(
-                                            "恢复未开始，旧数据仍保留。请返回后重试。",
+                                            "恢复未开始，旧数据保留",
                                             "Restore did not start. Source data was retained. Return and retry."))
                                 + "\n"
                                 + phase
@@ -188,7 +188,7 @@ public final class BrowserOriginRestoreActivity extends AppCompatActivity {
     if (identity == null || !identity.authUrl().equals(authUrl)) {
       status.setText(
           UiText.choose(
-              "运行实例已变化；旧数据与候选已保留，请返回后重试。",
+              "运行实例已变化，请重试",
               "The running instance changed. Source and candidates were retained. Return and retry."));
       return;
     }
@@ -204,6 +204,23 @@ public final class BrowserOriginRestoreActivity extends AppCompatActivity {
               "TARGET_PAGE_OPEN",
               code));
     }
+  }
+
+  void rendererGone(Surface failed) {
+    if (surface != failed) return;
+    surface = null;
+    if (server != null) server.close();
+    server = null;
+    BrowserOriginRestore.end(ticket);
+    com.deepseekharness.app.core.DiagnosticLog.record(
+        this, "BROWSER_ORIGIN_RESTORE_FAILED", "stage=RENDERER_GONE");
+    status.setText(
+        UiText.format(
+            "%s\n%s · %s",
+            UiText.choose(
+                "恢复页面无法打开，候选已保留。", "The recovery page could not open. Candidates were retained."),
+            "RENDERER",
+            "RENDERER_GONE"));
   }
 
   @Override

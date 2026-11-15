@@ -7,6 +7,8 @@ import com.sun.tools.javac.parser.Tokens.TokenKind;
 import com.sun.tools.javac.util.Context;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 
@@ -33,7 +35,44 @@ public final class JavaTokenFingerprint {
     return HexFormat.of().formatHex(digest.digest());
   }
 
+  private static String read(String path) throws Exception {
+    return new String(Files.readAllBytes(Path.of(path)), StandardCharsets.UTF_8);
+  }
+
+  /**
+   * Batch mode: each stdin line is "beforePath\tafterPath"; prints "beforeSha afterSha" per line,
+   * or "ERROR" when either side cannot be lexed. One JVM serves a whole formatter batch.
+   */
+  private static void pairs() throws Exception {
+    String input = new String(System.in.readAllBytes(), StandardCharsets.UTF_8);
+    StringBuilder output = new StringBuilder();
+    for (String line : input.split("\n", -1)) {
+      if (line.isEmpty()) {
+        continue;
+      }
+      int tab = line.indexOf('\t');
+      if (tab < 0 || line.indexOf('\t', tab + 1) >= 0) {
+        throw new IllegalArgumentException("JAVA_TOKEN_PAIR_LINE");
+      }
+      try {
+        String before = fingerprint(read(line.substring(0, tab)));
+        String after = fingerprint(read(line.substring(tab + 1)));
+        output.append(before).append(' ').append(after).append('\n');
+      } catch (RuntimeException error) {
+        output.append("ERROR\n");
+      }
+    }
+    System.out.print(output);
+  }
+
   public static void main(String[] args) throws Exception {
+    if (args.length == 1 && args[0].equals("--pairs")) {
+      pairs();
+      return;
+    }
+    if (args.length != 0) {
+      throw new IllegalArgumentException("JAVA_TOKEN_USAGE");
+    }
     String input = new String(System.in.readAllBytes(), StandardCharsets.UTF_8);
     int separator = input.indexOf('\0');
     if (separator < 0 || input.indexOf('\0', separator + 1) >= 0) {

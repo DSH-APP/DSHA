@@ -22,8 +22,10 @@ import runtime_stable_patches
 ROOT = Path(__file__).resolve().parents[1]
 WORKER = 'plugin-bundle-proof-workers-patch.json'
 OLD_RECIPE_SHA = '466c61d0fc0d180cd4828fb981a0851cf1721ced023163cf7e17469e1144b681'
-OLD_MODULE_SHA = '9f47fda97820a06f33a29f5b5903412c91e3f5f7873c064f1ab18fe91b8657ca'
-PRE_WORKER_SHA = 'c1072ef0368c7d352cdba9535b240c5c5b9691c5fcab0e4a2fc44104a9db0714'
+# 模块字节随内置 DSH 上游与前序配方变化：build193（rc.3）时为 9f47fda9… / c1072ef0…，
+# 当前按 0.2.1-rc.5 canonical 与现行前序链重算。配方夹具本身（OLD_RECIPE_SHA）不变。
+OLD_MODULE_SHA = '8043321a15a77b0559a03165b253bf366ea04abc4397a808828d083e9c5d87ea'
+PRE_WORKER_SHA = '1eb661c0f36bcc5dcf47570f0c09ae26215bcf449031f218bc32bf6dc98a3d85'
 MANAGER = '@deepseek-ai/dsh-plugin-manager/lib/index.js'
 NEW_RECIPES = {WORKER, 'plugin-inventory-management-patch.json',
                'plugin-manager-management-probe-patch.json',
@@ -135,7 +137,7 @@ def main():
         raise RuntimeError('TEST_ASSERTIONS_REQUIRE_UNOPTIMIZED_PYTHON')
     source = args.source_root.resolve()
     assets = source / 'app/src/main/assets'
-    chains, _ = runtime_stable_patches.load_chains(assets, '0.2.1-rc.2')
+    chains, _ = runtime_stable_patches.load_chains(assets, json.loads((source / 'tools/dsh-runtime/package.json').read_text(encoding='utf8'))['dependencies']['@deepseek-ai/dsh'])
     selected = json.loads((source / 'app/build/test-runtimes/current.json').read_text(encoding='utf-8'))
     raw = Path(selected['raw']) / 'node_modules'
     historical_bytes = (source / 'tools/fixtures/plugin-bundle-proof-workers-v1-patch.json').read_bytes()
@@ -175,7 +177,10 @@ def main():
             worker_rows = [row for row in chain if row[0] == WORKER]
             required_marker = 'DSHA_PLUGIN_BUNDLE_READ_WORKERS_V1' if args.expect_broken_current else 'DSHA_PLUGIN_BUNDLE_READ_WORKERS_V2'
             assert len(worker_rows) == 1 and worker_rows[0][2] == [required_marker], 'worker registry must identify the exact admitted generation'
-            pre_chain = [row for row in chain if row[0] != WORKER]
+            # This pinned historical pre-worker proof predates the later argv
+            # routing repair. Keep the old bytes/hash; current-chain upgrade
+            # below still has to migrate them through the new recipe.
+            pre_chain = [row for row in chain if row[0] not in {WORKER, 'plugin-pnpm-argv-patch.json'}]
             pre = runtime_stable_patches.apply(canonical, pre_chain)
             assert sha(pre) == PRE_WORKER_SHA, 'pre-worker actual managed source identity'
             historical_row = (WORKER, [(item['before'], item['after']) for item in historical['patches']], ['DSHA_PLUGIN_BUNDLE_READ_WORKERS_V1'])

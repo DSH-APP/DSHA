@@ -27,8 +27,9 @@ export interface ComposerFileButtonProps extends PropsRuntime<'conversation.inpu
  * a non-plain input phase (adjudicating/claimed/submitting = the machine is
  * busy) and a subagent session both refuse attachments. The host's own
  * `locked` / `addFiles === undefined` arms are package-private, so a missing
- * session seat also disables the control. Hidden entirely on wide screens
- * (CSS media query, and the shared desktop hide block in misc.css.ts).
+ * session seat also disables the control. Hidden on mouse-driven windows at
+ * every width (the shared desktop hide block in misc.css.ts); wide touch
+ * (tablet ≥1024 + coarse pointer) puts it back in that file's tablet block (#259).
  */
 export declare function ComposerFileButton({ useInput, useSession, t }: ComposerFileButtonProps): import("react").JSX.Element;
 //# sourceMappingURL=ComposerFileButton.d.ts.map

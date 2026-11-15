@@ -13,14 +13,18 @@ function fixture(rejection, t, getService=()=>{throw Error('不应访问会话')
     async resume(){throw Error('鉴权与正文检查前不得恢复会话');}
   }
   const webServer={port:3080,register:route=>{
-    assert.equal(route.kind,'exact');assert.equal(route.path,'/api/mobile-nav.session.delete');
-    assert.equal(handler,undefined);handler=route.handler;return ()=>{};
+    assert.equal(route.kind,'exact');
+    // 文件传输在同一 ctx 上另注册 /api/dsha/files/* 四类路由；这里只截获删除入口。
+    if(route.path==='/api/mobile-nav.session.delete'){assert.equal(handler,undefined);handler=route.handler;}
+    return ()=>{};
   }};
   t.after(()=>{for(const dispose of disposers.reverse())dispose();});
   const ctx={effect(){},logger:{warn(){}},get(name){consulted++;return getService(name);},inject(names,fn){
     if (names.length === 1 && names[0] === 'settings') return; // 此夹具未提供可选设置服务。
-    assert.deepEqual(names,names.length===1?['webServer']:['webServer','connection','agents']);
-    const services=names.length===1?{webServer}:{webServer,agents:new Agents(),connection:{requestRejection(){checked++;return rejection;}}};
+    // 删除入口只依赖 webServer/connection/agents；文件传输另行声明 fs/sandboxPolicy/sessions，
+    // 用空壳满足装配即可，断言仍集中在删除路由的鉴权与正文读取顺序。
+    const services={webServer,agents:new Agents(),
+      connection:{requestRejection(){checked++;return rejection;}},fs:{},sandboxPolicy:{},sessions:{}};
     fn({...services,effect:run=>{const dispose=run();assert.equal(typeof dispose,'function');disposers.push(dispose);}});
   }};
   apply(ctx);

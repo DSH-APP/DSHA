@@ -18,7 +18,7 @@
 | ADB | 系统adbd、配对密钥、当前鉴权连接 | 本机无线设备shell通道 | Root、无障碍已连接、当前操作已批准 |
 | 无障碍 | 用户的系统设置及系统实际绑定 | 节点、手势、部分截图/屏幕操作 | 任意shell、独立显示创建权限 |
 | DSHA本机确认策略 | DeviceGrants、CapabilityBroker、当前运行 | 判断助手请求应询问、允许或拒绝 | 系统权限或设备连接 |
-| DSH会话权限模式 | Web/运行选项与工具策略 | read-only、workspace-write等工具约束 | Android UID隔离或强系统沙箱 |
+| DSH运行权限模式 | 正式Web启动固定danger-full-access；build191移除原生三档选择 | 既有会话/插件自身工具策略及独立应急只读策略继续独立 | Android UID隔离、强系统沙箱或额外Android能力授权 |
 
 Android官方把普通权限、运行时权限和特殊权限分别处理；Manifest中的声明本身不是所有能力已获准的证明。[Android权限概览](https://developer.android.com/guide/topics/permissions/overview)
 上表后三层的具体判据是DSHA源码策略，不是Android或Shizuku为DSHA提供的安全背书。
@@ -57,6 +57,12 @@ Shizuku官方同时说明UID、Linux capabilities和SELinux都会影响可用操
 这里的API37门来自当前源码；不能推导所有Android版本、系统设置页或ROM都有同样表现。
 权限可能被用户撤销，也可能已允许但实际服务未连接；应在使用点重新取事实。
 涉及系统对话框的选择仍由用户完成，不能用全局确认自动回答。
+
+### 2.1 跨应用文件访问（SAF）
+
+「设置 → 设备能力授权 → 跨应用文件访问」使用系统 `ACTION_OPEN_DOCUMENT_TREE` 选择器让用户逐目录授权，不申请 `MANAGE_EXTERNAL_STORAGE`，也不扩大容器或 rootfs 的路径范围。授权页只显示 `SafGrants` 记录的短 id、应用标签、同目录的读/写位与本功能新增位；「允许写入」是本地二次开关，关闭时桥对写/删返回 `READ_ONLY`。只给写权限的树在添加时拒绝（`WRITE_ONLY`），避免出现「系统给了写位但读端点永远不可用」的半可用授权。
+
+权限查询（`getPersistedUriPermissions`、目录名）只在后台 executor 执行；`/app/saf/trees` 的轻量列表不查询 Provider。撤销时只释放本功能新拿到的读/写位，add 前的待确认记录与失效授权下次访问重试清理。SAF 不改变 Root/Shizuku/ADB 的授权状态，也不借用它们扩大目标范围；Provider 拒绝或挂起时按桥错误码失败，不自动切换通道。
 
 ## 3. Root：发现su、用户允许和真实执行是三步
 
@@ -290,6 +296,14 @@ flowchart LR
 全局策略revision、broker epoch、screen grant revision和Web generation是不同字段，不能合并或归零。
 原生虚拟屏节点面板另有[NativeScreenControlLease](../app/src/main/java/com/deepseekharness/app/screen/NativeScreenControlLease.java)，绑定真实RESUMED Activity；pause/stop/destroy撤销。
 该本机用户入口不能通过null broker变成助手绕过，也不能把旧帧/节点换标签作用于新屏。
+
+敏感界面分档是屏幕策略的**子策略**，不是新的系统授权，也不新增capability：`DeviceGrants` 另存
+`sensitive_screen_v1`（逐类别ASK/HANDOFF、精确包名的强制交接/信任名单，默认全ASK、名单空、损坏回默认）。
+它的修订号与 `screen_confirmation_v1` 的修订号一起构成屏幕请求的policyRevision（见8.2），任一保存都先失效旧确认与
+在途请求；进程内保留修订号下限，避免损坏记录把围栏退回旧值。`ScreenConfirmationPolicy.ALLOW_ALL` 只省普通确认，
+不能跳过敏感类别的ASK、不能关闭已配置的HANDOFF，也不能解除密码文本读写硬阻断；`OFF`（逐类别显式选择）只关闭整屏
+分档并回到普通确认策略，不影响密码文本硬阻断；密码文本的硬拒绝由输入层执行，
+与确认结果无关。HANDOFF不改屏幕模式：暂停助手、撤销在途请求并丢弃观察，用户恢复后必须重新观察，不自动重放。
 
 ## 9. 审批不等于回答，工具策略不等于生命周期证明
 

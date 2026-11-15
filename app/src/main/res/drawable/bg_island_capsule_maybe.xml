@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 示意胶囊（36.0 旧接口查不到开关）：虚线描边，表示是否显示由系统决定。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_accent_soft" />
+    <corners android:radius="11dp" />
+    <stroke android:width="1.5dp" android:color="@color/shell_accent" android:dashWidth="4dp" android:dashGap="3dp" />
+</shape>

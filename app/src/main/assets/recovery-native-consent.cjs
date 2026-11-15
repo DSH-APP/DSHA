@@ -16,19 +16,24 @@ function current() {
   try { fs.lstatSync('/root/.recovery-stop'); throw invalid('RECOVERY_CONSENT_STOPPED'); }
   catch (error) { if (error.code !== 'ENOENT') throw error; }
   return { instance, generation, token, port,
-    connection: crypto.createHash('sha256').update(instance + ':' + generation + ':' + token).digest('hex') };
+    connection: crypto.createHash('sha256').update(instance + ':' + generation + ':' + port + ':' + token).digest('hex') };
 }
 function readConnection() {
-  return Object.freeze({ applicationId: 'dsh.android.client', generation: current().connection });
+  const owner = current();
+  return Object.freeze({ applicationId: process.env.DSHA_BRIDGE_APPLICATION_ID || 'io.github.sunsetrne.dsha',
+    generation: owner.connection, port: owner.port });
 }
 function bridgeFetch(route, init = {}) {
-  if (route !== '/device/consent' || Object.keys(init).some(key => !['signal', 'expectedConnectionGeneration'].includes(key)))
+  if (route !== '/device/consent' || Object.keys(init).some(key => !['signal', 'expectedConnectionGeneration', 'expectedConnectionPort'].includes(key)))
     return Promise.reject(invalid('RECOVERY_CONSENT_QUERY_ONLY'));
   if (init.signal?.aborted) return Promise.reject(init.signal.reason || invalid('RECOVERY_CONSENT_CANCELLED'));
   let owner;
   try {
     owner = current();
-    if (owner.connection !== init.expectedConnectionGeneration) throw invalid('RECOVERY_CONSENT_CHANGED');
+    // 预期端口只是身份围栏；连接地址始终来自本次宿主注入的 broker。
+    if (owner.connection !== init.expectedConnectionGeneration
+        || init.expectedConnectionPort !== undefined && owner.port !== init.expectedConnectionPort)
+      throw invalid('RECOVERY_CONSENT_CHANGED');
   } catch (error) { return Promise.reject(error); }
   return new Promise((resolve, reject) => {
     const body = '{}';

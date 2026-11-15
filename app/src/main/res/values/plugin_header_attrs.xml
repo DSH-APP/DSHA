@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PluginFlowRow：插件页头部单行优先的流式容器。 -->
+<resources>
+    <declare-styleable name="PluginFlowRow">
+        <attr name="flowGapHorizontal" format="dimension" />
+        <attr name="flowGapVertical" format="dimension" />
+        <attr name="flowStretchWrapped" format="boolean" />
+    </declare-styleable>
+</resources>

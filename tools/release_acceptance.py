@@ -6,7 +6,7 @@ from pathlib import Path
 from release_layout import ROOT, source_snapshot_path
 
 CONTRACT=Path(__file__).with_name('release-acceptance.json')
-CERT='e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5'
+CERT='a4b0413c67fa46dd30dc7e2bce3ad56151ed8bfde2a3315fff685baf786b5d5d'
 
 
 def digest(path):
@@ -14,14 +14,14 @@ def digest(path):
 
 
 def baseline_from_receipt(path, root=ROOT):
-    """A raw current snapshot is not a baseline: require a completed two-flavor delivery receipt."""
+    """A raw current snapshot is not a baseline: require a completed single-Standard delivery receipt."""
     path=Path(path).resolve()
     receipt=json.loads(path.read_text(encoding='utf8'))
     if receipt.get('status')!='PASS_FOR_EXECUTED_SCOPE':
         raise ValueError('ACCEPTANCE_BASELINE_NOT_DELIVERED')
     apks=receipt.get('apks',[])
-    if len(apks)!=2 or {a.get('flavor') for a in apks}!={'standard','low'} \
-            or any(a.get('certificateSha256')!=CERT or a.get('package')!='dsh.android.client' for a in apks):
+    if len(apks)!=1 or {a.get('flavor') for a in apks}!={'standard'} \
+            or any(a.get('certificateSha256')!=CERT or a.get('package')!='io.github.sunsetrne.dsha' for a in apks):
         raise ValueError('ACCEPTANCE_BASELINE_IDENTITY')
     source=receipt.get('sourceSnapshot',{})
     snapshot=source_snapshot_path(source.get('path',''), source.get('sha256'), root)
@@ -35,7 +35,8 @@ def requirements(baseline, current, contract=CONTRACT, provenance=None):
     if not baseline or not current:
         raise ValueError('ACCEPTANCE_BASELINE_EMPTY')
     changed=sorted(name for name in set(baseline)|set(current) if baseline.get(name)!=current.get(name))
-    selected={flavor:set(rules['baseDeviceChecks']) for flavor in ('standard','low')}
+    # Sunset-3090-Q 只有 Standard 变体（Android 11+），设备验收矩阵不再分 flavor。
+    selected={'standard':set(rules['baseDeviceChecks'])}
     matched=[]
     for rule in rules['changeRules']:
         hits=[name for name in changed if any(fnmatch.fnmatchcase(name,pattern) for pattern in rule['paths'])]

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-tools/lib/pipeline.js",
+  "patches": [
+    {
+      "before": "import { HarnessError, createToolResultMessage } from \"@deepseek-ai/dsh-llm\";",
+      "after": "import { captureExecution, prepareOperation, verifyGlobalConsent, verifyDispatch } from \"dsha-destructive-policy\"; // DSHA_REQUIRED_POLICY_V1\nimport { HarnessError, createToolResultMessage } from \"@deepseek-ai/dsh-llm\";"
+    },
+    {
+      "before": "\t\t\tthis.deferredContexts.set(execution, deferredContexts);",
+      "after": "\t\t\tObject.defineProperties(execution, Object.fromEntries([\"name\", \"arguments\", \"token\", \"callId\", \"rootCallId\", \"agent\", \"parent\", \"toolSet\"].map(key => [key, { value: execution[key], writable: false, configurable: false, enumerable: true }])));\n\t\t\tcaptureExecution(this.tools, execution, visible);\n\t\t\tthis.deferredContexts.set(execution, deferredContexts);"
+    },
+    {
+      "before": "\t\t\tconst denialReason = decision.kind === \"allow\" ? this.tools.checkGuards(exec) : decision.reason;",
+      "after": "\t\t\tif (decision.kind === \"allow\") await prepareOperation(this.tools, exec);\n\t\t\tconst denialReason = decision.kind === \"allow\" ? this.tools.checkGuards(exec) : decision.reason;"
+    },
+    {
+      "before": "\t\t\tconst tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== void 0, exec.toolSet);\n\t\t\tif (!tool) throw new ToolNotFoundError(exec.name);\n\t\t\tstate.bodyInvoked = true;",
+      "after": "\t\t\tawait verifyGlobalConsent(exec);\n\t\t\tconst tool = this.resolveExecution(exec.name, exec.agent, exec.parent !== void 0, exec.toolSet);\n\t\t\tif (!tool) throw new ToolNotFoundError(exec.name);\n\t\t\tverifyDispatch(this.tools, exec, tool);\n\t\t\tstate.bodyInvoked = true;"
+    }
+  ],
+  "sourceSha256": "f6c850cefce30831c4c5f160e831856b105935331bacd1ae0823129001614bc6"
+}

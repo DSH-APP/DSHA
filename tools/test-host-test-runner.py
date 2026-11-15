@@ -45,12 +45,42 @@ class HostRunnerTest(unittest.TestCase):
     def save(self):
         self.manifest.write_text(json.dumps(dict(schema=1, tests=self.rows)), encoding='utf-8')
 
+    def test_owned_nested_phone_and_file_transfer_fixtures_require_manifest_coverage(self):
+        nested = self.tools / 'file-transfer'
+        nested.mkdir()
+        (nested / 'test-owned.py').write_text('print("owned isolated fixture")')
+        phone = self.tools / 'phone-control/task-binding'
+        phone.mkdir(parents=True)
+        (phone / 'test-phone.mjs').write_text('console.log("owned phone fixture")')
+        self.save()
+        with self.assertRaisesRegex(ValueError, 'TEST_MANIFEST_COVERAGE'):
+            runner.load_manifest()
+        self.rows.append(dict(path='tools/file-transfer/test-owned.py', stage='runtime',
+                              reason='Current nested transfer fixture', requires=['python39'],
+                              args=[], environment={}, timeoutSeconds=10))
+        self.save()
+        with self.assertRaisesRegex(ValueError, 'TEST_MANIFEST_COVERAGE'):
+            runner.load_manifest()
+        self.rows.append(dict(path='tools/phone-control/task-binding/test-phone.mjs', stage='runtime',
+                              reason='Current nested phone fixture', requires=['node24'],
+                              args=[], environment={}, timeoutSeconds=10))
+        self.save()
+        self.assertEqual(3, len(runner.load_manifest()['tests']))
+
     def invoke(self):
         self.save()
         argv = ['run-host-tests.py', '--stage', 'fast', '--output', str(self.output), *self.extra_args]
         with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(io.StringIO()):
             code = runner.main()
         return code, json.loads((self.output / 'manifest.json').read_text())
+
+    def test_low_scope_is_rejected_before_any_child_starts(self):
+        self.add('test-pass.py', 'raise AssertionError("must not run")')
+        self.extra_args = ['--flavor', 'low']
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as raised:
+            self.invoke()
+        self.assertEqual(raised.exception.code, 2)
+        self.assertFalse(self.output.exists())
 
     def test_real_failed_child_does_not_hide_later_pass_and_fixture_is_removed(self):
         self.add('test-failure.py', 'raise SystemExit(7)')

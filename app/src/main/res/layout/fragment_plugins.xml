@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 插件页滚动容器（UI v5）：页面内容和内边距由 header/item/footer 承担。 -->
 <androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/pluginList" android:layout_width="match_parent" android:layout_height="match_parent"
-    android:background="@color/surface" android:paddingStart="18dp" android:paddingEnd="18dp"
-    android:paddingTop="14dp" android:paddingBottom="22dp" android:clipToPadding="false" />
+    android:background="@color/shell_bg" android:clipToPadding="false" android:paddingStart="@dimen/shell_page_pad"
+    android:paddingTop="@dimen/shell_page_top" android:paddingEnd="@dimen/shell_page_pad"
+    android:paddingBottom="@dimen/shell_page_bottom" />

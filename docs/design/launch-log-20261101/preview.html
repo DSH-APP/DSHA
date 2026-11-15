@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-reduced="false">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>DSHA · 启动日志压缩与精致化（交互原型）</title>
+  <style>
+    /* UI v5 token 离线副本，对齐 app/src/main/res/values{,-night}/shell_ui.xml；仅用于本预览。 */
+    :root {
+      color-scheme: light;
+      --page: #e9eef6; --bg: #f3f6fb; --surface: #fcfdff; --raised: #e7edf6;
+      --line: rgba(29, 58, 96, .075); --line-2: rgba(29, 58, 96, .145);
+      --text: #18273f; --text-2: #50617a; --muted: #5a6b86;
+      --accent: #1e50d0; --accent-soft: rgba(30, 80, 208, .08); --on-accent: #fff;
+      --good: #287453; --good-soft: rgba(40, 116, 83, .10);
+      --warn: #8c600d; --warn-soft: rgba(140, 96, 13, .10);
+      --bad: #af404b; --bad-soft: rgba(175, 64, 75, .10);
+      --bezel: #1b2333;
+      --shadow: 0 18px 50px rgba(24, 39, 63, .18); --shadow-soft: 0 2px 8px rgba(24, 39, 63, .08);
+      --mono: ui-monospace, "JetBrains Mono", "Cascadia Mono", "Roboto Mono", "Noto Sans Mono CJK SC", Menlo, Consolas, monospace;
+      --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --fs: 1;
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --page: #070a10; --bg: #0b0f16; --surface: #131923; --raised: #1b2432;
+      --line: rgba(203, 220, 255, .07); --line-2: rgba(203, 220, 255, .13);
+      --text: #edf1f7; --text-2: #b0bbcc; --muted: #8895aa;
+      --accent: #6aa4ff; --accent-soft: rgba(106, 164, 255, .08); --on-accent: #091729;
+      --good: #93ccaf; --good-soft: rgba(147, 204, 175, .10);
+      --warn: #e4be83; --warn-soft: rgba(228, 190, 131, .10);
+      --bad: #eea3a6; --bad-soft: rgba(238, 163, 166, .10);
+      --bezel: #2a3446;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .5); --shadow-soft: 0 2px 8px rgba(0, 0, 0, .35);
+    }
+    [data-reduced="true"] *, [data-reduced="true"] *::before, [data-reduced="true"] *::after { transition: none !important; animation: none !important; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { background: var(--page); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.5; }
+    button { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .stage { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; align-items: flex-start; padding: 28px 18px 48px; }
+
+    /* ---------- 手机框 ---------- */
+    .device { width: 380px; flex: none; background: var(--bezel); border-radius: 42px; padding: 10px; box-shadow: var(--shadow); }
+    .screen { background: var(--bg); border-radius: 33px; height: 780px; overflow: hidden; display: flex; flex-direction: column; }
+    .statusbar { height: 30px; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 0 26px; font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+    .page { flex: 1; overflow-y: auto; padding: 8px 20px 28px; font-size: calc(14px * var(--fs)); }
+
+    /* 上方状态区：仅作语境，弱化 */
+    .ctx-eyebrow { font-size: calc(11px * var(--fs)); font-weight: 700; color: var(--muted); letter-spacing: .04em; }
+    .ctx-title { font-size: calc(26px * var(--fs)); font-weight: 700; margin: 6px 0 4px; line-height: 1.2; }
+    .ctx-desc { color: var(--text-2); font-size: calc(13px * var(--fs)); margin: 0 0 14px; }
+    .ctx-primary { width: 100%; min-height: 52px; border: 0; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-weight: 700; cursor: pointer; }
+    .ctx-rows { margin-top: 14px; border-top: 1px solid var(--line); opacity: .55; }
+    .ctx-row { display: flex; justify-content: space-between; padding: 14px 4px; border-bottom: 1px solid var(--line); font-size: calc(14px * var(--fs)); }
+    .ctx-row span:last-child { color: var(--muted); }
+    .ctx-sep { height: 22px; }
+
+    /* ============ 改后：启动日志面板 ============ */
+    .log-head { display: flex; align-items: center; gap: 8px; min-height: 40px; }
+    .log-title { flex: 1; min-width: 0; }
+    .log-title h2 { margin: 0; font-size: calc(15px * var(--fs)); font-weight: 700; line-height: 1.25; }
+    .log-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: calc(11.5px * var(--fs)); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--muted); }
+    .dot.run { background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+    .dot.good { background: var(--good); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+    @keyframes pulse { 50% { opacity: .35; } }
+    .ibtn { width: 40px; height: 40px; flex: none; border-radius: 999px; border: 1px solid var(--line-2); background: var(--surface); display: grid; place-items: center; cursor: pointer; color: var(--text-2); }
+    .ibtn:hover { background: var(--raised); }
+    .ibtn:active { transform: scale(.96); }
+    .ibtn svg { width: 18px; height: 18px; }
+
+    .seg { display: flex; gap: 4px; margin-top: 10px; padding: 3px; background: var(--raised); border-radius: 999px; }
+    .seg button { flex: 1; min-height: 34px; border: 0; border-radius: 999px; background: transparent; font-size: calc(12.5px * var(--fs)); font-weight: 600; color: var(--text-2); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .seg button[aria-selected="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-soft); }
+    .count { font-size: calc(10.5px * var(--fs)); font-weight: 700; padding: 0 6px; border-radius: 999px; line-height: 17px; background: var(--line-2); color: var(--text-2); font-variant-numeric: tabular-nums; }
+    .count.warn { background: var(--warn-soft); color: var(--warn); } .count.bad { background: var(--bad-soft); color: var(--bad); }
+
+    .box { position: relative; margin-top: 8px; background: var(--surface); border: 1px solid var(--line-2); border-radius: 16px; overflow: hidden; }
+    .scroll { height: calc(var(--box-h, 184px) * var(--fs)); overflow-y: auto; overscroll-behavior: contain; scroll-behavior: auto; }
+    .box.tall .scroll { --box-h: 360px; }
+
+    /* 概览：阶段行 */
+    .stg { border-bottom: 1px solid var(--line); }
+    .stg:last-child { border-bottom: 0; }
+    .stg-btn { width: 100%; display: grid; grid-template-columns: 18px 1fr auto 14px; align-items: center; gap: 10px; padding: 9px 12px 7px; background: none; border: 0; text-align: left; cursor: pointer; }
+    .stg-btn:hover { background: var(--accent-soft); }
+    .stg-name { font-size: calc(13px * var(--fs)); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stg-dur { font-family: var(--mono); font-size: calc(11.5px * var(--fs)); color: var(--muted); font-variant-numeric: tabular-nums; }
+    .stg.running .stg-dur { color: var(--accent); }
+    .stg.warn .stg-dur { color: var(--warn); } .stg.bad .stg-dur { color: var(--bad); }
+    .chev { width: 14px; height: 14px; color: var(--muted); transition: transform .18s; }
+    .stg[data-open="true"] .chev { transform: rotate(90deg); }
+    .bar { grid-column: 2 / 4; height: 3px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 2px; }
+    .bar i { display: block; height: 100%; min-width: 3px; border-radius: 3px; background: var(--accent); opacity: .55; transition: width .25s; }
+    .stg.good .bar i { background: var(--good); } .stg.warn .bar i { background: var(--warn); opacity: .8; } .stg.bad .bar i { background: var(--bad); opacity: .8; }
+    .ico { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; }
+    .ico svg { width: 12px; height: 12px; }
+    .ico.good { background: var(--good-soft); color: var(--good); }
+    .ico.warn { background: var(--warn-soft); color: var(--warn); }
+    .ico.bad { background: var(--bad-soft); color: var(--bad); }
+    .ico.run { border: 2px solid var(--accent-soft); border-top-color: var(--accent); animation: spin .9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .stg-body { display: none; padding: 0 12px 10px 40px; }
+    .stg[data-open="true"] .stg-body { display: block; }
+    .sub { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline; padding: 3px 0; font-size: calc(12px * var(--fs)); color: var(--text-2); }
+    .sub .k { font-family: var(--mono); font-size: calc(11.5px * var(--fs)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sub .v { font-family: var(--mono); font-size: calc(11px * var(--fs)); color: var(--muted); font-variant-numeric: tabular-nums; }
+    .sub .mini { grid-column: 1 / -1; height: 2px; background: var(--line); border-radius: 2px; overflow: hidden; }
+    .sub .mini i { display: block; height: 100%; background: var(--muted); opacity: .45; }
+    .sub.note .k { font-family: var(--sans); }
+    .sub.warn .k, .sub.warn .v { color: var(--warn); } .sub.bad .k, .sub.bad .v { color: var(--bad); }
+    .issue { margin: 4px 0 2px; padding: 7px 9px; border-radius: 10px; font-size: calc(12px * var(--fs)); line-height: 1.45; }
+    .issue.warn { background: var(--warn-soft); color: var(--warn); } .issue.bad { background: var(--bad-soft); color: var(--bad); }
+    .raw-link { margin-top: 4px; background: none; border: 0; padding: 4px 0; font-size: calc(11.5px * var(--fs)); color: var(--accent); cursor: pointer; }
+    .digest { display: flex; align-items: center; gap: 8px; padding: 4px 6px 4px 12px; font-size: calc(11px * var(--fs)); color: var(--muted); border-top: 1px dashed var(--line-2); font-variant-numeric: tabular-nums; }
+
+    /* 原始：时间槽 + 内容，保持复制原文不变 */
+    .rawbar { display: flex; gap: 6px; padding: 8px 10px 6px; border-bottom: 1px solid var(--line); background: var(--surface); position: sticky; top: 0; z-index: 1; overflow-x: auto; scrollbar-width: none; }
+    .chip { flex: none; min-height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; font-size: calc(11.5px * var(--fs)); color: var(--text-2); cursor: pointer; }
+    .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: transparent; color: var(--accent); font-weight: 600; }
+    .raw { margin: 0; padding: 6px 0 8px; font-family: var(--mono); font-size: calc(11.5px * var(--fs)); line-height: 1.55; }
+    .ln { display: grid; grid-template-columns: 38px 1fr; gap: 8px; padding: 1px 10px 1px 0; border-left: 2px solid transparent; }
+    .ln .t { text-align: right; color: var(--muted); opacity: .75; font-variant-numeric: tabular-nums; user-select: none; }
+    .ln .x { color: var(--text-2); white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }
+    .raw.nowrap .ln .x { white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+    .ln.stage .x { color: var(--text); }
+    .ln.timing .x { color: var(--muted); }
+    .ln .tag { color: var(--accent); }
+    .ln .key { color: var(--text-2); opacity: .8; }
+    .ln .num { color: var(--text); }
+    .ln.warn { background: var(--warn-soft); border-left-color: var(--warn); } .ln.warn .x { color: var(--warn); }
+    .ln.bad { background: var(--bad-soft); border-left-color: var(--bad); } .ln.bad .x { color: var(--bad); }
+    .ln.fresh { animation: fresh 1.2s ease-out; }
+    @keyframes fresh { from { background: var(--accent-soft); } }
+    .empty { padding: 28px 12px; text-align: center; color: var(--muted); font-size: calc(12px * var(--fs)); }
+
+    /* 跟随：框内右下角，单一入口 */
+    .follow { position: absolute; right: 8px; bottom: 8px; display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 11px; border-radius: 999px; border: 1px solid var(--line-2); background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(6px); font-size: calc(11.5px * var(--fs)); color: var(--text-2); cursor: pointer; box-shadow: var(--shadow-soft); transition: opacity .18s, transform .18s; }
+    .follow.on { opacity: .0; pointer-events: none; transform: translateY(4px); }
+    .box:hover .follow.on, .follow.on:focus-visible { opacity: .85; pointer-events: auto; transform: none; }
+    .follow.paused { color: var(--accent); border-color: transparent; background: var(--accent-soft); font-weight: 600; }
+    .follow svg { width: 13px; height: 13px; }
+    .expand { flex: none; margin-left: auto; width: 28px; height: 28px; border-radius: 8px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; }
+    .expand:hover { background: var(--raised); }
+    .expand svg { width: 14px; height: 14px; }
+
+    .actions { display: flex; gap: 10px; margin-top: 12px; }
+    .actions button { flex: 1; min-height: 46px; border-radius: 999px; font-weight: 700; font-size: calc(14px * var(--fs)); cursor: pointer; border: 1px solid var(--line-2); background: var(--surface); }
+    .actions button:first-child { background: var(--raised); border-color: transparent; }
+
+    .toast { position: absolute; left: 50%; bottom: 40px; transform: translate(-50%, 10px); background: var(--text); color: var(--bg); padding: 9px 14px; border-radius: 12px; font-size: 12.5px; max-width: 320px; opacity: 0; pointer-events: none; transition: .2s; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .device-wrap { position: relative; }
+
+    /* ============ 改前：按截图复刻 ============ */
+    .old-head { display: flex; align-items: center; gap: 8px; }
+    .old-head h2 { flex: 1; margin: 0; font-size: calc(14px * var(--fs)); color: var(--text-2); font-weight: 700; }
+    .old-pill { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--raised); font-size: calc(14px * var(--fs)); color: var(--text-2); cursor: pointer; }
+    .old-box { margin-top: 10px; height: calc(184px * var(--fs)); overflow-y: auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 16px; padding: 12px; font-family: var(--mono); font-size: calc(12px * var(--fs)); line-height: 1.6; color: var(--text-2); white-space: pre-wrap; word-break: break-all; }
+    .old-row { display: flex; gap: 8px; margin-top: 8px; }
+    .old-row .old-pill { color: var(--accent); }
+
+    /* ---------- 控制台 ---------- */
+    .panel { width: 400px; max-width: 100%; display: flex; flex-direction: column; gap: 14px; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; box-shadow: var(--shadow-soft); }
+    .card h1 { font-size: 17px; margin: 0 0 4px; }
+    .card h3 { font-size: 13px; margin: 0 0 10px; color: var(--text-2); }
+    .card p { margin: 0; color: var(--text-2); font-size: 13px; }
+    .ctl { display: grid; grid-template-columns: 76px 1fr; gap: 10px 12px; align-items: center; font-size: 12.5px; }
+    .ctl > span { color: var(--muted); }
+    .grp { display: flex; flex-wrap: wrap; gap: 6px; }
+    .grp button { min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; font-size: 12.5px; cursor: pointer; color: var(--text-2); }
+    .grp button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+    .grp button.act { background: var(--raised); border-color: transparent; color: var(--text); }
+    ol, ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text-2); }
+    li { margin: 4px 0; }
+    li b { color: var(--text); font-weight: 600; }
+    code { font-family: var(--mono); font-size: 11.5px; background: var(--raised); padding: 1px 5px; border-radius: 5px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    td, th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--text-2); }
+    th { color: var(--muted); font-weight: 600; }
+    td:first-child { color: var(--text); white-space: nowrap; }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  </style>
+</head>
+<body>
+<div class="stage">
+  <div class="device-wrap">
+    <div class="device" aria-label="手机预览">
+      <div class="screen">
+        <div class="statusbar"><span>22:39</span><span>5G · 82%</span></div>
+        <div class="page" id="page">
+          <div class="ctx-eyebrow">DSH · 启动</div>
+          <div class="ctx-title" id="ctx-title">正在启动</div>
+          <p class="ctx-desc" id="ctx-desc">首次准备可能需要几秒，日志实时记录每个阶段。</p>
+          <button class="ctx-primary" type="button" tabindex="-1">打开界面</button>
+          <div class="ctx-rows" aria-hidden="true">
+            <div class="ctx-row"><span>本机访问地址</span><span>›</span></div>
+          </div>
+          <div class="ctx-sep"></div>
+          <section id="panel" aria-labelledby="log-h"></section>
+        </div>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <div class="panel">
+    <div class="card">
+      <h1>启动日志 · 压缩与精致化</h1>
+      <p>默认看<b>阶段概览</b>（一屏读完启动用了多久、卡在哪），需要排障时切<b>原始</b>，复制 / 下载始终是完整原文。</p>
+    </div>
+
+    <div class="card">
+      <h3>演示控制</h3>
+      <div class="ctl">
+        <span>版本</span>
+        <div class="grp" data-ctl="variant"><button data-v="after" aria-pressed="true">改后</button><button data-v="before">改前（截图）</button></div>
+        <span>场景</span>
+        <div class="grp" data-ctl="scenario"><button data-v="ok" aria-pressed="true">正常</button><button data-v="warn">插件跳过</button><button data-v="fail">鉴权前退出</button></div>
+        <span>回放</span>
+        <div class="grp"><button class="act" id="replay">重新播放</button><button class="act" id="finish">直接到结束</button></div>
+        <span>速度</span>
+        <div class="grp" data-ctl="speed"><button data-v="0.5">0.5×</button><button data-v="1" aria-pressed="true">1×</button><button data-v="3">3×</button></div>
+        <span>主题</span>
+        <div class="grp" data-ctl="theme"><button data-v="light" aria-pressed="true">浅色</button><button data-v="dark">夜间</button></div>
+        <span>字体</span>
+        <div class="grp" data-ctl="fs"><button data-v="1" aria-pressed="true">1.0×</button><button data-v="1.3">1.3×</button></div>
+        <span>动效</span>
+        <div class="grp" data-ctl="reduced"><button data-v="false" aria-pressed="true">正常</button><button data-v="true">减少</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>压缩规则</h3>
+      <ol>
+        <li><b>行按阶段折叠</b>：「正在 X…」与「完成「X」，耗时 n」合并为一行：状态图标 · 阶段名 · 耗时 · 占比条。21 行原文 → 6 行阶段。</li>
+        <li><b>计时行降级</b>：<code>STARTUP_PREP_TIMING</code> / <code>CAS_TIMING</code> 不再占主视图，归入所属阶段的明细，只显示 phase + 毫秒 + 小比例条。</li>
+        <li><b>问题上浮</b>：失败 / 跳过行让阶段变色、自动展开，并在标题行与「原始」标签上计数；概览里直接给出原句。</li>
+        <li><b>时间前缀改为时间槽</b>：<code>[0.7s]</code> 变成左侧等宽灰色列，正文对齐、不再被前缀挤换行；复制仍是带前缀原文。</li>
+        <li><b>按钮收进标题行</b>：复制 / 下载改 40dp 图标钮（保留无障碍名称）；「跟随最新」「查看最新」合并为框内一个浮标，暂停时才显示并带未读数。</li>
+        <li><b>原始视图工具条</b>：全部 / 隐藏计时 / 仅问题 / 换行，筛选只影响显示。</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3>落到原生的映射</h3>
+      <table>
+        <tr><th>原型</th><th>原生建议</th></tr>
+        <tr><td>阶段分组</td><td>新增纯逻辑 <code>util/StartupLogDigest</code>，输入 <code>StartupTrace</code> 已有的 <code>Line.kind</code>（2 开始 / 3 完成 / 4 切离）而不是解析中文文案，中英文共用；配单测。</td></tr>
+        <tr><td>计时明细</td><td>按前缀 <code>STARTUP_PREP_TIMING:</code> / <code>CAS_TIMING:</code> 解析，失败则按普通行显示，不丢行。</td></tr>
+        <tr><td>概览 / 原始</td><td><code>launch_log_scroll</code> 内切换两个子视图；原始仍是 <code>launch_log</code> TextView + Spannable 着色，可选可复制。</td></tr>
+        <tr><td>跟随浮标</td><td>复用 <code>LogScrollView.shouldFollowEnd()</code> 与 <code>followLogs</code>；删掉 <code>launch_follow_logs</code> 行，<code>launch_latest_button</code> 改为框内 FrameLayout 覆层。</td></tr>
+        <tr><td>复制 / 下载</td><td><code>copyLogs()</code> 与 <code>DiagnosticActivity.downloadLogs</code> 不变，始终取完整 <code>trace.log</code>。</td></tr>
+        <tr><td>验收</td><td>文案进 <code>tools/i18n</code>；跑 <code>LayoutAuditInstrumentation</code> 中英、日夜、短屏、1.3× 字体。</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ---------- 样例日志（取自截图与源码格式；端口为示例值） ---------- */
+  const BASE = [
+    [0.0, '正在检查运行环境…'],
+    [0.1, '完成「检查运行环境」，耗时 0.1s'],
+    [0.3, '正在检查旧插件文件链接…'],
+    [0.6, 'CAS_TIMING: {"phase":"scan","elapsedMs":122.07,"entries":16,"directories":1,"maxDepth":1,"candidates":0}'],
+    [0.7, 'CAS_TIMING: {"phase":"entry-total","elapsedMs":162.805}'],
+    [0.7, '完成「检查旧插件文件链接」，耗时 0.4s'],
+    [0.7, '正在注册插件…'],
+    [0.9, 'STARTUP_PREP_TIMING: phase=prepare-plugin-helpers durationMs=110 elapsedMs=836 outcome=returned'],
+    [1.5, 'STARTUP_PREP_TIMING: phase=register-builtins durationMs=683 elapsedMs=1521 outcome=returned'],
+    [1.6, 'RUNTIME_LINKS_CACHED: 共享依赖未变化，复用已检查链接'],
+    [1.7, '完成「注册插件」，耗时 1.0s'],
+    [1.7, '正在启动 Web 服务…'],
+    [1.8, '使用自动端口（--port 0）'],
+  ];
+  const SCENARIOS = {
+    ok: { fail: false, lines: BASE.concat([
+      [2.9, '已加载 6 个插件'],
+      [3.4, '已捕获本机鉴权链接，实际端口 41873'],
+      [3.4, '完成「启动 Web 服务」，耗时 1.7s'],
+      [3.4, '正在打开界面…'],
+      [3.9, '浏览器已就绪'],
+      [3.9, '完成「打开界面」，耗时 0.5s'],
+    ]) },
+    warn: { fail: false, lines: BASE.concat([
+      [2.6, '插件 dsh-example-tools 已跳过：入口文件不存在（lib/index.js）'],
+      [2.9, '已加载 5 个插件，跳过 1 个'],
+      [3.5, '已捕获本机鉴权链接，实际端口 41873'],
+      [3.5, '完成「启动 Web 服务」，耗时 1.8s'],
+      [3.5, '正在打开界面…'],
+      [4.0, '浏览器已就绪'],
+      [4.0, '完成「打开界面」，耗时 0.5s'],
+    ]) },
+    fail: { fail: true, lines: BASE.concat([
+      [2.4, 'node: 无法加载原生模块 better-sqlite3（ELF 架构不匹配）'],
+      [2.5, 'Web 服务在鉴权前退出，退出码 1'],
+      [2.5, '启动失败：可安全启动进入基础界面；插件文件和原配置保留。'],
+    ]) },
+  };
+
+  /* ---------- 分类与分组（原生应读 Line.kind，这里用文案近似） ---------- */
+  function classify(text) {
+    let m;
+    if ((m = /^正在(.+?)…$/.exec(text))) return { kind: 'start', name: m[1] };
+    if ((m = /^完成「(.+?)」，耗时 ([\d.]+)s$/.exec(text))) return { kind: 'done', name: m[1], dur: +m[2] * 1000 };
+    if ((m = /^STARTUP_PREP_TIMING: phase=(\S+) durationMs=(\d+)/.exec(text))) {
+      const bad = /outcome=threw/.test(text);
+      return { kind: 'timing', label: m[1], ms: +m[2], sev: bad ? 'bad' : '' };
+    }
+    if ((m = /^CAS_TIMING: (\{.*\})$/.exec(text))) {
+      try {
+        const o = JSON.parse(m[1]);
+        const extra = o.entries != null ? ` · ${o.entries} 项` : '';
+        return { kind: 'timing', label: 'cas ' + o.phase + extra, ms: Math.round(o.elapsedMs), sev: '' };
+      } catch (_) { /* 解析失败按普通行，不丢行 */ }
+    }
+    if (/失败|退出码|无法|错误|threw/.test(text)) return { kind: 'issue', sev: 'bad' };
+    if (/已跳过|警告|未找到/.test(text)) return { kind: 'issue', sev: 'warn' };
+    if ((m = /^([A-Z][A-Z0-9_]{3,}): (.*)$/.exec(text))) return { kind: 'note', label: m[2], tag: m[1] };
+    return { kind: 'note', label: text };
+  }
+
+  function digest(lines, ended, scenarioFails, now) {
+    const stages = [];
+    let cur = null;
+    const open = (name, at) => { cur = { name, at, dur: null, items: [], sev: '', done: false }; stages.push(cur); };
+    for (const l of lines) {
+      if (l.c.kind === 'start') { if (cur && !cur.done) cur.done = true; open(l.c.name, l.t); continue; }
+      if (!cur) open('准备', l.t);
+      if (l.c.kind === 'done') { cur.dur = l.c.dur; cur.done = true; continue; }
+      cur.items.push(l);
+      const sev = l.c.sev || '';
+      if (sev === 'bad' || (sev === 'warn' && cur.sev !== 'bad')) cur.sev = sev;
+    }
+    for (const s of stages) {
+      if (s.dur == null) s.dur = Math.max(0, (now - s.at) * 1000);
+      s.state = s.sev === 'bad' ? 'bad' : (!s.done && !(ended && scenarioFails)) ? (ended ? 'good' : 'running') : (s.sev === 'warn' ? 'warn' : 'good');
+      if (ended && scenarioFails && !s.done) s.state = 'bad';
+    }
+    const issues = lines.filter((l) => l.c.kind === 'issue');
+    const timings = lines.filter((l) => l.c.kind === 'timing').length;
+    return { stages, issues, timings };
+  }
+
+  /* ---------- 状态 ---------- */
+  const S = {
+    variant: 'after', scenario: 'ok', speed: 1, view: 'overview',
+    filter: 'all', wrap: true, follow: true, unread: 0, tall: false,
+    clock: 0, shown: 0, ended: false, timer: null, openSet: new Set(), userToggled: new Set(),
+  };
+  const scen = () => SCENARIOS[S.scenario];
+  const visible = () => scen().lines.slice(0, S.shown).map(([t, x]) => ({ t, x, c: classify(x) }));
+  const rawText = () => scen().lines.slice(0, S.shown).map(([t, x]) => `[${t.toFixed(1)}s] ${x}`).join('\n');
+  const fmt = (ms) => ms >= 1000 ? (ms / 1000).toFixed(1) + 's' : Math.round(ms) + 'ms';
+
+  const ICON = {
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
+    down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14"/></svg>',
+    ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 6v8M12 18.5v.1"/></svg>',
+    bad: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>',
+    chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>',
+    arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14m0 0-6-6m6 6 6-6"/></svg>',
+    grow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>',
+    shrink: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg>',
+  };
+
+  /* ---------- 渲染：改后 ---------- */
+  function headerState(d) {
+    const fails = scen().fail && S.ended;
+    if (fails) return { dot: 'bad', text: `启动失败 · ${S.clock.toFixed(1)}s` };
+    if (!S.ended) {
+      const cur = d.stages[d.stages.length - 1];
+      return { dot: 'run', text: `${cur ? cur.name : '准备'} · ${S.clock.toFixed(1)}s` };
+    }
+    const warn = d.issues.length;
+    return { dot: warn ? 'warn' : 'good', text: `已就绪 · 用时 ${S.clock.toFixed(1)}s${warn ? ` · ${warn} 项提示` : ''}` };
+  }
+
+  // 概览子项时间相对本阶段开始（+0.1s），与阶段耗时同一口径；原始视图保留绝对时间
+  function rowSub(l, maxMs, at) {
+    const c = l.c;
+    if (c.kind === 'issue') return `<div class="issue ${c.sev}" role="note">${esc(l.x)}</div>`;
+    if (c.kind === 'timing') {
+      const w = Math.max(3, Math.min(100, (c.ms / maxMs) * 100));
+      return `<div class="sub ${c.sev}"><span class="k">${esc(c.label)}</span><span class="v">${fmt(c.ms)}</span><span class="mini"><i style="width:${w}%"></i></span></div>`;
+    }
+    const label = c.tag ? c.label : l.x;
+    return `<div class="sub note"><span class="k" title="${esc(l.x)}">${esc(label)}</span><span class="v" title="启动后 ${l.t.toFixed(1)}s">+${Math.max(0, l.t - at).toFixed(1)}s</span></div>`;
+  }
+
+  function renderOverview(d) {
+    if (!d.stages.length) return '<div class="empty">还没有日志。点按「打开界面」开始启动。</div>';
+    const total = Math.max(1, S.clock * 1000);
+    const html = d.stages.map((s, i) => {
+      const id = 'stg-' + i;
+      const auto = s.state === 'running' || s.state === 'bad' || s.state === 'warn';
+      const isOpen = S.userToggled.has(i) ? S.openSet.has(i) : auto;
+      const ico = s.state === 'running' ? '<span class="ico run" aria-hidden="true"></span>'
+        : `<span class="ico ${s.state}">${ICON[s.state === 'good' ? 'ok' : s.state]}</span>`;
+      const stateWord = { running: '进行中', good: '完成', warn: '有提示', bad: '失败' }[s.state];
+      const timingMax = Math.max(1, ...s.items.filter((l) => l.c.kind === 'timing').map((l) => l.c.ms), s.dur);
+      const body = s.items.length
+        ? s.items.map((l) => rowSub(l, timingMax, s.at)).join('') + `<button class="raw-link" data-raw="${i}" type="button">在原始日志中查看 ${s.items.length} 行 ›</button>`
+        : '<div class="sub note"><span class="k" style="color:var(--muted)">无额外输出</span></div>';
+      return `<div class="stg ${s.state}" data-open="${isOpen}">
+        <button class="stg-btn" type="button" aria-expanded="${isOpen}" aria-controls="${id}" data-i="${i}" aria-label="${esc(s.name)}，${stateWord}，${fmt(s.dur)}">
+          ${ico}<span class="stg-name">${esc(s.name)}</span><span class="stg-dur">${fmt(s.dur)}</span>${s.items.length ? ICON.chev : '<span></span>'}
+          <span class="bar" aria-hidden="true"><i style="width:${Math.min(100, (s.dur / total) * 100)}%"></i></span>
+        </button>
+        <div class="stg-body" id="${id}">${body}</div>
+      </div>`;
+    }).join('');
+    const rawCount = S.shown;
+    return html + `<div class="digest"><span>${rawCount} 行原文 → ${d.stages.length} 个阶段 · 计时 ${d.timings} 条归入明细</span>${tallBtn()}</div>`;
+  }
+
+  const tallBtn = () => `<button class="expand" type="button" id="b-tall" aria-label="${S.tall ? '收起日志区域' : '展开日志区域'}" title="${S.tall ? '收起' : '展开'}">${S.tall ? ICON.shrink : ICON.grow}</button>`;
+
+  function highlight(x) {
+    let h = esc(x);
+    h = h.replace(/^([A-Z][A-Z0-9_]{3,}):/, '<span class="tag">$1</span>:');
+    h = h.replace(/(&quot;[a-zA-Z]+&quot;):/g, '<span class="key">$1</span>:');
+    h = h.replace(/\b([a-zA-Z]+)=/g, '<span class="key">$1</span>=');
+    h = h.replace(/(:|=)(-?\d+(?:\.\d+)?)/g, '$1<span class="num">$2</span>');
+    return h;
+  }
+
+  function renderRaw(lines, freshFrom) {
+    let rows = lines.map((l, i) => ({ l, i }));
+    if (S.filter === 'notiming') rows = rows.filter(({ l }) => l.c.kind !== 'timing');
+    if (S.filter === 'issues') rows = rows.filter(({ l }) => l.c.kind === 'issue');
+    const bar = `<div class="rawbar" role="toolbar" aria-label="原始日志筛选">
+      ${[['all', '全部'], ['notiming', '隐藏计时'], ['issues', '仅问题']].map(([v, t]) => `<button class="chip" type="button" data-filter="${v}" aria-pressed="${S.filter === v}">${t}</button>`).join('')}
+      <button class="chip" type="button" data-wrap aria-pressed="${S.wrap}">换行</button>
+      ${tallBtn()}
+    </div>`;
+    if (!rows.length) return bar + `<div class="empty">${S.filter === 'issues' ? '没有失败或跳过的行。' : '还没有日志。'}</div>`;
+    return bar + `<div class="raw${S.wrap ? '' : ' nowrap'}" role="log" aria-label="原始启动日志">` + rows.map(({ l, i }) => {
+      const cls = l.c.kind === 'issue' ? l.c.sev : l.c.kind === 'timing' ? 'timing' : (l.c.kind === 'start' || l.c.kind === 'done') ? 'stage' : '';
+      return `<div class="ln ${cls}${i >= freshFrom ? ' fresh' : ''}" data-line="${i}"><span class="t">${l.t.toFixed(1)}</span><span class="x">${highlight(l.x)}</span></div>`;
+    }).join('') + '</div>';
+  }
+
+  let lastShown = 0;
+  function renderAfter() {
+    const lines = visible();
+    const d = digest(lines, S.ended, scen().fail, S.clock);
+    const hs = headerState(d);
+    const issueN = d.issues.length;
+    const issueSev = d.issues.some((l) => l.c.sev === 'bad') ? 'bad' : 'warn';
+    const prev = $('scroll');
+    const keepTop = prev ? prev.scrollTop : 0;
+    const focusKey = document.activeElement && document.activeElement.closest('#panel') ? focusId(document.activeElement) : null;
+
+    $('panel').innerHTML = `
+      <div class="log-head">
+        <div class="log-title">
+          <h2 id="log-h">启动日志</h2>
+          <div class="log-meta" id="log-meta" aria-live="polite"><span class="dot ${hs.dot}" aria-hidden="true"></span><span>${esc(hs.text)}</span></div>
+        </div>
+        <button class="ibtn" type="button" id="b-copy" aria-label="复制完整启动日志" title="复制日志">${ICON.copy}</button>
+        <button class="ibtn" type="button" id="b-down" aria-label="下载启动日志" title="下载日志">${ICON.down}</button>
+      </div>
+      <div class="seg" role="tablist" aria-label="日志视图">
+        <button role="tab" type="button" data-view="overview" aria-selected="${S.view === 'overview'}">概览 <span class="count">${d.stages.length}</span></button>
+        <button role="tab" type="button" data-view="raw" aria-selected="${S.view === 'raw'}">原始 <span class="count${issueN ? ' ' + issueSev : ''}">${issueN ? issueN + ' 问题' : lines.length}</span></button>
+      </div>
+      <div class="box${S.tall ? ' tall' : ''}${S.view === 'raw' ? ' raw-mode' : ''}">
+        <div class="scroll" id="scroll" tabindex="0" aria-label="启动日志内容">${S.view === 'overview' ? renderOverview(d) : renderRaw(lines, lastShown)}</div>
+        <button class="follow ${S.follow ? 'on' : 'paused'}" type="button" id="b-follow" aria-label="${S.follow ? '日志跟随中，点按暂停跟随' : '跳到最新并恢复跟随'}">
+          ${S.follow ? '跟随中 · 点按暂停' : ICON.arrow + (S.unread ? `${S.unread} 条新日志` : '回到最新')}
+        </button>
+      </div>
+      <div class="actions"><button type="button" id="b-safe">安全启动</button><button type="button" id="b-rec">恢复选项</button></div>`;
+    lastShown = lines.length;
+
+    const sc = $('scroll');
+    if (S.follow) sc.scrollTop = sc.scrollHeight; else sc.scrollTop = keepTop;
+    sc.addEventListener('scroll', onScroll, { passive: true });
+    if (focusKey) { const el = $('panel').querySelector(focusKey); if (el) el.focus({ preventScroll: true }); }
+  }
+
+  function focusId(el) {
+    if (el.id) return '#' + el.id;
+    for (const a of ['data-view', 'data-i', 'data-filter', 'data-raw']) if (el.hasAttribute(a)) return `[${a}="${el.getAttribute(a)}"]`;
+    if (el.hasAttribute('data-wrap')) return '[data-wrap]';
+    return null;
+  }
+
+  let programmatic = false;
+  function onScroll(e) {
+    if (programmatic) return;
+    const sc = e.currentTarget;
+    const atEnd = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 6;
+    if (atEnd !== S.follow) {
+      S.follow = atEnd;
+      if (atEnd) S.unread = 0;
+      updateFollow();
+    }
+  }
+  function updateFollow() {
+    const b = $('b-follow');
+    if (!b) return;
+    b.className = 'follow ' + (S.follow ? 'on' : 'paused');
+    b.setAttribute('aria-label', S.follow ? '日志跟随中，点按暂停跟随' : '跳到最新并恢复跟随');
+    b.innerHTML = S.follow ? '跟随中 · 点按暂停' : ICON.arrow + (S.unread ? `${S.unread} 条新日志` : '回到最新');
+  }
+  function jumpLatest() {
+    S.follow = true; S.unread = 0;
+    const sc = $('scroll');
+    if (sc) { programmatic = true; sc.scrollTop = sc.scrollHeight; requestAnimationFrame(() => { programmatic = false; }); }
+    updateFollow();
+  }
+
+  /* ---------- 渲染：改前（与截图一致） ---------- */
+  function renderBefore() {
+    const sc = $('old-box');
+    const keep = sc ? sc.scrollTop : 0;
+    const followOld = !sc || sc.scrollHeight - sc.scrollTop - sc.clientHeight < 6;
+    $('panel').innerHTML = `
+      <div class="old-head"><h2 id="log-h">启动日志</h2><button class="old-pill" type="button" id="b-copy">复制日志</button><button class="old-pill" type="button" id="b-down">下载日志</button></div>
+      <div class="old-box" id="old-box" tabindex="0">${esc(rawText() || '还没有日志。')}</div>
+      <div class="old-row"><button class="old-pill" type="button">跟随最新</button><button class="old-pill" type="button">查看最新</button></div>
+      <div class="actions"><button type="button">安全启动</button><button type="button">恢复选项</button></div>`;
+    const n = $('old-box');
+    n.scrollTop = followOld ? n.scrollHeight : keep;
+  }
+
+  function render() {
+    (S.variant === 'after' ? renderAfter : renderBefore)();
+    const fails = scen().fail && S.ended;
+    $('ctx-title').textContent = fails ? '启动未完成' : S.ended ? 'DSH 已就绪' : '正在启动';
+    $('ctx-desc').textContent = fails ? '可安全启动进入基础界面；插件文件和原配置保留。' : S.ended ? '界面已打开，可从这里随时查看本次启动记录。' : '首次准备可能需要几秒，日志实时记录每个阶段。';
+  }
+
+  /* ---------- 回放 ---------- */
+  function tick() {
+    S.clock += 0.1 * S.speed;
+    const L = scen().lines;
+    let added = 0;
+    while (S.shown < L.length && L[S.shown][0] <= S.clock + 1e-9) { S.shown++; added++; }
+    if (S.shown >= L.length) { S.ended = true; S.clock = L[L.length - 1][0]; stop(); }
+    if (added && !S.follow) S.unread += added;
+    if (added || S.ended) render();
+    else if (S.variant === 'after') {
+      // 只更新计时文本，不重建 DOM，避免打断滚动和焦点
+      const meta = $('log-meta');
+      const d = digest(visible(), S.ended, scen().fail, S.clock);
+      if (meta) meta.lastElementChild.textContent = headerState(d).text;
+      const runDur = document.querySelector('.stg.running .stg-dur');
+      const last = d.stages[d.stages.length - 1];
+      if (runDur && last) runDur.textContent = fmt(last.dur);
+    }
+  }
+  function stop() { clearInterval(S.timer); S.timer = null; }
+  function replay() {
+    stop();
+    Object.assign(S, { clock: 0, shown: 0, ended: false, follow: true, unread: 0 });
+    S.openSet.clear(); S.userToggled.clear(); lastShown = 0;
+    render();
+    S.timer = setInterval(tick, 100);
+  }
+  function finish() {
+    stop();
+    const L = scen().lines;
+    S.shown = L.length; S.clock = L[L.length - 1][0]; S.ended = true; S.unread = 0;
+    render();
+  }
+
+  /* ---------- 交互 ---------- */
+  let toastT;
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
+
+  $('panel').addEventListener('click', (e) => {
+    const t = e.target.closest('button');
+    if (!t) return;
+    if (t.id === 'b-copy') {
+      const text = rawText();
+      if (!text) return toast('还没有可复制的日志');
+      const ok = () => toast(`已复制完整原始日志 ${S.shown} 行。可能含本机访问地址，仅分享给可信设备`);
+      (navigator.clipboard && navigator.clipboard.writeText(text).then(ok, ok)) || ok();
+      return;
+    }
+    if (t.id === 'b-down') return toast('原型不创建文件；原生进入 DiagnosticActivity.downloadLogs');
+    if (t.id === 'b-follow') { S.follow ? (S.follow = false, updateFollow()) : jumpLatest(); return; }
+    if (t.id === 'b-tall') { S.tall = !S.tall; render(); return; }
+    if (t.id === 'b-safe' || t.id === 'b-rec') return toast('原型不执行启动操作');
+    if (t.dataset.view) { S.view = t.dataset.view; S.follow = true; S.unread = 0; render(); return; }
+    if (t.dataset.filter) { S.filter = t.dataset.filter; render(); return; }
+    if (t.hasAttribute('data-wrap')) { S.wrap = !S.wrap; render(); return; }
+    if (t.dataset.raw != null) {
+      // 跳到原始视图中该阶段第一行
+      const d = digest(visible(), S.ended, scen().fail, S.clock);
+      const first = d.stages[+t.dataset.raw].items[0];
+      S.view = 'raw'; S.filter = 'all'; S.follow = false; render();
+      const idx = visible().indexOf(visible().find((l) => l.t === first.t && l.x === first.x));
+      const row = document.querySelector(`.ln[data-line="${idx}"]`);
+      if (row) { $('scroll').scrollTop = row.offsetTop - 44; row.classList.add('fresh'); }
+      updateFollow();
+      return;
+    }
+    if (t.dataset.i != null) {
+      const i = +t.dataset.i, stg = t.closest('.stg');
+      const open = stg.dataset.open !== 'true';
+      S.userToggled.add(i); open ? S.openSet.add(i) : S.openSet.delete(i);
+      stg.dataset.open = open; t.setAttribute('aria-expanded', open);
+      if (S.follow) jumpLatest();
+    }
+  });
+
+  document.querySelectorAll('[data-ctl]').forEach((g) => g.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-v]');
+    if (!b) return;
+    g.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b));
+    const k = g.dataset.ctl, v = b.dataset.v;
+    if (k === 'variant') { S.variant = v; render(); }
+    if (k === 'scenario') { S.scenario = v; replay(); }
+    if (k === 'speed') S.speed = +v;
+    if (k === 'theme') document.documentElement.dataset.theme = v;
+    if (k === 'reduced') document.documentElement.dataset.reduced = v;
+    if (k === 'fs') { document.documentElement.style.setProperty('--fs', v); render(); }
+  }));
+  $('replay').addEventListener('click', replay);
+  $('finish').addEventListener('click', finish);
+
+  replay();
+})();
+</script>
+</body>
+</html>

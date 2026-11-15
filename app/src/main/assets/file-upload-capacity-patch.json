@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-file-upload/lib/index.js",
+  "sourceSha256": "b17e3621ce127ceb4f68919acdeeac64c54cf64c5d42429be8a7a65b5d20bbfe",
+  "packageIntegrity": "sha512-MipvUhc+bLgexDff+vFNUZodd3WQ9Q+OZnYW8kAv6MU6ieSRUeVxgGOlNsM5rKVZNjxDmmzXaXeXq2d5VnvTTA==",
+  "purpose": "Enforce 5,000,000,000 bytes per file, count streamed bytes before storage, retain image budgets and use bounded binary browser transport.",
+  "patches": [
+    {
+      "before": "//#region lib/types/http-route.js",
+      "after": "// DSHA_UPLOAD_FILE_LIMIT_V1: decimal bytes, independent of native batch/session quotas.\nconst DSHA_UPLOAD_FILE_LIMIT = 5000000000;\nfunction dshaUploadTooLarge() {\n\treturn new RemoteError(\"session/attachment-invalid\", \"Single file exceeds 5 GB (5,000,000,000 bytes).\", { reason: \"FILE_TOO_LARGE\", maxBytes: DSHA_UPLOAD_FILE_LIMIT });\n}\nasync function* dshaUploadChunks(data, state) {\n\tlet bytes = 0;\n\tfor await (const chunk of data) {\n\t\tif (!(chunk instanceof Uint8Array)) throw new TypeError(\"file upload stream produced a non-Uint8Array chunk\");\n\t\tif (chunk.byteLength > DSHA_UPLOAD_FILE_LIMIT - bytes) {\n\t\t\tstate.exceeded = true;\n\t\t\tthrow dshaUploadTooLarge();\n\t\t}\n\t\tbytes += chunk.byteLength;\n\t\tyield chunk;\n\t}\n}\n//#region lib/types/http-route.js"
+    },
+    {
+      "before": "\tconst name = url.searchParams.get(\"name\") ?? void 0;",
+      "after": "\tconst name = url.searchParams.get(\"name\") ?? void 0;\n\tconst declared = request.headers.get(\"content-length\");\n\tif (declared !== null && /^\\d+$/.test(declared) && BigInt(declared) > BigInt(DSHA_UPLOAD_FILE_LIMIT)) {\n\t\tawait request.body?.cancel().catch(() => {});\n\t\treturn new Response(\"Single file exceeds 5 GB (5,000,000,000 bytes).\", { status: 413 });\n\t}"
+    },
+    {
+      "before": "\tconst reader = body.getReader();\n\ttry {",
+      "after": "\tconst reader = body.getReader();\n\tlet complete = false;\n\ttry {"
+    },
+    {
+      "before": "\t\t\tif (chunk.done) return;",
+      "after": "\t\t\tif (chunk.done) { complete = true; return; }"
+    },
+    {
+      "before": "\t} finally {\n\t\treader.releaseLock();",
+      "after": "\t} finally {\n\t\tif (!complete) await reader.cancel().catch(() => {});\n\t\treader.releaseLock();"
+    },
+    {
+      "before": "\t\t\tsignal.throwIfAborted();\n\t\t\tconst file = await this.store(agent, async () => this.ctx.attachments.admitEncodedFile({",
+      "after": "\t\t\tsignal.throwIfAborted();\n\t\t\t// Legacy RPC callers retain validation; browser files always use the binary route.\n\t\t\tconst encoded = request.data;\n\t\t\tconst padding = encoded.endsWith(\"==\") ? 2 : encoded.endsWith(\"=\") ? 1 : 0;\n\t\t\tif (Math.floor(encoded.length / 4) * 3 - padding > DSHA_UPLOAD_FILE_LIMIT) throw dshaUploadTooLarge();\n\t\t\tconst file = await this.store(agent, async () => this.ctx.attachments.admitEncodedFile({"
+    },
+    {
+      "before": "\t\tasync uploadStream(request) {\n\t\t\tconst agent = await this.resolveAgent(request.sessionId);\n\t\t\tconst file = await this.store(agent, async () => this.ctx.attachments.saveFileStream({\n\t\t\t\tdata: request.data,\n\t\t\t\t...request.signal === void 0 ? {} : { signal: request.signal },\n\t\t\t\t...request.name === void 0 ? {} : { name: request.name }\n\t\t\t}));\n\t\t\treturn {\n\t\t\t\treceiptId: this.stage(agent, {\n\t\t\t\t\ttype: \"file\",\n\t\t\t\t\tattachment: file\n\t\t\t\t}),\n\t\t\t\tfile\n\t\t\t};\n\t\t}",
+      "after": "\t\tasync uploadStream(request) {\n\t\t\tconst agent = await this.resolveAgent(request.sessionId);\n\t\t\tconst state = { exceeded: false };\n\t\t\tlet file;\n\t\t\ttry {\n\t\t\t\tfile = await this.store(agent, async () => this.ctx.attachments.saveFileStream({\n\t\t\t\t\tdata: dshaUploadChunks(request.data, state),\n\t\t\t\t\t...request.signal === void 0 ? {} : { signal: request.signal },\n\t\t\t\t\t...request.name === void 0 ? {} : { name: request.name }\n\t\t\t\t}));\n\t\t\t} catch (error) {\n\t\t\t\t// The attachment store cleans its partial temporary before wrapping intake errors.\n\t\t\t\t// Restore only our own overflow reason after that cleanup, never mint a receipt.\n\t\t\t\tif (state.exceeded) throw dshaUploadTooLarge();\n\t\t\t\tthrow error;\n\t\t\t}\n\t\t\treturn {\n\t\t\t\treceiptId: this.stage(agent, {\n\t\t\t\t\ttype: \"file\",\n\t\t\t\t\tattachment: file\n\t\t\t\t}),\n\t\t\t\tfile\n\t\t\t};\n\t\t}"
+    }
+  ]
+}

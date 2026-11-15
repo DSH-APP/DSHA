@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.5-20261108.1300-dsh0.2.2-rc.1 / build344
+
+- proot 実行ルート自己ミラー bind（T123）：`baseArgv()` に `-b <canonical rootfs>:<canonical rootfs>` を追加し、`/proc/self/maps` のホストパス読み戻しを修正（実行ルートが `/data/user/0` 別名で maps は `/data/data` のとき guest が `<rootfs>/data/data/...` を誤読して ENOENT）。canonical は `getCanonicalFile()` で解決し失敗時は渡されたパスへ、proroot v1.2.8 vendor は既に bind 済みなので App 側は重複 bind しない（更新時に要確認）。launcher ソース変更のため受管ランタイム descriptor は `2ae3f266` から **`f65796a2`** に再計算。固定入力の再生成なし・管理ランタイム追加なし。新規 `ContainerRuntimeSelfMirrorTest`。**proot 実機確認は未実施**。
+- スワイプ `SwipeAction`（T122）：45% しきい値、動作列幅超過は 30% 減衰、LTR 左 / RTL 右を純ロジックで鏡像。スワイプは動作を露呈するだけで、破壊的動作は既存確認ダイアログのみを呼び、コールバックなしは押せず、同一画面 1 行のみ、スクリーンリーダーに「操作を表示」。ボトムシート `BottomSheetCard`：ハンドル / タップ / 下 96dp で閉じ、戻るキーで先に閉じ、短画面 <480dp は全高・本文スクロール・フッター固定、スクリムは閉じるのみ。システムアニメーション無効時は終状態へ。バックアップ記録・プラグイン一覧・プラグイン操作 / 並べ替えシートに接続し、十言語 11 文言と hygiene ピンを追加。
+- バージョンと範囲：versionCode 344（公開済み build343 / `4ba75ddd` ベース）、DSHA `0.2.1-rc.5` / 内蔵 DSH `0.2.2-rc.1`。受管ランタイム更新 1 件（runtimeId `f65796a2…`）を含み、それ以外の挙動変更なし。fixed-inputs 凍結（20261105e）、内蔵 `dsh-web-mobile` 不変。
+- **未検証 / 未検収**：実機ジェスチャ、短画面、RTL、TalkBack、proot 実機確認は未実施（proot 切替は Web 再起動とセッション中断を伴う）。**build344 は実機検収前**（343→344 上書き、データ保全、READY と上記挙動はユーザー待ち）。検証範囲：contracts 全体、descriptor `f65796a2`、format 1625、i18n、hygiene、changelog、doc-links、全量単体テスト（10 件 aarch64 ベースライン）と lint。正式署名 assemble は本機では実行しない。

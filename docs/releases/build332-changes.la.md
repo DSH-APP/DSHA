@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.5-20261106.0700-dsh0.2.2-rc.1 / build332
+
+- Editio documentorum tantum: rationem archivi T58 corrigit. Correctio indicis primi conexus a build324 (`a54f9854`) iam mersa et in sarcina inclusa est; omnes editiones a build324 usque ad build332 eam ferunt. Tag archivi `archive/feat/first-connect-indicator-20261106` (`5918af63`) tantum exemplar rami separati eiusdem correctionis est: seorsum non mergetur, nec significat correctionem in sarcina deesse.
+- Nulla nova facultas, nulla mutatio morum, nulla mutatio temporis executionis: fixed-inputs non recreantur, managed-runtime-inputs et runtime-descriptor immutata manent (runtimeId `35e3f499` manet), neque novum tempus executionis administratum aut additamentum additur.
+- Ambitus probationis: grex contracts hospitis plenus, inspectio formae totius arboris (JDK 17), host-tests manifest et probationes unitariae selectae (pagina renovationis); probatio in instrumento reali localiter non facta est. versionCode ad 332 auctus (in build331 fundatum); revisio DSHA 0.2.1-rc.5 manet, DSH inclusum 0.2.2-rc.1.

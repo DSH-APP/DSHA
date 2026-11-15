@@ -1,7 +1,7 @@
 # DSHA 项目架构与功能维护总手册
 
-核验日期：2026-10-21。本文面向需要理解、修改和验证 DSHA 的维护者，以已发布F10 `087724c`为参考，按当前 F12 / build190 工作树维护。
-F11是未上传的本地检查点，不是新增已发布版本；最终诊断身份、软件、APK和附件范围见[README](../README.md)与[F12记录](releases/v0.2.1-rc.2-build190-fix12-20261021.md)，本页不预填最终版本或测试总数。
+核验日期：2026-10-31。本文面向需要理解、修改和验证 DSHA 的维护者，按当前 build356 / DSH 0.2.2-rc.1 工作树维护。
+F10–F13、build190 等记录保留各自历史归属，不是本版交付证据；最终诊断身份、软件、APK 与附件范围见 [README](../README.md) 与本轮 CI / Release 回执，本页不预填测试总数。
 版本最终以 [app/build.gradle](../app/build.gradle) 和对应产物回执为准。
 本文是功能与代码地图，不是新的验收报告，也不改变运行权限、数据格式或 APK。
 设备、ADB、真实账号/模型对话和长时验收仍按交付记录的暂停边界；宿主测试通过不等于手机性能通过。
@@ -27,22 +27,21 @@ F11是未上传的本地检查点，不是新增已发布版本；最终诊断�
 
 DSHA 是 Android 宿主与适配项目，内置上游 DSH，并增加安装、生命周期、设备桥和数据保护。
 [DeepSeek 官方 deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) 是上游项目；
-当前维护分支、私有预发布仓库及其 Android 修改，不代表 DeepSeek 官方发布或认证。
+当前维护分支、公开预发布仓库及其 Android 修改，不代表 DeepSeek 官方发布或认证。
 DSHA 工程来源为 [DSH-APP/DSHA](https://github.com/DSH-APP/DSHA)，当前维护/分发在
-[DSHA-prerelase](https://github.com/ym2025szz/DSHA-prerelase)；私有页面需要相应访问权限。
+[DSHA-Sunset-mod](https://github.com/SunsetRNE/DSHA-Sunset-mod)。
 当前使用哪个 DSH 版本，应读 [npm manifest](../tools/dsh-runtime/package.json) 与
 [完整 lock](../tools/dsh-runtime/package-lock.json)，不能根据上游默认分支推断。
 移动 UI 是 [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) 第三方插件；
-当前 3.2.1 固定到实际 main 提交，并非未经修改的同名标签，详见 [上游锁](../tools/mobile-plugin-upstream.lock.json)。
+当前 3.3.5 锁定上游 main `646fe837`（发布标签 v3.3.5 = `14ecfccf`，标签后 3 个修复提交一并取用；对应宿主 0.2.2），但包内产物含本地补丁、不等于同名标签原件，详见 [上游锁](../tools/mobile-plugin-upstream.lock.json)。
 本地补丁、固定归档、第三方许可与可复现范围分别记录，不能由“开源”推导所有 vendor 均可重编。
 
 | 当前生产选择 | 维护含义 |
 |---|---|
 | Java 17、Material3、单 `:app` 模块 | 原生页面与平台桥使用 Java，不新增 Kotlin 旁路 |
-| `dsh.android.client`、历史 E7E3、非调试正式包 | 覆盖兼容性由实际包和证书确认，不能换签名代替升级 |
-| Standard：minSdk 30、系统 WebView、arm64 | 本轮交付的 APK；系统 WebView 版本仍受设备影响 |
-| Low：minSdk 23、Gecko 兼容路径、arm64 | 保留源码与软件检查；本轮没有新的 Low APK/设备交付 |
-| Ubuntu base10、DSH 0.2.1-rc.2 | 基础环境、DSH、APK 与数据格式是不同身份 |
+| `io.github.sunsetrne.dsha`、Mod 自有证书（见 `ci/release-identity.json`）、非调试正式包 | 实际包名 / 证书检查决定升级兼容性；换签名不是升级 |
+| Standard：minSdk 30、系统 WebView、arm64 | 唯一构建线；Low/GeckoView 已整体删除，不再声明 Android 10 及以下可用。系统 WebView 版本仍受设备影响 |
+| Ubuntu base10、DSH 0.2.1-rc.5 | 基础环境、DSH、APK 与数据格式是不同身份 |
 | proot 默认、proroot 显式可选 | 当前不执行 bxroot；旧分支约束不能覆盖当前选择 |
 | PiP 默认关闭 | 只有用户明确开启，才允许进入系统画中画 |
 | 模型与 API Key 在 Web 设置 | 原生模型向导、配置页模型编辑及其生产路由已移除 |
@@ -67,13 +66,13 @@ Main 底部导航包含启动、终端、插件和设置；后台任务入口独
 | 插件市场、安装、启停、更新 | PluginFragment / PluginInstallActivity | 包格式、依赖和实际加载分别核验 |
 | Root、Shizuku、ADB 与权限 | DeviceGrantsFragment / AdbPairActivity | 通道开关、实际授权和连接状态不同 |
 | 物理屏观察与操作 | 无障碍、设备桥与内置工具 | 当前目标、屏幕策略和系统能力都要满足 |
-| 独立虚拟屏与节点操作 | VirtualScreenActivity | Standard 实验能力，不能转记为 Low 支持 |
+| 独立虚拟屏与节点操作 | VirtualScreenActivity | Standard 能力（API 30+）；不能转记为 Android 10 及以下支持 |
 | 一键保存备份 | 数据与备份 → 一键备份 | 安全停止后导出，完成后由用户启动 |
 | 更多导出、恢复、验证 | NativeDataActivity | 先读完、核验和预检，再事务提交 |
 | 文件浏览、保存和分享 | WorkspaceFilesActivity | SAF/Provider 与受控流处理，不接受任意网页路径 |
 | 自动备份 | AutomaticBackupActivity | 调度受系统限制，不保证卸载存续 |
 | 工作区和空间维护 | StorageActivity / StorageHelpActivity | 外置工作区内容不自动扫描清理 |
-| 用户技能 | SkillsActivity | 导入文档到官方技能目录，不执行导入正文 |
+| 用户技能 | SkillsFragment（设置子页） | 导入文档到官方技能目录，不执行导入正文；按页面宽度单列 / 并排 |
 | 启动失败诊断和恢复 | DiagnosticActivity / StartupRecoveryActivity | 恢复与普通插件查询使用不同状态判据 |
 | 独立应急 DSH | RecoveryActivity / RecoveryWebActivity | 独立运行根，修复写入需原生确认 |
 | 应用更新 | UpdateActivity / UpdateDownloadService | APK 更新与受管环境更新是两件事 |
@@ -88,7 +87,7 @@ Main 底部导航包含启动、终端、插件和设置；后台任务入口独
 | 配置 | 未显式设置时 | 修改与恢复边界 |
 |---|---|---|
 | Shell 命令确认 | 开启 | 仍需区分本应用确认、DSH 审批和原生终端 |
-| DSH 工具权限模式 | `danger-full-access` | 可选择 workspace-write / read-only；不是 Android UID 隔离 |
+| DSH 运行权限模式 | 固定 `danger-full-access` | build191移除原生三档选择及旧值生效；既有会话/插件自身权限和独立应急只读策略不改，不是Android UID隔离 |
 | Root Shell | 关闭 | 开启不创建 su，也不等于实际 UID0 验证通过 |
 | 应用更新检查 | 开启 | 只控制检查意图，不保证下载或覆盖已经完成 |
 | 桌面网页模式 | 关闭 | 属浏览器显示选择，不改变运行引擎 |
@@ -107,7 +106,7 @@ flowchart TB
   APP --> LIFE[HarnessController / WebLifecycleController]
   LIFE --> START[StartupPipeline / RuntimeLauncher]
   START --> LINUX[私有 Ubuntu / Node / DSH]
-  UI --> BROWSER[WebView 或 Low Gecko]
+  UI --> BROWSER[系统 WebView]
   BROWSER <--> LINUX
   LINUX --> HTTP[本机 HttpShellService 鉴权桥]
   HTTP --> CAP[能力与确认策略]
@@ -212,7 +211,7 @@ Ubuntu 基础环境相同的普通 DSH/UI 更新，不应重建现用 Ubuntu 或
 
 ## 6. 原生导航、双浏览器、PiP 与键盘
 
-Main 提供原生导航；WebPreviewActivity/Low GeckoPreviewActivity 持有网页实例。
+Main 提供原生导航；WebPreviewActivity 持有网页实例（旧 Low/Gecko 实现随 low 源集在 build209 删除）。
 同一运行代次切换全屏、后台或 PiP 时复用同一网页，不通过重建页面“恢复”草稿。
 `BrowserTasks` 与任务策略记录明确导航来源，区分系统 Home 后台与用户主动回主页。
 从 Web 按 Home 后点击桌面图标，应恢复同代 Web；主动 Back/主页按钮才回 Main。
@@ -245,7 +244,7 @@ Android 官方说明 `onPrepare` 在重布局前，而终态 Insets 可能在 `o
 因此不能把普通 onApply 当作每个动画帧，也不能让首帧直接跳终点。
 参见 [Android 键盘动画文档](https://developer.android.com/develop/ui/views/layout/sw-keyboard)；
 本项目消费与旧 API 兼容行为仍以当前 AndroidX 依赖和实际回归为准。
-双内核平台差异另见 [Standard](android-standard.md) 与 [Low](android-low.md)。
+系统 WebView 平台说明见 [Standard](android-standard.md)；旧 Low/Gecko 实现只作历史记录。
 
 ## 7. 模型、插件、市场和技能
 
@@ -275,7 +274,7 @@ GitHub 源码准备、npm 发布包和作者已构建 Release 是不同路径，
 删除只作用于精确对象身份；旧依赖链接按实际版本契约处理，不跟随链接递归删除外部目标。
 系统插件由签名 APK 受管证明重建，用户插件源码、实际依赖与包装脚本独立归档。
 移动 UI 更新应先核上游是否已吸收或撤回差异，不把历史补丁重新整批叠回。
-用户技能入口见 [SkillsActivity](../app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java)。
+用户技能入口见 [SkillsFragment](../app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java)（build242 起由独立 Activity 改为设置子页，经「数据与备份」进入）。
 安装使用说明见 [插件指南](plugins.md)，其中历史版本标题不覆盖当前锁。
 
 当前发现先筛选小manifest和真实patch bundle，单命令/请求认证一次proof表并按canonical目录去重，不用跨请求stat缓存代替完整FILE/mode/LINK、目录成员与竞态证明。Node真实Host的bundle/full-content proof异步运行，全局最多2个内容扫描并发、每次读取最多64 KiB并让出事件循环；删除先在writer/HMR锁外预检，提交内针对实际目标再次完整内容核验。只读list不占profile writer锁，不能把优化理解为跳过内容证明或放宽删除目标。
@@ -300,7 +299,7 @@ DSH 的 Android 工具通过内置适配器进入本机鉴权桥，原生终端�
 | Shizuku | 服务 Binder 可用、用户授权和 UserService 绑定有效 | 与 ADB 开关独立，不能把 binder 存在当授权完成 |
 | ADB | 实际配对/连接、端口与密钥身份、当前连接代次 | 配对端口与连接端口不同，不固定写死 |
 
-`devicePlan/deviceExecute` 的普通通道选择为 Root → Shizuku → ADB；force/SMS 等有专用规则。
+`devicePlan/deviceExecute` 与虚拟屏共用 `util/DeviceChannelOrder` 的通道顺序：Root → Shizuku → ADB，API≥37 且 ADB 已验证连接时 ADB 先于 Shizuku；设备命令先严格判据、再已授权判据各选一次；force/SMS/SHELL 等有专用规则。
 已发送后结果未知不能继续换通道重放；只有明确 NOT_SENT 才可按受控契约撤销未提交票。
 无线配对 UI 主要面向 Android11+；旧系统路径依真实 ADB TCP、Root 或 Shizuku 条件。
 App 不会凭空获得 Root，也不代替系统完成所有受保护设置授权。
@@ -333,7 +332,7 @@ DSH 的 `tree/node/editor`、`see/anchor/anchored_click` 与原生节点操作�
 UNKNOWN 保留日志与屏障，缺身份时不按裸 PID 清理，也不自动重放创建或点击。
 
 修改前必须阅读 [虚拟屏架构](virtual-screen-architecture.md) 和 [ADR 0003](adr/0003-virtual-screen-lifecycle-and-input.md)。
-使用条件见 [虚拟屏指南](virtual-screen-guide.md)，Low 的不支持边界需要明确保持。
+使用条件见 [虚拟屏指南](virtual-screen-guide.md)，Android 10 及以下不支持的边界需要明确保持。
 
 ## 10. 终端、附件、文件、分享与麦克风
 
@@ -395,7 +394,7 @@ flowchart LR
 ```
 
 一键备份复用 `OneClickBackup`、`NativeBackupJobs` 和既有 v5 引擎，不另造轻量数据格式。
-Standard 直接发布到 `Download/DSHA`；Low 旧系统首次选择目录后按持久授权复用。
+Standard 直接发布到 `Download/DSHA`；Low 已删除，旧系统 SAF 目录流程只作历史记录。
 备份先安全停止 DSH 和运行任务，生成并验证，再交付文件；完成后不自动重启业务。
 包含实际清单记录的应用数据与当前应用内工作区，外置工作区内容需要用户另外备份。
 
@@ -446,7 +445,8 @@ Android 私有目录框架别名须显式绑定 canonical authority，不能放�
 | `res/`、`i18n/` | Material 资源、UiText 与双语索引 | 文案不泄漏内部凭据，不遗留死页面 |
 
 生产 Java 根目录见 [app 源码](../app/src/main/java/com/deepseekharness/app/)，
-Low 适配见 [low 源集](../app/src/low/)，测试见 [宿主 JUnit](../app/src/test/java/com/deepseekharness/app/)。
+测试见 [宿主 JUnit](../app/src/test/java/com/deepseekharness/app/)。历史 low 源集已在 build209 删除，
+本项目自 build209 起只有 Standard（Android 11+）一条构建线。
 不要把历史目录计数当实时架构，也不要将仅用于构建/夹具的脚本包装成用户功能。
 
 ## 14. 验证、构建和修改流程
@@ -498,7 +498,7 @@ JUnit 选择类、执行数、skip、平台依赖失败及补跑应分别记录�
 - 备份生成、发布到 Provider、完整读回验证和完整数据覆盖不能合并宣称。
 - 不可读凭据不等于未配置；未知数据不等于垃圾；历史回执不等于当前现场。
 - 同源桥校验、工具审批和 proot 不构成第三方任意代码的强沙箱。
-- 两版软件通过不等于本轮交付了 Low；浏览器夹具通过不等于全 ROM/输入法手机通过。
+- 单一 Standard 通过不等于所有 Android 11+ ROM 或输入法都通过；浏览器夹具通过也不等于全机型手机通过。
 - 新增手册和上传源码不改变已签 APK，也不产生新的设备或长时验收结论。
 
 继续阅读：[设备权限](device-permissions-architecture.md) · [运行时与数据](runtime-data-plugin-architecture.md) ·

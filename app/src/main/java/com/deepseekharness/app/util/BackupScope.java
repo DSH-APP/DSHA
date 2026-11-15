@@ -30,6 +30,16 @@ public final class BackupScope {
   /** UI 与对话框里展示的顺序（也是选项顺序）。 */
   public static final int[] ALL = {FULL, SESSIONS, SETTINGS, PLUGINS};
 
+  /** 原生授权状态只属于本机，不随任何用户归档导出或恢复。 */
+  public static boolean excludesNativeGrantState(String path) {
+    if (path == null) return false;
+    String normalized = path.replace('\\', '/');
+    return normalized.equals("dsha_device_grants")
+        || normalized.endsWith("/dsha_device_grants")
+        || normalized.equals("clipboard_read_mode_v1")
+        || normalized.endsWith("/clipboard_read_mode_v1");
+  }
+
   private BackupScope() {}
 
   /** 写进备份清单（manifest）的标识。恢复端靠它决定合并范围，所以不能改字面量。 */

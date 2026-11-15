@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_label" formatted="false">"DSH-A-Su 画面操作"</string>
+    <string name="accessibility_desc" formatted="false">"用途は2つです。Android の「ワイヤレスデバッグ」のペアリングコードを自動で読み取ることと、AI アシスタントが画面の読み取り、タップ、入力、キー操作、スクリーンショットを行い端末を操作できるようにすることです。DSH-A-Su はバックグラウンドで画面を記録せず、アシスタントの要求時だけ現在の画面を読み取ります。"</string>
+</resources>

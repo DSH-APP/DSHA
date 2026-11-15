@@ -22,18 +22,12 @@ class UiBoundaryTest(unittest.TestCase):
             labels=[e.get(A+'labelFor') for e in root.iter() if e.get(A+'labelFor')]
             self.assertGreaterEqual(len(labels),2)
             for target in labels:self.assertIn(target,ids)
-    def test_static_welcome_rows_do_not_look_clickable_and_status_indicator_is_decorative(self):
-        for path in ['welcome_page2.xml','welcome_page3.xml']:
-            root=self.xml('app/src/main/res/layout/'+path)
-            for row in root.iter():
-                if row.get(A+'id','').startswith('@+id/welcome_item_'):
-                    self.assertEqual('false',row.get(A+'clickable'));self.assertNotIn('selectableItemBackground',row.get(A+'background',''))
-                    self.assertFalse(any(c.get(A+'src')=='@drawable/ic_ui2_chevron' for c in row.iter()))
+    def test_launch_status_indicator_is_decorative(self):
         root=self.xml('app/src/main/res/layout/fragment_launch.xml');dot=next(e for e in root.iter() if e.get(A+'id')=='@+id/launch_run_dot');self.assertEqual('no',dot.get(A+'importantForAccessibility'))
     def test_intro_labels_have_both_languages_and_no_inline_english_captions(self):
         for language in ['values','values-en']:
             root=self.xml('app/src/main/res/'+language+'/audit154_ui.xml');self.assertEqual(4,len(root.findall('string')))
-        for path in ['welcome_page1.xml','welcome_page2.xml','welcome_page3.xml','fragment_device_grants.xml']:
+        for path in ['fragment_device_grants.xml']:
             for node in self.xml('app/src/main/res/layout/'+path).iter():
                 self.assertNotIn(node.get(A+'text'),['DEEPSEEK HARNESS · ANDROID','01 / BUILT FOR YOUR FLOW','02 / YOUR DATA, YOUR CHOICE','Computer Use'])
 

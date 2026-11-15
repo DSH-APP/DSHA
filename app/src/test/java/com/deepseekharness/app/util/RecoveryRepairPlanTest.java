@@ -96,6 +96,16 @@ public class RecoveryRepairPlanTest {
   }
 
   @Test
+  public void pluginJournalIsolationIsPinnedMaintenanceAction() throws Exception {
+    assertTrue(RecoveryRepairPlan.ACTIONS.contains("isolate-plugin-journals"));
+    var p =
+        new RecoveryRepairPlan(
+            SESSION, 1, "isolate-plugin-journals", "maintenance", HASH, DATA, "");
+    p.begin(SESSION, 1, p.nonce, HASH, DATA);
+    assertEquals(RecoveryRepairPlan.State.APPLYING, p.state());
+  }
+
+  @Test
   public void failureDoesNotPretendApplication() throws Exception {
     var p = plan();
     p.begin(SESSION, 1, p.nonce, HASH, DATA);

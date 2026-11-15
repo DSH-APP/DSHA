@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 手机胶囊导航的图标/文字着色：选中浅蓝、未选中静音灰。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true" android:color="?attr/dsha_pal_shell_accent" />
+    <item android:color="@color/shell_text_muted" />
+</selector>

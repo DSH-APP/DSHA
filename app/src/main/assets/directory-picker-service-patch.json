@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-api-workspace-controller/lib/index.js",
   "sourceSha256": "257848af0e4bacb15265660a3750c7909bb4002ab02a1c2a3188045f882ee39e",
-  "packageIntegrity": "sha512-v1ZxPEY5suajD8dqCE7TjYzPllK/JS8LT1aCKGksiBqvgpzruG5YpPzw9JnY3Z3yJSrgwUYHlKpuHReG3Kbfvw==",
+  "packageIntegrity": "sha512-X1Uvm8HTA1624di5CUAxZxz+4QLy46Q2SFajyU1tJt98wlfarrl3WwGYGXjmu/aF0mmUHekp56LXr2oXb7hEVg==",
   "reason": "Register the actual directory-picker Remote service independently from unrelated Workspace registry initialization; preserve named-class callers, schema, backend capability and Gateway authorization.",
   "patches": [
     {

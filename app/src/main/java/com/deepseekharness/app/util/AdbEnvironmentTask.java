@@ -17,7 +17,8 @@ public final class AdbEnvironmentTask {
   public static <T> T run(
       String kind, BooleanSupplier pendingMaintenance, EnvironmentTaskGate.Operation<T> operation)
       throws Exception {
-    if (EnvironmentTaskGate.ownsCurrentThread()) return owned(pendingMaintenance, operation);
+    if (EnvironmentTaskGate.ownsExclusiveCurrentThread())
+      return owned(pendingMaintenance, operation);
     EnvironmentTaskGate.Lease lease = EnvironmentTaskGate.tryAcquire(kind);
     if (lease == null) throw new Busy(BLOCKED);
     try (lease) {

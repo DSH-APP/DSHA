@@ -11,6 +11,7 @@
     "auto-review-native-disabled-patch.json",
     "backup-engine.py",
     "backup-plugin-graph.py",
+    "bridge-port.cjs",
     "bridge-token-compat.cjs",
     "builtin-plugins.json",
     "ca-certificates.crt",
@@ -21,9 +22,12 @@
     "conversation-stream-cancel-patch.json",
     "credential-paths.json",
     "credential-yaml-filter.cjs",
+    "deepseek-account-client-diagnostic-patch.json",
+    "deepseek-account-requests-patch.json",
     "deepseek-messages-compat-patch.json",
     "deepseek-native-oauth-patch.json",
     "deepseek-stream-cancel-patch.json",
+    "deepseek-web-search-headers-patch.json",
     "device-shell-policy.py",
     "directory-picker-service-patch.json",
     "dns-compat.cjs",
@@ -33,12 +37,19 @@
     "dsha-layout-recovery.js",
     "dsha-plugin.sh",
     "dsha-runtime-env.sh",
-    "file-upload-resolver-lifecycle-patch.json",
+    "file-deliverables-patch.json",
+    "file-image-actions-patch.json",
+    "file-upload-binary-client-patch.json",
+    "file-upload-capacity-patch.json",
+    "first-connect-indicator-patch.json",
     "frontend-static-cache-patch.json",
     "guard-bash-patch.json",
     "guard-editor-patch.json",
     "guard-fs-patch.json",
     "guard-tools-patch.json",
+    "guard-tools-pipeline-patch.json",
+    "gh-proxy.mjs",
+    "gh-wrapper.sh",
     "install-basic-tools.sh",
     "install-ubuntu-tools.sh",
     "lan-settings-upstream-contract.json",
@@ -50,7 +61,9 @@
     "licenses/snakeyaml-LICENSE.txt",
     "managed-package-proofs.json",
     "managed-runtime-inputs.json",
+    "materialize-cas-links.py",
     "native-consent.cjs",
+    "net-epoch.cjs",
     "office-fonts-patch.json",
     "offline-rootfs.version",
     "pdf-compat-patch.json",
@@ -75,6 +88,7 @@
     "plugin-manager-policy-patch.json",
     "plugin-manager.py",
     "plugin-network.py",
+    "plugin-pnpm-argv-patch.json",
     "plugin-semver.cjs",
     "plugin-transactions.py",
     "pnpm-runtime.bin",
@@ -89,6 +103,14 @@
     "recovery-native-consent.cjs",
     "recovery-profile-package.json",
     "recovery-profile.patch.yml",
+    "recovery-recipes/0.2.1-rc.2/language-patch.json",
+    "recovery-recipes/0.2.1-rc.2/pdf-compat-patch.json",
+    "recovery-recipes/0.2.1-rc.3/language-patch.json",
+    "recovery-recipes/0.2.1-rc.3/pdf-compat-patch.json",
+    "recovery-recipes/0.2.1-rc.5/language-patch.json",
+    "recovery-recipes/0.2.1-rc.5/pdf-compat-patch.json",
+    "recovery-recipes/0.2.2-rc.1/language-patch.json",
+    "recovery-recipes/0.2.2-rc.1/pdf-compat-patch.json",
     "register-builtin-plugins.py",
     "retire-guarded-preset-patch.json",
     "retired-market-catalog-patch.json",
@@ -102,23 +124,28 @@
     "session-interaction-patch.json",
     "sidebar-layout-recovery-patch.json",
     "startup-mcp-timing-patch.json",
+    "mcp-image-base64-patch.json",
+    "mcp-version-negotiation-patch.json",
     "startup-observer.cjs",
     "subagent-navigation-patch.json",
     "tool-block-identity-patch.json",
     "tool-dispatch-validation-patch.json",
+    "tool-dispatch-validation-pipeline-patch.json",
     "tool-history-display-patch.json",
     "tool-messages-history-patch.json",
     "tool-stream-identity-patch.json",
-    "tooltip-entry-patch.json",
-    "tooltip-interaction-patch.json",
     "ubuntu-tools.bin",
     "ubuntu-tools.layout",
     "ubuntu-tools.manifest.json",
+    "web-fetch-http-surrogate-patch.json",
+    "web-fetch-output-surrogate-patch.json",
     "web-integration/language.js",
     "web-integration/permission-full-access.js",
     "web-integration/session-interaction.js",
     "welcome-notice-patch.json",
-    "workspace-directory-policy-patch.json"
+    "workspace-directory-policy-patch.json",
+    "user-only-skill-approval-patch.json",
+    "external-tool-proof.json"
   ],
   "packagedTrees": [
     "app-integration",
@@ -137,12 +164,14 @@
     "dsh-runtime.inputs.json",
     "ubuntu-tools.inputs.json",
     "glibc-python.tar.gz",
-    "adb-wheels.tar.gz"
+    "adb-wheels.tar.gz",
+    "gh-cli.tar.gz"
   ],
   "sourceOnlyTrees": [
     "runtime-python"
   ],
   "generatedFiles": [
+    "gh-cli.bin",
     "glibc-python.bin",
     "adb-wheels.bin",
     "offline-rootfs.bin",
@@ -172,8 +201,8 @@
   ],
   "dynamicReaders": [
     {
-      "source": "app/src/main/java/com/deepseekharness/app/core/HarnessController.java",
-      "method": "readAsset(name)",
+      "source": "app/src/main/java/com/deepseekharness/app/core/PackagedAssets.java",
+      "method": "read(context, name)",
       "contract": "BackupManager legacy reader helper/identity loops; current environment snapshots use the host filesystem.",
       "assets": [
         "backup-engine.py",
@@ -222,7 +251,15 @@
         "recovery-profile.patch.yml",
         "recovery-profile-package.json",
         "recovery-runtime.json",
-        "recovery-asset-locations.json"
+        "recovery-asset-locations.json",
+        "recovery-recipes/0.2.1-rc.2/language-patch.json",
+        "recovery-recipes/0.2.1-rc.2/pdf-compat-patch.json",
+        "recovery-recipes/0.2.1-rc.3/language-patch.json",
+        "recovery-recipes/0.2.1-rc.3/pdf-compat-patch.json",
+        "recovery-recipes/0.2.1-rc.5/language-patch.json",
+        "recovery-recipes/0.2.1-rc.5/pdf-compat-patch.json",
+        "recovery-recipes/0.2.2-rc.1/language-patch.json",
+        "recovery-recipes/0.2.2-rc.1/pdf-compat-patch.json"
       ]
     },
     {
@@ -241,6 +278,7 @@
       "contract": "Exact page compatibility/locale/back integration; ES5 token shim also enters generated Gecko content.",
       "assets": [
         "web-integration/es-compat.js",
+        "web-integration/safe-area.js",
         "web-integration/compat.js",
         "bridge-token-compat.cjs",
         "web-integration/startup.js",
@@ -268,6 +306,7 @@
   ],
   "sourceTransforms": {
     "glibc-python.tar.gz": "glibc-python.bin",
-    "adb-wheels.tar.gz": "adb-wheels.bin"
+    "adb-wheels.tar.gz": "adb-wheels.bin",
+    "gh-cli.tar.gz": "gh-cli.bin"
   }
 }

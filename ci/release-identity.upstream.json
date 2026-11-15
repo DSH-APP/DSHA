@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "identity": "upstream",
+  "packageName": "dsh.android.client",
+  "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
+  "schemes": ["v1", "v2", "v3"],
+  "appName": "DSHA",
+  "keyAlias": "androiddebugkey",
+  "testSuffix": ".SunsetRNE",
+  "devSuffix": ".SunsetDev",
+  "tagPrefix": "dsha-build",
+  "apkPrefix": "dsha",
+  "repository": "DSH-APP/DSHA",
+  "ref": "refs/heads/main",
+  "privateRepository": false,
+  "workflow": ".github/workflows/release-official.yml"
+}

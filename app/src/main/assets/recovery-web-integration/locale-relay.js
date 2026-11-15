@@ -1,10 +1,10 @@
 // This isolated extension is installed only by the emergency Gecko surface.
-// It relays the two supported UI locale values and never reads URL credentials.
+// It relays the ten canonical UI locale values and never reads URL credentials.
 (function () {
   'use strict';
   if (window.top !== window || location.protocol !== 'http:' || location.hostname !== 'localhost'
       || !location.port || location.username || location.password) return;
-  const valid = value => value === 'zh' || value === 'en';
+  const valid = value => ['zh','zh-Hant','en','ru','ja','ko','ar','pt','la','fr'].includes(value);
   const port = browser.runtime.connectNative('dsha_recovery_locale');
   port.onMessage.addListener(message => {
     if (message?.type !== 'language' || !valid(message.language)) return;

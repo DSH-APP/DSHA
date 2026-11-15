@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 由 tools/generate-theme-palettes.py 生成，勿手改。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/dsha_pal_shell_bg" />
+</selector>

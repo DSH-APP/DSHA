@@ -40,6 +40,17 @@ public final class WebBlobDownload implements AutoCloseable {
       String mime,
       long size,
       java.util.function.BiConsumer<Boolean, String> completion) {
+    start(base, url, name, share ? "share" : "save", mime, size, completion);
+  }
+
+  public void start(
+      String base,
+      String url,
+      String name,
+      String destination,
+      String mime,
+      long size,
+      java.util.function.BiConsumer<Boolean, String> completion) {
     if (!WebPreviewPolicy.sameService(base, view.getUrl())
         || !WebPreviewPolicy.pageDownload(base, url)) return;
     if (model.isBusy() || model.canRetrySave() || model.pickerOpen) {
@@ -49,7 +60,17 @@ public final class WebBlobDownload implements AutoCloseable {
     try {
       Pipe pipe = new Pipe();
       active = pipe;
-      if (!model.download(base, url, null, name, size, pipe.input, share, mime, completion)) {
+      if (!model.download(
+          base,
+          url,
+          null,
+          name,
+          size,
+          pipe.input,
+          destination.equals("share"),
+          mime,
+          completion,
+          destination.equals("gallery"))) {
         pipe.fail(com.deepseekharness.app.util.UiText.text("下载未启动"));
         return;
       }
@@ -157,11 +178,14 @@ public final class WebBlobDownload implements AutoCloseable {
   public void close() {
     if (active != null) active.fail(com.deepseekharness.app.util.UiText.text("网页已关闭"));
     active = null;
-    if (port != null) {
-      port.close();
-      port = null;
+    WebMessagePort previous = port;
+    port = null;
+    try {
+      if (previous != null) previous.close();
+    } finally {
+      // Renderer loss may reject its port close, but must not leave the writer alive.
+      writer.shutdownNow();
     }
-    writer.shutdownNow();
   }
 
   private static final class Pipe {

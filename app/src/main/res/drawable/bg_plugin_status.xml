@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 插件行状态底：卡片内的凹陷 surface，只承担多行真实状态的可读性，不表示状态本身。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_bg" />
+    <corners android:radius="10dp" />
+</shape>

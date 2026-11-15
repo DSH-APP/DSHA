@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.3-20261101.1630-dsh0.2.1-rc.5 / build247
+
+- L'étape 3 de la configuration initiale, Accorder le nécessaire, devient une seule liste : sans catégories, une ligne par autorisation. Les autorisations accordées n'affichent que leur état ; les autres placent Autoriser / Activer / Paramètres en fin de ligne, avec un sous-titre d'une ligne sur ce qu'elles débloquent.
+- Les explications d'usage, les indications de redirection et les autres boutons passent dans une zone dépliable ouverte d'un toucher ; la ligne se replie dès que l'autorisation change. Seuls les problèmes comme un refus, un arrière-plan restreint ou une connexion en attente reçoivent une indication dans la ligne.
+- Les éléments recommandés viennent en premier et le reste est replié sous Plus d'autorisations ; l'introduction et le bouton du bas tiennent chacun sur une ligne. Sur un téléphone 360dp en portrait, les six éléments recommandés tiennent sur un seul écran.
+- Portée de la vérification : tests unitaires locaux ; le paquet de test a été installé par-dessus sur un OnePlus PJD110 (360dp, portrait) et la page d'autorisations vérifiée. Autres appareils, langues, mode sombre, écrans courts et police 1,3× non vérifiés. versionCode porté à 247. La révision DSHA reste 0.2.1-rc.3 et le DSH intégré reste 0.2.1-rc.5.

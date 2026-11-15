@@ -21,6 +21,32 @@ public class UiTextTest {
   }
 
   @Test
+  public void everyLanguageUsesItsFullDictionaryAndPreservesExternalArguments() {
+    for (String language : UiLanguagePreference.LANGUAGES) {
+      assertEquals(language, UiMessages.EN.size(), UiMessages.forLanguage(language).size());
+      UiText.setLanguage(language);
+      String expected = UiMessages.forLanguage(language).get("下一步");
+      assertEquals(language, expected, UiText.text("下一步"));
+      assertEquals(language, expected, UiText.choose("下一步", "Next"));
+      String external = "用户的内容 %s العربية Русский";
+      assertSame(external, UiText.raw(external));
+      String template = UiMessages.forLanguage(language).get("网页提示（%s）");
+      assertEquals(
+          language,
+          String.format(java.util.Locale.ROOT, template, external),
+          UiText.format("网页提示（%s）", external));
+      assertEquals("ar".equals(language), UiText.isRtl());
+    }
+  }
+
+  @Test
+  public void chooseFallsBackToExplicitEnglishOnlyForUnregisteredApplicationText() {
+    UiText.setLanguage("ru");
+    assertEquals("Unregistered label", UiText.choose("未登记标签197", "Unregistered label"));
+    assertEquals("未登记标签197", UiText.text("未登记标签197"));
+  }
+
+  @Test
   public void labelsSwitchAndActionArraysKeepTheirKeys() {
     String[] actions = {"删除插件", "复制插件名称"};
     UiText.setLanguage("en");

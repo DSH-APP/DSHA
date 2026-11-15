@@ -10,11 +10,17 @@ public class StartupPipelineTest {
   static final class Fixture
       implements StartupPipeline.Runtime, StartupPipeline.Diagnostics, StartupPipeline.Actions {
     final List<String> calls = new ArrayList<>();
+    final List<String> messages = new ArrayList<>();
     boolean current = true;
     String failure = "";
-    String staleAt = "", stopError = "";
+    String staleAt = "";
+    List<com.deepseekharness.app.util.WebStopDiagnostic> stopFacts = List.of();
+    List<com.deepseekharness.app.util.WebStopDiagnostic> priorFacts = List.of();
+    boolean awaitPriorExit;
+    long clock = 1_000;
     String casReceipt = receipt(false, 0, "");
     BoundedProcessRunner.Result casOutcome;
+    boolean pluginScopeClosed;
 
     void step(String name) throws IOException {
       calls.add(name);
@@ -30,9 +36,9 @@ public class StartupPipelineTest {
       calls.add("lan-stop");
     }
 
-    public String stopWeb() throws IOException {
+    public List<com.deepseekharness.app.util.WebStopDiagnostic> stopWeb() throws IOException {
       step("stop");
-      return stopError;
+      return stopFacts;
     }
 
     public void tools() throws Exception {
@@ -66,8 +72,26 @@ public class StartupPipelineTest {
       return "ok";
     }
 
-    public BoundedProcessRunner.Result materializeCasLinks() throws Exception {
+    public StartupPipeline.Plugins startupPlugins() {
+      return new StartupPipeline.Plugins() {
+        public String register() throws Exception {
+          return Fixture.this.register();
+        }
+
+        public String legacy() throws Exception {
+          return Fixture.this.legacyPlugins();
+        }
+
+        public void close() {
+          pluginScopeClosed = true;
+        }
+      };
+    }
+
+    public BoundedProcessRunner.Result materializeCasLinks(
+        java.util.function.Consumer<String> timing) throws Exception {
       step("cas-copy");
+      timing.accept("CAS_HOST_TIMING: phase=process-collect durationMs=10 elapsedMs=14");
       return casOutcome == null ? BoundedProcessRunner.localCompletion(casReceipt) : casOutcome;
     }
 
@@ -75,7 +99,9 @@ public class StartupPipelineTest {
       return "fixture";
     }
 
-    public void message(long g, String s) {}
+    public void message(long g, String s) {
+      messages.add(g + ":" + s);
+    }
 
     public void issue(long g, String n, String s) {
       calls.add("issue");
@@ -89,8 +115,19 @@ public class StartupPipelineTest {
 
     public void status(String value) {}
 
-    public void releasePrior() {
+    public List<com.deepseekharness.app.util.WebStopDiagnostic> releasePrior() {
       calls.add("release-prior");
+      return priorFacts;
+    }
+
+    public boolean awaitPriorExit(long deadlineMs) {
+      calls.add("wait-prior-exit");
+      assertTrue(deadlineMs >= clock);
+      return awaitPriorExit;
+    }
+
+    public long now() {
+      return clock;
     }
 
     public void recoverData() throws Exception {
@@ -141,6 +178,36 @@ public class StartupPipelineTest {
             "unlock",
             "checkpoint"),
         f.calls);
+    assertTrue(f.pluginScopeClosed);
+  }
+
+  @Test
+  public void builtinOrLegacyFailureClosesPreparationAndCannotUnlockOrActivate() throws Exception {
+    for (String phase : List.of("register", "legacy")) {
+      Fixture f = new Fixture();
+      f.failure = phase;
+      assertThrows(IOException.class, () -> new StartupPipeline(f, f).prepare(47, false, f));
+      assertTrue(f.pluginScopeClosed);
+      assertFalse(f.calls.contains("activate"));
+      assertFalse(f.calls.contains("unlock"));
+      assertTrue(
+          f.messages.stream()
+              .anyMatch(
+                  line ->
+                      line.contains(
+                              "phase="
+                                  + (phase.equals("register")
+                                      ? "register-builtins"
+                                      : "legacy-plugin-reviews"))
+                          && line.endsWith("outcome=threw")));
+      if (phase.equals("register")) assertFalse(f.calls.contains("legacy"));
+    }
+    Fixture stale = new Fixture();
+    stale.staleAt = "register";
+    assertNull(new StartupPipeline(stale, stale).prepare(48, false, stale));
+    assertTrue(stale.pluginScopeClosed);
+    assertFalse(stale.calls.contains("legacy"));
+    assertFalse(stale.calls.contains("unlock"));
   }
 
   @Test
@@ -205,11 +272,48 @@ public class StartupPipelineTest {
   }
 
   @Test
-  public void stopFailureOrObsoleteGenerationCannotMaterializeOrUnlock() throws Exception {
+  public void casTimingIsBoundedAndCannotAuthorizeWithoutACompletedReceipt() throws Exception {
+    Fixture f = new Fixture();
+    f.casReceipt =
+        "CAS_TIMING: {\"phase\":\"scan\",\"durationMs\":12}\n" + "ordinary script output\n";
+    IOException failure =
+        assertThrows(IOException.class, () -> new StartupPipeline(f, f).prepare(31, false, f));
+    assertEquals("PLUGIN_CAS_COPY_RESULT_MISSING", failure.getMessage());
+    assertTrue(f.messages.stream().anyMatch(line -> line.startsWith("31:CAS_HOST_TIMING:")));
+    assertTrue(f.messages.stream().anyMatch(line -> line.startsWith("31:CAS_TIMING:")));
+    assertFalse(f.messages.stream().anyMatch(line -> line.contains("ordinary script output")));
+    assertFalse(f.calls.contains("register"));
+    assertFalse(f.calls.contains("unlock"));
+
+    Fixture large = new Fixture();
+    large.casReceipt =
+        "CAS_TIMING: "
+            + "0".repeat(5000)
+            + "\n"
+            + "CAS_TIMING: {\"phase\":\"scan\",\"durationMs\":12}\n".repeat(100)
+            + receipt(false, 0, "");
+    assertEquals("web", new StartupPipeline(large, large).prepare(32, false, large));
+    assertEquals(
+        24, large.messages.stream().filter(line -> line.startsWith("32:CAS_TIMING:")).count());
+    assertTrue(
+        large.messages.stream()
+            .filter(line -> line.startsWith("32:CAS_TIMING:"))
+            .allMatch(line -> line.length() <= 4099));
+  }
+
+  @Test
+  public void hardStopFailureDoesNotWaitOrMaterializeOrUnlock() throws Exception {
     Fixture stopped = new Fixture();
-    stopped.stopError = "old guest exit unconfirmed";
-    assertThrows(
-        IOException.class, () -> new StartupPipeline(stopped, stopped).prepare(1, false, stopped));
+    stopped.stopFacts =
+        List.of(
+            com.deepseekharness.app.util.WebStopDiagnostic.of(
+                com.deepseekharness.app.util.WebStopDiagnostic.Code.IDENTITY_CHANGED));
+    StartupStopFailure failure =
+        assertThrows(
+            StartupStopFailure.class,
+            () -> new StartupPipeline(stopped, stopped).prepare(1, false, stopped));
+    assertTrue(failure.getMessage().contains("发生了什么"));
+    assertFalse(stopped.calls.contains("wait-prior-exit"));
     assertFalse(stopped.calls.contains("cas-copy"));
     assertFalse(stopped.calls.contains("unlock"));
     Fixture stale = new Fixture();
@@ -217,6 +321,50 @@ public class StartupPipelineTest {
     assertNull(new StartupPipeline(stale, stale).prepare(1, false, stale));
     assertFalse(stale.calls.contains("cas-copy"));
     assertFalse(stale.calls.contains("unlock"));
+  }
+
+  @Test
+  public void inProgressStopWaitsInTheSameWindowInsteadOfFailingImmediately() throws Exception {
+    Fixture f = new Fixture();
+    f.stopFacts =
+        List.of(
+            com.deepseekharness.app.util.WebStopDiagnostic.of(
+                com.deepseekharness.app.util.WebStopDiagnostic.Code.OWNED_WEB_REMAINS,
+                "PID=42",
+                "命令摘要=node bin.js web"));
+    f.priorFacts =
+        List.of(
+            com.deepseekharness.app.util.WebStopDiagnostic.of(
+                com.deepseekharness.app.util.WebStopDiagnostic.Code.OWNED_LAUNCHER_PENDING));
+    f.awaitPriorExit = true;
+    assertEquals("web", new StartupPipeline(f, f).prepare(1, false, f));
+    // stop-web 非空时旧实现会在 10ms 内抛错；现在必须先给启动器同样的窗口，再只读复核。
+    assertTrue(f.calls.indexOf("stop") < f.calls.indexOf("release-prior"));
+    assertTrue(f.calls.indexOf("release-prior") < f.calls.indexOf("wait-prior-exit"));
+    assertTrue(f.calls.indexOf("wait-prior-exit") < f.calls.indexOf("tools"));
+  }
+
+  @Test
+  public void stillExitingAtDeadlineReportsThreeElementsWithVerifiedResidual() {
+    Fixture f = new Fixture();
+    f.stopFacts =
+        List.of(
+            com.deepseekharness.app.util.WebStopDiagnostic.of(
+                com.deepseekharness.app.util.WebStopDiagnostic.Code.OWNED_WEB_REMAINS,
+                "PID=42",
+                "命令摘要=node bin.js web"));
+    f.awaitPriorExit = false;
+    StartupStopFailure failure =
+        assertThrows(
+            StartupStopFailure.class, () -> new StartupPipeline(f, f).prepare(9, false, f));
+    String text = failure.getMessage();
+    assertTrue(text.contains("发生了什么"));
+    assertTrue(text.contains("影响"));
+    assertTrue(text.contains("下一步"));
+    assertTrue(text.contains("PID=42"));
+    assertTrue(text.contains("命令摘要=node bin.js web"));
+    assertTrue(f.calls.contains("wait-prior-exit"));
+    assertFalse(f.calls.contains("cas-copy"));
   }
 
   @Test
@@ -388,11 +536,11 @@ public class StartupPipelineTest {
       throws Exception {
     try (PriorSession session = new PriorSession()) {
       session.confirmed = false;
-      assertThrows(IOException.class, session.actions::releasePrior);
+      assertFalse(session.actions.releasePrior().isEmpty());
       assertEquals(1, session.confirmations[0]);
       assertArrayEquals(new int[] {0, 0}, session.released);
       session.confirmed = true;
-      session.actions.releasePrior();
+      assertTrue(session.actions.releasePrior().isEmpty());
       assertEquals(2, session.confirmations[0]);
       assertArrayEquals(new int[] {1, 0}, session.released);
     }
@@ -429,7 +577,7 @@ public class StartupPipelineTest {
               destroyed[0]++;
             }
           };
-      assertThrows(IOException.class, session.actions::releasePrior);
+      assertFalse(session.actions.releasePrior().isEmpty());
       assertEquals(0, destroyed[0]);
       assertEquals(0, session.confirmations[0]);
       assertArrayEquals(new int[] {0, 0}, session.released);
@@ -440,7 +588,7 @@ public class StartupPipelineTest {
   public void obsoleteOrInterruptedPriorAdapterCannotAdvancePreparation() throws Exception {
     try (PriorSession session = new PriorSession()) {
       session.state.lifecycle.beginStop();
-      session.actions.releasePrior();
+      assertTrue(session.actions.releasePrior().isEmpty());
       assertEquals(0, session.confirmations[0]);
       assertArrayEquals(new int[] {0, 0}, session.released);
     }

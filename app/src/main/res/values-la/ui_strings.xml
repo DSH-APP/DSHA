@@ -1,0 +1,291 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="about_close_button" formatted="false">"Claude"</string>
+    <string name="about_community" formatted="false">"Communitas QQ"</string>
+    <string name="about_tagline" formatted="false">"DSHA deductor Android"</string>
+    <string name="adb_pairing_service_label" formatted="false">"Coniunctio ADB"</string>
+    <string name="alpha_no_seccomp" formatted="false">"Accelerationem seccomp claude"</string>
+    <string name="alpha_static_loader" formatted="false">"Onertor staticus (proroot)"</string>
+    <string name="build190_auto_port" formatted="false">"Portum sponte assigna"</string>
+    <string name="build190_restore_port_drafts" formatted="false">"Rudimenta restitue"</string>
+    <string name="computer_use_title" formatted="false">"Moderatio veli"</string>
+    <string name="copy_text" formatted="false">"Exscribe"</string>
+    <string name="device_checking" formatted="false">"Auctoritas verificatur…"</string>
+    <string name="device_open_access" formatted="false">"Fasciculos administra"</string>
+    <string name="diag248_copy" formatted="false">"Relationem exscribe"</string>
+    <string name="diag248_copy_sub" formatted="false">"Textus purgatus pro responso"</string>
+    <string name="diag248_empty" formatted="false">"Nondum eventa; inspectionem tantum statum localem legit"</string>
+    <string name="diag248_export" formatted="false">"Diagnosim exporta"</string>
+    <string name="diag248_export_sub" formatted="false">"Fasciculus actorum structus"</string>
+    <string name="diag248_feedback" formatted="false">"Responsum"</string>
+    <string name="diag248_idle_sub" formatted="false">"Componentes et ambitum inspice"</string>
+    <string name="diag248_idle_title" formatted="false">"Nondum examinatum"</string>
+    <string name="diag248_plugins" formatted="false">"Additamenta administra"</string>
+    <string name="diag248_plugins_sub" formatted="false">"Initium a plugins impeditum"</string>
+    <string name="diag248_repair_sub" formatted="false">"Certificata et componentes currendi iterum institue"</string>
+    <string name="diag248_start" formatted="false">"Inspice"</string>
+    <string name="diag248_status" formatted="false">"Status"</string>
+    <string name="diag248_tools" formatted="false">"Instrumenta"</string>
+    <string name="dns_auto" formatted="false">"Auto (commendata)"</string>
+    <string name="dns_ipv4" formatted="false">"Compatibilitas DNS IPv4"</string>
+    <string name="dns_native" formatted="false">"Duplex ordo nativus"</string>
+    <string name="nh_sub" formatted="false">"Vitia retis tantum notantur, non reparantur"</string>
+    <string name="nh_title" formatted="false">"Valetudo retis"</string>
+    <string name="paste_text" formatted="false">"Insere"</string>
+    <string name="phone_assistant" formatted="false">"Adiutor supernatans"</string>
+    <string name="phone_assistant_detail" formatted="false">"Veram sessionem DSH in hoc telephono elige ad colloquium supernatans et moderamina morae."</string>
+    <string name="picture_in_picture_allowed" formatted="false">"A systemate permissum; colloquium in fenestella manet cum ad Domum is aut applicationes mutas."</string>
+    <string name="picture_in_picture_disabled" formatted="false">"A systemate inactivum; nulla fenestella in recessu apparet. Tange ad mutandum."</string>
+    <string name="picture_in_picture_enable" formatted="false">"Colloquium in imagine"</string>
+    <string name="picture_in_picture_landscape" formatted="false">"Ad transversum muta"</string>
+    <string name="picture_in_picture_opted_out" formatted="false">"Inactivum nisi aliter eligitur. Commutatorem supra activa ut colloquium in fenestella teneas cum ad Domum is."</string>
+    <string name="picture_in_picture_portrait" formatted="false">"Ad situm erectum muta"</string>
+    <string name="picture_in_picture_settings_unavailable" formatted="false">"Optiones systematis imaginis intra imaginem aperiri non potuerunt."</string>
+    <string name="picture_in_picture_title" formatted="false">"Imago intra imaginem"</string>
+    <string name="picture_in_picture_unsupported" formatted="false">"Imago intra imaginem Android 8.0+ et instrumentum id sustinens requirit."</string>
+    <string name="plugin_sort_az" formatted="false">"Nomen A–Z"</string>
+    <string name="plugin_sort_enabled" formatted="false">"Activa primum"</string>
+    <string name="plugin_sort_title" formatted="false">"Additamenta ordina"</string>
+    <string name="plugin_sort_updates" formatted="false">"Renovationes priores"</string>
+    <string name="plugin_sort_za" formatted="false">"Nomen Z–A"</string>
+    <string name="text_selection_more" formatted="false">"Plura…"</string>
+    <string name="ui134_adb_hint" formatted="false">"Android 11+: depurationem sine filo in eodem Wi-Fi copula. Root non requiritur. Post mutationes retis verifica aut rursus copula."</string>
+    <string name="ui134_candidate" formatted="false">"Editionem candidati vide"</string>
+    <string name="ui134_candidate_sub" formatted="false">"Notae, magnitudo, installatio"</string>
+    <string name="ui134_changelog" formatted="false">"Haec editio"</string>
+    <string name="ui134_check_ready" formatted="false">"Examina praepara"</string>
+    <string name="ui134_code" formatted="false">"Codex versionis"</string>
+    <string name="ui134_current" formatted="false">"Applicatio praesens"</string>
+    <string name="ui134_disconnect" formatted="false">"ADB disiunge"</string>
+    <string name="ui134_edition" formatted="false">"Editio"</string>
+    <string name="ui134_recent_startups" formatted="false">"Ultima quinque initia"</string>
+    <string name="ui134_recent_startups_sub" formatted="false">"Gradus, errores, exitus"</string>
+    <string name="ui134_results" formatted="false">"Eventus examinis"</string>
+    <string name="ui134_root_hint" formatted="false">"In apparatu cum root, su directe sine coniunctione ADB uti potes. Primo exsecutione DSHA in administro root auctoriza. Gradum interceptionis mandatorum infra elige; claustra nativa ut lectio nuntiorum SMS in omnibus tribus gradibus valent."</string>
+    <string name="ui134_screen_setup" formatted="false">"Moderationem veli para · Duo gradus"</string>
+    <string name="ui134_shizuku_hint" formatted="false">"Shizuku in administratore eius initia, deinde DSHA hic auctoriza. Plerumque ministerium post reinitiationem rursus initia."</string>
+    <string name="ui134_start_records" formatted="false">"Acta initii"</string>
+    <string name="ui134_startup_recovery" formatted="false">"Recuperatio initii"</string>
+    <string name="ui134_startup_recovery_sub" formatted="false">"Difficultates et optiones"</string>
+    <string name="ui2_about" formatted="false">"De DSHA"</string>
+    <string name="ui2_about_sub" formatted="false">"Versio, licentiae et responsa"</string>
+    <string name="ui2_adb" formatted="false">"Coniunctio ADB"</string>
+    <string name="ui2_adb_intro" formatted="false">"Codicem copulationis ex depuratione sine filo sume"</string>
+    <string name="ui2_address" formatted="false">"Inscriptiones aditus"</string>
+    <string name="ui2_address_sub" formatted="false">"Inscriptiones locales et LAN"</string>
+    <string name="ui2_app_version" formatted="false">"Versio applicationis"</string>
+    <string name="ui2_backup_restore" formatted="false">"Copia et restitutio"</string>
+    <string name="ui2_backup_restore_sub" formatted="false">"Exporta, importa, serva"</string>
+    <string name="ui2_base" formatted="false">"Fundamentum Ubuntu"</string>
+    <string name="ui2_check_all" formatted="false">"Omnes partes verifica"</string>
+    <string name="ui2_community" formatted="false">"Additamenta communitatis"</string>
+    <string name="ui2_community_sub" formatted="false">"Additamenta et fontes installationis explora"</string>
+    <string name="ui2_component1" formatted="false">"Ambitus Ubuntu"</string>
+    <string name="ui2_component2" formatted="false">"Instrumenta sine rete"</string>
+    <string name="ui2_component3" formatted="false">"Node.js 24"</string>
+    <string name="ui2_component4" formatted="false">"pnpm"</string>
+    <string name="ui2_component5" formatted="false">"DeepSeek Harness"</string>
+    <string name="ui2_component6" formatted="false">"Probationes initii"</string>
+    <string name="ui2_component_hint" formatted="false">"Exitus et optiones inspice"</string>
+    <string name="ui2_config_sub" formatted="false">"Portus et modus currendi proximo initio valebunt"</string>
+    <string name="ui2_connection" formatted="false">"Status conexionis"</string>
+    <string name="ui2_data_ops" formatted="false">"Copia et restitutio"</string>
+    <string name="ui2_data_sub" formatted="false">"Exportationes, recuperatio et communicatio fasciculorum."</string>
+    <string name="ui2_data_title" formatted="false">"Data et copia"</string>
+    <string name="ui2_device_channels" formatted="false">"Canales mandatorum"</string>
+    <string name="ui2_device_grants" formatted="false">"Facultates apparatus"</string>
+    <string name="ui2_diagnostics" formatted="false">"Diagnosis"</string>
+    <string name="ui2_diagnostics_intro" formatted="false">"Partes, repositorium et ministeria inspice et relationem expurgatam genera."</string>
+    <string name="ui2_diagnostics_sub" formatted="false">"Probationes ambitus et acta diagnostica"</string>
+    <string name="ui2_display" formatted="false">"Ostensio et initium"</string>
+    <string name="ui2_dns" formatted="false">"Regula DNS"</string>
+    <string name="ui2_environment" formatted="false">"Ambitus exsecutionis"</string>
+    <string name="ui2_environment_page" formatted="false">"Installatio et exsecutio"</string>
+    <string name="ui2_environment_recovery" formatted="false">"Recuperatio ambitus"</string>
+    <string name="ui2_environment_recovery_sub" formatted="false">"Dependentias et conservationem"</string>
+    <string name="ui2_environment_state" formatted="false">"Status ambitus"</string>
+    <string name="ui2_environment_sub" formatted="false">"Singulas partes inspice et sola quae attentionem requirunt repara."</string>
+    <string name="ui2_error_logs" formatted="false">"Acta errorum"</string>
+    <string name="ui2_experience" formatted="false">"Usus"</string>
+    <string name="ui2_export" formatted="false">"Additamenta exporta"</string>
+    <string name="ui2_export_sub" formatted="false">"Exemplar additamentorum serva"</string>
+    <string name="ui2_floating" formatted="false">"Status supernatans"</string>
+    <string name="ui2_floating_settings" formatted="false">"Species et mores"</string>
+    <string name="ui2_floating_settings_sub" formatted="false">"Stilum, res, praevisionem emenda"</string>
+    <string name="ui2_from_link" formatted="false">"Ex vinculo institue"</string>
+    <string name="ui2_grants_sub" formatted="false">"Facultates liberae electionis. Colloquia et terminalia potestatem moderandi instrumentum non requirunt."</string>
+    <string name="ui2_import" formatted="false">"Additamenta importa"</string>
+    <string name="ui2_import_sub" formatted="false">"ZIP additamenti ex instrumento tuo elige"</string>
+    <string name="ui2_install_environment" formatted="false">"Installatio et exsecutio"</string>
+    <string name="ui2_installation_log" formatted="false">"Acta probationis"</string>
+    <string name="ui2_installed" formatted="false">"Additamenta instituta"</string>
+    <string name="ui2_launch_hint" formatted="false">"Paratum ad proximum opus tuum."</string>
+    <string name="ui2_local_plugins" formatted="false">"Additamenta localia"</string>
+    <string name="ui2_logs" formatted="false">"Acta initii"</string>
+    <string name="ui2_maintenance" formatted="false">"Cura et recuperatio"</string>
+    <string name="ui2_managed" formatted="false">"Ambitus administratus"</string>
+    <string name="ui2_managed_sub" formatted="false">"Partes inclusas renova et data personalia retine"</string>
+    <string name="ui2_managed_update" formatted="false">"Ambitum renova"</string>
+    <string name="ui2_management" formatted="false">"Administratio"</string>
+    <string name="ui2_meet" formatted="false">"DSHA cognosce"</string>
+    <string name="ui2_network_runtime" formatted="false">"Exsecutio et rete"</string>
+    <string name="ui2_offline_badge" formatted="false">"Praeparatio sine rete  ·  Sine root  ·  %1$s"</string>
+    <string name="ui2_online_notice" formatted="false">"Exemplaria per rete nuntios et adiuncta accipiunt quae mittere eligis."</string>
+    <string name="ui2_overlay" formatted="false">"Status supernatans"</string>
+    <string name="ui2_overlay_sub" formatted="false">"Res, opacitas et tempus ostensionis"</string>
+    <string name="ui2_plugin_link" formatted="false">"Repositorium aut URL"</string>
+    <string name="ui2_port" formatted="false">"Portus Web activus"</string>
+    <string name="ui2_port_hint" formatted="false">"Portu occupato, ad portum liberum sponte transi"</string>
+    <string name="ui2_port_preferred" formatted="false">"Portus Web praelatus"</string>
+    <string name="ui2_recovery_tools" formatted="false">"Recuperatio ambitus et datorum"</string>
+    <string name="ui2_repair_parts" formatted="false">"Partes repara"</string>
+    <string name="ui2_repair_parts_sub" formatted="false">"Partes absentes inspice et partes operantes retine"</string>
+    <string name="ui2_reproduction" formatted="false">"Notae repetitionis"</string>
+    <string name="ui2_resolve" formatted="false">"Resolve et institue"</string>
+    <string name="ui2_restart" formatted="false">"Iterum incipe"</string>
+    <string name="ui2_rollback" formatted="false">"Reversio ambitus"</string>
+    <string name="ui2_rollback_sub" formatted="false">"Post probationem separatam muta"</string>
+    <string name="ui2_runtime_compat" formatted="false">"Compatibilitas ambitus"</string>
+    <string name="ui2_runtime_config" formatted="false">"Optiones exsecutionis"</string>
+    <string name="ui2_sensitive" formatted="false">"Facultates sensitivae"</string>
+    <string name="ui2_settings" formatted="false">"Optiones"</string>
+    <string name="ui2_settings_hint" formatted="false">"Spatium laboris ad usum tuum accommoda."</string>
+    <string name="ui2_shortcuts" formatted="false">"Aditus celer"</string>
+    <string name="ui2_six_steps" formatted="false">"Sex gradus"</string>
+    <string name="ui2_skip" formatted="false">"Prooemium praetermitte"</string>
+    <string name="ui2_start" formatted="false">"DSHA initia"</string>
+    <string name="ui2_stop" formatted="false">"Siste"</string>
+    <string name="ui2_stopped" formatted="false">"DSH non currit"</string>
+    <string name="ui2_storage_files" formatted="false">"Repositorium, fasciculi"</string>
+    <string name="ui2_storage_files_sub" formatted="false">"Usus repositorii, purgatio memoriae et communicatio fasciculorum"</string>
+    <string name="ui2_support" formatted="false">"Auxilium"</string>
+    <string name="ui2_system_permissions" formatted="false">"Potestates systematis"</string>
+    <string name="ui2_troubleshooting" formatted="false">"Solutio difficultatum"</string>
+    <string name="ui2_update_channel" formatted="false">"Canalis renovationum"</string>
+    <string name="ui2_updates" formatted="false">"Renovationes"</string>
+    <string name="ui2_updates_intro" formatted="false">"Versiones applicationis et partium ambitus vide."</string>
+    <string name="ui2_updates_sub" formatted="false">"Stabiles et praeviae"</string>
+    <string name="ui2_w1_0" formatted="false">"Colloquia et opera"</string>
+    <string name="ui2_w1_1" formatted="false">"Terminale integrum"</string>
+    <string name="ui2_w1_2" formatted="false">"Additamenta et apparatus"</string>
+    <string name="ui2_w2_0" formatted="false">"Colloquia et fasciculi"</string>
+    <string name="ui2_w2_1" formatted="false">"Exemplaria et claves"</string>
+    <string name="ui2_w2_2" formatted="false">"Actiones instrumenti"</string>
+    <string name="ui2_welcome_lead0" formatted="false">"Codicem scribe, fasciculos tracta et instrumentis utere.\nSpatium laboris tecum porta."</string>
+    <string name="ui2_welcome_lead1" formatted="false">"Colloquia, fasciculi et instrumenta, simul."</string>
+    <string name="ui2_welcome_lead2" formatted="false">"Potestas moderandi instrumentum liberae electionis est."</string>
+    <string name="ui2_welcome_title0" formatted="false">"Spatium laboris AI tuum,\nin ipso telephono."</string>
+    <string name="ui2_welcome_title1" formatted="false">"Ab idea\nad opus perfectum."</string>
+    <string name="ui2_welcome_title2" formatted="false">"Facultates tuae.\nData tua."</string>
+    <string name="ui2_workspace" formatted="false">"Spatium laboris"</string>
+    <string name="ui2_ws1_0" formatted="false">"Cum exemplaribus labora ut opera perficias."</string>
+    <string name="ui2_ws1_1" formatted="false">"Mandata Ubuntu et sessiones independentes."</string>
+    <string name="ui2_ws1_2" formatted="false">"Additamenta adde et facultates instrumenti habilita."</string>
+    <string name="ui2_ws2_0" formatted="false">"Localiter servantur, manu exportantur."</string>
+    <string name="ui2_ws2_1" formatted="false">"Exemplaria et claves API in interfacie Web constitue. Documenta identitatis nativa exsistentia retinentur."</string>
+    <string name="ui2_ws2_2" formatted="false">"Root, Shizuku, ADB et SMS potestates separatas habent."</string>
+    <string name="ui_adb_code_label" formatted="false">"Codex copulationis (6 digiti)"</string>
+    <string name="ui_adb_host_label" formatted="false">"Inscriptio (vacua = inventio)"</string>
+    <string name="ui_adb_port_label" formatted="false">"Portus (vacuus = inventio)"</string>
+    <string name="ui_lan_unencrypted" formatted="false">"Negotiatio retis localis non obscurata; tantum retibus et instrumentis fide dignis"</string>
+    <string name="ui_language_title" formatted="false">"Lingua"</string>
+    <string name="ui_m0001" formatted="false">"Renovationem depone"</string>
+    <string name="ui_m0002" formatted="false">"Optiones serva"</string>
+    <string name="ui_m0003" formatted="false">"Examen interrumpe"</string>
+    <string name="ui_m0005" formatted="false">"Incipe"</string>
+    <string name="ui_m0006" formatted="false">"Exemplar fac et restitue"</string>
+    <string name="ui_m0007" formatted="false">"Initium tutum"</string>
+    <string name="ui_m0010" formatted="false">"Coniunctionem incipe"</string>
+    <string name="ui_m0011" formatted="false">"Optiones recuperationis"</string>
+    <string name="ui_m0012" formatted="false">"Inscriptio et portus"</string>
+    <string name="ui_m0013" formatted="false">"Additamenta administra"</string>
+    <string name="ui_m0015" formatted="false">"Shizuku auctoritatem da"</string>
+    <string name="ui_m0016" formatted="false">"Additamenta"</string>
+    <string name="ui_m0017" formatted="false">"Nondum examinatum"</string>
+    <string name="ui_m0018" formatted="false">"Renovationes quaere"</string>
+    <string name="ui_m0020" formatted="false">"Lucidum"</string>
+    <string name="ui_m0021" formatted="false">"Terminale"</string>
+    <string name="ui_m0023" formatted="false">"Optiones"</string>
+    <string name="ui_m0024" formatted="false">"Mandatum insere et Enter preme"</string>
+    <string name="ui_m0025" formatted="false">"Nulla adhuc acta."</string>
+    <string name="ui_m0026" formatted="false">"Coniunctio et portus"</string>
+    <string name="ui_m0030" formatted="false">"Nisi depuratione sine filo uteris, clausum tene"</string>
+    <string name="ui_m0031" formatted="false">"Coniunctio ADB"</string>
+    <string name="ui_m0039" formatted="false">"Shizuku auctoritatem non habet"</string>
+    <string name="ui_m0046" formatted="false">"Acta depone"</string>
+    <string name="ui_m0047" formatted="false">"Acta errorum depone"</string>
+    <string name="ui_m0050" formatted="false">"Siste"</string>
+    <string name="ui_m0053" formatted="false">"Sensoria et lucerna"</string>
+    <string name="ui_m0054" formatted="false">"Ambitu proroot utere"</string>
+    <string name="ui_m0055" formatted="false">"Navigator compatibilis"</string>
+    <string name="ui_m0057" formatted="false">"Dispositio computatri"</string>
+    <string name="ui_m0060" formatted="false">"Instrumenta reparationis"</string>
+    <string name="ui_m0062" formatted="false">"Interpretem root permitte"</string>
+    <string name="ui_m0063" formatted="false">"Accessum LAN permitte"</string>
+    <string name="ui_m0066" formatted="false">"Locum permitte"</string>
+    <string name="ui_m0067" formatted="false">"De applicatione"</string>
+    <string name="ui_m0078" formatted="false">"Opus interrumpe"</string>
+    <string name="ui_m0079" formatted="false">"Operationem interrumpe"</string>
+    <string name="ui_m0080" formatted="false">"Serva ut"</string>
+    <string name="ui_m0081" formatted="false">"Sola mea additamenta"</string>
+    <string name="ui_m0084" formatted="false">"In fundo abrupto perge inspicere; ante restitutionem depurationem sine filo accende"</string>
+    <string name="ui_m0089" formatted="false">"Renovationes quaere"</string>
+    <string name="ui_m0090" formatted="false">"Accessum ADB ad apparatum activa (ex praedefinito inactivus)"</string>
+    <string name="ui_m0094" formatted="false">"Editiones in navigatro vide"</string>
+    <string name="ui_m0095" formatted="false">"In navigatro aperi"</string>
+    <string name="ui_m0102" formatted="false">"Exscribe"</string>
+    <string name="ui_m0103" formatted="false">"Relationem exscribe"</string>
+    <string name="ui_m0104" formatted="false">"Modus tutus: additamenta tertia restitue"</string>
+    <string name="ui_m0106" formatted="false">"Additamentum instrue"</string>
+    <string name="ui_m0107" formatted="false">"Renovationem instrue"</string>
+    <string name="ui_m0109" formatted="false">"Relationem exporta"</string>
+    <string name="ui_m0118" formatted="false">"Machina interretialis inclusa; si compatibilitas deficit, tempta"</string>
+    <string name="ui_m0121" formatted="false">"Exitum IA superpone"</string>
+    <string name="ui_m0125" formatted="false">"Administratorem Shizuku aperi"</string>
+    <string name="ui_m0126" formatted="false">"Data et exemplaria"</string>
+    <string name="ui_m0128" formatted="false">"Emendatio sine filis"</string>
+    <string name="ui_m0133" formatted="false">"Forum additamentorum"</string>
+    <string name="ui_m0134" formatted="false">"Status operationum additamentorum. Tange ad singula videnda."</string>
+    <string name="ui_m0135" formatted="false">"Additamenta administra"</string>
+    <string name="ui_m0137" formatted="false">"URL additamenti vel nomen fasciculi npm"</string>
+    <string name="ui_m0138" formatted="false">"Nomina vel descriptiones quaere"</string>
+    <string name="ui_m0142" formatted="false">"Novum terminale"</string>
+    <string name="ui_m0145" formatted="false">"Nulla terminalia\n«Novum» tange ut aperias"</string>
+    <string name="ui_m0146" formatted="false">"Plura"</string>
+    <string name="ui_m0158" formatted="false">"Additamenta detege"</string>
+    <string name="ui_m0159" formatted="false">"Additamenta detege"</string>
+    <string name="ui_m0164" formatted="false">"Expurga"</string>
+    <string name="ui_m0170" formatted="false">"root auctoritatem da et verifica"</string>
+    <string name="ui_m0171" formatted="false">"SMS lege"</string>
+    <string name="ui_m0173" formatted="false">"Stabilis"</string>
+    <string name="ui_m0177" formatted="false">"Simplex"</string>
+    <string name="ui_m0178" formatted="false">"Terminale simplex"</string>
+    <string name="ui_m0179" formatted="false">"URL insere"</string>
+    <string name="ui_m0181" formatted="false">"Codicem coniunctionis auto lege"</string>
+    <string name="ui_m0182" formatted="false">"Gradus ad difficultatem repetendam adde. Claves aut colloquia privata ne includas."</string>
+    <string name="ui_m0185" formatted="false">"URL inspice"</string>
+    <string name="ui_m0191" formatted="false">"Optiones pilae"</string>
+    <string name="ui_m0201" formatted="false">"Redi"</string>
+    <string name="ui_m0202" formatted="false">"Ad Initium redi: additamenta / initium tutum"</string>
+    <string name="ui_m0209" formatted="false">"Examina iterum exsequere"</string>
+    <string name="ui_m0211" formatted="false">"Optiones repone, colloquia serva"</string>
+    <string name="ui_m0212" formatted="false">"Iterum tenta"</string>
+    <string name="ui_m0215" formatted="false">"Praevisio"</string>
+    <string name="ui_m0217" formatted="false">"Connexionem verifica"</string>
+    <string name="ui_m0218" formatted="false">"＋ Novum"</string>
+    <string name="ui_m9024" formatted="false">"Mutare"</string>
+    <string name="upd_browser_sub" formatted="false">"Omnes versiones et APK"</string>
+    <string name="upd_copy_version" formatted="false">"Versionem exscribere"</string>
+    <string name="upd_full_notes" formatted="false">"Notae plenae"</string>
+    <string name="upd_pane_empty" formatted="false">"Cum candidata inventa erit, notae, magnitudo et modus instituendi hic apparebunt."</string>
+    <string name="upd_recheck" formatted="false">"Iterum examina"</string>
+    <string name="upd_tab_candidate" formatted="false">"Candidata"</string>
+    <string name="upd_tab_current" formatted="false">"Haec versio"</string>
+    <string name="welcome_eyebrow0" formatted="false">"DEEPSEEK HARNESS · ANDROID"</string>
+    <string name="welcome_eyebrow1" formatted="false">"01 / AD CURSUM TUUM FACTUM"</string>
+    <string name="welcome_eyebrow2" formatted="false">"02 / DATA TUA, ELECTIO TUA"</string>
+    <plurals name="plugin_count">
+        <item quantity="one">"%d additamentum"</item>
+        <item quantity="other">"%d additamenta"</item>
+    </plurals>
+</resources>

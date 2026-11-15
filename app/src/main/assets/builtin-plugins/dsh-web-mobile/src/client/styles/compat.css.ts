@@ -149,8 +149,18 @@ export const COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
        animation and geometry transition — no curve matching needed. */
     transition: background-color .15s, top .24s var(--ds-ease-out, ease-in-out);
   }
-  [data-mobile-nav="preview-full-toggle"]:hover {
-    background: var(--aion-bg-3, rgba(0, 0, 0, .22));
+  /* 44px 热区：20×20 的按钮外扩——纵向 ±12px（标题栏行内上下都有空），横向只能
+     ±4px（右侧 8px 外就是宿主自己的 20px 收起键：两颗命中盒再宽就会互相压住，
+     变成「点收起却展开」。该约束与上面「头部按钮热区」那组同一来源）。 */
+  [data-mobile-nav="preview-full-toggle"]::after {
+    content: '';
+    position: absolute;
+    inset: -12px -4px;
+  }
+  @media (hover: hover) {
+    [data-mobile-nav="preview-full-toggle"]:hover {
+      background: var(--aion-bg-3, rgba(0, 0, 0, .22));
+    }
   }
   [data-mobile-nav="preview-full-toggle"]:active {
     background: var(--aion-bg-active, rgba(0, 0, 0, .28));
@@ -233,9 +243,17 @@ export const COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
      ssh own the center column while active). */
   html[data-dsh-taskboard-active] [data-mobile-nav="fab"],
   html[data-dsh-ssh-active] [data-mobile-nav="fab"],
-  html[data-dsh-taskboard-active] [data-mobile-nav="backdrop"],
-  html[data-dsh-ssh-active] [data-mobile-nav="backdrop"] {
+  html[data-dsh-taskboard-active] [data-mobile-nav="hit"],
+  html[data-dsh-ssh-active] [data-mobile-nav="hit"] {
     display: none !important;
+  }
+  /* The dim is painted by the frame's ::after since 2026-11-08, so hiding the
+     catcher no longer hides the paint: a takeover must clear the dim too, or a
+     dim from a close in flight covers the panel and cannot be tapped away. */
+  html[data-dsh-taskboard-active] [data-mobile-nav="frame"]::after,
+  html[data-dsh-ssh-active] [data-mobile-nav="frame"]::after {
+    opacity: 0;
+    transition: none;
   }
   /* Board header: let the search field take the slack instead of squeezing
      the action buttons. */
@@ -541,19 +559,26 @@ export const COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
 
   /* ---------- dsh-web-ui polish: floating pet ----------
      The whale-girl pet (dsh-pet) floats at the viewport corner with a
-     persisted, draggable position. On phones the pet is scaled down so
-     it does not dominate the screen; the plugin's own drag + persist
-     still work (the position itself is left alone — the mobile default
-     position is seeded via the pet API to just above the composer). */
-
-  body > [class*="_float"]:has([class*="_sprite"][role="button"]) {
-    transform: scale(.66);
-    transform-origin: bottom right;
-  }
-  /* While a modal dialog (settings sheet / export) owns the screen the pet
-     floats ABOVE it and covers the dialog content; modal semantics say the
-     background is inert, so hide the pet for the modal's lifetime. */
-  body:has([aria-modal="true"]) > [class*="_float"]:has([class*="_sprite"][role="button"]) {
+     persisted, draggable position. Its root is a pointer-events:auto drag
+     layer, so while a sheet owns the screen it sits on top of the sheet's own
+     content and swallows taps; hide it for that sheet's lifetime.
+     2026-10-29 (#248): 0.3.x renamed the root to .dsh-pet-root — the shipped
+     bundle carries no _float / _sprite / role=button node at all, so the old
+     descendant selector had been dead for the whole 0.3 line. Both generations
+     are listed. The mobile scale rule that used to live here is gone: it never
+     matched 0.3.x, and the pet's own size setting owns that decision. */
+  /* @patch
+     id: pet-hidden-under-sheets
+     for: dsh-pet 0.3.x 的 .dsh-pet-root（slot shell.overlay）+ 老代际 _float/_sprite 根节点
+     why: 宠物根节点是拖拽层，弹层与全屏右侧栏面板期间压住面板内容并吞点击；旧选择器打不到 0.3.x 的根节点
+     until: 宠物插件提供「背景 inert 时自行收起」的接缝，或稳定暴露一个语义标记——届时合并本块
+     test: tests/pet-overlay.test.ts
+  */
+  body:has([aria-modal="true"]) .dsh-pet-root,
+  body:has([data-sidebar-right-open][data-sidebar-right-panel="fullscreen"]) .dsh-pet-root,
+  body:has([aria-modal="true"]) > [class*="_float"]:has([class*="_sprite"][role="button"]),
+  body:has([data-sidebar-right-open][data-sidebar-right-panel="fullscreen"])
+    > [class*="_float"]:has([class*="_sprite"][role="button"]) {
     display: none !important;
   }
 
@@ -613,7 +638,6 @@ export const COMPAT_CSS = `@media (max-width: 1023px) and (pointer: coarse) {
     flex-flow: row nowrap !important;
     align-items: center !important;
     white-space: nowrap !important;
-    margin-right: 6px !important;
     padding: 0 !important;
   }
   /* 第一组（轮次·步数·tok/s）保持完整。 */

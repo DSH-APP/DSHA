@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- 上岛顺序的一级：级别号 + 名称与原因 + 示例胶囊 + 当前数量；整行作一个无障碍节点。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="@dimen/island_level_row_min" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="@dimen/config_row_pad_start" android:paddingEnd="@dimen/config_row_pad_end" android:paddingTop="6dp" android:paddingBottom="6dp" android:focusable="true" android:importantForAccessibility="yes">
+    <TextView android:id="@+id/island_level_no" android:layout_width="@dimen/island_level_badge" android:layout_height="@dimen/island_level_badge" android:background="@drawable/bg_island_badge" android:gravity="center" android:textSize="12sp" android:textStyle="bold" android:fontFamily="monospace" android:includeFontPadding="false" android:importantForAccessibility="no" />
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:orientation="vertical" android:importantForAccessibility="noHideDescendants">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+            <TextView android:id="@+id/island_level_title" style="@style/ConfigRowTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:maxLines="1" />
+            <TextView android:id="@+id/island_level_sample" android:layout_width="wrap_content" android:layout_height="20dp" android:layout_marginStart="6dp" android:background="@drawable/bg_island_badge" android:gravity="center" android:paddingStart="8dp" android:paddingEnd="8dp" android:textColor="@color/shell_text_secondary" android:textSize="11.5sp" android:textStyle="bold" android:maxLines="1" android:includeFontPadding="false" />
+        </LinearLayout>
+        <TextView android:id="@+id/island_level_why" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/shell_text_muted" />
+    </LinearLayout>
+    <TextView android:id="@+id/island_level_count" style="@style/ConfigRowSub" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_marginTop="0dp" android:maxLines="1" android:importantForAccessibility="no" />
+</LinearLayout>

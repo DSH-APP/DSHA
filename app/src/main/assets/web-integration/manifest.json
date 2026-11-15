@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "DSHA 页面返回",
-  "version": "1.10",
+  "version": "1.12",
   "browser_specific_settings": {
     "gecko": {
       "id": "dsha-page@dsh.client"
@@ -18,6 +18,7 @@
         "http://127.0.0.1/*"
       ],
       "js": [
+        "safe-area.js",
         "startup-relay.js",
         "gecko-compat.js"
       ],

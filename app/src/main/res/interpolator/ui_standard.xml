@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  v5 统一动画曲线 cubic-bezier(.22, 1, .36, 1)：
+  与设计原型 DESIGN-NOTES 的导航指示、抽屉、弹层同一曲线，
+  页面、弹窗与抽屉不再各用一套系统默认插值器。
+-->
+<pathInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:controlX1="0.22"
+    android:controlY1="1"
+    android:controlX2="0.36"
+    android:controlY2="1" />

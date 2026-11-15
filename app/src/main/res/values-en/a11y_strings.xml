@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 无障碍服务声明：所有变体包共用同一 service 声明，标签随实际应用名区分。 -->
+<resources>
+    <string name="accessibility_service_label" formatted="false">"DSH-A-Su screen control"</string>
+    <string name="accessibility_desc" formatted="false">"Two uses: (1) read Android's Wireless debugging pairing code automatically; (2) let the AI assistant read the screen, tap, type, press keys and take screenshots to control the phone. DSH-A-Su never records the screen in the background; the current screen is read only while the assistant asks for it."</string>
+</resources>

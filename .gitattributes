@@ -35,6 +35,10 @@
 # 退休原件必须覆盖后面的按扩展名规则，Git 不得改写原始换行字节。
 tools/history/** -text -eol
 
+# Rust vendor 树按上游字节入库（.cargo-checksum.json 记录逐文件 SHA-256），
+# 禁止 Git 行尾规范化；重新 vendor 后必须逐字节一致。
+rust/vendor/** -text -eol
+
 # Existing managed text is hash-bound to the signed runtime; keep exact bytes.
 app/src/main/assets/builtin-plugins/dsh-auto-review/package.json -text -eol
 app/src/main/assets/builtin-plugins/dsh-computer-use-android/package.json -text -eol
@@ -50,3 +54,31 @@ app/src/main/assets/plugin-manager-policy-patch.json -text -eol
 app/src/main/assets/plugin-manager.py -text -eol
 /tools/fixtures/session-interaction-v3/session-interaction-patch.json -text -eol
 /tools/fixtures/session-interaction-v3/web-integration/session-interaction.js -text -eol
+
+/tools/fixtures/rc2-upgrade-source/dsh-client-ui-workspace.js -text -eol
+/tools/fixtures/rc2-upgrade-source/dsh-client-ui-agent-preset.js -text -eol
+
+# Frozen build197 language inputs: exact SHA checked by check-source-hygiene.py.
+/docs/releases/build197-changes.ar.md -text -eol
+/docs/releases/build197-changes.la.md -text -eol
+/docs/releases/build197-changes.pt.md -text -eol
+/tools/i18n/translations-extra/ar.json -text -eol
+/tools/i18n/translations-extra/fr.json -text -eol
+/tools/i18n/translations-extra/ja.json -text -eol
+/tools/i18n/translations-extra/ko.json -text -eol
+/tools/i18n/translations-extra/pt.json -text -eol
+/tools/i18n/translations-extra/ru.json -text -eol
+/tools/i18n/translations/ar.json -text -eol
+/tools/i18n/translations/fr.json -text -eol
+/tools/i18n/translations/ja.json -text -eol
+/tools/i18n/translations/ko.json -text -eol
+/tools/i18n/translations/pt.json -text -eol
+/tools/i18n/translations/ru.json -text -eol
+/tools/i18n/web-translations/ar.json -text -eol
+/tools/i18n/web-translations/fr.json -text -eol
+/tools/i18n/web-translations/ja.json -text -eol
+/tools/i18n/web-translations/ko.json -text -eol
+/tools/i18n/web-translations/la.json -text -eol
+/tools/i18n/web-translations/pt.json -text -eol
+/tools/i18n/web-translations/ru.json -text -eol
+/tools/i18n/web-translations/zh-Hant.json -text -eol

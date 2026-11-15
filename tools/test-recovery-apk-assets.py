@@ -9,13 +9,35 @@ import unittest
 import zipfile
 from pathlib import Path
 from recovery_apk_assets import archive_locations, SHARED
-from recovery_runtime_overlay import TARGETS, INPUT_ASSETS, CAPSULE_DEPENDENCIES
+from recovery_runtime_overlay import TARGETS, input_assets, CAPSULE_DEPENDENCIES
 
 spec=importlib.util.spec_from_file_location('verify_recovery_apk',Path(__file__).with_name('verify-recovery-apk.py'))
 verifier=importlib.util.module_from_spec(spec);spec.loader.exec_module(verifier)
 
 
 class RecoveryApkAssetsTests(unittest.TestCase):
+    def test_descriptor_budget_is_enforced_from_zip_metadata_before_reading_payload(self):
+        class Oversized:
+            def getinfo(self, name):
+                return type('Info', (), dict(file_size=verifier.DESCRIPTOR_MAX_BYTES + 1))()
+            def read(self, name):
+                raise AssertionError('oversized descriptor must not be loaded')
+        with self.assertRaisesRegex(RuntimeError, 'RECOVERY_DESCRIPTOR_BYTE_LIMIT'):
+            verifier.read_descriptor(Oversized())
+
+    def test_descriptor_reader_accepts_normal_budgeted_proof_and_rejects_path_growth(self):
+        def check(value):
+            memory = io.BytesIO()
+            with zipfile.ZipFile(memory, 'w') as apk:
+                apk.writestr('assets/recovery-runtime.json', json.dumps(value))
+            with zipfile.ZipFile(memory) as apk:
+                return verifier.read_descriptor(apk)
+        value = dict(files=[dict(path='file-' + str(i), sha256='a'*64, bytes=0) for i in range(6)], links=[])
+        self.assertEqual(check(value), value)
+        value['files'][0]['path'] = 'a' * 4097
+        with self.assertRaisesRegex(ValueError, 'RECOVERY_PATH_LIMIT'):
+            check(value)
+
     def test_mandatory_capsule_dependencies_are_signed_and_in_final_file_proof(self):
         content = {asset: ('dependency:' + asset).encode() for asset in CAPSULE_DEPENDENCIES}
         rows = [dict(asset=asset, path=target, sha256=hashlib.sha256(content[asset]).hexdigest(), bytes=len(content[asset]))
@@ -104,8 +126,8 @@ class RecoveryApkAssetsTests(unittest.TestCase):
         with self.assertRaises(KeyError):verify(missing,descriptor)
 
     def test_overlay_recipe_and_language_asset_hashes_are_bound(self):
-        content={name:('source '+name).encode() for name in INPUT_ASSETS}
-        descriptor={'overlayInputs':{name:hashlib.sha256(body).hexdigest() for name,body in content.items()}}
+        content={name:('source '+name).encode() for name in input_assets('0.2.1-rc.2')}
+        descriptor={'dshVersion':'0.2.1-rc.2','overlayInputs':{name:hashlib.sha256(body).hexdigest() for name,body in content.items()}}
         def check(blobs):
             memory=io.BytesIO()
             with zipfile.ZipFile(memory,'w') as apk:

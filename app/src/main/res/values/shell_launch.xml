@@ -1,0 +1,397 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+  启动主页（UI v5 试点）专用尺寸与文字样式。
+  颜色一律引用 values/shell_ui.xml 的 shell_* token，本文件不新增颜色，也不改全站样式。
+-->
+<resources>
+
+    <!-- ========== 间距与尺寸 ========== -->
+    <dimen name="shell_launch_page_pad">20dp</dimen>
+    <dimen name="shell_launch_page_top">18dp</dimen>
+    <dimen name="shell_launch_page_bottom">90dp</dimen>
+    <dimen name="shell_launch_section_gap">22dp</dimen>
+    <dimen name="shell_launch_control_gap">10dp</dimen>
+    <dimen name="shell_launch_metric_gap">8dp</dimen>
+    <dimen name="shell_launch_activity_height">16dp</dimen>
+    <dimen name="shell_launch_radius_card">18dp</dimen>
+    <dimen name="shell_launch_radius_status">16dp</dimen>
+    <dimen name="shell_launch_radius_pill">999dp</dimen>
+    <dimen name="shell_launch_row_height">54dp</dimen>
+    <dimen name="shell_launch_pill_height">44dp</dimen>
+    <dimen name="shell_launch_primary_height">52dp</dimen>
+    <dimen name="shell_launch_secondary_height">46dp</dimen>
+    <dimen name="shell_launch_log_height">184dp</dimen>
+    <!-- 启动日志区（docs/design/launch-log-20261101）。 -->
+    <dimen name="shell_launch_log_ibtn">40dp</dimen>
+    <dimen name="shell_launch_log_tab_height">36dp</dimen>
+    <dimen name="shell_launch_log_chip_height">32dp</dimen>
+    <dimen name="shell_launch_log_stage_icon">18dp</dimen>
+    <dimen name="shell_launch_icon">20dp</dimen>
+    <!-- 启动 / 停止 / 重启按钮内图标。 -->
+    <dimen name="shell_launch_action_icon">18dp</dimen>
+    <dimen name="shell_launch_metric_pad">14dp</dimen>
+
+    <!-- ========== 字号阶梯 ========== -->
+    <dimen name="shell_launch_title">28sp</dimen>
+    <dimen name="shell_launch_body">13sp</dimen>
+    <dimen name="shell_launch_meta">12sp</dimen>
+    <dimen name="shell_launch_caption">11sp</dimen>
+    <dimen name="shell_launch_row_text">14sp</dimen>
+    <dimen name="shell_launch_value">16sp</dimen>
+    <dimen name="shell_launch_button_text">14sp</dimen>
+    <dimen name="shell_launch_log_text">12sp</dimen>
+
+    <!-- ========== 顶部语境 / 标题 / 说明 ========== -->
+
+    <!-- 状态圆点：颜色由 LaunchFragment 按真实状态设置，默认静默。 -->
+    <style name="ShellLaunchDot" parent="">
+        <item name="android:textSize">10sp</item>
+        <item name="android:textColor">@color/shell_text_muted</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <!-- 语境小字：说明当前位于哪个页面、处于哪类真实状态。 -->
+    <style name="ShellLaunchEyebrow" parent="">
+        <item name="android:textSize">@dimen/shell_launch_caption</item>
+        <item name="android:textColor">@color/shell_text_muted</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:letterSpacing">0.04</item>
+    </style>
+
+    <!-- 每页唯一的大标题；文字仍由真实运行状态写入。 -->
+    <style name="ShellLaunchTitle" parent="">
+        <item name="android:textSize">@dimen/shell_launch_title</item>
+        <item name="android:textColor">@color/shell_text</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+    </style>
+
+    <style name="ShellLaunchDescription" parent="">
+        <item name="android:textSize">@dimen/shell_launch_body</item>
+        <item name="android:textColor">@color/shell_text_secondary</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
+
+    <!-- 活动条下方的真实状态 / 阶段说明。 -->
+    <style name="ShellLaunchMeta" parent="">
+        <item name="android:textSize">@dimen/shell_launch_meta</item>
+        <item name="android:textColor">@color/shell_text_muted</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+    </style>
+
+    <!-- ========== 三格状态 ========== -->
+    <style name="ShellLaunchMetric" parent="">
+        <item name="android:background">@drawable/bg_shell_status</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:padding">@dimen/shell_launch_metric_pad</item>
+        <item name="android:gravity">start</item>
+    </style>
+
+    <!-- 三格很窄：数值单行按可用宽度缩放，标签允许换行；都不伪造内容。 -->
+    <style name="ShellLaunchMetricValue" parent="">
+        <item name="android:textSize">@dimen/shell_launch_value</item>
+        <item name="android:textColor">@color/shell_text</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:autoSizeTextType">uniform</item>
+        <item name="android:autoSizeMinTextSize">10sp</item>
+        <item name="android:autoSizeMaxTextSize">@dimen/shell_launch_value</item>
+    </style>
+
+    <style name="ShellLaunchMetricLabel" parent="">
+        <item name="android:textSize">@dimen/shell_launch_caption</item>
+        <item name="android:textColor">@color/shell_text_muted</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+        <item name="android:layout_marginTop">6dp</item>
+    </style>
+
+    <!-- ========== 快捷行 / 日志区 ========== -->
+    <style name="ShellLaunchSectionTitle" parent="">
+        <item name="android:textSize">@dimen/shell_launch_meta</item>
+        <item name="android:textColor">@color/shell_text_secondary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <!-- 快捷行：图标由 drawableStart 提供，点按区域整行可点。 -->
+    <style name="ShellLaunchRow" parent="">
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minHeight">@dimen/shell_launch_row_height</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:textColor">@color/shell_text</item>
+        <item name="android:textSize">@dimen/shell_launch_row_text</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:drawableTint">@color/shell_text_muted</item>
+    </style>
+
+    <!-- 小型胶囊按钮（复制 / 导出 / 跟随）。 -->
+    <style name="ShellLaunchPillButton" parent="Widget.DSHA.Button">
+        <item name="android:background">@drawable/bg_shell_pill</item>
+        <item name="android:textColor">@color/shell_text_secondary</item>
+        <item name="android:textSize">@dimen/shell_launch_meta</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minWidth">64dp</item>
+        <item name="android:minHeight">@dimen/shell_launch_pill_height</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+    </style>
+
+    <!-- 跟随 / 查看最新：可点的胶囊文字，不做假开关。 -->
+    <style name="ShellLaunchPill" parent="">
+        <item name="android:background">@drawable/bg_shell_pill</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minWidth">64dp</item>
+        <item name="android:minHeight">@dimen/shell_launch_pill_height</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:textColor">@color/shell_text_secondary</item>
+        <item name="android:textSize">@dimen/shell_launch_meta</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="ShellLaunchLatest" parent="ShellLaunchPill">
+        <item name="android:textColor">@color/shell_accent</item>
+    </style>
+
+    <!-- ========== 主 / 次操作 ========== -->
+    <style name="ShellLaunchPrimary" parent="Widget.DSHA.PrimaryButton">
+        <item name="android:minHeight">@dimen/shell_launch_primary_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:textSize">@dimen/shell_launch_button_text</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/shell_on_accent</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <!-- MaterialButton 图标：贴文字起始侧、与文字整组居中；尺寸用 dp，不随字体缩放。 -->
+        <item name="iconGravity">textStart</item>
+        <item name="iconSize">@dimen/shell_launch_action_icon</item>
+        <item name="iconPadding">8dp</item>
+        <item name="iconTint">@color/shell_on_accent</item>
+    </style>
+
+    <style name="ShellLaunchSecondary" parent="Widget.DSHA.Button">
+        <item name="android:minHeight">@dimen/shell_launch_secondary_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:textSize">@dimen/shell_launch_body</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/shell_text</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+    </style>
+
+    <!-- ========== UI v5 方案 A：主操作旁的轻量停止 / 重启，与就绪轨道 ========== -->
+    <style name="ShellLaunchQuiet" parent="Widget.DSHA.Button">
+        <item name="android:background">@drawable/bg_action_plain</item>
+        <item name="android:minHeight">@dimen/touch_min</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:textSize">@dimen/shell_launch_body</item>
+        <item name="android:textColor">@color/shell_text_secondary</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconSize">@dimen/shell_launch_action_icon</item>
+        <item name="iconPadding">8dp</item>
+        <item name="iconTint">@color/shell_text_secondary</item>
+    </style>
+
+    <style name="ShellLaunchRailItem" parent="">
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">start</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+        <item name="android:paddingEnd">8dp</item>
+    </style>
+
+    <style name="ShellLaunchRailLabel" parent="">
+        <item name="android:textSize">@dimen/shell_launch_caption</item>
+        <item name="android:textColor">@color/shell_text_muted</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:layout_marginTop">10dp</item>
+    </style>
+
+    <style name="ShellLaunchRailValue" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/shell_text</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:layout_marginTop">5dp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <!-- ========== 日志正文 ========== -->
+    <style name="ShellLaunchLog" parent="">
+        <item name="android:textSize">@dimen/shell_launch_log_text</item>
+        <item name="android:textColor">@color/shell_text_secondary</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+        <item name="android:textIsSelectable">true</item>
+    </style>
+
+    <!-- ========== 启动日志区（docs/design/launch-log-20261101） ========== -->
+    <style name="ShellLaunchLogTitle" parent="">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/shell_text</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <!-- 标题下的状态小字：阶段 · 用时 · 提示数，单行省略。 -->
+    <style name="ShellLaunchLogMeta" parent="">
+        <item name="android:textSize">@dimen/shell_launch_caption</item>
+        <item name="android:textColor">@color/shell_text_muted</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+
+    <style name="ShellLaunchLogIconButton" parent="">
+        <item name="android:background">@drawable/bg_launch_log_ibtn</item>
+        <item name="android:scaleType">center</item>
+        <item name="android:padding">11dp</item>
+        <item name="android:tint">@color/shell_text_secondary</item>
+    </style>
+
+    <style name="ShellLaunchLogTab" parent="">
+        <item name="android:background">@drawable/bg_launch_log_seg_tab</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">@dimen/shell_launch_log_tab_height</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:textSize">@dimen/shell_launch_meta</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/shell_text_secondary</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="ShellLaunchLogChip" parent="">
+        <item name="android:background">@drawable/bg_launch_log_chip</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">@dimen/shell_launch_log_chip_height</item>
+        <item name="android:paddingStart">11dp</item>
+        <item name="android:paddingEnd">11dp</item>
+        <item name="android:textSize">@dimen/shell_launch_caption</item>
+        <item name="android:textColor">@color/shell_text_secondary</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- ========== 顶栏「+」气泡弹窗（T145） ========== -->
+    <dimen name="shell_quick_action_width">252dp</dimen>
+    <dimen name="shell_quick_action_shadow">8dp</dimen>
+    <dimen name="shell_quick_action_row">46dp</dimen>
+    <dimen name="shell_quick_action_row_icon">20dp</dimen>
+
+    <style name="ShellQuickActionRow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minHeight">@dimen/shell_quick_action_row</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:paddingBottom">10dp</item>
+    </style>
+
+    <style name="ShellQuickActionIcon" parent="">
+        <item name="android:layout_width">@dimen/shell_quick_action_row_icon</item>
+        <item name="android:layout_height">@dimen/shell_quick_action_row_icon</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <style name="ShellQuickActionLabel" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">13dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textColor">@color/shell_text</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="ShellQuickActionSub" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">3dp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textColor">@color/shell_text_muted</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
+    <style name="ShellLaunchLogFollow" parent="">
+        <item name="android:background">@drawable/bg_launch_log_follow</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">@dimen/shell_launch_log_chip_height</item>
+        <item name="android:paddingStart">11dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:drawablePadding">6dp</item>
+        <item name="android:textSize">@dimen/shell_launch_caption</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/shell_accent</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <style name="ShellLaunchLogDigest" parent="">
+        <item name="android:textSize">@dimen/shell_launch_caption</item>
+        <item name="android:textColor">@color/shell_text_muted</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+
+    <style name="ShellLaunchLogExpand" parent="">
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:scaleType">center</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:tint">@color/shell_text_muted</item>
+    </style>
+</resources>

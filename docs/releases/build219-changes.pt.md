@@ -1,0 +1,9 @@
+# DSHA 0.2.1-rc.3-20261031.2130-dsh0.2.1-rc.5 / build219
+
+- Conclui a reformulação do primeiro acesso do build218: guia em quatro passos (boas-vindas → finalidade → permissões → concluído), cápsula de implantação em segundo plano e página de manutenção do ambiente de execução em tela cheia; a primeira implantação e a atualização por cima usam a mesma entrada de manutenção.
+- Correções de feedback em dispositivo: a implantação em segundo plano dentro do guia, quando recuperada pelo sistema, volta à mesma etapa; a escolha de «finalidade» agora define as recomendações; o cartão de bateria segue o estado «permitir uso em segundo plano» do sistema; configurações de clone do Stellar mostram permissões para o gerenciador real.
+- Ao detectar um gerenciador Stellar, a página de permissões do dispositivo e o cartão do guia usam o nome real do gerenciador, em vez do nome antigo fixo.
+- A entrada de otimização de bateria abre diretamente a página de bateria deste aplicativo; os textos do cartão e dos botões passam a usar o sentido «permitir uso em segundo plano».
+- A atualização por cima volta à página de manutenção em tela cheia; se o disco tiver uma transação de manutenção ou um teste isolado inacabado, o app primeiro confirma que o processo de teste antigo terminou e fecha o local, e só então entra na manutenção/atualização, em vez de iniciar uma atualização fadada a falhar.
+- Em telas de toque largas (tablet em paisagem / CSS ≥1024px) as ações arquivar/fixar vão para o menu ⋯: corrige o título comprimido a cerca de 55px na barra lateral de 280px, deixando apenas «hora + ⋯» na linha. O dsh-web-mobile embutido traz um patch local antecipado; remova-o quando o PR #256 upstream for mesclado.
+- O versionCode sobe para 219; a revisão DSHA permanece 0.2.1-rc.3 e o DSH embutido 0.2.1-rc.5; o build e a aceitação seguem este CI run e o recibo do Release, e esta rodada não declara aceitação de instalação por cima em dispositivo real.

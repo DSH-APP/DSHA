@@ -34,6 +34,7 @@ import org.robolectric.annotation.Implements;
 public final class RuntimeLauncherAssetsAndroidTest {
   private static final String BRIDGE = "// signed bridge fixture\n";
   private static final String CONSENT = "// signed consent fixture\n";
+  private static final String PORT = "// signed port fixture\n";
   private static final String PROOFS = "{\"schema\":1,\"packages\":[]}\n";
   private static int preloadReads;
   private static final java.util.Set<Path> modeledLinks = new java.util.HashSet<>();
@@ -58,7 +59,8 @@ public final class RuntimeLauncherAssetsAndroidTest {
         throw new AssertionError("Launcher must never follow a LINK fact");
       if (file.getPath().contains("runtime-launcher-assets")
           && (file.getName().equals("bridge-token-compat.cjs")
-              || file.getName().equals("native-consent.cjs"))) preloadReads++;
+              || file.getName().equals("native-consent.cjs")
+              || file.getName().equals("bridge-port.cjs"))) preloadReads++;
       return super.read(file, node);
     }
   }
@@ -75,6 +77,7 @@ public final class RuntimeLauncherAssetsAndroidTest {
           Map.of(
                   "bridge-token-compat.cjs", BRIDGE,
                   "native-consent.cjs", CONSENT,
+                  "bridge-port.cjs", PORT,
                   "managed-package-proofs.json", PROOFS)
               .entrySet()) {
         zip.putNextEntry(new java.util.zip.ZipEntry("assets/" + item.getKey()));
@@ -184,13 +187,24 @@ public final class RuntimeLauncherAssetsAndroidTest {
     preloadReads = 0;
     ProcessBuilder builder = launcher().builder("true", spec());
     assertEquals(prepared, boundPreloads(builder));
-    assertEquals(Integer.getInteger("dsha.expectedPreloadReads", 2).intValue(), preloadReads);
+    assertEquals(Integer.getInteger("dsha.expectedPreloadReads", 3).intValue(), preloadReads);
     assertTrue(builder.environment().get("NODE_OPTIONS").contains(RuntimeLauncherAssets.GUEST));
     String expected =
         com.deepseekharness.app.backup.BackupArchive.hex(
             com.deepseekharness.app.backup.BackupArchive.sha()
                 .digest(PROOFS.getBytes(StandardCharsets.UTF_8)));
     assertEquals(expected, builder.environment().get("DSHA_MANAGED_PACKAGE_PROOFS_SHA256"));
+  }
+
+  @Test
+  public void portDiscoveryHelperIsPublishedAndDamageCreatesANewVerifiedSet() throws Exception {
+    Path before = RuntimeLauncherAssets.prepare(context).toPath();
+    assertEquals(PORT, Files.readString(before.resolve("bridge-port.cjs")));
+    Files.writeString(before.resolve("bridge-port.cjs"), "damaged\n");
+    Path after = RuntimeLauncherAssets.prepare(context).toPath();
+    assertNotEquals(before, after);
+    assertEquals(PORT, Files.readString(after.resolve("bridge-port.cjs")));
+    assertEquals("damaged\n", Files.readString(before.resolve("bridge-port.cjs")));
   }
 
   @Test
@@ -227,7 +241,7 @@ public final class RuntimeLauncherAssetsAndroidTest {
     preloadReads = 0;
     launcher.bindPreloads(argv);
     launcher.environment(new ProcessBuilder("fixture"), spec());
-    assertEquals(4, preloadReads);
+    assertEquals(6, preloadReads); // 两次独立调用各核验桥兼容、授权 SDK、端口解析三份资产。
     assertEquals(List.of("-b", argv.get(1)), argv);
     assertTrue(argv.get(1).endsWith(":" + RuntimeLauncherAssets.GUEST));
   }

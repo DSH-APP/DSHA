@@ -36,6 +36,7 @@ flowchart LR
 | File | What to read |
 |---|---|
 | [VirtualScreenActivity][activity] | Native creation, application launch, preview, input results and explicit node panel |
+| [VirtualScreenForeground][foreground] / [VirtualScreenStrip][strip] | In-page strip and full preview: modes, yielding and persisted collapse |
 | [VirtualScreenManager][manager] | Single application-level orchestrator, identity snapshots, serialized operations and exit convergence |
 | [VirtualScreenCore][core] | Privileged-process startup, loopback server, display and input routing |
 | [VirtualScreenLauncher][launcher] / [VirtualScreenChannels][channels] | Fixed-command construction and available-channel selection |
@@ -48,7 +49,7 @@ flowchart LR
 
 ## 3. Creation and the managed handshake
 
-Native `start()` and `/app/vscreen/create` both reach the Manager's `startOrdered()`. It checks flavor, API, existing lifecycle and cleanup evidence first. An unresolved instance cannot be bypassed by creating another. The same Manager owns the current Core; callers should inspect `status` first and reuse an existing target. `VirtualScreenPolicy.phoneSize()` normalizes creation orientation. Do not infer virtual dimensions from the native screen size.
+Native `start()` and `/app/vscreen/create` both reach the Manager's `startOrdered()`. It checks flavor, API, existing lifecycle and cleanup evidence first. An unresolved instance cannot be bypassed by creating another. The same Manager owns the current Core; callers should inspect `status` first and reuse an existing target. `VirtualScreenPolicy.phoneSize()` normalizes creation orientation. Do not infer virtual dimensions from the native screen size. When the user explicitly picks a display size, the Manager passes only a whitelist preset id and the orientation to Core (see 3.1); requests without a preset keep going through `phoneSize()` at 320 dpi, so the default creation pixels do not change.
 
 ```mermaid
 sequenceDiagram
@@ -71,6 +72,21 @@ sequenceDiagram
 `VirtualScreenLauncher.launchCommand()` points only to the installed package and fixed Core class. Core `main()` checks the package name, installed-APK classpath, API and dynamic-port requirement. The `--launch` parent starts `--server` with `setsid`, reads bootstrap, confirms reachability and explicitly exits. Parent exit is not resident-Core exit; they have different roles. Core generates its secret and rejects putting it in a `--token` argument. The handshake carries port, secret and birth identity. A success word alone cannot establish startup.
 
 [VirtualScreenChannels][channels] normally checks Root, Shizuku and ADB availability in that order. On API 37 with ADB connected, code places ADB before Shizuku; Root remains first. Availability still requires the corresponding local authorization. The application cannot thereby grant itself Root or pairing permission. For ADB, see [AdbBridge][adb] and [AdbVirtualScreenStart][adb-start]. The Manager issues a one-time ticket bound to the command, epoch and deadline, through plan authorization and commit. It travels through a dedicated path and must not appear in logs, command lines or ordinary terminal commands. Unknown startup results retain their evidence. Starting again through another channel can also duplicate creation; timeout cannot establish that nothing ran.
+
+### 3.1 Display-size whitelist and observation budget
+
+The default stays `1008×1792 @320` (16:9, logical 504×896 dp), matching `phoneSize()` normalization in [VirtualScreenPolicy][policy]. The user explicitly picks a whitelist preset on the virtual-screen page (“Display size”); the Manager reads it through [VirtualScreenDisplaySettings][display-settings] and passes only `preset=<id>` plus `orientation` to Core, which revalidates the whitelist with [VirtualScreenDisplayPreset][display-preset].
+
+| Preset id | Pixels (portrait) | dpi | Logical dp | Ratio | Notes |
+|---|---|---:|---:|---|---|
+| `default` | 1008×1792 | 320 | 504×896 | 16:9 | Default, unchanged |
+| `compat-720` | 720×1600 | 320 | 360×800 | 20:9 | 360 dp compatibility baseline |
+
+Unknown ids, blank values and over-budget sizes fall back to the default; arbitrary sizes or dpi values are not accepted, so creation parameters do not become a new resource surface. A preset is created at its whitelist pixels and does **not** go through the legacy 16:9 + multiple-of-144 `phoneSize()` normalization; that path remains only for requests without a preset. The choice applies to the next create or rotate rebuild only. A running display is not silently resized, and Core generation, frame identity and input gates are unchanged.
+
+The observation budget shares one constant source with [VirtualScreenObservedPixels][observed-pixels]: at most two originals, 24 MiB total. The default is about 13.8 MiB for two copies and `compat-720` about 8.8 MiB. 1440×2560 takes about 28.1 MiB for two copies, exceeding the budget, so it is excluded from the whitelist; enabling it requires adjusting and re-accounting the budget first, not just adding a row. `VirtualScreenDisplayPresetTest` guards that every whitelist entry fits.
+
+**Device status**: target-app layout, IME behavior, screenshot size and multi-window behavior under `compat-720` are **not yet verified on a real device** and are not claimed as compatible. The default keeps the existing build baseline, whose device evidence covers only the default size.
 
 ## 4. Identity is more than a displayId
 
@@ -101,6 +117,20 @@ There are two image paths, which must be tested separately when changed:
 `ObservedPixels` currently allows 30 seconds, at most two retained images and 24 MiB of raw bitmaps. Its budget is not JPEG length; a large original resolution can be rejected outright. Native thumbnails and Agent originals cannot share an undifferentiated coordinate system. `status` only reads state; **it does not issue proof that an image was observed**.
 
 [VirtualScreenPreviews][previews] coalesces requests from multiple native presentation owners, each with its decoded bitmap and main-thread callback. A subscription `Lease` delivers only frames from the current epoch and records the generation/sequence actually adopted. A failure gap revokes input identity. Recovery must redeliver even the same sequence, rather than losing it to deduplication. [PreviewView][preview-view] may retain the previous image on same-generation `STALE_FRAME` / `FRAME_NOT_READY` to reduce flicker. **Retaining an image does not retain input authority**: the old image may remain visible, but touch stays disabled until a valid frame is adopted again.
+
+### 5.1 In-page presentation: strip / full preview / off
+
+[VirtualScreenForeground][foreground] decides what appears inside a host page; the mode and collapse intent are persisted by [VirtualScreenPreviewSettings][preview-settings] (keys `vscreen_preview_mode` / `vscreen_preview_collapsed`, see [VirtualScreenPreviewPolicy][preview-policy]):
+
+| Mode | Behaviour |
+|---|---|
+| Strip (default) | [VirtualScreenStrip][strip]: a 3dp blue breathing line plus target text at the top, 27dp visual height and a 40dp tap target; display only, never forwards touch to the virtual screen; tapping opens the control page and `×` collapses it |
+| Full preview | The old 172dp in-page window; drag the title, tap the picture to open the control page |
+| Off | No preview at all |
+
+The strip target only comes from the Manager's read-only `targetStatus` (`package` when `packageVerified` is true). When it is unavailable the strip shows "Operating the virtual screen" and never guesses from the last launch record. Refreshing is a read-only status every four seconds: it takes no frames, registers no observation and issues no frame or node credential, so the strip is not input authority and does not change ADR0003 observation/input identity. The strip and window are removed when the virtual screen stops or is revoked, the host page leaves the foreground, the current page is the virtual-screen page itself, or the system floating preview shows; that floating window keeps its original opt-in permission path.
+
+Collapse survives virtual-screen generations and app restarts (no more per-generation memory) and can only be reopened through **Settings → Device capability authorization → Virtual screen preview**; choosing a mode clears the collapse intent and shows it again. When system animations are off or motion is reduced, the breathing line stays static and fully opaque.
 
 ## 6. Raw coordinates and injection
 
@@ -190,13 +220,45 @@ Manager `closeExpected()` verifies Core UUID, and `detachLocked()` invalidates o
 | START_UNKNOWN / DISCONNECTED | status pending, cleanup identity and read-only probing through the original channel | create again or replay launch through another channel |
 | CLOSE_UNKNOWN | Release ACK, birth proof, journal commit and cleanup reason | Declare STOPPED just because the picture disappeared |
 | FRAME_NOT_READY / STALE_FRAME | Generation, latest frame, recent recovery from no-frame state and adoption callback | Retain an image while leaving touch enabled |
+| Assistant see: VSCREEN_NO_WINDOW / FRAME_PENDING / FRAME_STALLED | windowState, windowEvidence, foregroundPackage, sinceReadyOrLaunchMs, nextAction | Wait or recreate on an empty display; treat UNKNOWN as empty when accessibility is unavailable |
+| Assistant tree: NO_UNIQUE_APPLICATION_WINDOW | applicationWindowCount, windowAmbiguous, focusedWindowId, windowDiagnostic | Continue with a self-chosen application window; re-read the same ambiguous screen |
 | FRAME_NOT_OBSERVED / FRAME_EXPIRED | requested/current/observed frame fields and TTL | Replace the old image's frame number with a new status frame |
 | STALE_TREE / STALE_NODE | Actual window/package, service state and tree lifetime | Refresh automatically and resend the old business action |
 | NATIVE_CONTROL_REVOKED | Paused page, cancelled panel or changed Core | Reactivate the old owner |
 | INPUT_RESULT_UNKNOWN | Actual application image/state; retain the original action receipt | Repeat the same action with other coordinates/nodes/channels |
 | inputUnavailable / no nodes | Missing backend members, system permissions and target-app semantics | Claim every button must be controllable |
 
+Assistant-side `see` refines Core `FRAME_NOT_READY` (`util/VirtualScreenObservationHint`; `legacyError` keeps the original code): no window on the display and no foreground package from Core → `VSCREEN_NO_WINDOW` / `LAUNCH_APP_FIRST`; a window less than 10 seconds after ready or the latest launch → `FRAME_PENDING` / `WAIT_AND_SEE_AGAIN`; still no frame after 10 seconds → `FRAME_STALLED` / `REPORT_TO_USER`; without accessibility and without a Core foreground package the cases cannot be separated, so `FRAME_NOT_READY` / `LAUNCH_APP_OR_WAIT` remains. When see degrades to an image only, `availabilityReason` is split into `ANCHOR_ACCESSIBILITY_NOT_ENABLED` / `_NOT_CONNECTED`, `ANCHOR_NO_WINDOW`, `ANCHOR_TARGET_EVIDENCE_UNAVAILABLE`, `ANCHOR_CONSENT_EVIDENCE_UNAVAILABLE` and `ANCHOR_REQUEST_EVIDENCE_REQUIRED`; tree/node/editor without a window keep `error` `ACCESSIBILITY_UNAVAILABLE` and add `reason` and `nextAction`. All of these are read-only failures; no gate is relaxed, nothing is replayed and no display is switched. The virtual-screen page still reads the Core preview directly, so `FRAME_NOT_READY` keeps its waiting meaning there.
+
 Collect redacted technical fields first: error code, phase, orientation/dimensions, state, frame relationships, backend type and proof classification. Do not publish real tokens, handshakes, cleanup handles, user input, tree contents or personal data in screenshots. Native `lastStartOutcome()` / `safeStartOutcome()` supply a startup technical summary without secrets/images. Before reading logs, identify their source, APK, flavor and runtime phase. A PASS from another package cannot be reassigned.
+
+### 12.1 Minimal window evidence and actionable multi-window hints (T98)
+
+Failure replies are purely additive: the existing `windowState` / `windowEvidence` / `windowDiagnostic`
+semantics do not change and no authorization surface is added (`util/VirtualScreenWindowEvidence`, pure logic).
+
+- The refined `see` `FRAME_NOT_READY` reply and the tree/node/editor/anchor window-unavailable reply include
+  `applicationWindowCount` / `systemWindowCount` / `inputMethodWindowCount`, `focusedWindowId` /
+  `activeWindowId` and `windowAmbiguous` when accessibility is readable. When exactly one window is selectable
+  they also carry `targetWindowDisplayId` / `targetWindowId` / `targetWindowType` / `targetWindowLayer` /
+  `targetWindowBounds` / `targetWindowFocused` / `targetWindowActive` / `targetWindowTitle` /
+  `targetWindowPackage`.
+- Fields come only from the accessibility window inventory: titles drop control characters, collapse
+  whitespace and are truncated to 64 code points; package names are kept only when they match the
+  package-name alphabet, and invalid values are omitted. No node text, control content, screenshot or complete
+  window list is included. Window ids are reused and are not long-term identities.
+- `NO_UNIQUE_APPLICATION_WINDOW` is separated by counts: multiple application windows side by side (split
+  screen/floating window) → `reason=VSCREEN_WINDOW_AMBIGUOUS`,
+  `nextAction=ASK_USER_TO_CLOSE_SPLIT_SCREEN`; only system/IME windows and no application window →
+  `reason=VSCREEN_NO_WINDOW`, `nextAction=LAUNCH_APP_FIRST`. Without evidence the reply stays `SEE_AGAIN`, so
+  the assistant does not tell the user to close split screen without proof.
+- Evidence only explains failures and next steps; it never participates in authorization, selection or retry.
+  The semantic path still accepts only the unique result of `VirtualScreenWindowPolicy.selectDetailed`, and the
+  anchor path only accepts the windowId carried by the original observation (duplicate ids are refused with
+  `ANCHOR_WINDOW_AMBIGUOUS`). Multi-window never causes an automatic window switch.
+- Real-device acceptance: multiple windows/split screen (ask the user to close split screen instead of choosing
+  a window), IME present (only `inputMethodWindowCount`; never counted as an application window) and
+  FLAG_SECURE pages (when screenshots fail, window evidence still carries metadata only and no content).
 
 ## 13. Modification guide and regression entry points
 
@@ -208,13 +270,14 @@ Collect redacted technical fields first: error code, phase, orientation/dimensio
 | Capture, preview and gestures | Pixels, Previews, PreviewView, PreviewInputGate | PixelsTest, PreviewContinuityTest, PreviewAdoptionTest, PreviewInputGateTest, NativeInputFrameBoundaryTest |
 | Nodes and native panel | Accessibility, NativeControls, Activity, NativeScreenControlLease | VirtualScreenNativeControlsTest, ActivityNodeControlsTest, ActivityLayoutTest |
 | Original-image anchors | ObservedPixels, ObservedControl, AnchorProof | VirtualScreenObservedPixelsTest, VirtualScreenAnchoredChainTest; test-vscreen-anchored.mjs |
+| Window evidence and multi-window hints | WindowPolicy, WindowEvidence, ScreenTargetResolver, ObservationHint, Manager/HttpShellService | VirtualScreenWindowPolicyTest, VirtualScreenWindowEvidenceTest, VirtualScreenObservationHintTest, ScreenTargetResolverEvidenceTest |
 | DSH tools/bridge | server.cjs, VscreenBridgeRequest, HttpShellService | VscreenBridgeRequestTest, VscreenAnchoredGrammarTest; test-vscreen-bundle.mjs, test-vscreen-manager-http.py |
 
 Test names in the table omit shared prefixes where applicable. They live in [vscreen tests][tests] or [util tests][util-tests]. `AdbVirtualScreenStartTest` lives in bridge tests; scripts are under [tools](../../tools). Do not test only a copied helper: layout/node-panel checks should cover the real Activity, and chain tests should cross real orchestration and transport boundaries. A resource-owning fixture that fails during construction must still release its own Core to prevent later CORE_ALREADY_BOUND contamination. Before changing input, identify raw, semantic or anchored mode; removing identity checks is not a usability fix. UI changes must cover long errors, both orientations, keyboard safe areas, panel cancellation, background revocation and complete submission of long fields. Prompt changes should inspect real assembled tool instructions and retain image content and isError, rather than only searching for a string. After asset changes, the single build owner regenerates descriptor/plugin metadata and verifies actual APK members. Do not edit aggregate assets in parallel.
 
 ## 14. Support and acceptance boundaries
 
-`VirtualScreenManager.supported()` requires non-LOW_ANDROID and API at least 30. Standard has minSdk 30, but meeting the version does not prove that a ROM's hidden APIs, display creation or injection work. Low does not expose this production virtual-screen path even on a newer Android version. Its skipped tests cannot count as capability passes. The physical screen independently uses accessibility and is not selected automatically when virtual screens are unavailable. A display may be created without a target window. Applications may refuse to launch or render on an external display. Secure windows, passwords, system input methods, Canvas, animations and absent accessibility trees may constrain functionality. Android accepting an event or ACTION_SET_TEXT does not verify the target application's business result; observe again after an action. Software tests prove contracts for their fixtures, not phone frame rate, universal touch support or all-device compatibility. Device conclusions must bind the actual APK and record exact operations, receipts, screen changes and unexecuted scope. A delivery with device acceptance paused cannot imply current phone verification, nor authorize device operations to fill the gap.
+`VirtualScreenManager.supported()` requires API 30+; build209 removed the LOW_ANDROID branch with the low variant. Standard has minSdk 30, but meeting the version does not prove that a ROM's hidden APIs, display creation or injection work. The physical screen independently uses accessibility and is not selected automatically when virtual screens are unavailable. A display may be created without a target window. Applications may refuse to launch or render on an external display. Secure windows, passwords, system input methods, Canvas, animations and absent accessibility trees may constrain functionality. Android accepting an event or ACTION_SET_TEXT does not verify the target application's business result; observe again after an action. Software tests prove contracts for their fixtures, not phone frame rate, universal touch support or all-device compatibility. Device conclusions must bind the actual APK and record exact operations, receipts, screen changes and unexecuted scope. A delivery with device acceptance paused cannot imply current phone verification, nor authorize device operations to fill the gap.
 
 [activity]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenActivity.java
 [manager]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenManager.java
@@ -237,9 +300,15 @@ Test names in the table omit shared prefixes where applicable. They live in [vsc
 [pixels]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPixels.java
 [observed-pixels]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenObservedPixels.java
 [previews]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviews.java
+[foreground]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenForeground.java
+[strip]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenStrip.java
+[preview-settings]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewSettings.java
+[preview-policy]: ../../app/src/main/java/com/deepseekharness/app/util/VirtualScreenPreviewPolicy.java
 [preview-view]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewView.java
 [preview-gate]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenPreviewInputGate.java
 [policy]: ../../app/src/main/java/com/deepseekharness/app/util/VirtualScreenPolicy.java
+[display-preset]: ../../app/src/main/java/com/deepseekharness/app/util/VirtualScreenDisplayPreset.java
+[display-settings]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenDisplaySettings.java
 [input]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenInput.java
 [observed-control]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenObservedControl.java
 [anchor-proof]: ../../app/src/main/java/com/deepseekharness/app/vscreen/VirtualScreenAnchorProof.java

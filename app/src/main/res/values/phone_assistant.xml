@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="phone_assistant">悬浮助手</string>
+  <string name="phone_assistant_detail">选择这部手机上的真实 DSH 会话，悬浮聊天与暂停控制。</string>
+</resources>

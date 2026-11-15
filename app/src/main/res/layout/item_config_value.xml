@@ -1,0 +1,3 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- 运行配置行内当前值：右对齐次要色 + 小箭头；底部选择面板仍由 DshaSelectView 渲染。 -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" style="@style/ConfigRowValue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="36dp" android:gravity="end|center_vertical" app:drawableEndCompat="@drawable/ic_ui2_chevron" android:drawablePadding="4dp" app:drawableTint="@color/shell_text_muted" />

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UI v5 方案 A 启动主页就绪轨道的图标小方块。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_accent_soft" />
+    <corners android:radius="10dp" />
+</shape>

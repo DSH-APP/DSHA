@@ -29,7 +29,7 @@ import org.robolectric.annotation.Config;
 public final class VirtualScreenCloseReconcileTest {
   @org.junit.Before
   public void standardVirtualScreenFeatureOnly() {
-    org.junit.Assume.assumeFalse(com.deepseekharness.app.BuildConfig.LOW_ANDROID);
+    org.junit.Assume.assumeFalse(false);
   }
 
   private static final String BOOT = "11111111-2222-3333-4444-555555555555";

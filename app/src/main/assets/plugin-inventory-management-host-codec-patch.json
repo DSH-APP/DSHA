@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-host-plugin-inventory/lib/typert.host.js",
-  "sourceSha256": "abc752c26467d5fec28975bfef0c49e25eedd2f95cf991b9493c7ff0a4f0b626",
+  "sourceSha256": "d91e2c74830a5e48b87f44f69c6f9318aef65832520b326ee8751bfac306ac1b",
   "patches": [
     {
       "before": "  methods: {\n    'pluginInventory/list': {",

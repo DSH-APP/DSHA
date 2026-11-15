@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UI v5 方案 A 启动主页插图外环：浅描边圆角方块，代码里旋转 13°。只用 shell_* token。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_accent_soft" />
+    <corners android:radius="29dp" />
+    <stroke android:width="1dp" android:color="@color/shell_line_strong" />
+</shape>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 平板走左侧导航栏，没有悬浮胶囊，页底恢复普通余量。 -->
+<resources>
+    <dimen name="shell_page_bottom">30dp</dimen>
+    <!-- 没有悬浮胶囊：固定在页底的栏贴页底，不留空白。 -->
+    <dimen name="shell_nav_clearance">0dp</dimen>
+</resources>

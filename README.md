@@ -9,10 +9,8 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"></a>
   <a href="https://github.com/DSH-APP/DSHA/releases/latest"><img src="https://img.shields.io/github/v/release/DSH-APP/DSHA?sort=date&color=blue" alt="release"></a>
   <a href="https://github.com/DSH-APP/DSHA/stargazers"><img src="https://img.shields.io/github/stars/DSH-APP/DSHA?style=flat" alt="stars"></a>
-  <img src="https://img.shields.io/badge/Android-6%2B%20%2F%2011%2B-3DDC84?logo=android&logoColor=white" alt="android">
+  <img src="https://img.shields.io/badge/Android-11%2B-3DDC84?logo=android&logoColor=white" alt="android">
   <img src="https://img.shields.io/badge/arch-arm64--v8a-lightgrey" alt="arch">
-  <a href="https://afdian.com/a/dsha_apk"><img src="https://img.shields.io/badge/%E7%88%B1%E5%8F%91%E7%94%B5-%E8%B5%9E%E5%8A%A9-946CE6?logo=afdian&logoColor=white" alt="爱发电"></a>
-  <a href="https://qm.qq.com/q/N5aZSlnmgM"><img src="https://img.shields.io/badge/QQ%E7%BE%A4-975836806-1EBAFC?logo=qq&logoColor=white" alt="QQ群"></a>
 </p>
 
 <p align="center">
@@ -21,83 +19,62 @@
 
 > 🤖 下一个 AI / 开发者请先读 **[AGENTS.md](AGENTS.md)**（项目结构、启动契约、踩过的坑），不要先全库扫描。
 
-> 正式版 **[v0.2.1-rc.2 · build190](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.1-rc.2)**：虚拟屏、全局授权、新旧共存及移动 UI 更新。[中文文档索引](docs/documentation-index.md) · [English](docs/en/index.md)。
+> 正式版 **[v0.2.2 · build357](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.2)**（`0.2.2-20261111.0200-dsh0.2.2-rc.1`）：内容与 build356 一致，按官方格式交付 APK 与完整源码包。完整改动见 [CHANGELOG.md](CHANGELOG.md)。
 
-## ❤️ 赞助商
+## 当前状态
 
-<table>
-<tr>
-<td width="180"><a href="https://api-zeno.com"><img src="docs/sponsors/api-zeno.jpg" alt="API Zeno" width="150"></a></td>
-<td>感谢 <a href="https://api-zeno.com">API-Zeno</a> 赞助本项目！API-Zeno 汇集国内外主流 AI 模型，满足学习、创作、编程等需求。平台注重实际使用体验，提供操作指南、问题答疑与技术支持，支持在 DSHA 中接入使用。新用户注册即赠 5 元体验额度，欢迎体验！</td>
-</tr>
-</table>
-
-<table>
-<tr>
-<td width="180"><a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X"><img src="docs/sponsors/lvluo.jpg" alt="绿萝中转站" width="150"></a></td>
-<td>感谢 <a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X">绿萝中转站</a> 赞助本项目！绿萝中转站是一个包含多种厂家模型的 AI 平台，多款主流大模型随开随用，写代码、生成图片等等都能在同一平台调用。国内外模型应有尽有，上新及时，服务周到，价格美丽。使用本链接注册可享受充值 105% 优惠。</td>
-</tr>
-</table>
-
-<table>
-<tr>
-<td width="180"><a href="https://ai.onyxaxis.org/"><img src="docs/sponsors/axis-ai.jpg" alt="Axis AI" width="150"></a></td>
-<td>感谢 <a href="https://ai.onyxaxis.org/">Axis AI</a> 赞助本项目！Axis AI 是一个免费的公益 AI 平台，多款主流大模型随开随用，聊天、写代码、生成图片都能在同一平台内实现。</td>
-</tr>
-</table>
-
----
+| 项目 | 值 |
+|---|---|
+| 应用名 | **DSHA**（测试变体为 `DSHA Test`） |
+| 版本 | `0.2.2-20261111.0200-dsh0.2.2-rc.1` |
+| versionCode | 357 |
+| 包名 | `dsh.android.client`（测试变体 `dsh.android.client.SunsetRNE`） |
+| 签名 | 历史发布证书，SHA-256 `e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5` |
+| 系统 | Android 11+（API 30）/ arm64-v8a；**Android 10 及以下不再支持** |
+| 内置环境 | Ubuntu 24.04 arm64 · Node.js 24 · pnpm 10.34.5 · DSH 0.2.2-rc.1 · 移动 UI 3.3.5 |
+| 运行时 | proot 默认，proroot 可选（依机型） |
+| 界面语言 | 10 种：zh / zh-Hant / en / ru / ja / ko / ar / pt / la / fr |
+| 主线分支 | `main` |
+| 许可 | MIT（沿用原版） |
 
 ## 这是什么
 
-DeepSeek Harness（`@deepseek-ai/dsh`）是 DeepSeek 官方的 agent harness，类 Claude Code。
-它是为 glibc Linux 写的，直接在安卓上跑会撞上一堆事：原生模块编译不过、`link(2)` 被
-SELinux 挡住、沙箱起不来、前端按桌面布局排版。
+DeepSeek Harness（`@deepseek-ai/dsh`）是 DeepSeek 官方的 agent harness，为 glibc Linux 编写。直接跑在安卓上会撞上一堆事：原生模块编译不过、`link(2)` 被 SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 
-**DSHA 把这些全部封在一个 APK 里。** 装 APK、准备环境、打开 Web UI —— 不需要 Termux、
-不需要 ROOT、不需要敲一行命令。里面是一个完整的 Ubuntu 环境：`apt` 能用、
-交互式 PTY 能用、需要编译的原生模块能装，跟你在服务器上用是同一套东西。
+**DSHA 把这些全部封在一个 APK 里。** 首次启动解压并校验内置的离线环境，完成后进入主页、Web 在后台启动；打开 Web UI 再配置提供商、模型与 API Key。不需要 Termux、ROOT，也不需要敲一行命令。里面是完整的 Ubuntu 环境：`apt` 能用、交互式 PTY 能用、需要编译的原生模块能装，跟你在服务器上用是同一套东西。
 
-由贡献者 [@ym2025szz](https://github.com/ym2025szz) 维护并发布，感谢原作者
-[@qiannianhuanxiang](https://github.com/qiannianhuanxiang) 和其他贡献者。
+本仓库是 DSHA 的主仓库（官方发行线）：源自 [@qiannianhuanxiang](https://github.com/qiannianhuanxiang) 的原版 DSHA，并合入了社区贡献的终端、设备能力与移动端界面改造；发布身份为官方 `dsh.android.client` 与历史 E7E3 发布证书，旧 Mod 包 `io.github.sunsetrne.dsha` 保留为并存的历史身份。感谢原作者与所有贡献者。
 
----
+## 身份与共存
 
-## 下载
+| 身份 | 包名 | 说明 |
+|---|---|---|
+| 正式（默认） | `dsh.android.client` | 当前 Release；E7E3 证书，可覆盖升级历史正式包 |
+| 测试变体 | `dsh.android.client.SunsetRNE` | 与正式包并存，数据与授权独立 |
+| 旧 Mod | `io.github.sunsetrne.dsha` | 历史 Mod 身份（A4B0 证书），仅用于历史包与共存验证 |
+| 更早 | `com.dsh.client` | 更早包名，旧数据仍可经导出/恢复迁移 |
 
-当前正式版 **[v0.2.1-rc.2 · build190](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.1-rc.2)** · Standard 标准版，Android 11+ / arm64 · **278.66 MiB**。
+同一台手机上多个身份可以并存，但**数据、系统授权、无障碍开关互不继承**；迁移走应用内「数据与备份」导出 → 新包导入。同时运行两套 Web 时仍可能遇到端口冲突。
 
-[下载 APK](https://github.com/DSH-APP/DSHA/releases/download/v0.2.1-rc.2/dsha-0.2.1-rc.2.apk) · [SHA-256](https://github.com/DSH-APP/DSHA/releases/download/v0.2.1-rc.2/dsha-0.2.1-rc.2.apk.sha256) · [完整源码与固定离线构建输入](https://github.com/DSH-APP/DSHA/releases/download/v0.2.1-rc.2/DSHA-0.2.1-rc.2-20261022.2100-source.zip) · [发布说明](docs/releases/v0.2.1-rc.2-notes.md)
+## 下载与安装
 
-- **新旧共存**：新版包名 `dsh.android.client`，可与旧版 `com.dsh.client` 并排安装；数据和授权独立，需要迁移时使用备份导出/恢复。同时运行两套服务仍可能遇到设备端口冲突。
-- **虚拟屏与全局授权**：实验性虚拟屏通过已授权的 ADB / Root / Shizuku 通道操作；确认策略支持全部手动、按应用和全部允许，仅控制 DSHA 确认，不代替系统授权或系统沙箱。
-- **环境与交互更新**：内置 DSH **0.2.1-rc.2**、移动 UI **3.2.1**，默认 **proot**、可选 **proroot**；修复插件启动/管理、局域网与登录、键盘衔接和后台恢复等路径，会话单击切换。画中画**默认关闭**，由用户主动开启。
-- **备份与数据保护**：一键备份/导出，保留用户数据；移除危险的彻底重装，外置工作区内容保留。
+当前正式版 **[v0.2.2 · build357](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.2)**，Standard 标准版，Android 11+ / arm64，APK 约 **302 MiB**（内置完整 Ubuntu 环境）。
 
-完整版本名 `0.2.1-rc.2-20261022.2100-dsh0.2.1-rc.2` / code190，E7E3 正式签名、非调试。保留 APK 原版本字符串，本次发布为 **GitHub 正式版 / Latest**。本次提供 Standard APK；旧 Low 发布保留，不新增 Low APK。
+[下载 APK](https://github.com/DSH-APP/DSHA/releases/latest) · SHA-256 与完整源码包见该 Release 的资产列表 · [下载校验](docs/download-verification.md)
+
+资产：`dsha-0.2.2.apk`、`dsha-0.2.2.apk.sha256`、`DSHA-0.2.2-20261111.0200-source.zip`、同名 `.sha256`；发布说明与构建回执见 [v0.2.2 Release](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.2)。
 
 ### 开始使用
 
-1. 安装标准版 APK，首次启动准备内置离线环境。
-2. 解压完成进入主页，Web 在后台启动；就绪后进入 Web UI，在网页中配置模型。
-3. 从旧包迁移请先导出备份，再在新包恢复；以后同包覆盖更新前，请先正常停止 DSH。
+1. 安装对应签名的 APK，首次启动解压并校验内置离线环境（耗时取决于设备 I/O）。
+2. 环境就绪后进入主页，Web 在后台启动；主页显示进度与结果。
+3. Web 就绪后打开 Web UI，在网页设置中配置提供商、模型与 API Key。
 
-精确 APK 已在 Android 13 对两种运行时、旧会话、插件状态及立即息屏启动做有限检查；页面延迟仍有波动，不承诺所有机型普遍提速或完整 Doze/功耗验收。详见[验证范围与已知限制](docs/releases/v0.2.1-rc.2-notes.md)。[下载校验](docs/download-verification.md)；官网与应用内更新清单独立于本次 GitHub 发布。
+### 迁移
 
-<details>
-<summary>历史版本介绍（原文保留）</summary>
-
-下表属于上一 build170 版本的比较说明；v1.1.10 及更早的 Release 正文和历史标签继续保留。
-
-| 以前发布的版本 | 本版主要增加 |
-|---|---|
-| [v0.1.7-rc2 / 147，上一正式版](https://github.com/DSH-APP/DSHA/releases/tag/v0.1.7-rc2) | DSH 0.1.7 → 0.2.0 rc2、移动 UI 3.0.3 → 3.0.5，以及上面的文件、草稿、ADB、shell、插件和备份改进。 |
-| [v0.1.5-rc2 / 129](https://github.com/DSH-APP/DSHA/releases/tag/v0.1.5-rc2) | 还累积加入自动备份、独立应急、按需录音、PiP、Standard 实验性虚拟屏及受管更新改进。 |
-| [v1.1.10 及更早版本](https://github.com/DSH-APP/DSHA/releases/tag/v1.1.10) | 已转为双 APK、受管 Ubuntu/DSH 更新与宿主备份恢复；完整直接升级矩阵尚未重新验证，原版说明保留在历史标签。 |
-
-</details>
-
----
+- **从正式版升级**：同包名、同签名直接覆盖；升级前先正常停止 DSH，升级后数据保留。
+- **从旧 Mod 包迁移**：先在旧包「数据与备份」导出，再在正式包导入；设备授权与无障碍开关需重新开启。
+- **从更早的 `com.dsh.client` 迁移**：同样走导出/导入，不从另一包名自动继承授权。
 
 ## 为什么是 DSHA
 
@@ -105,12 +82,10 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 |---|---|
 | 🚫 **零命令行门槛** | 内置离线 Ubuntu rootfs，APK 装完就能用。不装 Termux、不配 pkg、不敲命令 |
 | 🐧 **完整 glibc 环境** | 不是裁剪版：`apt` / PTY / 原生模块 / Python / git 都在。上游插件不用改就能跑 |
-| ⚙️ **双运行时选择** | 默认proot、可选proroot；实际性能取决于设备、I/O、缓存和插件，不以历史异条件样本给引擎排名 |
+| ⚙️ **双运行时选择** | 默认 proot、可选 proroot；实际性能取决于设备、I/O、缓存和插件，不以历史样本给引擎排名 |
 | 🔌 **手机就是 agent 的手** | 无障碍 + ADB 免 Shizuku 直连 + 独立虚拟屏：读屏、点按、装应用、跑自动化，全部内置 |
-| 💾 **导出后迁移数据** | “数据与备份”导出无需密码的 `.tar.gz`；数据位置可在存储指南查看，本机副本不保证卸载后存续 |
+| 💾 **导出后迁移数据** | 「数据与备份」导出无需密码的 `.tar.gz`；数据位置可在存储指南查看，本机副本不保证卸载后存续 |
 | 🩺 **坏了能自己说清哪坏了** | 组件级自检 + 按需修补 + 启动诊断 + 独立应急 DSH；Web 起不来时直接点名是哪个插件 |
-
----
 
 ## 核心模块
 
@@ -118,22 +93,23 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 
 | 能力 | 说明 |
 |---|---|
-| 内置离线 rootfs | Ubuntu 24.04 (noble) arm64 打进 APK，无网也能完成环境部署 |
+| 内置离线 rootfs | Ubuntu 24.04（noble）arm64 打进 APK，无网也能完成环境部署 |
 | 六步安装流水线 | 解压 → 基础工具 → Node.js → pnpm → dsh → 补丁，每步先探测再执行、装完即校验；只修失败项，不从头重来 |
 | 分步重装 / 更新 | rootfs、工具、Node、harness 相互独立，可单独重装，不重复下载 |
 | 双装机路径 | 预构建包与源码构建都支持，源码路径自动处理 node-pty 等原生模块编译 |
 | 离线工具链 | curl / git / Python / 证书随包锁定版本（`packages.lock.json`），不依赖用户先跑 `apt` |
 | 镜像与网络 | apt 源官方 / 中科大镜像自动回退；DNS 三模式（auto / 强制 IPv4 / 系统原生），AAAA 被拒时仅重试解析、不重放 HTTP 请求 |
 | 基础环境版本化 | Ubuntu 基础环境独立编号；界面更新不重建环境，普通 dsh 更新不递增基础版本 |
+| 固定构建输入 | 离线 rootfs、DSH runtime、Ubuntu tools 作为公开 Release 资产分发，`ci/sunset-inputs.lock.json` 锁定 SHA-256，clone 后可还原完整构建 |
 
 ### ② 运行时
 
 | 能力 | 说明 |
 |---|---|
-| proroot / proot 双运行时 | 默认稳定的 proot；可在“配置”选择 proroot，实际兼容结果依机型 |
+| proroot / proot 双运行时 | 默认稳定的 proot；可在「配置」选择 proroot，实际兼容结果依机型 |
 | 性能证据 | 有同台有限样本，设备、缓存和插件状态影响明显；见[性能记录](docs/performance-startup-20261022.md)，不作为普遍引擎排名 |
 | 有限兼容回退 | proroot 在鉴权前明确退出且无插件故障时，确认 guest 退出后仅重试一次 proot；慢启动不触发回退 |
-| Node.js 24 + pnpm 10 | 与上游一致的运行环境，随包锁版本 |
+| Node.js 24 + pnpm 10.34.5 | 与上游一致的运行环境，随包锁版本 |
 | 分包更新 | Ubuntu 与 dsh 运行时在 APK 内分包；冷安装两份都解压，局部更新只读 dsh 包 |
 | 受管更新试运行 | 新环境先在隔离区真实启动、验证端口 / 鉴权 / 会话读写 / 插件加载，全过后才切换提交，失败自动回切 |
 | 前台服务 + 看门狗 | 通知栏可见运行状态；Web 掉了自动拉起，不用手动重启 |
@@ -143,8 +119,8 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 
 | 能力 | 说明 |
 |---|---|
-| 数据位置与迁移 | “数据与备份 → 存储指南”查看实际位置；升级保留当前数据，卸载前请导出需要保留的内容 |
-| v5 备份与导出 | 新导出为无需密码的 `.tar.gz` 完整性归档；内部自动副本仍加密，旧加密原件读取仍需原密码 |
+| 数据位置与迁移 | 「数据与备份 → 存储指南」查看实际位置；升级保留当前数据，卸载前请导出需要保留的内容 |
+| v5 备份与导出 | 用户导出为**无需密码**的 `.tar.gz` 完整性归档；内部自动副本仍加密，历史加密原件读取仍需原密码 |
 | 自动备份计划 | 默认开启：每天指定时间 / 每隔 1–168 小时 / 停止 DSH 后，三种模式；运行中自动延后不打断工作；保留最近 3 份已验证副本 |
 | 分范围备份 | 全量 / 只对话 / 只插件 / 只设置任选，恢复时只覆盖对应内容 |
 | 换机恢复 | 导出实际对话、附件、设置及用户插件，先校验摘要和范围再预检恢复，保留当前内容与冲突原件 |
@@ -152,7 +128,7 @@ SELinux 挡住、沙箱起不来、前端按桌面布局排版。
 | 兼容旧备份 | 先完整认证/摘要核验再预检；未知或依赖不完整时如实提示。系统插件由当前 APK 重建，用户原件继续保留 |
 | 会话损坏隔离 | 坏掉的会话文件挪到 `corrupt-backup` 可取回，不让一个坏文件卡住整个 Web |
 | 覆盖更新自动清理 | 升级后闲时清理可再生缓存与多余旧副本；保留至少两份健康前代，改过的原件不动 |
-| 外置工作区保护 | 彻底重装与完整格式化已移除；维护只断开外置引用，保留其文件和备份 |
+| 外置工作区保护 | 完整格式化已移除；维护只断开外置引用，保留其文件和备份 |
 
 ### ④ 设备能力（让 agent 真正操作这台手机）
 
@@ -161,9 +137,12 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 | 能力 | 说明 |
 |---|---|
 | 屏幕操作 | **无障碍服务实现，不需要 ADB**：读屏结构化输出（带可点击区域坐标）、按文字 / 坐标点按、输入、按键、滑动、截屏存 PNG |
-| 独立虚拟屏（实验） | Standard / Android 11+，先授权 ADB、Shizuku 或 Root 任一通道，再到虚拟屏页面创建屏幕；仅开启无障碍不会创建虚拟屏，详见[开启说明](docs/virtual-screen-guide.md) |
+| 独立虚拟屏（实验） | Standard / Android 11+，先授权 ADB、Shizuku 或 Root 任一通道，再到虚拟屏页面创建屏幕；仅开启无障碍不会创建虚拟屏，详见[架构说明](docs/virtual-screen-architecture.md) |
+| 实体屏特权执行（实验） | Phase A：复用受管 `app_process` 入口操作实体主屏，默认关闭、可撤销、仅当前手机任务期间有效；需在「设备能力授权 → 特权执行」原生开启，详见[核心说明](docs/privileged-screen-core.md) |
 | ADB 无线直连 | 内置无线配对（TLS 1.3-PSK + SPAKE2）与保活，**不需要 Shizuku**，重启手机自动恢复 |
 | Shizuku / Root 通道 | 备用设备命令通道，与 ADB 同受命令白名单约束 |
+| Root 命令三态拦截 | 严格（默认白名单）、放宽（拦截不可逆操作）、完全放宽；仅作用于 Root 通道，Shizuku / ADB 仍按严格档 |
+| 跨应用文件（SAF） | 用户经系统文档选择器逐个目录授权，助手按授权读写；写 / 删需二次确认，只给写权限的树直接拒绝 |
 | 与用户交互 | 系统通知、App 内提示、震动（长任务叫醒用户）、弹窗三选项征询、分享 / 打开链接 |
 | 文件交换 | 读目录 / 文本文件、导出产物到 `Download/DSHA`；凭据区（`.dsh` / `.ssh` / `.android`）读写均被拒绝 |
 | 传感器与位置 | 光线 / 加速度 / 陀螺仪 / 磁力计 / 气压 / 步数 / 定位 / 手电筒 —— 默认关闭，逐项授权 |
@@ -178,20 +157,23 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 | 真 PTY 终端 | Termux terminal-emulator JNI 实现：vim / htop / tmux 等全屏 TUI 可用 |
 | 手机键盘补偿 | 扩展键行（Ctrl / Alt / Esc / 方向键 / Tab），双指缩放调字号 |
 | 多标签 | 多会话并存，跨切页 / 旋转 / 语言切换保持进程与状态 |
+| 会话侧栏 | 三向态与横屏压缩布局，切换会话不丢输出 |
+| 输出面板 | 「更多…」面板、预览 / 复制 / 分享 / 保存，长输出不刷屏 |
 | 简易终端兜底 | PTY 在个别机型异常时可切回简易终端，会话保留在后台 |
 
 ### ⑥ Web UI 与访问
 
 | 能力 | 说明 |
 |---|---|
-| 双内核 | Standard 用系统 WebView；Low 内置 GeckoView 143，不受系统 WebView 版本拖累 |
-| 移动端适配 | 内置 [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) **3.2.1**（MIT），保留手机快捷键和窄屏适配，修复焦点、弹窗及插件卡片 |
+| 唯一 Standard 线 | 系统 WebView 内核；`low` 兼容线与 GeckoView 已整体删除 |
+| 移动端适配 | 内置 [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) **3.3.5**（MIT），保留手机快捷键和窄屏适配 |
 | 画中画 | 默认关闭，用户主动开启后使用 PiP 小窗；正常返回与后台恢复保留同代网页实例 |
 | 高刷与省电 | 按用户上限请求刷新率，空闲交还系统；实际帧率依设备和系统，不把请求成功当作性能证明 |
-| 深浅色与多语言 | 深色 / 浅色 / 跟随系统；简体中文 / English，默认跟随系统语言 |
+| 深浅色与多语言 | 深色 / 浅色 / 跟随系统；10 种界面语言，默认跟随系统语言 |
 | 局域网访问 | 电脑 / 平板浏览器直接用手机上的 dsh。token 鉴权 fail-closed，命中后回设 `SameSite=Strict` Cookie，不让 token 随外链泄漏 |
 | 老浏览器兼容 | 自动注入 `AbortSignal.any/timeout` 与 `crypto.randomUUID` polyfill（局域网 HTTP 下必需） |
 | 流式悬浮条 | AI 输出像歌词一样贴在屏幕顶部，工具调用翻译成人话；底色 / 透明度 / 行数可调；危险命令可直接在悬浮条上批准 |
+| 上岛 | 任务状态上岛（实时活动 / 灵动岛）与通知内多选、自定义回答直接内置 |
 | 端口可配 | Web 端口自定义，冲突自动回退并说明 |
 
 ### ⑦ 插件生态
@@ -209,6 +191,7 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 主要内置插件包括：`dsh-web-mobile`（移动端适配）、`dsh-status-overlay`（悬浮条）、
 `dsh-task-notifier`（回合完成通知）、`dsh-device-shell-guide`（设备能力引导）、
 `dsh-computer-use-android`（Android Computer Use）、`dsh-tool-vscreen`（虚拟屏工具）、
+`dsh-launch-target`（启动目标选择）、`dsh-fs-read-hint` / `dsh-fs-search-scope`（读取提示与搜索范围）、
 `dsh-auto-review`（官方实验性 Auto review 入口）。
 
 ### ⑧ 可靠性与应急
@@ -229,14 +212,12 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 |---|---|
 | 什么权限都不给也能用 | 最小配置（不给 ADB、不给文件权限、不开局域网）下 DSHA 照常跑 dsh；每项能力默认关闭、随时撤销 |
 | API key | Android Keystore + AES/GCM，密钥不出 Keystore；失败不清空旧密文 |
-| 设备命令 | 白名单始终开启，Root / Shizuku / ADB 三通道同一套策略，应用停止前逐个核验归属，防 PID 复用误伤 |
+| 设备命令 | 白名单始终开启，Root / Shizuku / ADB 三通道同一套策略；Root 另有 strict / relaxed / full 三档，短信闸门三档都保留 |
 | 桥凭据护栏 | `/app/export`、`/app/readfile` 拒绝凭据区路径，有规范化与 canonical path 检查；已知 Root 递归 READ 子链接缺口见安全文档，不视为完整隔离 |
 | 无遥测 | 不上传任何日志或使用数据；更新、插件下载、模型调用之外不发起网络请求 |
 | 诚实披露 | 已知弱点（无内核级沙箱、历史明文备份、签名密钥待轮换等）在文档里直接列出 |
 
 👉 每项权限到底暴露了什么、agent 碰得到手机的哪些部分，见 **[安全模型](docs/security-model.md)**。
-
----
 
 ## 与同类方案的关系
 
@@ -250,24 +231,21 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 | 开销 | 存在系统调用与文件 I/O 转译开销，实际耗时依设备与场景 | 无容器层，理论最快 |
 | 沙箱 | 两边都受限 | 两边都受限 |
 
----
-
 ## 已知限制
-
-诚实列出来，省得你装完才发现：
 
 | 项目 | 状态 | 说明 |
 |---|---|---|
 | 架构 | ⚠️ 仅 arm64-v8a | 32 位与 x86 设备不支持 |
-| 系统 | ✅ Standard 11+ / Low 6+ | 老系统部分能力受系统限制（无线配对需 11+ 等，见 [android-low](docs/android-low.md)） |
-| 包体 | ⚠️ 本次 Standard 278.66 MiB | 内置完整 Ubuntu 环境的代价，换来的是免下载、免命令行 |
+| 系统 | ⚠️ Android 11+（API 30） | Android 10 及以下不再支持；不同 ROM 的权限、后台与省电策略差异较大 |
+| 包体 | ⚠️ 本版约 302 MiB | 内置完整 Ubuntu 环境的代价，换来的是免下载、免命令行 |
 | bash 工具 | ✅ 可用 | 完整 Ubuntu 的 bash，agent 跑 shell 命令没有限制 |
 | bash 的**沙箱隔离** | ⚠️ 不可用 | bubblewrap 要 unprivileged user namespace，Android sepolicy 不给 —— 容器派和 Termux 派都一样绕不过。约束靠 dsh 的权限档位：默认 `danger-full-access`，可在配置页改成 `workspace-write` 或 `read-only`。请自行判断风险 |
-| 卓易通 / 鸿蒙 anco | ❓ 未验证 | 理论可行，尚无真机回归 |
 | 悬浮条 | ⚠️ 需要授权 | 用 `TYPE_APPLICATION_OVERLAY` 自绘；免 ROOT 拿不到真正的「状态栏歌词」接口 |
 | 数据位置 | ⚠️ 需要文件权限 | 「所有文件访问」被拒时数据留在私有目录，卸载即丢（自检会明确告知当前状态） |
-
----
+| 虚拟屏 / 特权执行 | ⚠️ 需要授权 | 依赖具体系统版本与原生授权状态，按实际设备取证声明，不承诺所有机型可用 |
+| 电脑端连接 | ⚠️ 已撤下 | 远程工作区能力不再提供；手机控制与本机 / 局域网能力保留 |
+| 部分 vendor 原生依赖 | ⚠️ 不保证 | 部分 vendor 原生依赖不保证完全从源码复现；首次解压离线环境耗时较长 |
+| 卓易通 / 鸿蒙 anco | ❓ 未验证 | 理论可行，尚无真机回归 |
 
 ## 架构
 
@@ -275,81 +253,95 @@ agent 通过本机 `127.0.0.1:3090` 桥调用以下能力（token 门控，`/app
 ┌──────────────────────── APK ────────────────────────┐
 │ 原生 Android（Java 17 · Material3 · 单模块 :app）    │
 │  ├ 启动 / 安装修复 / 配置 / 工作区 / 插件 / 终端     │
-│  ├ 网页内核：系统 WebView（Standard）/ Gecko（Low）  │
+│  ├ 网页内核：系统 WebView（唯一 Standard 线）        │
 │  ├ 前台服务 + 看门狗 + 通知 + 画中画                 │
-│  ├ App 桥 :3090（无障碍 / 虚拟屏 / 交互 / 文件）     │
+│  ├ App 桥 :3090（无障碍 / 虚拟屏 / 交互 / SAF / 文件）│
 │  ├ LAN 代理 :3081 · ADB / Shizuku / Root 设备通道    │
 │  └ 悬浮条（TYPE_APPLICATION_OVERLAY）                │
 ├─────────────────────────────────────────────────────┤
 │ proot（默认）/ proroot（可选，依机型核验）           │
 ├─────────────────────────────────────────────────────┤
-│ Ubuntu 24.04 arm64 · Node.js 24 · pnpm 10           │
-│  └ @deepseek-ai/dsh  →  Web UI :auto                │
+│ Ubuntu 24.04 arm64 · Node.js 24 · pnpm 10.34.5      │
+│  └ @deepseek-ai/dsh 0.2.2-rc.1 → Web UI :auto        │
 └─────────────────────────────────────────────────────┘
 ```
 
-数据：实际位置以“数据与备份 → 存储指南”为准；旧 `Documents/dshdata` 数据继续兼容读取。
-API key 由 Android Keystore 保护，本机密钥与自动副本不保证卸载后存续。
+数据：实际位置以「数据与备份 → 存储指南」为准；旧 `Documents/dshdata` 数据继续兼容读取。
+API key 由 Android Keystore 保护，本机密钥与自动副本不保证卸载后存续。端口与鉴权细节见[端口专页](docs/ports-and-networking.md)。
 
----
+## 设备通道：ADB / Shizuku / Root
 
-## ADB 无线配对（设备 Shell 能力）
+Agent 执行设备命令时按 **Root → Shizuku → ADB** 的顺序选一次可用通道（Android 17+ 且 ADB 已验证时 ADB 先于 Shizuku），选中后失败不换通道重放；三条通道共用同一套命令白名单，Android 系统授权与 DSHA 授权分别校验。完整语义见 [docs/device-channels.md](docs/device-channels.md)。
 
-配好之后 agent 就能直接操作这台手机，**不需要 Shizuku**。
+### ADB 无线配对（推荐，不需要 Shizuku）
 
-**首次配对（约 1 分钟）**
+配好之后 agent 就能直接操作这台手机，**不需要 Shizuku、不需要 ROOT**。
 
 1. 系统设置 →「关于手机」→ 连点「版本号」7 次开启开发者选项
 2. 开发者选项 → 打开「无线调试」
 3. 进入「无线调试」→「使用配对码配对设备」，记下 **IP:端口** 与 **6 位配对码**
-4. 回到 DSHA →「设备能力授权」页 → 填入 → 配对
+4. 回到 DSHA →「设备能力授权」→ 填入 → 配对
 
-> 无线调试的配对码需要 Android 11+；老系统可走 Shizuku / Root 通道，或直接用无障碍能力（读屏、点按、输入不需要任何配对）。
+> 配对码需要 Android 11+；Android 17 起，已验证的 ADB 连接会优先于 Shizuku 被选中。
 
-无线调试尚未开启时，“验证已有连接”可以先准备内置离线依赖；出现 `ADB_OFFLINE_READY` 仅表示依赖就绪。之后仍需打开无线调试并完成配对或连接验证。
+无线调试尚未开启时，「验证已有连接」可以先准备内置离线依赖；出现 `ADB_OFFLINE_READY` 仅表示依赖就绪，之后仍需打开无线调试并完成配对或连接验证。
 
 **配对之后**：DSHA 自己维护连接（保活 + 重连），重启手机后也会自动恢复，不用再操作。
 
 **验证**：内置终端里跑 `adb shell id`，输出 `uid=2000(shell)` 即成功。
 
-**让 agent 用起来**：把技能包复制到 agent 的技能目录：
+### Shizuku（或兼容管理器 Stellar）
+
+不想开无线调试时可以走 Shizuku 通道：
+
+1. 安装 [Shizuku](https://shizuku.rikka.app/) 或兼容 Shizuku 协议的管理器 [Stellar](https://github.com/roro2239/Stellar)，并在管理器里启动服务（用 Stellar 时还需开启「Shizuku 兼容层」）。
+2. 回到 DSHA →「设备能力授权」→ 授权 Shizuku，在管理器的授权弹窗中允许 DSHA。
+3. 验证：DSHA 中的 Shizuku 状态显示已连接，执行 `id` 返回 `uid=2000(shell)`。
+
+标准 API 13.1.5 / 兼容 API 12.2.0。管理器已授权不等于执行服务已就绪；断连重连、超时与失败各有独立预算，结果未知时不换通道重放。Shizuku 不执行短信查询，也不承接放宽档的 root 原始命令。
+
+### Root
+
+需要设备上真实可用的 su（Magisk / KernelSU 等）。在「设备能力授权」打开 Root 开关并授权后可用；Root 另有 **严格 / 放宽 / 完全放宽** 三档命令拦截，只影响以 root 身份执行时的拦截强度，短信闸门三档都保留。
+
+### 只开无障碍也可以
+
+读屏、点按、输入、滑动、截屏完全依赖无障碍服务，**不需要任何配对**；只有虚拟屏、短信读取和设备命令这类能力才需要上面的通道。
+
+## 从源码构建
+
+需要 JDK 17、Node 24、Python 3.9+、Android SDK 37 与 NDK 26。固定输入用公开预发布资产还原，工具链与签名配置见 [BUILD.md](BUILD.md) 与 [docs/fixed-build-inputs.md](docs/fixed-build-inputs.md)。
 
 ```bash
-cp -r agent-skills/device-shell ~/.agents/skills/
-cp -r agent-skills/screen-ocr-operator ~/.agents/skills/
+python3 tools/ci-assets.py --url "$(python3 -c 'import json;print(json.load(open("ci/sunset-inputs.lock.json"))["url"])')" \
+  --sha256 "$(python3 -c 'import json;print(json.load(open("ci/sunset-inputs.lock.json"))["sha256"])')"
+python3 tools/run-host-tests.py --check-manifest
+python3 tools/run-host-tests.py --stage fast
+./gradlew :app:testStandardDebugUnitTest :app:lintStandardRelease
+./gradlew :app:assembleStandardRelease
 ```
 
-`device-shell` 覆盖 ADB / Shizuku / Root 三通道的命令用法；
-`screen-ocr-operator` 提供截屏 + OCR + 批量屏幕操作（无障碍读屏拿不到内容的 WebView / 游戏画面用）。
+Windows 使用 `gradlew.bat`；也可用 `bash build.sh` 包装命令。测试任务名中的 Debug 只表示测试变体，不要求生成或安装调试 APK。签名私钥、用户数据、设备截图与日志不进入仓库。稳定性门禁见 `python3 tools/verify-stability.py`。
 
----
-
-## 构建
-
-本地构建需要 JDK 17、Android SDK（API 37）、NDK 26 与 Python 3.9+，详见 [BUILD.md](BUILD.md)：
-
-```bash
-bash build.sh                                # 默认构建 Standard Debug
-bash build.sh :app:assembleLowRelease        # 构建 Low Release
-bash build.sh :app:testStandardDebugUnitTest # 纯逻辑单测
-python tools/verify-stability.py             # 稳定性验收门禁
-```
-
-离线 rootfs 不提交 Git；发布流程（签名、门禁、真机验收、产物替换）见 [BUILD.md](BUILD.md) 与 [docs/releases/](docs/releases/)。
-
----
-
-## 文档索引
+## 文档
 
 | 文档 | 内容 |
 |---|---|
 | [AGENTS.md](AGENTS.md) | 项目结构、启动契约、技术约束与踩坑记录（AI / 新贡献者入口） |
-| [docs/security-model.md](docs/security-model.md) | 安全模型：每项权限的边界与已知弱点（[英文版](docs/security-model.en.md)） |
+| [docs/documentation-index.md](docs/documentation-index.md) | 完整文档索引 |
+| [docs/security-model.md](docs/security-model.md) | 安全模型：每项权限的边界与已知弱点 |
+| [docs/device-permissions-architecture.md](docs/device-permissions-architecture.md) | 权限架构：通道、原生授权与执行侧护栏 |
 | [docs/plugins.md](docs/plugins.md) | 插件安装与打包要求 |
-| [CHANGELOG.md](CHANGELOG.md) | 完整更新记录 |
+| [docs/virtual-screen-architecture.md](docs/virtual-screen-architecture.md) | 虚拟屏架构、前提与输入约束 |
+| [docs/privileged-screen-core.md](docs/privileged-screen-core.md) | 实体屏特权执行核心（T130 Phase A） |
+| [docs/runtime-engines.md](docs/runtime-engines.md) | proot / proroot 运行时与已知限制 |
+| [docs/ports-and-networking.md](docs/ports-and-networking.md) | 端口、鉴权与局域网 |
+| [docs/backup-and-restore.md](docs/backup-and-restore.md) | 备份、恢复与数据位置 |
+| [docs/fixed-build-inputs.md](docs/fixed-build-inputs.md) | 固定构建输入的公开资产与还原/升级流程 |
+| [docs/i18n-length-policy.md](docs/i18n-length-policy.md) | 界面文案长度预算与多语言精简口径 |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | 路线图与「明确不做」清单 |
-| [docs/android-standard.md](docs/android-standard.md) / [android-low.md](docs/android-low.md) | 两版设备适配说明 |
-| [docs/releases/](docs/releases/) | 各版本发布与验收记录 |
+| [BUILD.md](BUILD.md) / [CONTRIBUTING.md](CONTRIBUTING.md) | 构建、签名与贡献流程 |
+| [CHANGELOG.md](CHANGELOG.md) / [docs/releases/](docs/releases/) | 完整更新记录与各版本验收回执 |
 
 ## 致谢
 
@@ -359,30 +351,12 @@ python tools/verify-stability.py             # 稳定性验收门禁
 - [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) —— 内置移动端适配
 - [Shizuku](https://shizuku.rikka.app/) —— 备用设备命令通道
 
-## 交流
+## 交流与反馈
 
-QQ 群 **975836806** (二群)—— 测试版、问题反馈、插件交流。
-❗二群已满，请加一群❗
-★QQ 群**960636357** (老一群)现已扩容！
-
-| 事宜 | 联系 |
-|---|---|
-| 项目主创（合作/授权/入伙） | QQ 2921185884 |
-| 现维护者（项目提议/反馈，或直接提 issue） | QQ 1876843459 |
-| Email | 1437ht@gmail.com |
+- 问题与建议优先提 [GitHub Issues](https://github.com/DSH-APP/DSHA/issues)，附机型、Android 版本、APK 版本与复现步骤。
+- 社区交流：QQ 群 **975836806**（应用内「关于」也提供入口）。
+- 提交代码前请先读 [CONTRIBUTING.md](CONTRIBUTING.md)；外部 PR 需逐行审查后才合并。
 
 ## 许可
 
 [MIT](LICENSE)。第三方组件许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
-
-## Star History
-
-<a href="https://github.com/DSH-APP/DSHA/stargazers">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/star-history-dark.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="docs/star-history.svg" />
-    <img alt="DSHA Star History" src="docs/star-history.svg" width="820" />
-  </picture>
-</a>
-
-<sub>由 [`tools/gen-star-history.py`](tools/gen-star-history.py) 每 12 小时读取 GitHub 星标时间并更新（[workflow](.github/workflows/star-history.yml)）。浅色、深色 SVG 保存在本仓库；曲线按当前仍保留的星标汇总。</sub>

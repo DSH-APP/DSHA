@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 弹窗退出：140ms 淡出 + 轻微回缩，比进入更快，避免拖住下一条交互。 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="140"
+    android:interpolator="@android:interpolator/fast_out_linear_in">
+    <alpha
+        android:fromAlpha="1"
+        android:toAlpha="0" />
+    <scale
+        android:fromXScale="1"
+        android:toXScale="0.98"
+        android:fromYScale="1"
+        android:toYScale="0.98"
+        android:pivotX="50%"
+        android:pivotY="50%" />
+</set>

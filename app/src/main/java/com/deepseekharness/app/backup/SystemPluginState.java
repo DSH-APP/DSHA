@@ -40,10 +40,15 @@ final class SystemPluginState {
       if (entries.size() > BuiltinPlugins.SIGNED_BUILTINS.size())
         throw new IOException("PLUGIN_SYSTEM_STATE_LIMIT");
       File owner = new File(profiles, profile), file = new File(owner, "package.json");
-      if (!fs.stat(file).type.equals("FILE")) {
-        if (!createWeb || !profile.equals("web") || !fs.stat(owner).type.equals("MISSING"))
+      String fileType = fs.stat(file).type;
+      if (!fileType.equals("FILE")) {
+        String ownerType = fs.stat(owner).type;
+        if (!createWeb
+            || !profile.equals("web")
+            || !fileType.equals("MISSING")
+            || !(ownerType.equals("MISSING") || ownerType.equals("DIRECTORY")))
           throw new IOException("PLUGIN_SYSTEM_PROFILE_MISSING");
-        fs.directory(owner);
+        if (ownerType.equals("MISSING")) fs.directory(owner);
         Map<String, Object> initial = new LinkedHashMap<>();
         initial.put("name", "dsh-profile-web");
         initial.put("private", true);

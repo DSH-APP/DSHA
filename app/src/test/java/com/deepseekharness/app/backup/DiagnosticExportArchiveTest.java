@@ -27,7 +27,13 @@ public class DiagnosticExportArchiveTest {
         DiagnosticExportArchive.operationEvents(
             "10-19 12:34:56 [MAINTENANCE] original retained\nunknown historic line\n"));
     Map<String, Object> capture =
-        Map.of("operationHistory", "TAIL", "fullExceptionChains", "NOT_RECONSTRUCTED");
+        Map.of(
+            "operationHistory",
+            "TAIL",
+            "fullExceptionChains",
+            "NOT_RECONSTRUCTED",
+            "businessBodies",
+            "MAY_BE_PRESENT_IN_FREE_FORM_ERRORS");
     ByteArrayOutputStream output = new ByteArrayOutputStream();
     DiagnosticExportArchive.write(output, input, capture, new BackupControl(null));
     Map<String, byte[]> found = new LinkedHashMap<>();

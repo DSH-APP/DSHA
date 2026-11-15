@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.3-20261101.0910-dsh0.2.1-rc.5 / build244
+
+- Corrigitur «Restitue curationem interruptam» semper deficiens: versiones veteres testimonium perfectionis additamentorum atomice intra indicem transactionum additamentorum scribebant, et scriptio interrupta fasciculos ut `.previous` vel `.tmp-*` relinquebat. Deinde omnis inspectio `PLUGIN_JOURNAL_ID` nuntiabat, restitutio in «Web sistitur» haerebat, aliae reparationes cum `REPAIR_RECOVER_PENDING_FIRST` reiciebantur, nec Web incipere poterat.
+- Testimonium perfectionis nunc extra indicem transactionum servatur. Reliquiae veteres et alia ignota in eo indice ut sunt servantur; curationem non iam impediunt nec umquam ut operationes additamentorum iterantur. Machinae iam haerentes post inaugurationem superpositam inspectionem transire debent.
+- Haec versio scriptum transactionum additamentorum renovat, itaque inauguratio superposita fasciculos curatos per solitum ambitus curati renovationem substituit; data personalia loco manent.
+- Ambitus probationis: probationes unitatum locales (1689 casus in fasciculis backup et util) et regressiones Python transactionum additamentorum transierunt; in machina quae hoc vitium passa est nondum probatum. versionCode ad 244 tollitur. Recensio DSHA manet 0.2.1-rc.3, DSH inclusum manet 0.2.1-rc.5.
