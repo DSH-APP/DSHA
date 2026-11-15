@@ -60,9 +60,9 @@ export interface AttachmentInsert {
     readonly clipboardText: string;
 }
 /**
- * Ordered draft attachment ids from one input-state snapshot. 0.2.0-rc.2
- * publishes `attachmentIds` (files + images); the frozen rc.6 contract named
- * the image-only predecessor `imageIds`. Anything else → empty.
+ * Ordered draft attachment ids from one input-state snapshot (`attachmentIds`,
+ * files + images). The rc.6 image-only `imageIds` fallback was removed with
+ * the host floor. Anything else → empty.
  */
 export declare function draftAttachmentIdsOf(state: unknown): readonly string[];
 /**

@@ -23,6 +23,9 @@ public class ConfigStore {
     // 启动计数备份已移除；覆盖安装与旧备份恢复均不能重新启用。
     if (prefs.contains(Constants.KEY_AUTO_BACKUP) || prefs.contains("backup_launch_count"))
       prefs.edit().remove(Constants.KEY_AUTO_BACKUP).remove("backup_launch_count").apply();
+    // 原生 DSH 权限档位已退休；覆盖安装后的历史选择不能继续影响正式 Web。
+    if (prefs.contains(Constants.KEY_PERMISSION_MODE))
+      prefs.edit().remove(Constants.KEY_PERMISSION_MODE).apply();
   }
 
   public boolean isWelcomed() {
@@ -34,7 +37,9 @@ public class ConfigStore {
   }
 
   public boolean allowsLimitedEntry(String identity) {
-    return identity.equals(text("limited_entry_identity", ""));
+    return identity != null
+        && !identity.isEmpty()
+        && identity.equals(text("limited_entry_identity", ""));
   }
 
   public void allowLimitedEntry(String identity) {
@@ -46,9 +51,9 @@ public class ConfigStore {
   }
 
   /**
-   * 语言偏好：{@code system}（默认）/ {@code zh} / {@code en}。
+   * 语言偏好：{@code system}（默认）或 UiLanguagePreference 中的十种规范语言标签。
    *
-   * <p>从未设置过的用户走 {@code system}，由系统语言决定中文还是英文；
+   * <p>从未设置过的用户走 {@code system}，由系统首选语言及中文脚本/地区决定生效语言；
    * 老版本写过 {@code zh}/{@code en} 的用户保持原选择，升级不改变语言。
    */
   public String getUiLanguagePreference() {
@@ -60,7 +65,7 @@ public class ConfigStore {
     return com.deepseekharness.app.util.UiLanguagePreference.supported(text("ui_language", null));
   }
 
-  /** 实际生效语言（zh/en）：显式选择优先，否则解析系统语言。 */
+  /** 实际生效的规范 BCP-47 语言：显式选择优先，否则解析系统语言。 */
   public String getUiLanguage() {
     return com.deepseekharness.app.util.UiLanguagePreference.resolve(
         getUiLanguagePreference(), com.deepseekharness.app.util.SystemLanguage.tag());
@@ -83,6 +88,41 @@ public class ConfigStore {
         .edit()
         .putString("ui_theme", com.deepseekharness.app.util.UiThemePreference.normalize(value))
         .apply();
+  }
+
+  /** 调色板（与日夜正交）；未注册的旧值回到标准色。 */
+  public String getUiPalette() {
+    return com.deepseekharness.app.util.UiThemePalette.normalize(text("ui_palette", null));
+  }
+
+  public void setUiPalette(String value) {
+    prefs
+        .edit()
+        .putString("ui_palette", com.deepseekharness.app.util.UiThemePalette.normalize(value))
+        .apply();
+  }
+
+  /** 主题切换动画样式；未知值回到圆形扩散。 */
+  public String getThemeTransition() {
+    return com.deepseekharness.app.util.ThemeMotion.normalizeStyle(
+        text("ui_theme_transition", null));
+  }
+
+  public void setThemeTransition(String value) {
+    prefs
+        .edit()
+        .putString(
+            "ui_theme_transition", com.deepseekharness.app.util.ThemeMotion.normalizeStyle(value))
+        .apply();
+  }
+
+  /** 原生亮暗是否同步到内嵌 Web 的外观设置；默认开启，用户可在主题页关闭。 */
+  public boolean isWebThemeSync() {
+    return prefs.getBoolean("ui_theme_web_sync", true);
+  }
+
+  public void setWebThemeSync(boolean value) {
+    prefs.edit().putBoolean("ui_theme_web_sync", value).apply();
   }
 
   public com.deepseekharness.app.util.PluginSort.Mode getPluginSort() {
@@ -187,9 +227,7 @@ public class ConfigStore {
 
   public int getPortInt() {
     int p = parsePort(text(Constants.KEY_PORT, String.valueOf(Constants.DSH_WEB_PORT)));
-    return p == Constants.LAN_BRIDGE_PORT || p == Constants.SHELL_BRIDGE_PORT
-        ? Constants.DSH_WEB_PORT
-        : p;
+    return com.deepseekharness.app.util.WebPortPolicy.reserved(p) ? Constants.DSH_WEB_PORT : p;
   }
 
   public void setPort(String v) {
@@ -247,6 +285,21 @@ public class ConfigStore {
     prefs.edit().putBoolean(Constants.KEY_ALLOW_ROOT_SHELL, v).apply();
   }
 
+  /** root 命令拦截档位；非法或缺失一律回落严格档（fail-closed）。 */
+  public com.deepseekharness.app.util.DeviceShellPolicy.Mode rootPolicyMode() {
+    return com.deepseekharness.app.util.DeviceShellPolicy.Mode.parse(
+        text(Constants.KEY_ROOT_POLICY_MODE, "strict"));
+  }
+
+  public void setRootPolicyMode(com.deepseekharness.app.util.DeviceShellPolicy.Mode mode) {
+    prefs
+        .edit()
+        .putString(
+            Constants.KEY_ROOT_POLICY_MODE,
+            (mode == null ? com.deepseekharness.app.util.DeviceShellPolicy.Mode.STRICT : mode).id)
+        .apply();
+  }
+
   public boolean isCheckUpdate() {
     return flag(Constants.KEY_CHECK_UPDATE, true);
   }
@@ -261,6 +314,51 @@ public class ConfigStore {
 
   public void setDesktopMode(boolean v) {
     prefs.edit().putBoolean(Constants.KEY_DESKTOP_MODE, v).apply();
+  }
+
+  /** 屏幕常亮：默认关闭，按窗口生命周期应用，不随备份恢复。 */
+  public boolean isKeepScreenOn() {
+    return flag(Constants.KEY_KEEP_SCREEN_ON, false);
+  }
+
+  public void setKeepScreenOn(boolean value) {
+    prefs.edit().putBoolean(Constants.KEY_KEEP_SCREEN_ON, value).apply();
+  }
+
+  /** 隐藏后台：从最近任务隐藏本应用任务；默认关闭，只影响任务可见性，不随备份恢复。 */
+  public boolean isHideFromRecents() {
+    return flag(Constants.KEY_HIDE_FROM_RECENTS, false);
+  }
+
+  public void setHideFromRecents(boolean value) {
+    prefs.edit().putBoolean(Constants.KEY_HIDE_FROM_RECENTS, value).apply();
+  }
+
+  /** 隐藏后台严格模式（实验）：离开应用时结束 UI 任务；默认关闭，只影响界面任务，不随备份恢复。 */
+  public boolean isHideRecentsStrict() {
+    return flag(Constants.KEY_HIDE_RECENTS_STRICT, false);
+  }
+
+  public void setHideRecentsStrict(boolean value) {
+    prefs.edit().putBoolean(Constants.KEY_HIDE_RECENTS_STRICT, value).apply();
+  }
+
+  /** 任务状态上岛默认开启：它只是给已有通知补充短文本与提升请求，失败会静默降级。 */
+  public boolean isTaskIslandEnabled() {
+    return flag(Constants.KEY_TASK_ISLAND, true);
+  }
+
+  public void setTaskIslandEnabled(boolean v) {
+    prefs.edit().putBoolean(Constants.KEY_TASK_ISLAND, v).apply();
+  }
+
+  /** 岛上用系统计时器显示耗时；开启后状态不变就不再按秒重绘通知。 */
+  public boolean isTaskIslandChronometer() {
+    return flag(Constants.KEY_TASK_ISLAND_CHRONOMETER, false);
+  }
+
+  public void setTaskIslandChronometer(boolean v) {
+    prefs.edit().putBoolean(Constants.KEY_TASK_ISLAND_CHRONOMETER, v).apply();
   }
 
   public boolean isPictureInPictureEnabled() {
@@ -289,6 +387,44 @@ public class ConfigStore {
             Constants.KEY_PICTURE_IN_PICTURE_LAYOUT,
             com.deepseekharness.app.util.PictureInPicturePolicy.layout(value))
         .apply();
+  }
+
+  /** 桌面图标启动后的页面；未知或缺失值一律回到主界面。不在 BACKUP_SETTING_KEYS 中。 */
+  public String getEntryTarget() {
+    return com.deepseekharness.app.util.EntryTarget.normalize(
+        text(Constants.KEY_ENTRY_TARGET, com.deepseekharness.app.util.EntryTarget.MAIN));
+  }
+
+  /** 同步提交：桥接口需要如实回报是否已写入。 */
+  public boolean setEntryTarget(String value) {
+    return prefs
+        .edit()
+        .putString(
+            Constants.KEY_ENTRY_TARGET, com.deepseekharness.app.util.EntryTarget.normalize(value))
+        .commit();
+  }
+
+  /** 最近一次已核验网页的背景色；没有记录时返回 null。 */
+  public Integer getEntryWebBackground() {
+    Object value = prefs.getAll().get(Constants.KEY_ENTRY_WEB_BACKGROUND);
+    return value instanceof Integer ? (Integer) value : null;
+  }
+
+  public void setEntryWebBackground(int color) {
+    Integer current = getEntryWebBackground();
+    if (current != null && current == color) return;
+    prefs.edit().putInt(Constants.KEY_ENTRY_WEB_BACKGROUND, color).apply();
+  }
+
+  /** 最近一次前台是否为 Web；系统回收后恢复时据此决定回到 Web 还是主界面。 */
+  public boolean isLastForegroundWeb() {
+    return flag(Constants.KEY_ENTRY_LAST_WEB, false);
+  }
+
+  /** 只在值变化时写入：Web / 主界面每次回到前台都会调用。 */
+  public void setLastForegroundWeb(boolean web) {
+    if (isLastForegroundWeb() == web) return;
+    prefs.edit().putBoolean(Constants.KEY_ENTRY_LAST_WEB, web).apply();
   }
 
   public boolean isBackupKey() {
@@ -428,20 +564,23 @@ public class ConfigStore {
     prefs.edit().putBoolean(Constants.KEY_LAN_MODE, v).apply();
   }
 
-  // ================= 其他 =================
-
-  public String getPermissionMode() {
-    return com.deepseekharness.app.util.PermissionMode.normalize(
-        text(Constants.KEY_PERMISSION_MODE, "danger-full-access"));
+  /** Password verifier remains local and is never included in backup exports. */
+  public boolean hasLanPassword() {
+    return !text(com.deepseekharness.app.util.LanPassword.PREF_KEY, "").isEmpty();
   }
 
-  public void setPermissionMode(String v) {
-    prefs
+  /** Call off the UI thread: deriving the verifier is deliberately expensive. */
+  public void setLanPassword(String password) {
+    String verifier = com.deepseekharness.app.util.LanPassword.create(password);
+    com.deepseekharness.app.LanProxyService.stopLanListener();
+    if (!prefs
         .edit()
-        .putString(
-            Constants.KEY_PERMISSION_MODE, com.deepseekharness.app.util.PermissionMode.normalize(v))
-        .apply();
+        .putString(com.deepseekharness.app.util.LanPassword.PREF_KEY, verifier)
+        .commit()) throw new IllegalStateException("LAN password could not be saved");
+    com.deepseekharness.app.LanProxyService.stopLanListener();
   }
+
+  // ================= 其他 =================
 
   public String getWorkdir() {
     return text(Constants.KEY_WORKDIR, Constants.DEFAULT_WORKDIR);
@@ -561,7 +700,6 @@ public class ConfigStore {
         .put("port", getPort())
         .put("portMode", getWebPortMode())
         .put("workdir", getWorkdir())
-        .put("permissionMode", getPermissionMode())
         .put("confirmShell", isConfirmShell())
         .put("desktopMode", isDesktopMode())
         .put("checkUpdate", isCheckUpdate())
@@ -582,7 +720,6 @@ public class ConfigStore {
         .put("port", getPort())
         .put("portMode", getWebPortMode())
         .put("workdir", getWorkdir())
-        .put("permissionMode", getPermissionMode())
         .put("confirmShell", isConfirmShell())
         .put("desktopMode", isDesktopMode())
         .put("checkUpdate", isCheckUpdate())
@@ -604,17 +741,12 @@ public class ConfigStore {
   }
 
   public void importBackupSettings(org.json.JSONObject data) throws java.io.IOException {
-    SharedPreferences.Editor edit = prefs.edit();
+    SharedPreferences.Editor edit = prefs.edit().remove(Constants.KEY_PERMISSION_MODE);
     if (data.has("port"))
       edit.putString(Constants.KEY_PORT, String.valueOf(importedPort(data)))
           .putString(Constants.KEY_WEB_PORT_MODE, importedPortMode(data));
     if (data.has("workdir"))
       edit.putString(Constants.KEY_WORKDIR, data.optString("workdir", Constants.DEFAULT_WORKDIR));
-    if (data.has("permissionMode"))
-      edit.putString(
-          Constants.KEY_PERMISSION_MODE,
-          com.deepseekharness.app.util.PermissionMode.normalize(
-              data.optString("permissionMode", "danger-full-access")));
     if (data.has("confirmShell"))
       edit.putBoolean(Constants.KEY_CONFIRM_SHELL, data.optBoolean("confirmShell", true));
     if (data.has("desktopMode"))
@@ -652,7 +784,6 @@ public class ConfigStore {
     Constants.KEY_PORT,
     Constants.KEY_WEB_PORT_MODE,
     Constants.KEY_WORKDIR,
-    Constants.KEY_PERMISSION_MODE,
     Constants.KEY_CONFIRM_SHELL,
     Constants.KEY_DESKTOP_MODE,
     Constants.KEY_CHECK_UPDATE,
@@ -684,11 +815,6 @@ public class ConfigStore {
         throw new java.io.IOException("SETTINGS_PATH");
       next.put(Constants.KEY_WORKDIR, path);
     }
-    if (data.has("permissionMode"))
-      next.put(
-          Constants.KEY_PERMISSION_MODE,
-          com.deepseekharness.app.util.PermissionMode.normalize(
-              data.optString("permissionMode", "danger-full-access")));
     for (String[] pair :
         new String[][] {
           {"confirmShell", Constants.KEY_CONFIRM_SHELL},
@@ -723,8 +849,10 @@ public class ConfigStore {
   public void applyHostSettings(java.util.Map<String, Object> values) throws java.io.IOException {
     java.util.Set<String> allowed =
         new java.util.HashSet<>(java.util.Arrays.asList(BACKUP_SETTING_KEYS));
+    // 旧中断事务可能带这个退休字段；接受原日志格式，但不再恢复其值。
+    allowed.add(Constants.KEY_PERMISSION_MODE);
     if (!allowed.containsAll(values.keySet())) throw new java.io.IOException("SETTINGS_KEYS");
-    SharedPreferences.Editor edit = prefs.edit();
+    SharedPreferences.Editor edit = prefs.edit().remove(Constants.KEY_PERMISSION_MODE);
     for (String key : BACKUP_SETTING_KEYS) {
       Object value = values.get(key);
       if (value == null) edit.remove(key);
@@ -749,7 +877,7 @@ public class ConfigStore {
   public void finishRestoreSettings(boolean rollback) throws Exception {
     String saved = text("backup_restore_previous_settings", "");
     if (saved.isEmpty()) return;
-    SharedPreferences.Editor edit = prefs.edit();
+    SharedPreferences.Editor edit = prefs.edit().remove(Constants.KEY_PERMISSION_MODE);
     if (rollback) {
       org.json.JSONObject before = new org.json.JSONObject(saved);
       for (String key : BACKUP_SETTING_KEYS) {

@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.5-20261106.0700-dsh0.2.2-rc.1 / build332
+
+- Versão somente de documentação: corrige o registro de arquivamento T58. O patch do indicador de primeira conexão está mesclado e incluído desde o build324 (`a54f9854`); todas as versões de build324 a build332 o carregam. A tag de arquivo `archive/feat/first-connect-indicator-20261106` (`5918af63`) é apenas um snapshot de ramo separado do mesmo patch: não é mesclado em separado nem significa que o patch esteja ausente do pacote.
+- Sem novos recursos, sem mudança de comportamento e sem alteração do runtime: fixed-inputs não são reconstruídos, managed-runtime-inputs e runtime-descriptor ficam inalterados (runtimeId continua `35e3f499`), e nenhum runtime gerenciado ou plugin é adicionado.
+- Escopo de verificação: todo o grupo contracts do host, a verificação de formato de toda a árvore (JDK 17), o host-tests manifest e testes unitários direcionados (página de atualização); não houve validação em dispositivo localmente. O versionCode sobe para 332 (base build331); a revisão DSHA permanece 0.2.1-rc.5 e o DSH embutido é 0.2.2-rc.1.

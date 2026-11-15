@@ -10,18 +10,26 @@ import android.view.ViewGroup;
 import android.widget.*;
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.util.UiText;
+import com.deepseekharness.app.util.VirtualScreenPreviewPolicy;
 import java.lang.ref.WeakReference;
 
-/** DSHA 前台内部的预览小窗；不需要系统悬浮窗权限，也不抢走当前对话。 */
+/**
+ * DSHA 前台内部的虚拟屏预览。
+ *
+ * <p>默认是宿主页顶部的蓝色提示条（只显示正在操作的目标，不转发触摸）；「完整预览」档位保留
+ * 旧的页内小窗。两者都不需要系统悬浮窗权限，也不抢走当前对话；系统悬浮预览显示时让位。
+ * 档位与收起意图由 {@link VirtualScreenPreviewSettings} 持久化，不按显示代次记忆。
+ */
 public final class VirtualScreenForeground {
   private final Handler MAIN = new Handler(Looper.getMainLooper());
   private WeakReference<Activity> host = new WeakReference<>(null);
   private LinearLayout panel;
+  private VirtualScreenStrip strip;
   private ViewGroup parent;
   private ImageView image;
   private Bitmap bitmap;
   private long epoch, screenEpoch = -1;
-  private String hiddenGeneration = "";
+  private VirtualScreenPreviewPolicy.Mode shownMode;
   private VirtualScreenPreviews.Lease previewLease;
 
   private final VirtualScreenManager session;
@@ -60,20 +68,19 @@ public final class VirtualScreenForeground {
     onMain(
         () -> {
           if (fence != session.epoch()) return;
-          hiddenGeneration = "";
           sync();
         });
   }
 
-  public void stopped() {
-    stopped(session.epoch());
+  /** 系统悬浮预览显示/收起、设置里改档位或收起后重新判断：两种预览不同时出现。 */
+  public void refresh() {
+    onMain(this::sync);
   }
 
   public void stopped(long fence) {
     onMain(
         () -> {
           if (fence != session.epoch()) return;
-          hiddenGeneration = "";
           detach();
         });
   }
@@ -85,22 +92,46 @@ public final class VirtualScreenForeground {
 
   private void sync() {
     VirtualScreenPreviews.assertMain();
-    if (panel != null && screenEpoch != session.epoch()) detach();
+    if ((panel != null || strip != null) && screenEpoch != session.epoch()) detach();
     Activity activity = host.get();
     String generation = session.generation();
-    if (activity == null
-        || activity.isFinishing()
-        || activity.isDestroyed()
-        || activity instanceof VirtualScreenActivity
-        || generation.isEmpty()
-        || hiddenGeneration.equals(generation)) {
+    if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
       detach();
       return;
     }
-    if (panel != null) return;
+    VirtualScreenPreviewPolicy.Mode mode = VirtualScreenPreviewSettings.mode(activity);
+    if (!VirtualScreenPreviewPolicy.visible(
+        mode,
+        VirtualScreenPreviewSettings.collapsed(activity),
+        !generation.isEmpty(),
+        true,
+        activity instanceof VirtualScreenActivity,
+        session.overlay().showing())) {
+      detach();
+      return;
+    }
+    if (shownMode == mode && (panel != null || strip != null)) return;
+    detach();
     if (!(activity.findViewById(android.R.id.content) instanceof FrameLayout)) return;
     parent = activity.findViewById(android.R.id.content);
+    screenEpoch = session.epoch();
+    if (VirtualScreenPreviewPolicy.full(mode)) attachFull(activity);
+    else attachStrip(activity);
+    shownMode = mode;
+  }
+
+  /** 顶部提示条：3dp 呼吸线 + 目标文字，热区 40dp；只显示，不向虚拟屏转发触摸。 */
+  private void attachStrip(Activity activity) {
+    strip = new VirtualScreenStrip(activity, session);
+    parent.addView(strip.view(), new FrameLayout.LayoutParams(-1, dp(activity, 40), Gravity.TOP));
+    strip.start();
+  }
+
+  /** 旧的页内完整预览小窗；拖动标题移动，点画面打开控制页。 */
+  private void attachFull(Activity activity) {
+    screenEpoch = session.epoch();
     panel = new LinearLayout(activity);
+    panel.setId(R.id.vscreen_preview_panel);
     panel.setOrientation(LinearLayout.VERTICAL);
     panel.setBackgroundResource(R.drawable.bg_card);
     panel.setElevation(dp(activity, 12));
@@ -122,11 +153,13 @@ public final class VirtualScreenForeground {
     hide.setTextSize(22);
     hide.setTextColor(activity.getColor(R.color.text));
     hide.setGravity(Gravity.CENTER);
-    hide.setContentDescription(UiText.choose("隐藏预览", "Hide preview"));
+    hide.setContentDescription(UiText.choose("收起预览", "Hide preview"));
     bar.addView(hide, new LinearLayout.LayoutParams(dp(activity, 40), dp(activity, 40)));
     hide.setOnClickListener(
         v -> {
-          hiddenGeneration = session.generation();
+          // 收起意图持久化：换代次或重启后不会自己回来，只能从设置重新选择档位。
+          if (activity.isFinishing() || activity.isDestroyed()) return;
+          VirtualScreenPreviewSettings.collapse(activity);
           detach();
         });
     panel.addView(bar);
@@ -179,7 +212,6 @@ public final class VirtualScreenForeground {
             return true;
           }
         });
-    screenEpoch = session.epoch();
     long current = ++epoch;
     previewLease =
         session
@@ -209,6 +241,11 @@ public final class VirtualScreenForeground {
   private void detach() {
     VirtualScreenPreviews.assertMain();
     epoch++;
+    shownMode = null;
+    if (strip != null) {
+      strip.dismiss();
+      strip = null;
+    }
     if (previewLease != null) {
       previewLease.close();
       previewLease = null;

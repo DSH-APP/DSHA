@@ -44,7 +44,8 @@ def main():
     # 直接调用 Java WrapperMain，不把路径或参数拼给 PowerShell/cmd。
     command = [java, '-cp', str(ROOT / 'gradle/wrapper/gradle-wrapper.jar'),
                'org.gradle.wrapper.GradleWrapperMain', '--console=plain', '--continue', '-I', str(init)]
-    tasks = ['testStandardDebugUnitTest', 'testLowDebugUnitTest']
+    # build209 起只有单一 Standard 变体：不再有 testLowDebugUnitTest。
+    tasks = ['testStandardDebugUnitTest']
     for task in tasks:
         command += [':app:' + task, '--tests', 'com.deepseekharness.app.backup.*']
     started = time.time()

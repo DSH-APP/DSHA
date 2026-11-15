@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 示意通知卡：bg 底 + 强调色细边，表示这条是占岛的那条。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_bg" />
+    <corners android:radius="14dp" />
+    <stroke android:width="1dp" android:color="@color/shell_accent" />
+</shape>

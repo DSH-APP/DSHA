@@ -12,7 +12,24 @@
   // dsh-client 可在页面重渲染时再次调用同一个插件的 apply。成功结果
   // 对启动诊断没有新增信息；只记录首次成功，错误/下一次错误前的加载仍保留。
   var reportedActive = Object.create(null), reportedLoading = Object.create(null);
-  function uiText(zh, en) { return window.__DSHA_LANGUAGE__ === 'en' ? en : zh; }
+  // Runs before the locale plugin; these observer labels must be self-contained.
+  var uiMessages = {
+    zh: {initializing:'正在初始化网页插件：', initialized:'网页插件初始化返回：', ready:'网页已就绪'},
+    en: {initializing:'Initializing web plugin: ', initialized:'Web plugin initialization returned: ', ready:'Web page ready'},
+    'zh-Hant': {initializing:'正在初始化網頁外掛：', initialized:'網頁外掛初始化已返回：', ready:'網頁已就緒'},
+    ru: {initializing:'Инициализация веб-плагина: ', initialized:'Инициализация веб-плагина завершилась: ', ready:'Веб-страница готова'},
+    ja: {initializing:'Web プラグインを初期化中：', initialized:'Web プラグインの初期化から戻りました：', ready:'Web ページの準備ができました'},
+    ko: {initializing:'웹 플러그인 초기화 중: ', initialized:'웹 플러그인 초기화가 반환되었습니다: ', ready:'웹 페이지가 준비되었습니다'},
+    ar: {initializing:'جارٍ تهيئة إضافة الويب: ', initialized:'عادت تهيئة إضافة الويب: ', ready:'صفحة الويب جاهزة'},
+    pt: {initializing:'Inicializando plugin da Web: ', initialized:'A inicialização do plugin da Web retornou: ', ready:'Página da Web pronta'},
+    la: {initializing:'Additamentum interretiale initiatur: ', initialized:'Initiatio additamenti interretialis rediit: ', ready:'Pagina interretialis parata est'},
+    fr: {initializing:'Initialisation du module Web : ', initialized:'L’initialisation du module Web a rendu la main : ', ready:'La page Web est prête'}
+  };
+  function uiText(key) {
+    var locale = String(window.__DSHA_LANGUAGE__ || 'zh').replace(/_/g,'-').toLowerCase();
+    var language = /^zh-(?:hant|tw|hk|mo)(?:-|$)/.test(locale) ? 'zh-Hant' : locale.split('-')[0];
+    return (uiMessages[language] || uiMessages.zh)[key];
+  }
   function report(type, id, message, fatal) {
     if (count++ > 500) return;
     var text = JSON.stringify({type:type, id:String(id || '').slice(0,214), message:String(message || '').slice(0,6000), fatal:!!fatal && !ready,
@@ -42,13 +59,13 @@
     if (!descriptor || !descriptor.writable) return value;
     var original = value.apply;
     value.apply = function () {
-      reportPlugin('loading', id, uiText('正在初始化网页插件：', 'Initializing web plugin: ') + id);
+      reportPlugin('loading', id, uiText('initializing') + id);
       try {
         var result = original.apply(this, arguments);
         if (result && typeof result.then === 'function') return result.then(function (v) {
-          reportPlugin('active', id, uiText('网页插件初始化返回：', 'Web plugin initialization returned: ') + id); return v;
+          reportPlugin('active', id, uiText('initialized') + id); return v;
         }, function (error) { reportPlugin('issue', id, detail(error)); throw error; });
-        reportPlugin('active', id, uiText('网页插件初始化返回：', 'Web plugin initialization returned: ') + id); return result;
+        reportPlugin('active', id, uiText('initialized') + id); return result;
       } catch (error) { reportPlugin('issue', id, detail(error)); throw error; }
     };
     return value;
@@ -99,7 +116,7 @@
     // 使用真实布局的 shell 槽位，避免把任意非空 root 或 HTTP/插件就绪当作页面就绪。
     var mountedShell = root && root.querySelector('[data-shell-overlay]') && root.querySelector('[data-shell-bottom]');
     if (!boot && (document.querySelector('[data-composer-input]') || mountedShell || (seenBoot && root && root.children.length))) {
-      ready = true; report('ready', '', uiText('网页已就绪', 'Web page ready')); observer.disconnect();
+      ready = true; report('ready', '', uiText('ready')); observer.disconnect();
     }
   }
   var observer = new MutationObserver(inspect);

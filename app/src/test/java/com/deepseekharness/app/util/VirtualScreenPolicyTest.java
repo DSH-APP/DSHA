@@ -92,4 +92,25 @@ public class VirtualScreenPolicyTest {
     // 看过、仍是最新帧，但超过 30 秒窗口。
     assertEquals("OBSERVATION_TIMEOUT", VirtualScreenPolicy.inputRejection(5, 5, 5, 30_001));
   }
+
+  @Test
+  public void refusesOnlyTheHostPackageAsAVirtualScreenLaunchTarget() {
+    // 宿主自身会把正在运行的同一进程带进副屏，WebView 在 libmonochrome 里崩（T76）。
+    assertEquals(
+        "VSCREEN_SELF_LAUNCH_REFUSED",
+        VirtualScreenPolicy.selfLaunchRejection(
+            "io.github.sunsetrne.dsha", "io.github.sunsetrne.dsha"));
+    // 其它应用照常放行。
+    assertNull(
+        VirtualScreenPolicy.selfLaunchRejection("com.tencent.mm", "io.github.sunsetrne.dsha"));
+    // 测试包是另一个应用 / 进程：不按前缀或子串误伤。
+    assertNull(
+        VirtualScreenPolicy.selfLaunchRejection(
+            "io.github.sunsetrne.dsha.test", "io.github.sunsetrne.dsha"));
+    // 缺包名（例如宿主上下文不可用）时不假装能判定宿主。
+    assertNull(VirtualScreenPolicy.selfLaunchRejection(null, "io.github.sunsetrne.dsha"));
+    assertNull(VirtualScreenPolicy.selfLaunchRejection("", "io.github.sunsetrne.dsha"));
+    assertNull(VirtualScreenPolicy.selfLaunchRejection("io.github.sunsetrne.dsha", ""));
+    assertNull(VirtualScreenPolicy.selfLaunchRejection("io.github.sunsetrne.dsha", null));
+  }
 }

@@ -4,7 +4,7 @@ import android.accessibilityservice.AccessibilityService;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityWindowInfo;
 import com.deepseekharness.app.util.ScreenTarget;
-import com.deepseekharness.app.util.VirtualScreenWindowPolicy;
+import com.deepseekharness.app.util.VirtualScreenWindowEvidence;
 import com.deepseekharness.app.util.MainScreenWindowPolicy;
 import com.deepseekharness.app.util.ScreenWindowRegion;
 import java.util.ArrayList;
@@ -19,16 +19,29 @@ public final class ScreenTargetResolver {
     public final String diagnostic;
     public final ScreenWindowRegion region;
 
+    /** 虚拟显示的窗口证据；物理屏或 API<30 为 null。只读数据，不随 root 回收。 */
+    public final VirtualScreenWindowEvidence.Snapshot evidence;
+
     private Resolution(int display, AccessibilityNodeInfo root, String diagnostic) {
-      this(display, root, diagnostic, null);
+      this(display, root, diagnostic, null, null);
     }
 
     private Resolution(
         int display, AccessibilityNodeInfo root, String diagnostic, ScreenWindowRegion region) {
+      this(display, root, diagnostic, region, null);
+    }
+
+    private Resolution(
+        int display,
+        AccessibilityNodeInfo root,
+        String diagnostic,
+        ScreenWindowRegion region,
+        VirtualScreenWindowEvidence.Snapshot evidence) {
       this.root = root;
       target = identity(display, root);
       this.diagnostic = diagnostic;
       this.region = region;
+      this.evidence = evidence;
     }
 
     @Override
@@ -44,6 +57,17 @@ public final class ScreenTargetResolver {
             display,
             root.getWindowId(),
             root.getPackageName() == null ? "" : root.getPackageName().toString());
+  }
+
+  /** 一次只读诊断：诊断码与窗口证据同帧产出，供失败回复使用；不签发任何动作身份。 */
+  public static final class Diagnostics {
+    public final String diagnostic;
+    public final VirtualScreenWindowEvidence.Snapshot evidence;
+
+    public Diagnostics(String diagnostic, VirtualScreenWindowEvidence.Snapshot evidence) {
+      this.diagnostic = diagnostic;
+      this.evidence = evidence;
+    }
   }
 
   private static int windowDisplay(AccessibilityWindowInfo window) {
@@ -68,28 +92,50 @@ public final class ScreenTargetResolver {
     var all = service.getWindowsOnAllDisplays();
     try {
       var windows = all == null ? null : all.get(display);
-      if (windows == null || windows.isEmpty()) return new Resolution(display, null, "NO_WINDOWS");
+      if (windows == null || windows.isEmpty())
+        return new Resolution(
+            display,
+            null,
+            "NO_WINDOWS",
+            null,
+            VirtualScreenWindowEvidence.of(display, java.util.List.of()));
       if (display == 0) return physical(service, windows);
-      var candidates = new ArrayList<VirtualScreenWindowPolicy.Window>();
-      for (AccessibilityWindowInfo window : windows)
-        candidates.add(
-            new VirtualScreenWindowPolicy.Window(
+      var evidenceWindows = new ArrayList<VirtualScreenWindowEvidence.Window>();
+      for (AccessibilityWindowInfo window : windows) {
+        android.graphics.Rect bounds = new android.graphics.Rect();
+        window.getBoundsInScreen(bounds);
+        CharSequence title = window.getTitle();
+        evidenceWindows.add(
+            new VirtualScreenWindowEvidence.Window(
                 windowDisplay(window),
                 window.getId(),
+                window.getType(),
                 window.getLayer(),
-                window.getType() == AccessibilityWindowInfo.TYPE_APPLICATION,
+                bounds.left,
+                bounds.top,
+                bounds.right,
+                bounds.bottom,
                 window.isFocused(),
-                window.isActive()));
-      int selected = VirtualScreenWindowPolicy.select(display, candidates);
-      if (selected < 0) return new Resolution(display, null, "NO_UNIQUE_APPLICATION_WINDOW");
-      AccessibilityWindowInfo window = windows.get(selected);
+                window.isActive(),
+                title == null ? null : title.toString()));
+      }
+      var evidence = VirtualScreenWindowEvidence.of(display, evidenceWindows);
+      if (evidence.selectedIndex < 0)
+        return new Resolution(display, null, "NO_UNIQUE_APPLICATION_WINDOW", null, evidence);
+      AccessibilityWindowInfo window = windows.get(evidence.selectedIndex);
       AccessibilityNodeInfo root = window.getRoot();
-      if (root == null) return new Resolution(display, null, "ROOT_UNAVAILABLE");
+      if (root == null) return new Resolution(display, null, "ROOT_UNAVAILABLE", null, evidence);
       if (root.getWindowId() != window.getId()) {
         root.recycle();
-        return new Resolution(display, null, "WINDOW_ID_MISMATCH");
+        return new Resolution(display, null, "WINDOW_ID_MISMATCH", null, evidence);
       }
-      return new Resolution(display, root, "READABLE");
+      return new Resolution(
+          display,
+          root,
+          "READABLE",
+          null,
+          evidence.withTargetPackage(
+              root.getPackageName() == null ? "" : root.getPackageName().toString()));
     } finally {
       // getWindowsOnAllDisplays transfers every display's handles, not only the requested list.
       var released =
@@ -108,6 +154,28 @@ public final class ScreenTargetResolver {
     for (var window : windows) {
       android.graphics.Rect bounds = new android.graphics.Rect();
       window.getBoundsInScreen(bounds);
+      var measured =
+          new ScreenWindowRegion.Bounds(bounds.left, bounds.top, bounds.right, bounds.bottom);
+      boolean ownPackage = false;
+      AccessibilityNodeInfo overlayRoot = window.getRoot();
+      if (overlayRoot != null)
+        try {
+          ownPackage =
+              service
+                  .getPackageName()
+                  .contentEquals(
+                      overlayRoot.getPackageName() == null ? "" : overlayRoot.getPackageName());
+        } finally {
+          overlayRoot.recycle();
+        }
+      var exclusion =
+          com.deepseekharness.app.control.OwnedScreenOverlay.match(
+              window.getId(), measured, ownPackage);
+      // #210：登记可能因悬浮窗重建后 windowId 漂移而失配；未登记的非焦点自有
+      // 悬浮窗按包名身份整窗排除，不把自身浮条/助手/确认窗判成目标遮挡。
+      exclusion =
+          MainScreenWindowPolicy.ownFallbackExclusion(
+              ownPackage, window.isFocused(), window.getId(), measured, exclusion);
       var kind =
           switch (window.getType()) {
             case AccessibilityWindowInfo.TYPE_APPLICATION ->
@@ -125,7 +193,8 @@ public final class ScreenTargetResolver {
               kind,
               window.isFocused(),
               window.isActive(),
-              new ScreenWindowRegion.Bounds(bounds.left, bounds.top, bounds.right, bounds.bottom)));
+              measured,
+              exclusion));
     }
     var selection = MainScreenWindowPolicy.selection(candidates);
     int selected = selection.index();

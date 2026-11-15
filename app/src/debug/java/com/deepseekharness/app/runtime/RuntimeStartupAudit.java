@@ -156,14 +156,10 @@ public final class RuntimeStartupAudit extends Instrumentation {
         new ProotBootstrap(app, "proot".equals(args.getString("terminal_runtime")));
     Process unrelated = new ProcessBuilder("/system/bin/sleep", "120").start();
     com.deepseekharness.app.PtySession[] terminal = {null};
-    long[] ownedTab = {-1};
     try {
+      // 低层维护夹具直接由PtySession pending集合追踪；不绕过生产前台票注册用户标签。
       runOnMainSync(
-          () -> {
-            terminal[0] = com.deepseekharness.app.PtySession.start(proot, 80, 24, null);
-            ownedTab[0] =
-                com.deepseekharness.app.core.TerminalSessionOwner.shared().addPty(terminal[0]).id;
-          });
+          () -> terminal[0] = com.deepseekharness.app.PtySession.start(proot, 80, 24, null));
       File childFile = new File(proot.getRootfsDir(), "tmp/dsha-terminal-audit.pid");
       terminal[0].write("unset HISTFILE; sleep 120 & echo $! > /tmp/dsha-terminal-audit.pid\n");
       long deadline = SystemClock.elapsedRealtime() + 5000;
@@ -253,9 +249,7 @@ public final class RuntimeStartupAudit extends Instrumentation {
           });
     } finally {
       Compat.destroy(unrelated);
-      if (ownedTab[0] >= 0)
-        com.deepseekharness.app.core.TerminalSessionOwner.shared().closePty(ownedTab[0], 6000);
-      else if (terminal[0] != null) terminal[0].finishAndWait(6000);
+      if (terminal[0] != null) terminal[0].finishAndWait(6000);
     }
   }
 

@@ -61,7 +61,7 @@ public final class WebPortPolicy {
   }
 
   public static boolean reserved(int port) {
-    return port == 3081 || port == 3090;
+    return LanPortPolicy.reserved(port) || BridgePortPolicy.reserved(port);
   }
 
   public static boolean available(int port) throws IOException {

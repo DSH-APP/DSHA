@@ -100,8 +100,10 @@ let frameControllerInstalled = false
  * blend into the page. On narrow screens:
  * - The viewport meta is OWNED by the plugin while armed (viewport-meta.ts):
  *   width=device-width, initial-scale=1, viewport-fit=cover,
- *   interactive-widget=resizes-content (keyboard shrinks the layout viewport
- *   on Chromium instead of panning the page), re-asserted on every host
+ *   without interactive-widget=resizes-content (dropped 2026-10-30: WebKit's
+ *   implementation is new and where it is half-done the page is compensated
+ *   twice — the plugin models the keyboard with visualViewport instead),
+ *   re-asserted on every host
  *   rewrite, node replacement, or late injection, so
  *   env(safe-area-inset-top) stays the real status-bar / notch height
  *   instead of silently going stale when the host touches the meta. No zoom
@@ -120,7 +122,33 @@ let frameControllerInstalled = false
  *   touch-action; pinch zoom stays available on purpose — it is the only way
  *   back out of a zoom the browser applied on its own.
  */
+/**
+ * 手机档启动时把宿主的侧栏收起来（2026-11-06 真机/浏览器：局域网在浏览器打开时，
+ * 宿主的 narrow 模式默认处于「展开」，而本插件的手机版几何是按「收起=抽屉」写的，
+ * 于是侧栏以桌面形态压在主区上，右边只剩一条会话、中间一大片空白）。
+ *
+ * 只做一次：本次页面生命周期里第一次武装之后，如果侧栏不是收起态，就点一次宿主的
+ * 折叠开关。用户之后自己拉开/收起都尊重现状，不会被反复纠正。
+ */
+function collapseSidebarOnStartup(ctx: ClientContext): void {
+  let done = false
+  addReconcilerTask({
+    name: 'collapse-sidebar-on-startup',
+    scopes: ['*', 'data-sidebar-collapsed'],
+    ensure: () => {
+      if (done) return
+      const frame = findFrame()
+      if (frame === null) return
+      done = true
+      if (frame.hasAttribute('data-sidebar-collapsed')) return
+      ctx.layout.toggleSidebar()
+    },
+    dispose: () => {},
+  })
+}
+
 export function installPhoneChrome(ctx: ClientContext): void {
+  collapseSidebarOnStartup(ctx)
   installMobileEffect(ctx, 'dsh-web-mobile: status bar theme + viewport + zoom guard', () => {
     const themeMeta = document.createElement('meta')
     themeMeta.name = 'theme-color'

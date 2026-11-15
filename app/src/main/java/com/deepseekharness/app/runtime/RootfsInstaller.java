@@ -54,17 +54,27 @@ final class RootfsInstaller {
         throw new IOException(com.deepseekharness.app.util.UiText.text("Ubuntu Python 运行环境不完整"));
       GuestScriptBudget.checkpoint();
       // 标准库的 C 扩展还依赖 SQLite/readline；仅有 Python 主程序并不代表它们可用。
-      File sqlite = new File(stage, "usr/lib/aarch64-linux-gnu/libsqlite3.so.0");
-      File readline = new File(stage, "usr/lib/aarch64-linux-gnu/libreadline.so.8");
-      if (!sqlite.isFile()
-          || sqlite.length() == 0
-          || !readline.isFile()
-          || readline.length() == 0) {
+      // 与插件查询就绪共用 guest 判据：apt/dpkg 或外部 root 换成的 soname 链接只要在容器内指向非空普通文件即可用。
+      String sqlite = "usr/lib/aarch64-linux-gnu/libsqlite3.so.0";
+      String readline = "usr/lib/aarch64-linux-gnu/libreadline.so.8";
+      boolean sqliteReady = supportReady(stage, sqlite),
+          readlineReady = supportReady(stage, readline);
+      if (!sqliteReady || !readlineReady) {
+        // 悬空或越界的链接会让签名归档以 TAR_FILE_CONFLICT 拒绝写入；只移除这两个链接本身后再写回普通文件。
+        // 已可用的一项（含 apt 的有效链接）不重写，避免另一项缺失时因链接冲突整体失败。
+        if (!sqliteReady) dropBrokenLink(stage, sqlite);
+        if (!readlineReady) dropBrokenLink(stage, readline);
         try (InputStream input = ctx.getAssets().open("python-support.bin")) {
-          TarGzipExtractor.extractAuto(input, stage, 0);
+          TarGzipExtractor.extractSelected(
+              input,
+              stage,
+              0,
+              name ->
+                  !(sqliteReady && name.equals(sqlite))
+                      && !(readlineReady && name.equals(readline)));
         }
       }
-      if (!sqlite.isFile() || !readline.isFile())
+      if (!supportReady(stage, sqlite) || !supportReady(stage, readline))
         throw new IOException(com.deepseekharness.app.util.UiText.text("Python 动态库不完整"));
       GuestScriptBudget.checkpoint();
       py.setExecutable(true, false);
@@ -84,6 +94,29 @@ final class RootfsInstaller {
           new File(stage, "root/.dsha-python-version"),
           "3.12-glibc-arm64\n".getBytes(java.nio.charset.StandardCharsets.UTF_8),
           false);
+    }
+  }
+
+  /** 与 RuntimeTools.queryReady 同一判据（rootfs 内按 guest 语义解析出的本 UID 可读普通文件），动态库另要求非空。 */
+  private static boolean supportReady(File stage, String relative) {
+    try {
+      var file =
+          RuntimeTools.guestFile(
+              new com.deepseekharness.app.backup.AndroidBackupFileSystem(), stage, relative);
+      return file.regular() && file.node.size > 0 && file.file.canRead();
+    } catch (IOException | RuntimeException unavailable) {
+      return false;
+    }
+  }
+
+  /** 只删除无法解析为普通文件的链接本身（父目录逐级 NOFOLLOW）；普通文件、目录与可用链接不动。 */
+  private static void dropBrokenLink(File stage, String relative) {
+    try {
+      var fs = new com.deepseekharness.app.backup.AndroidBackupFileSystem();
+      File link = fs.child(stage, relative);
+      if (fs.stat(link).type.equals("LINK") && !supportReady(stage, relative)) fs.delete(link);
+    } catch (IOException | RuntimeException unavailable) {
+      // 留给随后的签名归档解包报告实际冲突，不在这里扩大删除范围。
     }
   }
 

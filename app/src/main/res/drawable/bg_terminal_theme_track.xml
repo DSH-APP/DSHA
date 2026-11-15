@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 主题三段开关的轨道：raised 底 + 细描边，10dp 圆角（radius_small），段块内缩 7dp。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/terminal_raised" />
+    <corners android:radius="@dimen/radius_small" />
+    <stroke android:width="@dimen/stroke" android:color="@color/terminal_line" />
+</shape>

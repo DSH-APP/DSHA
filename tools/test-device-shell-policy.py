@@ -46,6 +46,9 @@ class PolicyTest(unittest.TestCase):
         return dict(version=1, kind=kind, argv=argv, operands=paths, paths=RULES,
                     selfPackage="com.dsh.client", selfUid=12346, sourceApk='/data/app/com.dsh.client/base.apk')
 
+    def root_shell_plan(self, command, mode='relaxed', su=True, rootOnly=True):
+        return dict(version=1, kind='SHELL', command=command, mode=mode, rootOnly=rootOnly, su=su)
+
     def execute(self, plan): return policy.execute(plan, self.shell, lambda text, code: result(text, code))
 
     def no_mutations(self):
@@ -202,6 +205,60 @@ class PolicyTest(unittest.TestCase):
             with self.assertRaises(policy.Blocked): self.execute(bad)
         self.assertEqual([], self.sent)
 
+    def test_root_shell_plan_is_dispatched_raw_exactly_once(self):
+        # 回归：合法 SHELL 曾因 execute() 入口 kind 白名单漏加 'SHELL' 而被整体拒绝。
+        # 放宽/完全放宽档只核对协议形态与 root 身份，原命令必须一字不改地只发送一次。
+        command = "settings put global airplane_mode_on 1; printf 'done %s\\n' \"$USER\""
+        for mode in ('relaxed', 'full'):
+            with self.subTest(mode=mode):
+                self.sent.clear()
+                reply = self.execute(self.root_shell_plan(command, mode=mode))
+                self.assertEqual([command], self.sent)
+                self.assertEqual('executed', reply.output)
+                self.assertEqual(0, reply.exit_code)
+        self.assertEqual(0, sum(command.startswith('/system/bin/') for command in self.sent))
+
+    def test_root_shell_plan_requires_su_root_only_and_known_mode(self):
+        for change in ({'su': False}, {'su': None}, {'su': 1},
+                       {'rootOnly': False}, {'rootOnly': None}, {'rootOnly': 1},
+                       {'mode': ''}, {'mode': None}, {'mode': 'strict'}, {'mode': 'STRICT'},
+                       {'mode': 'relaxed '}, {'mode': 'unknown'}):
+            with self.subTest(change=change):
+                self.sent.clear()
+                with self.assertRaises(policy.Blocked):
+                    self.execute(dict(self.root_shell_plan('settings put global x 1'), **change))
+                self.assertEqual([], self.sent)
+        for key in ('su', 'rootOnly', 'mode'):
+            missing = self.root_shell_plan('settings put global x 1'); missing.pop(key)
+            with self.subTest(missing=key):
+                with self.assertRaises(policy.Blocked): self.execute(missing)
+        self.assertEqual([], self.sent)
+
+    def test_root_shell_plan_rejects_sms_surfaces_in_both_modes(self):
+        for command in ('cat /data/user/0/com.android.providers.telephony/databases/mmssms.db',
+                        'content query --uri content://sms --where 1=0',
+                        'echo ok; content query --uri content://mms',
+                        "sqlite3 /data/data/com.android.providers.telephony/databases/mmssms.db 'select * from sms'",
+                        'CONTENT QUERY --URI CONTENT://SMS'):
+            for mode in ('relaxed', 'full'):
+                with self.subTest(command=command, mode=mode):
+                    self.sent.clear()
+                    with self.assertRaises(policy.Blocked): self.execute(self.root_shell_plan(command, mode=mode))
+                    self.assertEqual([], self.sent)
+
+    def test_root_shell_plan_rejects_empty_overlong_and_nul_commands(self):
+        for command in ('', 'echo hi\0', 'x' * 16385, '好' * 6000, None, 123):
+            with self.subTest(command=command):
+                self.sent.clear()
+                with self.assertRaises(policy.Blocked): self.execute(self.root_shell_plan(command))
+                self.assertEqual([], self.sent)
+
+    def test_root_shell_plan_accepts_maximum_utf8_length(self):
+        command = 'echo ' + 'a' * (16384 - len('echo '))
+        self.assertEqual(16384, len(command.encode('utf-8')))
+        self.execute(self.root_shell_plan(command, mode='full'))
+        self.assertEqual([command], self.sent)
+
     def test_refresh_groups_before_each_user_app_stop(self):
         plan = self.plan('STOP', ['am', 'force-stop', 'example.app'], ['example.app'])
         plan['apps'] = [dict(name='android', uid=12345, system=False)]
@@ -288,7 +345,9 @@ class PolicyTest(unittest.TestCase):
         self.assertEqual(['/system/bin/grep -e x -'], self.sent)
 
     def test_unknown_plan_never_dispatches(self):
-        for plan in (None, {}, dict(version=1, kind='DENY'), dict(version=2, kind='READ')):
+        for plan in (None, {}, dict(version=1, kind='DENY'), dict(version=2, kind='READ'),
+                     dict(version=2, kind='SHELL', command='id', mode='relaxed', rootOnly=True, su=True),
+                     dict(version=1, kind='SHELL')):
             with self.assertRaises(policy.Blocked): self.execute(plan)
         self.assertEqual([], self.sent)
 

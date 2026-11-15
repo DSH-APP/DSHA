@@ -345,7 +345,8 @@ public final class LayoutAuditInstrumentation extends Instrumentation {
         "返回入口缺失");
     ui(() -> ((EditText) MainActivity.active().findViewById(R.id.config_port)).setText("39081"));
     MainActivity before = MainActivity.active();
-    ui(() -> before.findViewById(R.id.btn_theme).performClick());
+    // 顶栏主题按钮已移到设置 › 主题与外观；直接切换到相反明暗，重建路径相同。
+    ui(() -> ThemeController.select(before, ThemeController.isDark(before) ? "light" : "dark"));
     until(
         () ->
             MainActivity.active() != null
@@ -395,7 +396,8 @@ public final class LayoutAuditInstrumentation extends Instrumentation {
                     .setTitle(com.deepseekharness.app.util.UiText.text("持续允许读取短信？"))
                     .setMessage(
                         com.deepseekharness.app.util.UiText.text(
-                            "当前 DSHA 环境内的助手和插件将能通过已授权的 root 或 ADB 查询短信，包括正文、号码和可能存在的验证码。\n\n后续短信查询不再逐条询问。可随时回到本页关闭，恢复逐次确认。"))
+                            "当前 DSHA 环境内的助手和插件将能通过已授权的 root 或 ADB 查询短信，包括正文、号码和可能存在的验证码。\n\n"
+                                + "后续短信查询不再逐条询问。可随时回到本页关闭，恢复逐次确认。"))
                     .setPositiveButton(
                         com.deepseekharness.app.util.UiText.text("允许短信读取"), (d, w) -> {});
               else
@@ -475,7 +477,9 @@ public final class LayoutAuditInstrumentation extends Instrumentation {
         "activity_diagnostics",
         "activity_plugin_install",
         "fragment_pty_terminal",
-        "fragment_terminal"
+        "fragment_terminal",
+        "fragment_saf_access",
+        "fragment_saf_browse"
       };
       if (devices)
         scenes =
@@ -502,13 +506,11 @@ public final class LayoutAuditInstrumentation extends Instrumentation {
               "activity_plugin_install",
               "fragment_pty_terminal",
               "fragment_terminal",
+              "fragment_saf_access",
+              "fragment_saf_browse",
               "fragment_device_grants",
               "activity_adb_pair",
-              "activity_extract",
-              "activity_welcome",
-              "welcome_page1",
-              "welcome_page2",
-              "welcome_page3"
+              "activity_extract"
             };
       boolean recovery = "recovery".equals(args.getString("mode"));
       if (recovery) scenes = new String[] {"recovery_empty", "recovery_records"};
@@ -598,8 +600,8 @@ public final class LayoutAuditInstrumentation extends Instrumentation {
                     });
                 require(
                     screen.canvas.findViewById(R.id.btnSort).getHeight()
-                        == screen.canvas.findViewById(R.id.btnPluginUpdates).getHeight(),
-                    "排序与更新按钮高度不一致");
+                        == screen.canvas.findViewById(R.id.btnPluginDownloadSource).getHeight(),
+                    "排序与下载源胶囊高度不一致");
               }
               ui(
                   () ->
@@ -609,26 +611,21 @@ public final class LayoutAuditInstrumentation extends Instrumentation {
             }
             if (scene.equals("update_idle"))
               require(
-                  screen.canvas.findViewById(R.id.update_install).getVisibility() == View.GONE,
+                  ((UpdateProgressButton) screen.canvas.findViewById(R.id.update_action))
+                          .action()
+                          .command
+                      == com.deepseekharness.app.util.UpdateActionPolicy.Command.CHECK,
                   "无更新时仍展示安装操作");
-            if (scene.equals("update_busy"))
+            if (scene.equals("update_busy")) {
+              // 下载中主按钮原位变成进度条：不可点，页面不提供取消（通知栏保留）。
+              UpdateProgressButton action = screen.canvas.findViewById(R.id.update_action);
               require(
-                  screen.canvas.findViewById(R.id.update_cancel).getVisibility() == View.VISIBLE
-                      && !screen.canvas.findViewById(R.id.update_download).isEnabled(),
+                  !action.isEnabled()
+                      && action.action().mode
+                          == com.deepseekharness.app.util.UpdateActionPolicy.Mode.FILL,
                   "下载状态操作错误");
-            if (n == 0 || n == 1 || n == 3 || n == 5) save(screen.canvas, name);
-            if (style && n == 5 && scene.equals("welcome_page1")) {
-              android.widget.ScrollView scroll = (android.widget.ScrollView) screen.canvas;
-              require(scroll.canScrollVertically(1), "短屏欢迎页不能滚动查看完整文案");
-              ui(
-                  () -> {
-                    scroll.setSmoothScrollingEnabled(false);
-                    scroll.fullScroll(View.FOCUS_DOWN);
-                  });
-              waitForIdleSync();
-              require(scroll.getScrollY() > 0, "欢迎页没有实际滚动到底部");
-              save(screen.canvas, name + "-bottom");
             }
+            if (n == 0 || n == 1 || n == 3 || n == 5) save(screen.canvas, name);
           }
           if (style)
             dialogs(

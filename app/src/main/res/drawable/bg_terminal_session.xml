@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 当前会话行底色：强调浅底 + 10dp 圆角；左侧 2dp 强调条用 bg_terminal_accent_bar 叠加。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/terminal_accent_bg" />
+    <corners android:radius="@dimen/radius_small" />
+</shape>

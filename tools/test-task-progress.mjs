@@ -208,4 +208,138 @@ reporter.event(session,{type:'turn/start',data:{turn:1}});await reporter.tick();
 console.log(JSON.stringify({calls,ambient:['DSH_TASK_GENERATION','DSH_TASK_INSTANCE','DSH_TASK_TOKEN'].map(key=>Object.hasOwn(process.env,key))}));
 `],{env:scrubbedParentEnv(),encoding:'utf8',timeout:10000});
 assert.equal(child.status,0,child.stderr);assert.deepEqual(JSON.parse(child.stdout.trim()),{calls:0,ambient:[false,false,false]});
-console.log('task-progress: late Session/producer ownership, one-shot cancellation, real rc2 child scrub, ambient secret removal, independent CLI zero context, HMR client/sequence/lease continuity PASS; subprocess source SHA256='+createHash('sha256').update(readFileSync(subprocessSource)).digest('hex'));
+// Detail, heartbeat and no-turn/end fallbacks share the same live-ownership rules.
+const detailSession={id:'detail-session',surface:{contentGeneration:0}};
+let detailNow=1000;
+const detailAgent={session:detailSession,status:'running',cancel(){},whenIdle(){return Promise.resolve()}};
+const detailTraffic=[];
+const detailCtx={webServer:{port:41821},agents:{get:()=>detailAgent,roots:()=>[detailAgent]},
+  sessionProjections:{stateOf:(session,key)=>key==='title'?'修复上岛':{lastTurn:1,openTurnStartSeq:1}}};
+const detailReporter=new TaskReporter(detailCtx,async(operation,payload)=>{
+  detailTraffic.push({operation,payload});
+  if(operation==='context') return {generation:3,instance:'actual-runtime',port:41821};
+  if(operation==='claim') return {};
+  return true;
+},()=>detailNow,webRegistration);
+detailReporter.event(detailSession,{type:'turn/start',data:{turn:1}});
+detailReporter.event(detailSession,{type:'tool/call',data:{turn:1,name:'read_file',arguments:'{"path":"src/README.md"}'}});
+await detailReporter.tick();
+const detailEvent=detailTraffic.filter(t=>t.operation==='event').at(-1).payload;
+assert.equal(detailEvent.phase,'tool');
+assert.equal(detailEvent.detail,'read_file · src/README.md');
+assert.equal(detailEvent.title,'修复上岛');
+assert.ok(!JSON.stringify(detailTraffic).includes('private text'),'chunks still never cross the bridge');
+const heartbeatStart=detailTraffic.filter(t=>t.operation==='event').length;
+for(let i=0;i<5;i++) await detailReporter.tick();
+assert.equal(detailTraffic.filter(t=>t.operation==='event').length,heartbeatStart+5,'a live turn heartbeats once per tick');
+// A command is reduced to argv[0]: full command lines can carry secrets.
+detailReporter.event(detailSession,{type:'tool/call',data:{turn:1,name:'bash',arguments:'{"command":"curl https://example.invalid?token=SECRET"}'}});
+await detailReporter.tick();
+assert.equal(detailTraffic.filter(t=>t.operation==='event').at(-1).payload.detail,'bash · curl');
+assert.ok(!JSON.stringify(detailTraffic).includes('SECRET'),'full command lines must not cross the bridge');
+// turn/end lost while the agent goes idle: converge to completed after the grace window.
+detailAgent.status='idle';
+for(const step of [2100,3200,5200]) { detailNow=step; await detailReporter.tick() }
+const detailEnd=detailTraffic.filter(t=>t.operation==='event').at(-1).payload;
+assert.equal(detailEnd.phase,'ended');
+assert.equal(detailEnd.reason,'completed');
+assert.equal(detailReporter.pending.size,0);
+const detailIdleStart=detailTraffic.length;
+for(let i=0;i<200;i++) await detailReporter.tick();
+assert.equal(detailTraffic.length,detailIdleStart,'a converged terminal fact stops heartbeat and claim traffic');
+detailReporter.dispose();
+// Agent replacement without turn/end must converge to interrupted, never completed.
+const replacedLiveSession={id:'replaced-live',surface:{contentGeneration:0}};
+const replacedLiveAgent={session:replacedLiveSession,status:'running'};
+const replacementLiveAgent={session:replacedLiveSession,status:'running'};
+let replacedLiveCurrent=replacedLiveAgent,replacedLiveNow=0;
+const replacedLiveTraffic=[];
+const replacedLiveCtx={webServer:{port:41821},agents:{get:()=>replacedLiveCurrent,roots:()=>[replacedLiveCurrent]},
+  sessionProjections:{stateOf:()=>({lastTurn:1,openTurnStartSeq:1})}};
+const replacedLiveReporter=new TaskReporter(replacedLiveCtx,async(operation,payload)=>{
+  replacedLiveTraffic.push({operation,payload});
+  if(operation==='context') return {generation:3,instance:'actual-runtime',port:41821};
+  if(operation==='claim') return {};
+  return true;
+},()=>replacedLiveNow,webRegistration);
+replacedLiveReporter.event(replacedLiveSession,{type:'turn/start',data:{turn:1}});
+await replacedLiveReporter.tick();
+replacedLiveCurrent=replacementLiveAgent;
+for(const step of [1000,2000,4100]) { replacedLiveNow=step; await replacedLiveReporter.tick() }
+const replacedLiveEnd=replacedLiveTraffic.filter(t=>t.operation==='event').at(-1).payload;
+assert.equal(replacedLiveEnd.phase,'ended');
+assert.equal(replacedLiveEnd.reason,'interrupted','a replaced Agent must not be reported as completed');
+replacedLiveReporter.dispose();
+// Ask-user questions expose a one-shot native answer endpoint and follow the projection.
+const askSession={id:'ask-session',surface:{contentGeneration:0}};
+const askAgent={session:askSession,status:'running'};
+let askOpen=[];
+const askTraffic=[];
+const askCtx={webServer:{port:41821},agents:{get:()=>askAgent,roots:()=>[askAgent]},
+  sessionProjections:{stateOf:(session,key)=>key==='userQuestions'?{questions:{active:askOpen}}:
+    key==='title'?'问一下':{lastTurn:1,openTurnStartSeq:1}}};
+const askReporter=new TaskReporter(askCtx,async(operation,payload)=>{
+  askTraffic.push({operation,payload});
+  if(operation==='context') return {generation:3,instance:'actual-runtime',port:41821};
+  if(operation==='claim') return {};
+  return true;
+},Date.now,webRegistration);
+askReporter.event(askSession,{type:'tool/call',data:{turn:1,callId:'call-1',name:'ask_user_question',
+  arguments:JSON.stringify({questions:[{id:'q1',question:'选哪个？',options:[{label:'继续'},{label:'取消'}]}]})}});
+await askReporter.tick();
+let askEvent=askTraffic.filter(t=>t.operation==='event').at(-1).payload;
+assert.equal(askEvent.phase,'waiting');
+assert.equal(askEvent.detail,'选哪个？');
+let askPayload=JSON.parse(askEvent.question);
+assert.equal(askPayload.callId,'call-1');
+assert.equal(askPayload.port,41821);
+assert.equal(askPayload.path,'/__dsha_question_answer');
+assert.equal(askPayload.questions[0].options.length,2);
+assert.equal(typeof askPayload.token,'string');
+// Projection lag must not erase the waiting state before the question is observed.
+assert.equal(askReporter.rows.get(askSession.id).phase,'waiting');
+// One-shot answer endpoint validation and resolution.
+let nativeAnswer;
+askReporter.waiters.set('call-1',{request:{questions:[{id:'q1',options:[{label:'继续'},{label:'取消'}]}]},
+  resolve:value=>{nativeAnswer=value},expires:Infinity});
+assert.deepEqual(askReporter.acceptAnswer({token:'wrong',callId:'call-1',answers:[]}),{ok:false,error:'TOKEN'});
+assert.deepEqual(askReporter.acceptAnswer({token:askReporter.answerToken,callId:'call-1',answers:[{id:'q1',selected:['不存在']}]}),{ok:false,error:'OPTION'});
+assert.deepEqual(askReporter.acceptAnswer({token:askReporter.answerToken,callId:'call-1',answers:[{id:'q1',selected:['继续']}]}),{ok:true});
+assert.deepEqual(nativeAnswer,{answers:[{id:'q1',selected:['继续']}]});
+assert.equal(askReporter.acceptAnswer({token:askReporter.answerToken,callId:'call-1',answers:[{id:'q1',selected:['继续']}]}).error,'NO_WAITING');
+// Multi-select keeps every chosen label; custom text is a first-class answer.
+let multiAnswer, customAnswer, mixedAnswer;
+askReporter.waiters.set('call-3',{request:{questions:[{id:'q3',options:[{label:'A'},{label:'B'}],multiSelect:true}]},
+  resolve:value=>{multiAnswer=value},expires:Infinity});
+assert.deepEqual(askReporter.acceptAnswer({token:askReporter.answerToken,callId:'call-3',answers:[{id:'q3',selected:['A','B']}]}),{ok:true});
+assert.deepEqual(multiAnswer,{answers:[{id:'q3',selected:['A','B']}]});
+askReporter.waiters.set('call-4',{request:{questions:[{id:'q4',options:[{label:'A'}]}]},
+  resolve:value=>{customAnswer=value},expires:Infinity});
+assert.deepEqual(askReporter.acceptAnswer({token:askReporter.answerToken,callId:'call-4',answers:[{id:'q4',selected:[],custom:'我自己写'}]}),{ok:true});
+assert.deepEqual(customAnswer,{answers:[{id:'q4',selected:[],custom:'我自己写'}]});
+askReporter.waiters.set('call-5',{request:{questions:[{id:'q5',options:[{label:'A'},{label:'B'}]}]},
+  resolve:value=>{mixedAnswer=value},expires:Infinity});
+assert.deepEqual(askReporter.acceptAnswer({token:askReporter.answerToken,callId:'call-5',answers:[{id:'q5',selected:['A'],custom:'补充'}]}),{ok:true});
+assert.deepEqual(mixedAnswer,{answers:[{id:'q5',selected:[],custom:'补充'}]},'single-select custom overrides selected');
+assert.deepEqual(askReporter.acceptAnswer({token:askReporter.answerToken,callId:'call-6',answers:[{id:'q6',selected:[]}]}).error,'NO_WAITING');
+// Multi-select question payload carries the flag and all option labels.
+askOpen=[{callId:'call-7',state:'open',questions:[{id:'q7',question:'选几个？',multiSelect:true,
+  options:[{label:'A'},{label:'B'},{label:'C'}]}]}];
+await askReporter.tick();
+askEvent=askTraffic.filter(t=>t.operation==='event').at(-1).payload;
+assert.equal(askEvent.phase,'waiting');
+assert.equal(JSON.parse(askEvent.question).questions[0].multiSelect,true);
+assert.equal(JSON.parse(askEvent.question).questions[0].options.length,3);
+// The projection keeps a live question and clears it once the web/native UI settles it.
+askOpen=[{callId:'call-2',state:'open',questions:[{id:'q2',question:'继续吗？',options:[{label:'是'}]}]}];
+await askReporter.tick();
+askEvent=askTraffic.filter(t=>t.operation==='event').at(-1).payload;
+assert.equal(askEvent.phase,'waiting');
+assert.equal(JSON.parse(askEvent.question).callId,'call-2');
+askOpen=[];
+await askReporter.tick();
+askEvent=askTraffic.filter(t=>t.operation==='event').at(-1).payload;
+assert.equal(askEvent.phase,'running');
+assert.equal(askEvent.question,'');
+askReporter.dispose();
+console.log('task-progress: late Session/producer ownership, one-shot cancellation, ask-answer options/multi/custom, detail/heartbeat/terminal convergence, real rc2 child scrub, ambient secret removal, independent CLI zero context, HMR client/sequence/lease continuity PASS; subprocess source SHA256='+createHash('sha256').update(readFileSync(subprocessSource)).digest('hex'));

@@ -9,15 +9,33 @@ import unittest
 from unittest.mock import patch
 from pathlib import Path
 import json
+import re
 import recovery_runtime_overlay as browser_overlay
 
-CURRENT_DSH = json.loads((Path(__file__).parents[1] / 'tools/dsh-runtime/package.json').read_text(encoding='utf8'))['dependencies']['@deepseek-ai/dsh']
+CURRENT_DSH = json.loads((Path(__file__).parents[1] / 'tools/recovery-runtime/lock.json').read_text(encoding='utf8'))['dshVersion']
 
 spec=importlib.util.spec_from_file_location('recovery_assets',Path(__file__).with_name('prepare-recovery-assets.py'))
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 
 
 class RecoveryAssetTests(unittest.TestCase):
+    def test_language_overlay_replaces_the_complete_pinned_predecessor_and_rejects_partial_forms(self):
+        assets = module.ROOT / 'app/src/main/assets'
+        recipe = json.loads((assets / 'recovery-recipes/0.2.1-rc.3/language-patch.json').read_text(encoding='utf8'))
+        previous = recipe['previousPatches']
+        canonical = '\n'.join(row['before'] for row in previous)
+        old = canonical
+        for row in previous:
+            old = browser_overlay.exact(old, row['before'], row['after'])
+        expected = browser_overlay.language_overlay(canonical, recipe, assets)
+        self.assertEqual(expected, browser_overlay.language_overlay(old, recipe, assets))
+        self.assertEqual(expected, browser_overlay.language_overlay(expected, recipe, assets))
+        partial = old.replace(previous[1]['after'], previous[1]['before'])
+        with self.assertRaisesRegex(ValueError, 'RECOVERY_LANGUAGE_PARTIAL_PREVIOUS_RECIPE'):
+            browser_overlay.language_overlay(partial, recipe, assets)
+        with self.assertRaisesRegex(ValueError, 'RECOVERY_OVERLAY_ANCHOR|RECOVERY_LANGUAGE_DUPLICATE_HELPER'):
+            browser_overlay.language_overlay(old + '\n' + expected, recipe, assets)
+
     def test_signed_capsule_dependencies_are_complete_and_bound_to_files(self):
         assets = module.ROOT / 'app/src/main/assets'
         proof = {}
@@ -42,6 +60,23 @@ class RecoveryAssetTests(unittest.TestCase):
         self.assertEqual(browser_overlay.exact('before patched + extra', 'before', 'before patched'), 'before patched + extra')
         with self.assertRaisesRegex(ValueError, 'RECOVERY_OVERLAY_ANCHOR'):
             browser_overlay.exact('before patched + before', 'before', 'before patched')
+
+    def test_android_overlay_inputs_match_the_generator_names(self):
+        # build193 起描述使用 recovery-recipes/<版本>/ 键，Android 曾仍读顶层 recipe 名；两边必须同源。
+        java = (module.ROOT / 'app/src/main/java/com/deepseekharness/app/util/RecoveryOverlayInputs.java').read_text(encoding='utf8')
+
+        def literals(field):
+            block = re.search(r'\b' + field + r'\s*=\s*\{(.*?)\};', java, re.S)
+            self.assertIsNotNone(block, field)
+            return tuple(re.findall(r'"([^"]+)"', block.group(1)))
+
+        fixed, recipes = literals('FIXED'), literals('RECIPES')
+        self.assertEqual(fixed, browser_overlay.INPUT_ASSETS)
+        self.assertEqual(browser_overlay.input_assets(CURRENT_DSH),
+                         fixed + tuple(browser_overlay.recipe_path(CURRENT_DSH, name) for name in recipes))
+        runtime = (module.ROOT / 'app/src/main/java/com/deepseekharness/app/recovery/RecoveryRuntime.java').read_text(encoding='utf8')
+        self.assertIn('RecoveryOverlayInputs.forVersion(descriptor.getString("dshVersion"))', runtime)
+        self.assertNotIn('OVERLAY_INPUTS', runtime)
 
     def layout(self, root):
         shared, store, output = root / 'shared', root / 'pinned', root / 'output'
@@ -182,18 +217,19 @@ class RecoveryAssetTests(unittest.TestCase):
             root=Path(temp);assets=root/'assets';(assets/'web-integration').mkdir(parents=True)
             (assets/'web-integration/es-compat.js').write_text('window.__ES_COMPAT__=true;',encoding='utf8')
             (assets/'web-integration/startup.js').write_text('window.__STARTUP__=true;',encoding='utf8')
-            (assets/'web-integration/language.js').write_text('function installDshaLanguageBridge(){}',encoding='utf8')
+            (assets/'web-integration/language.js').write_text('/* DSHA_UI_LANGUAGES_V3: fixture */\nfunction installDshaLanguageBridge(){}',encoding='utf8')
+            (assets/browser_overlay.recipe_path(CURRENT_DSH, 'pdf-compat-patch.json')).parent.mkdir(parents=True)
             spec=dict(dshVersion=CURRENT_DSH,module=browser_overlay.TARGETS['client.pdf.js'].removeprefix(browser_overlay.PREFIX),
                       resourceModule=browser_overlay.TARGETS['client-resources.js'].removeprefix(browser_overlay.PREFIX),
                       asset='web-integration/es-compat.js',mainBefore='window.__ModuleLoader__.load({',
                       workerBefore='new Blob([_dsh_pdf_worker_default,',
                       resourceBefore='return hostname;',resourceAfter='return fixedHostname;')
-            (assets/'pdf-compat-patch.json').write_text(json.dumps(spec),encoding='utf8')
+            (assets/browser_overlay.recipe_path(CURRENT_DSH, 'pdf-compat-patch.json')).write_text(json.dumps(spec),encoding='utf8')
             language=dict(dshVersion=CURRENT_DSH,module=browser_overlay.TARGETS['client-locale.js'].removeprefix(browser_overlay.PREFIX),
                           patches=[dict(before='provide locale;',after='provide locale; effect language;',prependAsset='web-integration/language.js'),
                                    dict(before='resolve active;',after='resolve active from native;'),
                                    dict(before='choose locale;',after='choose locale and notify native;')])
-            (assets/'language-patch.json').write_text(json.dumps(language),encoding='utf8')
+            (assets/browser_overlay.recipe_path(CURRENT_DSH, 'language-patch.json')).write_text(json.dumps(language),encoding='utf8')
             archive=root/'runtime.tar.gz'
             def build_archive(pdf):
                 self.archive(archive,[(browser_overlay.TARGETS['index.html'],
@@ -202,6 +238,8 @@ class RecoveryAssetTests(unittest.TestCase):
                      (browser_overlay.TARGETS['client-resources.js'],'return hostname;',False),
                      (browser_overlay.TARGETS['client-locale.js'],'provide locale; resolve active; choose locale;',False)])
             build_archive('window.__ModuleLoader__.load({\nnew Blob([_dsh_pdf_worker_default,')
+            (assets/'pdf-compat-patch.json').write_text('{"dshVersion":"formal-new-generation"}', encoding='utf8')
+            (assets/'language-patch.json').write_text('{"dshVersion":"formal-new-generation"}', encoding='utf8')
             raw, patched=browser_overlay.build(archive,assets,CURRENT_DSH)
             html=patched['index.html'].decode()
             self.assertLess(html.index('DSHA_BROWSER_COMPAT_BEGIN'),html.index('<script src="app.js"'))
@@ -215,12 +253,12 @@ class RecoveryAssetTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'RECOVERY_OVERLAY_ANCHOR'):
                 browser_overlay.build(archive,assets,CURRENT_DSH)
             spec['dshVersion']='future-version'
-            (assets/'pdf-compat-patch.json').write_text(json.dumps(spec),encoding='utf8')
+            (assets/browser_overlay.recipe_path(CURRENT_DSH, 'pdf-compat-patch.json')).write_text(json.dumps(spec),encoding='utf8')
             with self.assertRaisesRegex(ValueError,'RECOVERY_PDF_RECIPE_PATH'):
                 browser_overlay.build(archive,assets,CURRENT_DSH)
-            spec['dshVersion']=CURRENT_DSH;(assets/'pdf-compat-patch.json').write_text(json.dumps(spec),encoding='utf8')
+            spec['dshVersion']=CURRENT_DSH;(assets/browser_overlay.recipe_path(CURRENT_DSH, 'pdf-compat-patch.json')).write_text(json.dumps(spec),encoding='utf8')
             language['patches'][1]['before']='missing locale anchor'
-            (assets/'language-patch.json').write_text(json.dumps(language),encoding='utf8')
+            (assets/browser_overlay.recipe_path(CURRENT_DSH, 'language-patch.json')).write_text(json.dumps(language),encoding='utf8')
             with self.assertRaisesRegex(ValueError,'RECOVERY_OVERLAY_ANCHOR'):
                 browser_overlay.build(archive,assets,CURRENT_DSH)
 

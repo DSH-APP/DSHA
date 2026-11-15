@@ -5,17 +5,47 @@ import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
+import re
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK = ROOT / 'tools/mobile-plugin-upstream.lock.json'
 DESTINATION = ROOT / 'app/src/main/assets/builtin-plugins/dsh-web-mobile'
 PATCHED = {'lib/client.js', 'lib/compress.js', 'lib/delete-session.js', 'lib/index.js',
-           'lib/compress.js.map', 'lib/delete-session.js.map', 'lib/index.js.map'}
+           'lib/compress.js.map', 'lib/delete-session.js.map', 'lib/index.js.map',
+           'src/client/i18n/locales.ts', 'src/client/components/file-share-locale.ts',
+           'src/client/effects/attachment-mention.ts', 'src/client/index.tsx',
+           'src/client/effects/file-share.ts', 'lib/types/client/i18n/locales.d.ts',
+           'src/client/effects/drawer-session-log.ts', 'src/client/effects/drawer-quick-settings.ts',
+           'lib/types/client/components/file-share-locale.d.ts',
+           'lib/types/client/effects/attachment-mention.d.ts'}
+# 上游 3.3.1 起删掉了 lib/file-transfer.js（b52b2cb「清 lib 残留」）；DSHA 的移动服务入口
+# tools/mobile-server/index.js 仍 import 该模块，改由 tools/file-transfer/file-transfer.js
+# 生成为仅本地追加成员，字节核验与 source map 规则不变。
+ADDITIONAL = {'lib/file-transfer.js', 'lib/file-transfer.js.map'}
+SHA1 = re.compile(r'[0-9a-f]{40}\Z')
+
+def validate_lock(lock, package):
+    if lock.get('schema') != 1 or lock.get('name') != 'dsh-web-mobile' or not lock.get('version'):
+        raise ValueError('MOBILE_UPSTREAM_LOCK')
+    if lock.get('ref') != 'main' or not lock.get('tag'):
+        raise ValueError('MOBILE_UPSTREAM_LOCK')
+    for key in ('commit', 'releaseCommit'):
+        if not SHA1.fullmatch(lock.get(key, '')):
+            raise ValueError('MOBILE_UPSTREAM_LOCK: ' + key)
+    archive = lock.get('archive', {})
+    if not str(archive.get('url', '')).endswith('/tar.gz/' + lock['commit']):
+        raise ValueError('MOBILE_UPSTREAM_ARCHIVE')
+    if package.get('name') != lock['name'] or package.get('version') != lock['version'] \
+            or package.get('license') != 'MIT':
+        raise ValueError('MOBILE_UPSTREAM_METADATA')
+    recorded = package.get('dshaUpstream')
+    if recorded and (recorded.get('version') != lock['version'] or recorded.get('commit') != lock['commit']):
+        raise ValueError('MOBILE_UPSTREAM_COMMIT')
 
 def prepare(source, write):
     lock = json.loads(LOCK.read_text(encoding='utf8'))
-    if lock['schema'] != 1 or lock['version'] != '3.2.1' or lock['commit'] != '10e58ce0c4ed424c7fbd9c91d48db06c6061b4e4':
+    if lock.get('schema') != 1:
         raise ValueError('MOBILE_UPSTREAM_LOCK')
     source = source.resolve(strict=True)
     contents = {}
@@ -31,8 +61,7 @@ def prepare(source, write):
             raise ValueError('MOBILE_UPSTREAM_BYTES: ' + name)
         contents[name] = content
     package = json.loads(contents['package.json'])
-    if package['version'] != lock['version'] or package['license'] != 'MIT':
-        raise ValueError('MOBILE_UPSTREAM_METADATA')
+    validate_lock(lock, package)
     package['dshaUpstream'] = {key: lock[key] for key in ['version', 'source', 'commit', 'sourceDate']}
     # 最新 main 已撤回标签之后的视口试验；发布标签与实际取用提交分别记录。
     package['dshaUpstream'].update(ref=lock.get('ref', lock['tag']), releaseTag=lock['tag'],
@@ -60,6 +89,7 @@ def prepare(source, write):
     patch = ROOT / 'tools/apply-mobile-client-patches.mjs'
     subprocess.run([node, str(patch), str(source / 'lib/client.js'), action], cwd=ROOT, check=True)
     subprocess.run([node, str(patch), '--server', str(source / 'lib'), action], cwd=ROOT, check=True)
+    subprocess.run([node, str(patch), '--locale-sources', str(source), action], cwd=ROOT, check=True)
     # Retire only the explicitly reviewed previous-version members; unknown local files stay errors.
     for name in lock.get('retiredFiles', []):
         relative = PurePosixPath(name)
@@ -75,13 +105,16 @@ def prepare(source, write):
         else:
             raise ValueError('MOBILE_RETIRED_PRESENT: ' + name)
     actual = {p.relative_to(DESTINATION).as_posix() for p in DESTINATION.rglob('*') if p.is_file()}
-    if actual != set(contents):
-        raise ValueError('MOBILE_DEPLOYED_MEMBERS: ' + str(sorted(actual.symmetric_difference(contents))))
+    expected_members = set(contents) | ADDITIONAL
+    if actual != expected_members:
+        raise ValueError('MOBILE_DEPLOYED_MEMBERS: ' + str(sorted(actual.symmetric_difference(expected_members))))
     print('PASS mobile fixed prebuilt assets:', lock['commit'], 'files:', len(contents))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--upstream-dir', required=True, type=Path)
-    parser.add_argument('--write', action='store_true')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--write', action='store_true')
+    mode.add_argument('--check', action='store_true')
     options = parser.parse_args()
     prepare(options.upstream_dir, options.write)

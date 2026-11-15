@@ -137,6 +137,43 @@ public final class VirtualScreenInputTest {
     org.junit.Assert.assertEquals(1, count.get());
   }
 
+  @Test
+  public void commandForTestRunsInjectedRunnerEvenWhenHostProbeIsUnavailable() {
+    // CI runner 没有 /system/bin/input：测试缝必须由注入 runner 代表命令可用性，
+    // 而不是被真实文件探测提前拒成 REJECTED（T97 合入后的 unit-source 红）。
+    java.util.concurrent.atomic.AtomicInteger count =
+        new java.util.concurrent.atomic.AtomicInteger();
+    VirtualScreenInput input =
+        VirtualScreenInput.commandForTest(
+            8,
+            (argv, timeout) -> {
+              count.incrementAndGet();
+              org.junit.Assert.assertArrayEquals(
+                  new String[] {"/system/bin/input", "-d", "8", "text", "hello%sworld"}, argv);
+              return com.deepseekharness.app.util.VirtualScreenInputResult.ACCEPTED;
+            });
+    assertSame(
+        com.deepseekharness.app.util.VirtualScreenInputResult.ACCEPTED, input.text("hello world"));
+    org.junit.Assert.assertEquals(1, count.get());
+  }
+
+  @Test
+  public void missingHostCommandStillRejectsWhenCommandIsNotForced() {
+    java.util.concurrent.atomic.AtomicInteger count =
+        new java.util.concurrent.atomic.AtomicInteger();
+    VirtualScreenInput input =
+        VirtualScreenInput.commandForTest(
+            8,
+            (argv, timeout) -> {
+              count.incrementAndGet();
+              return com.deepseekharness.app.util.VirtualScreenInputResult.ACCEPTED;
+            },
+            false);
+    assertSame(
+        com.deepseekharness.app.util.VirtualScreenInputResult.REJECTED, input.text("123456"));
+    org.junit.Assert.assertEquals(0, count.get());
+  }
+
   public static final class CommandChild {
     public static void main(String[] args) throws Exception {
       java.nio.file.Files.writeString(java.nio.file.Path.of(args[0]), "executed");

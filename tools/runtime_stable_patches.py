@@ -8,6 +8,13 @@ from pathlib import Path
 from runtime_input_contract import relative
 
 
+class PatchSequence(list):
+    """Current patches with an optional exact signed predecessor form."""
+    def __init__(self, previous=()):
+        super().__init__()
+        self.previous = list(previous)
+
+
 def load_chains(assets, version):
     assets = Path(assets)
     registry = json.loads((assets / 'runtime-patches.json').read_text(encoding='utf-8'))
@@ -23,7 +30,13 @@ def load_chains(assets, version):
             raise ValueError('STABLE_PATCH_VERSION: ' + name)
         module = relative(row.get('module', recipe.get('module')))
         inputs.add(name)
-        patches = []
+        previous = []
+        for patch in recipe.get('previousPatches', []):
+            before, after = patch['before'], patch['after']
+            if not isinstance(before, str) or not isinstance(after, str) or not before or not after or before == after:
+                raise ValueError('STABLE_PATCH_PREDECESSOR_INVALID: ' + name)
+            previous.append((before, after))
+        patches = PatchSequence(previous)
         for patch in recipe['patches']:
             before, after = patch['before'], patch['after']
             if 'prependAsset' in patch:
@@ -46,6 +59,13 @@ def apply(data, chain):
     text = data.decode('utf-8')
     for name, patches, markers in chain:
         if markers and all(marker in text for marker in markers): continue
+        previous = getattr(patches, 'previous', ())
+        if previous and all(text.count(after) == 1 and text.count(before) == after.count(before)
+                            for before, after in previous):
+            for before, after in reversed(previous):
+                text = text.replace(after, before, 1)
+        elif any(after in text and after not in {value for _, value in patches} for _, after in previous):
+            raise ValueError('STABLE_PATCH_ANCHOR: ' + name + ': partial predecessor')
         for before, after in patches:
             old, patched = text.count(before), text.count(after)
             if patched == 1 and old == after.count(before): continue

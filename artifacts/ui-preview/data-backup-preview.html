@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSHA · 数据与备份 重构预览</title>
+<style>
+  /* 颜色取自 app/src/main/res/values/colors.xml，夜间为预览近似值 */
+  :root {
+    --primary: #1E50D0; --primary-dark: #1A46B8; --on-primary: #fff;
+    --surface: #F3F6FB; --card: #FCFDFF; --raised: #E7EDF6;
+    --line: rgba(19,29,58,.12); --line-strong: #C6D2E4;
+    --text: #18273F; --text2: #50617A; --muted: #5A6B86;
+    --accent-bg: #E8EFFF; --accent-soft: #DBE7FF;
+    --ok: #287453; --ok-bg: #E4F3EB; --warn: #8C600D; --warn-bg: #FCF3DE;
+    --err: #AF404B; --err-bg: #FBEBEC;
+    --radius: 18px; --shadow: 0 1px 2px rgba(19,29,58,.05);
+    font-family: "HarmonyOS Sans SC", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+  }
+  [data-theme="dark"] {
+    --primary: #8FB0FF; --primary-dark: #A9C2FF; --on-primary: #0B1630;
+    --surface: #0F1522; --card: #161E2E; --raised: #1F2A3D;
+    --line: rgba(200,215,240,.12); --line-strong: #2E3B53;
+    --text: #E4E9F2; --text2: #A7B3C7; --muted: #8B98AE;
+    --accent-bg: #1D2B4A; --accent-soft: #23345A;
+    --ok: #7FD1A6; --ok-bg: #173327; --warn: #E9C171; --warn-bg: #3A2E14;
+    --err: #F19AA3; --err-bg: #3D1E23;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #D9DFEA; color: var(--text); }
+  [data-theme="dark"] body { background: #05080F; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  /* ---------- 预览外壳 ---------- */
+  .stage { min-height: 100%; display: flex; flex-direction: column; align-items: center; padding: 16px; gap: 12px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: rgba(255,255,255,.85);
+    border-radius: 14px; padding: 8px 12px; font-size: 13px; color: #18273F; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+  [data-theme="dark"] .toolbar { background: rgba(30,40,60,.9); color: #E4E9F2; }
+  .toolbar label { display: flex; gap: 6px; align-items: center; }
+  .toolbar select, .toolbar button { font-size: 13px; padding: 4px 8px; border-radius: 8px; border: 1px solid #C6D2E4; background: #fff; color: #18273F; }
+  .device { width: min(1280px, 100%); height: min(800px, calc(100vh - 90px)); min-height: 560px; background: var(--surface);
+    border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(15,25,50,.25); position: relative; }
+  .device.phone { width: 400px; height: min(820px, calc(100vh - 90px)); }
+
+  /* ---------- 应用栏 ---------- */
+  .appbar { display: flex; align-items: center; gap: 14px; padding: 14px 22px; border-bottom: 1px solid var(--line); flex: none; }
+  .logo { width: 44px; height: 44px; border-radius: 12px; background: var(--accent-bg); display: grid; place-items: center; color: var(--primary); }
+  .appbar h1 { margin: 0; font-size: 19px; letter-spacing: .5px; }
+  .appbar small { color: var(--text2); font-size: 12px; }
+  .appbar .sp { flex: 1; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: transparent; display: grid; place-items: center; cursor: pointer; color: var(--text); }
+  .icon-btn:hover { background: var(--raised); }
+
+  .body { flex: 1; display: flex; min-height: 0; }
+  .rail { width: 92px; flex: none; border-right: 1px solid var(--line); padding: 18px 10px; display: flex; flex-direction: column; gap: 10px; }
+  .rail button { border: 0; background: transparent; border-radius: 16px; padding: 12px 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; color: var(--primary); cursor: pointer; }
+  .rail button.on { background: var(--accent-bg); }
+  .rail .foot { margin-top: auto; font-size: 9px; letter-spacing: 1.5px; color: var(--muted); text-align: center; }
+  .list { width: 340px; flex: none; border-right: 1px solid var(--line); overflow: auto; padding: 22px 22px 40px; }
+  .list h2 { font-size: 28px; margin: 0 0 6px; }
+  .detail { flex: 1; overflow: auto; position: relative; }
+  .detail-inner { max-width: 760px; margin: 0 auto; padding: 22px 28px 60px; }
+  .phone .rail, .phone .appbar .hide-phone { display: none; }
+  .phone .list { display: none; }
+  .phone .detail-inner { padding: 16px 16px 60px; }
+  @media (max-width: 760px) { .device:not(.phone) .list { display: none; } .device:not(.phone) .rail { width: 72px; } }
+
+  /* ---------- 通用组件 ---------- */
+  .muted { color: var(--text2); }
+  .cap { font-size: 12px; color: var(--muted); }
+  .section-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--text2); margin: 22px 4px 10px; }
+  .section-label svg { color: var(--primary); }
+  .group { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+  .row { width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 0; background: transparent; text-align: left; cursor: pointer; min-height: 68px; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row:hover { background: var(--raised); }
+  .row.sel { background: var(--accent-bg); }
+  .row[disabled] { opacity: .45; cursor: not-allowed; }
+  .row .ic { width: 42px; height: 42px; border-radius: 12px; background: var(--accent-bg); color: var(--primary); display: grid; place-items: center; flex: none; }
+  .row .ic.warn { background: var(--warn-bg); color: var(--warn); }
+  .row .ic.err { background: var(--err-bg); color: var(--err); }
+  .row .tx { flex: 1; min-width: 0; }
+  .row .t { font-weight: 700; font-size: 15px; }
+  .row .s { font-size: 13px; color: var(--text2); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .meta { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .chev { color: var(--muted); flex: none; }
+  .btn { border: 1px solid var(--line-strong); background: var(--card); color: var(--primary); border-radius: 14px; padding: 11px 18px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; }
+  .btn:hover { background: var(--accent-bg); }
+  .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+  .btn.primary:hover { background: var(--primary-dark); }
+  .btn.danger { color: var(--err); border-color: color-mix(in srgb, var(--err) 35%, transparent); }
+  .btn.ghost { border-color: transparent; background: transparent; }
+  .btn[disabled] { opacity: .45; cursor: not-allowed; }
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btns.full > .btn { flex: 1; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+  .card + .card { margin-top: 12px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--accent-bg); color: var(--primary); }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .badge.err { background: var(--err-bg); color: var(--err); }
+  .badge.gray { background: var(--raised); color: var(--text2); }
+  .notice { display: flex; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--raised); font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .notice.warn { background: var(--warn-bg); color: var(--warn); }
+  .notice.err { background: var(--err-bg); color: var(--err); }
+  .notice svg { flex: none; margin-top: 2px; }
+
+  /* 页面头 */
+  .page-head { display: flex; align-items: center; gap: 16px; margin: 6px 0 4px; }
+  .page-head .big-ic { width: 60px; height: 60px; border-radius: 18px; background: var(--accent-bg); color: var(--primary); display: grid; place-items: center; flex: none; }
+  .page-head h2 { margin: 0; font-size: 30px; }
+  .page-sub { margin: 8px 0 0; color: var(--text2); font-size: 14px; }
+  .crumb { display: flex; align-items: center; gap: 4px; margin-bottom: 10px; font-size: 13px; color: var(--text2); }
+  .crumb button { border: 0; background: transparent; color: var(--primary); cursor: pointer; padding: 6px 8px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; }
+  .crumb button:hover { background: var(--accent-bg); }
+
+  /* 状态卡（新首页核心） */
+  .hero { border-radius: 22px; padding: 20px; background: linear-gradient(0deg, var(--card), var(--card)); border: 1px solid var(--line); margin-top: 18px; box-shadow: var(--shadow); }
+  .hero-top { display: flex; gap: 14px; align-items: flex-start; }
+  .shield { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; flex: none; background: var(--ok-bg); color: var(--ok); }
+  .shield.warn { background: var(--warn-bg); color: var(--warn); }
+  .shield.err { background: var(--err-bg); color: var(--err); }
+  .shield.run { background: var(--accent-bg); color: var(--primary); }
+  .hero h3 { margin: 2px 0 4px; font-size: 19px; }
+  .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
+  .stat { background: var(--surface); border-radius: 14px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 14px; margin-top: 3px; }
+  .phone .hero-stats { grid-template-columns: 1fr; }
+  .progress { height: 8px; border-radius: 99px; background: var(--raised); overflow: hidden; margin: 14px 0 8px; }
+  .progress i { display: block; height: 100%; background: var(--primary); border-radius: 99px; transition: width .4s; }
+  .steps { list-style: none; margin: 10px 0 14px; padding: 0; display: grid; gap: 8px; font-size: 13px; }
+  .steps li { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  .steps li.done { color: var(--ok); }
+  .steps li.cur { color: var(--primary); font-weight: 600; }
+  .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid currentColor; display: grid; place-items: center; flex: none; }
+  .steps li.done .dot { background: currentColor; }
+  .steps li.done .dot::after { content: ""; width: 7px; height: 4px; border-left: 2px solid var(--card); border-bottom: 2px solid var(--card); transform: rotate(-45deg) translate(1px,-1px); }
+  .steps li.cur .dot { border-top-color: transparent; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 向导 stepper */
+  .stepper { display: flex; gap: 6px; margin: 18px 0; }
+  .stepper div { flex: 1; font-size: 12px; color: var(--muted); }
+  .stepper div::before { content: ""; display: block; height: 4px; border-radius: 4px; background: var(--raised); margin-bottom: 6px; }
+  .stepper div.on { color: var(--primary); font-weight: 600; }
+  .stepper div.on::before, .stepper div.done::before { background: var(--primary); }
+
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 14px; }
+  .kv dt { color: var(--text2); }
+  .kv dd { margin: 0; }
+  .incl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .phone .incl { grid-template-columns: 1fr; }
+  .incl ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.9; }
+  .check { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 14px; cursor: pointer; }
+  .check:hover { background: var(--raised); }
+  .check input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--primary); flex: none; }
+  .check .s { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .seg { display: flex; background: var(--raised); border-radius: 14px; padding: 4px; gap: 4px; }
+  .seg button { flex: 1; border: 0; background: transparent; padding: 10px 6px; border-radius: 11px; cursor: pointer; font-size: 13px; color: var(--text2); }
+  .seg button.on { background: var(--card); color: var(--primary); font-weight: 700; box-shadow: var(--shadow); }
+  .field { display: flex; align-items: center; gap: 12px; margin-top: 14px; font-size: 14px; }
+  .field input { font: inherit; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); width: 130px; }
+  .switch { position: relative; width: 50px; height: 30px; flex: none; }
+  .switch input { opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; position: absolute; z-index: 1; }
+  .switch span { position: absolute; inset: 0; border-radius: 99px; background: var(--line-strong); transition: .2s; }
+  .switch span::after { content: ""; position: absolute; width: 24px; height: 24px; left: 3px; top: 3px; border-radius: 50%; background: #fff; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .switch input:checked + span { background: var(--primary); }
+  .switch input:checked + span::after { transform: translateX(20px); }
+  .switch input:focus-visible + span { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  .usage { display: flex; height: 18px; border-radius: 9px; overflow: hidden; margin: 14px 0; }
+  .usage i { display: block; height: 100%; }
+  .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; font-size: 13px; }
+  .legend div { display: flex; align-items: center; gap: 8px; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .legend b { margin-left: auto; font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+  .chip { border: 1px solid var(--line-strong); background: var(--card); padding: 7px 14px; border-radius: 99px; font-size: 13px; cursor: pointer; color: var(--text2); }
+  .chip.on { background: var(--accent-bg); border-color: var(--primary); color: var(--primary); font-weight: 600; }
+  details.qa { border-top: 1px solid var(--line); padding: 4px 0; }
+  details.qa:first-of-type { border-top: 0; }
+  details.qa summary { cursor: pointer; padding: 12px 4px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+  details.qa summary::after { content: "+"; color: var(--muted); }
+  details.qa[open] summary::after { content: "−"; }
+  details.qa p { margin: 0 4px 12px; font-size: 14px; color: var(--text2); line-height: 1.7; }
+  .drop { border: 2px dashed var(--line-strong); border-radius: 18px; padding: 26px; text-align: center; color: var(--text2); cursor: pointer; background: transparent; width: 100%; }
+  .drop:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* 弹层 */
+  .scrim { position: absolute; inset: 0; background: rgba(9,16,30,.45); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 20; }
+  .scrim.show { display: flex; }
+  .dialog { background: var(--card); border-radius: 24px; width: min(460px, 100%); max-height: 86%; overflow: auto; padding: 22px; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+  .dialog h3 { margin: 0 0 10px; font-size: 19px; }
+  .dialog p { margin: 0 0 18px; line-height: 1.7; color: var(--text2); font-size: 14px; white-space: pre-line; }
+  .dialog .btns { justify-content: flex-end; }
+  .toast { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: #18273F; color: #fff; padding: 10px 18px; border-radius: 12px; font-size: 13px; opacity: 0; pointer-events: none; transition: .25s; z-index: 30; max-width: 90%; }
+  .toast.show { opacity: 1; transform: translateX(-50%); }
+  .note-pin { position: fixed; right: 16px; bottom: 16px; max-width: 320px; font-size: 12px; background: #fff; color: #18273F; border-radius: 14px; padding: 12px 14px; box-shadow: 0 6px 24px rgba(0,0,0,.15); line-height: 1.6; }
+  .note-pin b { display: block; margin-bottom: 4px; }
+  .note-pin.hidden { display: none; }
+  @media (max-width: 1100px) { .note-pin { display: none; } }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="toolbar" role="group" aria-label="预览控制">
+    <strong>预览控制</strong>
+    <label>设备
+      <select id="ctl-device"><option value="tablet">平板双栏</option><option value="phone">手机单栏</option></select>
+    </label>
+    <label>备份状态
+      <select id="ctl-state">
+        <option value="ok">已保护</option>
+        <option value="stale">较久未备份</option>
+        <option value="never">从未备份</option>
+        <option value="failed">上次失败</option>
+        <option value="pending">维护未完成</option>
+      </select>
+    </label>
+    <button id="ctl-theme" type="button">切换日夜</button>
+    <button id="ctl-note" type="button">改动说明</button>
+  </div>
+
+  <div class="device" id="device">
+    <header class="appbar">
+      <div class="logo" aria-hidden="true"><svg width="24" height="24"><use href="#i-term"/></svg></div>
+      <div><h1>DSH-A-Su Test</h1><small>偏好与管理</small></div>
+      <div class="sp"></div>
+      <button class="icon-btn hide-phone" aria-label="更新"><svg width="22" height="22"><use href="#i-down"/></svg></button>
+      <button class="icon-btn" aria-label="切换日夜" data-action="theme"><svg width="22" height="22"><use href="#i-contrast"/></svg></button>
+      <button class="icon-btn hide-phone" aria-label="关于"><svg width="22" height="22"><use href="#i-info"/></svg></button>
+    </header>
+    <div class="body">
+      <nav class="rail" aria-label="主导航">
+        <button><svg width="24" height="24"><use href="#i-play"/></svg>启动</button>
+        <button><svg width="24" height="24"><use href="#i-puzzle"/></svg>插件</button>
+        <button class="on" aria-current="page"><svg width="24" height="24"><use href="#i-gear"/></svg>设置</button>
+        <button><svg width="24" height="24"><use href="#i-term"/></svg>终端</button>
+        <div class="foot">LOCAL FIRST</div>
+      </nav>
+      <aside class="list" aria-label="设置分类">
+        <h2>设置</h2>
+        <p class="muted" style="margin:0 0 18px">让工作台按你的习惯运行。</p>
+        <div class="section-label">运行环境</div>
+        <div class="group">
+          <button class="row"><span class="ic"><svg width="22" height="22"><use href="#i-box"/></svg></span><span class="tx"><div class="t">安装与环境</div><div class="s">安装与修复运行环境</div></span><svg class="chev" width="18" height="18"><use href="#i-chev"/></svg></button>
+          <button class="row"><span class="ic"><svg width="22" height="22"><use href="#i-gear"/></svg></span><span class="tx"><div class="t">运行配置</div><div class="s">接口、显示与运行</div></span><svg class="chev" width="18" height="18"><use href="#i-chev"/></svg></button>
+          <button class="row sel" data-go="root"><span class="ic"><svg width="22" height="22"><use href="#i-folder"/></svg></span><span class="tx"><div class="t">数据与备份</div><div class="s" id="list-sub">已保护 · 2 小时前</div></span><svg class="chev" width="18" height="18"><use href="#i-chev"/></svg></button>
+          <button class="row"><span class="ic"><svg width="22" height="22"><use href="#i-shield"/></svg></span><span class="tx"><div class="t">设备能力授权</div><div class="s">Root · Shizuku · ADB · …</div></span><svg class="chev" width="18" height="18"><use href="#i-chev"/></svg></button>
+          <button class="row"><span class="ic"><svg width="22" height="22"><use href="#i-box"/></svg></span><span class="tx"><div class="t">任务状态上岛</div><div class="s">状态栏胶囊 · 灵动岛 · 实时…</div></span><svg class="chev" width="18" height="18"><use href="#i-chev"/></svg></button>
+        </div>
+        <div class="section-label">使用体验</div>
+        <div class="group">
+          <button class="row"><span class="ic"><svg width="22" height="22"><use href="#i-globe"/></svg></span><span class="tx"><div class="t">语言 / Language</div><div class="s">跟随系统</div></span><svg class="chev" width="18" height="18"><use href="#i-chev"/></svg></button>
+        </div>
+      </aside>
+      <main class="detail" id="detail" tabindex="-1" aria-live="polite"><div class="detail-inner" id="view"></div></main>
+    </div>
+    <div class="scrim" id="scrim" role="dialog" aria-modal="true" aria-labelledby="dlg-title"><div class="dialog" id="dialog"></div></div>
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+</div>
+
+<div class="note-pin hidden" id="note">
+  <b>这版改了什么</b>
+  1. 顶部新增备份状态卡：最近备份、自动备份、保存位置一眼可见，主按钮就是「立即备份」。<br>
+  2. 「一键备份」点击后先进确认页，列出包含 / 不包含的内容，不再直接开始。<br>
+  3. 原「恢复与更多备份选项」拆成恢复向导、自动备份、自定义导出三个独立入口。<br>
+  4. 救援、保留副本、重置配置统一收进「维护与恢复」，危险操作都有二次确认。<br>
+  5. 备份记录从底部文本块改成可点开的记录列表。
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-term" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 10 3 2-3 2M12 15h5"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4m-4 4 4-4 4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></symbol>
+    <symbol id="i-contrast" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></symbol>
+    <symbol id="i-puzzle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M10 4h4v3a2 2 0 1 0 0 0h3v3a2 2 0 1 1 0 4v3h-3a2 2 0 1 0-4 0H7v-3a2 2 0 1 1 0-4V7h3a2 2 0 1 1 0 0z"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2.8 14 5l3-.5.9 2.9 2.6 1.6-1 2.9 1 2.9-2.6 1.6-.9 2.9-3-.5-2 2.2-2-2.2-3 .5-.9-2.9-2.6-1.6 1-2.9-1-2.9 2.6-1.6L7 4.5l3 .5z" stroke-linejoin="round"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-shield-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="M12 8v5M12 16h.01"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></symbol>
+    <symbol id="i-restore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5M4 4v4.5h4.5"/><path d="M12 8v4l3 2"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+    <symbol id="i-disk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 6c-2-1.5-5-2-8-1.5v14c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-14c-3-.5-6 0-8 1.5zM12 6v14"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M14.5 5.5a4 4 0 0 0 5 5L13 17l-4 4-3-3 4-4 6.5-6.5a4 4 0 0 1-2-2z"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7L20 8.5M20 4v4.5h-4.5"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  </defs>
+</svg>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const ic = (id, s = 22) => `<svg width="${s}" height="${s}" aria-hidden="true"><use href="#${id}"/></svg>`;
+  const chev = ic('i-chev', 18).replace('<svg', '<svg class="chev"');
+  const esc = (v) => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // ---------- 模拟状态 ----------
+  const S = {
+    state: 'ok',
+    running: null,          // { pct, step, timer }
+    lastDone: false,
+    auto: { on: true, mode: 'daily', time: '03:00', hours: 24 },
+    restore: { step: 0, file: null, scope: { app: true, chat: true, settings: true, plugins: true, files: false }, pwd: '' },
+    export: { scope: 0, key: false, projects: [] },
+    retainedFilter: '全部',
+    fileDir: ['工作目录'],
+    stack: ['root'],
+  };
+  const copies = [
+    { t: '今天 03:00', size: '412 MB', ok: true, plugin: false },
+    { t: '昨天 03:00', size: '409 MB', ok: true, plugin: true },
+    { t: '10-30 03:00', size: '398 MB', ok: true, plugin: false },
+  ];
+  const backupFiles = [
+    { name: 'DSHA-data-v5-7f3a…c21e.tar.gz', t: '今天 18:12', size: '418 MB', enc: false },
+    { name: 'DSHA-data-v5-19b0…9e04.tar.gz', t: '10-28 21:40', size: '402 MB', enc: false },
+    { name: 'DSHA-backup-2026-09-12.dsha', t: '09-12 10:05', size: '355 MB', enc: true },
+  ];
+
+  const stateInfo = {
+    ok:      { cls: '',     icon: 'i-shield',   title: '数据已保护', sub: '最近一次手动备份在 2 小时前，自动副本已按计划完成。', last: '今天 18:12', list: '已保护 · 2 小时前' },
+    stale:   { cls: 'warn', icon: 'i-shield-x', title: '已有 9 天没有手动备份', sub: '自动副本只存在本机私有目录。换机或卸载前，请导出一份到手机存储。', last: '10-23 21:05', list: '9 天未备份' },
+    never:   { cls: 'warn', icon: 'i-shield-x', title: '还没有导出过备份', sub: '对话、配置和插件目前只存在应用内。建议先做一次一键备份。', last: '从未', list: '尚未备份' },
+    failed:  { cls: 'err',  icon: 'i-shield-x', title: '上次备份未完成', sub: '保存位置空间不足，原数据未改动。清理空间后可以重新备份。', last: '10-29 22:10（失败）', list: '上次失败' },
+    pending: { cls: 'err',  icon: 'i-wrench',   title: '有未完成的环境维护', sub: '原环境尚未确认，备份和恢复暂不可用。请先恢复中断的维护。', last: '今天 18:12', list: '需要处理' },
+  };
+  const blocked = () => S.state === 'pending' || !!S.running;
+
+  // ---------- 通用片段 ----------
+  const row = ({ go, act, icon, t, s, meta, tone, dis }) =>
+    `<button class="row" ${go ? `data-go="${go}"` : ''} ${act ? `data-action="${act}"` : ''} ${dis ? 'disabled' : ''}>
+      <span class="ic ${tone || ''}">${ic(icon)}</span>
+      <span class="tx"><div class="t">${t}</div>${s ? `<div class="s">${s}</div>` : ''}</span>
+      ${meta ? `<span class="meta">${meta}</span>` : ''}${chev}</button>`;
+  const titles = {
+    root: '数据与备份', backup: '一键备份', restore: '从备份恢复', auto: '自动备份', export: '自定义导出',
+    storage: '存储与文件', files: '作品与文件导出', skills: '技能（Skills）', guide: '储存指南',
+    rescue: '救援与维护工具', retained: '保留副本与旧环境', history: '备份与维护记录',
+  };
+  const head = (icon, title, sub) => {
+    const crumbs = S.stack.slice(0, -1).map((p, i) =>
+      `<button data-back="${i}">${i === S.stack.length - 2 ? ic('i-back', 16) : ''}${titles[p]}</button><span aria-hidden="true">/</span>`).join('');
+    return `${S.stack.length > 1 ? `<nav class="crumb" aria-label="路径">${crumbs}<span>${titles[S.stack.at(-1)]}</span></nav>` : ''}
+      <div class="page-head"><div class="big-ic">${ic(icon, 30)}</div><h2>${title}</h2></div>
+      <p class="page-sub">${sub}</p>`;
+  };
+
+  // ---------- 页面：首页 ----------
+  function heroHtml() {
+    if (S.running) {
+      const steps = ['安全停止 DSH 与运行任务', '打包对话、配置与插件', '写入 下载/DSHA', '完整性核验'];
+      return `<section class="hero" aria-label="备份进行中">
+        <div class="hero-top"><div class="shield run">${ic('i-up', 26)}</div>
+          <div style="flex:1"><h3>正在备份 · ${S.running.pct}%</h3><div class="muted" style="font-size:14px">${steps[S.running.step]}… 请勿关闭应用。</div></div></div>
+        <div class="progress" role="progressbar" aria-valuenow="${S.running.pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${S.running.pct}%"></i></div>
+        <ul class="steps">${steps.map((x, i) => `<li class="${i < S.running.step ? 'done' : i === S.running.step ? 'cur' : ''}"><span class="dot"></span>${x}</li>`).join('')}</ul>
+        <div class="btns"><button class="btn danger" data-action="cancel-backup">取消备份</button></div></section>`;
+    }
+    const i = stateInfo[S.state];
+    const auto = S.auto.on ? (S.auto.mode === 'daily' ? `每天 ${S.auto.time}` : S.auto.mode === 'interval' ? `每 ${S.auto.hours} 小时` : '停止 DSH 后') : '已关闭';
+    const doneBanner = S.lastDone ? `<div class="notice" style="background:var(--ok-bg);color:var(--ok);margin-bottom:14px">${ic('i-shield', 18)}<span>备份完成并已核验：DSHA-data-v5-a41c…77d2.tar.gz · 421 MB，保存在 下载/DSHA。</span></div>` : '';
+    const primary = S.state === 'pending'
+      ? `<button class="btn primary" data-go="rescue">${ic('i-wrench', 18)}恢复中断维护</button>`
+      : `<button class="btn primary" data-go="backup">${ic('i-up', 18)}立即备份</button>`;
+    return `<section class="hero" aria-label="备份状态">${doneBanner}
+      <div class="hero-top"><div class="shield ${i.cls}">${ic(i.icon, 26)}</div>
+        <div style="flex:1"><h3>${i.title}</h3><div class="muted" style="font-size:14px;line-height:1.6">${i.sub}</div></div></div>
+      <div class="hero-stats">
+        <button class="stat" data-go="history" style="border:0;text-align:left;cursor:pointer"><span class="cap">最近手动备份</span><b>${S.lastDone ? '刚刚' : i.last}</b></button>
+        <button class="stat" data-go="auto" style="border:0;text-align:left;cursor:pointer"><span class="cap">自动备份</span><b>${auto}</b></button>
+        <div class="stat"><span class="cap">保存位置</span><b>下载/DSHA</b></div>
+      </div>
+      <div class="btns full">${primary}<button class="btn" data-go="restore" ${S.state === 'pending' ? 'disabled' : ''}>${ic('i-restore', 18)}从备份恢复</button></div></section>`;
+  }
+  function viewRoot() {
+    const d = blocked();
+    return head('i-folder', '数据与备份', '导出、恢复与文件共享。') + heroHtml() +
+      `<div class="section-label">${ic('i-up', 18)}备份选项</div><div class="group">
+        ${row({ go: 'auto', icon: 'i-clock', t: '自动备份', s: '备份时机 · 本机保留最近 3 份已验证副本', meta: S.auto.on ? '已开启' : '已关闭' })}
+        ${row({ go: 'export', icon: 'i-sliders', t: '自定义导出', s: '选择范围 · 项目目录 · 是否包含 API Key', dis: d })}
+        ${row({ go: 'history', icon: 'i-history', t: '备份与维护记录', s: '手动备份、自动副本和维护结果' })}
+      </div>
+      <div class="section-label">${ic('i-folder', 18)}存储与文件</div><div class="group">
+        ${row({ go: 'storage', icon: 'i-disk', t: '存储与文件', s: '空间占用、缓存清理和文件共享', meta: '3.8 GB' })}
+        ${row({ go: 'files', icon: 'i-file', t: '作品与文件导出', s: '浏览工作区 · 保存到手机 · 分享' })}
+        ${row({ go: 'skills', icon: 'i-spark', t: '技能（Skills）', s: '查看技能 · 导入 SKILL.md', meta: '4 个' })}
+      </div>
+      <div class="section-label">${ic('i-wrench', 18)}维护与恢复</div><div class="group">
+        ${row({ go: 'guide', icon: 'i-book', t: '储存指南', s: '数据位置 · 导出备份 · 恢复与清理' })}
+        ${row({ go: 'retained', icon: 'i-archive', t: '保留副本与旧环境', s: '旧环境、插件原件和隔离项，不自动删除', meta: '7 项' })}
+        ${row({ go: 'rescue', icon: 'i-wrench', t: '救援与维护工具', s: '只读救援导出 · 恢复中断提交 · 回退运行时', tone: S.state === 'pending' ? 'err' : '' })}
+        ${row({ act: 'reset', icon: 'i-reset', t: '重置配置', s: '保留原件，插件、对话和凭据不受影响', tone: 'warn', dis: d })}
+      </div>`;
+  }
+
+  // ---------- 一键备份确认 ----------
+  function viewBackup() {
+    return head('i-up', '一键备份', '无需密码，直接保存为 tar.gz，可在新设备上恢复。') +
+      `<div class="card" style="margin-top:18px"><div class="incl">
+        <div><span class="badge ok">会包含</span><ul><li>对话与附件</li><li>运行配置与 profile 设置</li><li>已安装插件（系统插件除外）</li><li>当前应用内工作区</li></ul></div>
+        <div><span class="badge gray">不包含</span><ul><li>原生 API Key（可在自定义导出中勾选）</li><li>外置工作区，请另行备份</li><li>可再生缓存与 Ubuntu 运行环境</li><li>桥 token 等本机凭据</li></ul></div>
+      </div></div>
+      <div class="card"><dl class="kv">
+        <dt>保存到</dt><dd>下载/DSHA <span class="cap">（剩余 48.2 GB）</span></dd>
+        <dt>文件名</dt><dd>DSHA-data-v5-&lt;UUID&gt;.tar.gz</dd>
+        <dt>预计大小</dt><dd>约 420 MB</dd>
+      </dl></div>
+      <div class="notice" style="margin-top:12px">${ic('i-info', 18)}<span>备份时会安全停止 DSH Web、终端和写任务，完成后需手动重新启动。整个过程约 1–2 分钟。</span></div>
+      <div class="btns full" style="margin-top:18px"><button class="btn" data-action="back">取消</button><button class="btn primary" data-action="start-backup" ${blocked() ? 'disabled' : ''}>开始备份</button></div>`;
+  }
+
+  // ---------- 恢复向导 ----------
+  function viewRestore() {
+    const r = S.restore, names = ['选择文件', '核验内容', '选择范围', '确认恢复'];
+    const stepper = `<div class="stepper" aria-label="步骤">${names.map((n, i) => `<div class="${i < r.step ? 'done' : i === r.step ? 'on' : ''}">${i + 1}. ${n}</div>`).join('')}</div>`;
+    let body = '';
+    if (r.step === 0) {
+      body = `<button class="drop" data-action="pick-file">${ic('i-file', 28)}<div style="margin-top:8px;font-weight:600">从手机选择备份文件</div><div class="cap">支持 .tar.gz 与旧版加密 .dsha</div></button>
+        <div class="section-label">下载/DSHA 中找到的备份</div><div class="group">
+        ${backupFiles.map((f, i) => `<button class="row" data-action="choose-file" data-i="${i}"><span class="ic">${ic(f.enc ? 'i-lock' : 'i-archive')}</span><span class="tx"><div class="t" style="font-size:14px">${f.name}</div><div class="s">${f.t} · ${f.size}${f.enc ? ' · 旧版加密，需要原密码' : ''}</div></span>${chev}</button>`).join('')}</div>`;
+    } else if (r.step === 1) {
+      const f = backupFiles[r.file];
+      body = f.enc && !r.verified
+        ? `<div class="card"><h3 style="margin:0 0 8px;font-size:16px">${ic('i-lock', 18)} 输入原备份密码</h3><p class="muted" style="font-size:14px;margin:0 0 12px">这是旧版加密备份，需要原密码完成认证后才能检查内容。</p>
+            <label class="field" style="margin:0"><span>密码</span><input type="password" id="pwd" style="flex:1;width:auto" autocomplete="off"></label></div>
+            <div class="btns full" style="margin-top:16px"><button class="btn" data-action="restore-prev">上一步</button><button class="btn primary" data-action="verify">核验</button></div>`
+        : `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="word-break:break-all">${f.name}</b><span class="badge ok">${ic('i-shield', 14)}完整性通过</span></div>
+            <dl class="kv" style="margin-top:14px"><dt>数据格式</dt><dd>v5 · 已完整核验</dd><dt>创建时间</dt><dd>${f.t}</dd>
+            <dt>对话</dt><dd>128 个会话 · 附件 36 MB</dd><dt>设置</dt><dd>web profile、工作目录 .env</dd>
+            <dt>插件</dt><dd>6 个 <span class="badge warn">1 个含受管脚本，将先隔离</span></dd><dt>工作区</dt><dd>212 MB</dd></dl></div>
+          <div class="notice" style="margin-top:12px">${ic('i-info', 18)}<span>本机授权状态（Root、Shizuku、短信等）不会从备份生效，恢复后需在本机重新开启。</span></div>
+          <div class="btns full" style="margin-top:16px"><button class="btn" data-action="restore-prev">上一步</button><button class="btn primary" data-action="restore-next">下一步</button></div>`;
+    } else if (r.step === 2) {
+      const items = [['app', '应用数据', '全部内容'], ['chat', '对话与附件', '128 个会话'], ['settings', '设置', '合并到当前配置，原配置保留快照'], ['plugins', '插件', '6 个，未知插件先隔离'], ['files', '工作区文件', '212 MB，同名文件保留两份']];
+      body = `<div class="card" style="padding:8px">${items.map(([k, t, s]) => `<label class="check"><input type="checkbox" data-scope="${k}" ${r.scope[k] ? 'checked' : ''}><span><b>${t}</b><div class="s">${s}</div></span></label>`).join('')}</div>
+        <div class="btns full" style="margin-top:16px"><button class="btn" data-action="restore-prev">上一步</button><button class="btn primary" data-action="restore-next" ${Object.values(r.scope).some(Boolean) ? '' : 'disabled'}>下一步</button></div>`;
+    } else if (r.step === 3) {
+      const picked = Object.entries(r.scope).filter(([, v]) => v).map(([k]) => ({ app: '应用数据', chat: '对话与附件', settings: '设置', plugins: '插件', files: '工作区文件' }[k]));
+      body = `<div class="card"><dl class="kv"><dt>来源</dt><dd style="word-break:break-all">${backupFiles[r.file].name}</dd><dt>范围</dt><dd>${picked.join('、')}</dd><dt>当前数据</dt><dd>恢复前自动生成私有快照，可在「保留副本」中找回</dd></dl></div>
+        <div class="notice warn" style="margin-top:12px">${ic('i-info', 18)}<span>将先停止 Web、终端和写任务。恢复完成并通过检查后才会提交，失败时保留原数据。</span></div>
+        <div class="btns full" style="margin-top:16px"><button class="btn" data-action="restore-prev">上一步</button><button class="btn primary" data-action="restore-run">恢复此备份</button></div>`;
+    } else {
+      body = `<div class="card" style="text-align:center;padding:30px"><div class="shield" style="margin:0 auto 12px">${ic('i-shield', 26)}</div><h3 style="margin:0 0 6px">恢复完成</h3><p class="muted" style="margin:0 0 16px">数据已提交并通过就绪检查。1 个插件仍在隔离区，可在「保留副本与旧环境」中查看。</p>
+        <div class="btns" style="justify-content:center"><button class="btn" data-go-replace="retained">查看隔离插件</button><button class="btn primary" data-action="home">返回</button></div></div>`;
+    }
+    return head('i-restore', '从备份恢复', '先验证备份内容，再确认恢复范围。') + stepper + body;
+  }
+
+  // ---------- 自动备份 ----------
+  function viewAuto() {
+    const a = S.auto;
+    const modeBody = a.mode === 'daily'
+      ? `<label class="field"><span>每天时间</span><input type="time" id="auto-time" value="${a.time}"></label>`
+      : a.mode === 'interval'
+        ? `<label class="field"><span>间隔小时</span><input type="number" id="auto-hours" min="1" max="168" value="${a.hours}"><span class="cap">1–168 小时</span></label>`
+        : `<p class="cap" style="margin:14px 0 0">每次正常停止 DSH 后创建一份副本。</p>`;
+    return head('i-clock', '自动备份', '在本机私有目录加密保存副本，到期时 DSH 仍在运行会自动延后，不会强停任务。') +
+      `<div class="card" style="margin-top:18px;display:flex;align-items:center;gap:14px"><div style="flex:1"><b>自动备份</b><div class="cap">${a.on ? '下次：明天 ' + (a.mode === 'daily' ? a.time : '约 03:00') : '已关闭，不会创建新副本'}</div></div>
+        <span class="switch"><input type="checkbox" id="auto-on" aria-label="自动备份" ${a.on ? 'checked' : ''}><span></span></span></div>
+      <div class="card" ${a.on ? '' : 'style="opacity:.5;pointer-events:none"'}><b>备份时机</b>
+        <div class="seg" style="margin-top:12px" role="tablist">${[['daily', '每天指定时间'], ['interval', '每隔一段时间'], ['stop', '停止 DSH 后']].map(([k, t]) => `<button role="tab" aria-selected="${a.mode === k}" class="${a.mode === k ? 'on' : ''}" data-action="auto-mode" data-k="${k}">${t}</button>`).join('')}</div>${modeBody}</div>
+      <div class="section-label" style="justify-content:space-between"><span>本机副本 · 保留最近 3 份</span><button class="btn ghost" data-action="auto-now" style="min-height:32px;padding:4px 10px" ${a.on && !blocked() ? '' : 'disabled'}>现在创建</button></div>
+      <div class="group">${copies.map((c, i) => `<div class="row" style="cursor:default"><span class="ic">${ic('i-archive')}</span><span class="tx"><div class="t">${c.t}</div><div class="s">${c.size} · <span style="color:var(--ok)">已验证</span>${c.plugin ? ' · 插件依赖待核对' : ''}</div></span>
+        <span class="btns"><button class="btn" style="min-height:36px;padding:6px 12px" data-action="copy-restore" data-i="${i}">预检恢复</button><button class="btn" style="min-height:36px;padding:6px 12px" data-action="copy-export">导出</button></span></div>`).join('')}</div>
+      <p class="cap" style="margin:10px 4px">手动导出和来源不明的记录不会被自动删除。</p>`;
+  }
+
+  // ---------- 自定义导出 ----------
+  function viewExport() {
+    const e = S.export, opts = [['应用数据', '对话、设置、插件与应用内工作区'], ['对话与附件', '只导出会话记录和附件'], ['设置', 'profile 设置与工作目录 .env'], ['插件', '用户插件，系统插件按 APK 重建'], ['所选项目文件', '只导出下方选择的目录']];
+    return head('i-sliders', '自定义导出', '选择范围和项目后，导出无需密码的 tar.gz 备份。') +
+      `<div class="section-label">数据范围</div><div class="card" style="padding:8px" role="radiogroup">${opts.map(([t, s], i) => `<label class="check"><input type="radio" name="scope" data-exp="${i}" ${e.scope === i ? 'checked' : ''}><span><b>${t}</b><div class="s">${s}</div></span></label>`).join('')}</div>
+      <div class="section-label">项目目录</div><div class="card"><div class="cap">项目文件需单独选择目录，不会扫描整部手机。</div>
+        <div class="chips">${e.projects.map(p => `<span class="chip on">${esc(p)}</span>`).join('') || '<span class="cap">尚未选择</span>'}</div>
+        <button class="btn" data-action="pick-project">${ic('i-folder', 18)}选择项目目录</button></div>
+      <div class="section-label">敏感信息</div><div class="card" style="padding:8px"><label class="check"><input type="checkbox" id="exp-key" ${e.key ? 'checked' : ''}><span><b>包含原生 API Key</b><div class="s">默认不包含。勾选后请妥善保管导出文件。</div></span></label></div>
+      ${e.key ? `<div class="notice warn" style="margin-top:12px">${ic('i-info', 18)}<span>导出文件不加密，任何拿到文件的人都能读取 API Key。</span></div>` : ''}
+      <div class="btns full" style="margin-top:18px"><button class="btn" data-action="locations">查看数据范围与位置</button><button class="btn primary" data-action="do-export" ${e.scope === 4 && !e.projects.length ? 'disabled' : ''}>选择位置并导出</button></div>`;
+  }
+
+  // ---------- 存储 ----------
+  function viewStorage() {
+    const parts = [['Ubuntu 运行环境', 1.9, '#1E50D0'], ['插件依赖', 0.82, '#5B83E6'], ['对话与附件', 0.36, '#2B9A6B'], ['应用内工作区', 0.21, '#D49A2A'], ['可再生缓存', 0.31, '#9AA7BD'], ['本机备份副本', 0.2, '#C26B9A']];
+    const total = parts.reduce((a, p) => a + p[1], 0);
+    return head('i-disk', '存储与文件', '空间占用、缓存清理和文件共享。') +
+      `<div class="card" style="margin-top:18px"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:22px">${total.toFixed(1)} GB</b><span class="cap">统计于 刚刚</span></div>
+        <div class="usage" role="img" aria-label="存储占用分布">${parts.map(p => `<i style="width:${p[1] / total * 100}%;background:${p[2]}"></i>`).join('')}</div>
+        <div class="legend">${parts.map(p => `<div><i style="background:${p[2]}"></i>${p[0]}<b>${p[1] >= 1 ? p[1].toFixed(1) + ' GB' : Math.round(p[1] * 1024) + ' MB'}</b></div>`).join('')}</div>
+        <div class="btns" style="margin-top:14px"><button class="btn ghost" data-action="toast" data-msg="已重新统计">重新统计</button></div></div>
+      <div class="card"><div style="display:flex;gap:14px;align-items:center"><div style="flex:1"><b>清理存储空间</b><div class="cap" style="margin-top:4px">可释放约 420 MB：可再生缓存与多余运行时副本。至少保留两份健康副本，修改过的原件不会删除。</div></div>
+        <button class="btn" data-action="clean" ${blocked() ? 'disabled' : ''}>开始清理</button></div></div>
+      <div class="section-label">文件共享</div><div class="group">
+        ${row({ act: 'toast', icon: 'i-folder', t: '工作目录', s: '/root/workspace' })}
+        ${row({ act: 'toast', icon: 'i-share', t: '在文件管理器中访问', s: '通过系统文件选择器或 MT 管理器访问 DSHA' })}
+      </div>`;
+  }
+
+  // ---------- 作品导出 ----------
+  const tree = {
+    '工作目录': [['dir', 'DSH-A-mod', '12 项'], ['dir', 'notes', '5 项'], ['file', 'report.pdf', '1.2 MB'], ['file', 'cover.png', '840 KB']],
+    'DSH-A-mod': [['dir', 'artifacts', '3 项'], ['file', 'README.md', '18 KB'], ['file', 'BUILD.md', '9 KB']],
+    'notes': [['file', 'todo.md', '2 KB'], ['file', 'meeting.txt', '4 KB']],
+    'artifacts': [['file', 'data-backup-preview.html', '46 KB']],
+  };
+  function viewFiles() {
+    const cur = S.fileDir.at(-1), items = tree[cur] || [];
+    return head('i-file', '作品与文件导出', '浏览工作区，把文件保存到手机或直接分享。') +
+      `<nav class="crumb" aria-label="目录" style="margin-top:16px">${S.fileDir.map((d, i) => i < S.fileDir.length - 1 ? `<button data-dir="${i}">${d}</button><span>/</span>` : `<b>${d}</b>`).join('')}</nav>
+      <div class="group">${items.map(([k, n, m]) => k === 'dir'
+        ? `<button class="row" data-open="${n}"><span class="ic">${ic('i-folder')}</span><span class="tx"><div class="t">${n}</div><div class="s">${m}</div></span>${chev}</button>`
+        : `<div class="row" style="cursor:default"><span class="ic">${ic('i-file')}</span><span class="tx"><div class="t">${n}</div><div class="s">${m}</div></span><span class="btns"><button class="btn" style="min-height:36px;padding:6px 12px" data-action="toast" data-msg="已保存文件：${n}">保存到…</button><button class="btn" style="min-height:36px;padding:6px 12px" data-action="toast" data-msg="已打开分享面板">${ic('i-share', 16)}</button></span></div>`).join('')}</div>`;
+  }
+
+  // ---------- 技能 ----------
+  function viewSkills() {
+    const sk = [['dsh-badge', '为文档和 PR 添加 powered by dsh 徽章', true], ['code-review', '按项目约定审查改动', true], ['release-notes', '生成中文发布说明', false], ['android-ui-audit', '原生布局验收清单', true]];
+    return head('i-spark', '技能（Skills）', '已安装的技能会在对话中按需调用。') +
+      `<div class="btns" style="margin-top:16px"><button class="btn primary" data-action="toast" data-msg="正在读取并检查 SKILL.md…">导入 SKILL.md</button><button class="btn ghost" data-action="toast" data-msg="已刷新">刷新</button></div>
+      <div class="section-label">已安装 · ${sk.length}</div><div class="group">${sk.map(([n, d, m]) => `<button class="row" data-action="skill" data-n="${n}" data-m="${m}"><span class="ic">${ic('i-spark')}</span><span class="tx"><div class="t">${n}</div><div class="s">${d}</div></span><span class="badge ${m ? '' : 'gray'}">${m ? '模型可调用' : '仅手动'}</span>${chev}</button>`).join('')}</div>
+      <details class="qa card" style="margin-top:12px;padding:4px 14px"><summary>格式要求</summary><p>SKILL.md 必须是非空 UTF-8 文本，不超过 1 MiB，开头包含 name 与 description 字段。</p></details>`;
+  }
+
+  // ---------- 储存指南 ----------
+  function viewGuide() {
+    const qa = [
+      ['数据存在哪里？', '对话、配置、插件和 Ubuntu 运行环境都在应用私有目录。外置工作区在你选择的手机目录里，不受应用卸载影响。', 'storage', '查看占用'],
+      ['备份会带走什么？', '一键备份包含对话、配置、插件与应用内工作区；不含 API Key、外置工作区和可再生的运行环境。', 'backup', '去备份'],
+      ['Android「清缓存」为什么没用？', 'Ubuntu、Node 和插件依赖属于应用数据，通常比 Android 缓存大得多。系统清缓存只有几十 MB，不会移除运行环境。', 'storage', '查看清理选项'],
+      ['换机怎么迁移？', '在旧设备一键备份，把 下载/DSHA 中的 tar.gz 拷到新设备，在「从备份恢复」中选择该文件。本机授权需在新设备重新开启。', 'restore', '选择备份做恢复预检'],
+      ['环境坏了还能救回数据吗？', '可以。救援工具不依赖 Ubuntu 或网页，能只读导出可读取的数据。', 'rescue', '打开救援工具'],
+    ];
+    return head('i-book', '储存指南', '先看保留范围，再选择操作。打开本页不会修改文件或停止 DSH。') +
+      `<div class="card" style="margin-top:18px;padding:6px 16px">${qa.map(([q, a, go, l], i) => `<details class="qa" ${i === 0 ? 'open' : ''}><summary>${q}</summary><p>${a}</p><p><button class="btn" style="min-height:36px" data-go="${go}">${l}</button></p></details>`).join('')}</div>`;
+  }
+
+  // ---------- 救援 ----------
+  function viewRescue() {
+    const pend = S.state === 'pending';
+    return head('i-wrench', '救援与维护工具', '运行环境不可用时，也能检查并保护可读取的数据。') +
+      (pend ? `<div class="notice err" style="margin-top:16px">${ic('i-info', 18)}<span>检测到中断的数据提交。建议先执行「恢复中断的数据提交」。</span></div>` : '') +
+      `<div class="section-label">数据救援</div><div class="group">
+        ${row({ act: 'dlg-rescue-export', icon: 'i-down', t: '只读救援导出', s: '不启动环境，只读取当前可读数据' })}
+        ${row({ act: 'dlg-reexport', icon: 'i-archive', t: '重新导出已验证副本', s: '从本机自动副本生成 tar.gz' })}
+      </div>
+      <div class="section-label">维护</div><div class="group">
+        ${row({ act: 'dlg-recover', icon: 'i-restore', t: '恢复中断的数据提交', s: '根据宿主日志恢复一致状态，原件保留', tone: pend ? 'err' : '', meta: pend ? '待处理' : '' })}
+        ${row({ act: 'dlg-home', icon: 'i-folder', t: '选择已有数据目录', s: '原容器目录 / 宿主持久目录，不合并不清空' })}
+        ${row({ act: 'dlg-rollback', icon: 'i-reset', t: '回退兼容运行时', s: '切回直接健康前代', tone: 'warn' })}
+      </div>`;
+  }
+
+  // ---------- 保留副本 ----------
+  function viewRetained() {
+    const all = [['加密副本', '10-12 自动副本', '已记录验证，操作前复核', 'ok'], ['旧环境数据', 'previous-linux · 1.4 GB', '原件保留', 'gray'], ['插件原件', 'dsh-web-mobile 3.2.1', '原操作已提交', 'ok'], ['隔离插件', 'legacy-tools', '来源或记录未确认', 'warn'], ['运行时原件', 'dsh 0.2.1-rc.4', '原件保留', 'gray'], ['恢复原件', '10-28 恢复前快照', '已记录验证，操作前复核', 'ok'], ['rc1 迁移记录', 'profile 设置', '迁移待重试或待处理', 'warn']];
+    const cats = ['全部', '加密副本', '旧环境数据', '插件原件', '隔离插件'];
+    const list = all.filter(x => S.retainedFilter === '全部' || x[0] === S.retainedFilter);
+    return head('i-archive', '保留副本与旧环境', '查看保留副本、旧环境和插件原件；检查与恢复分别处理，不自动删除。') +
+      `<div class="chips">${cats.map(c => `<button class="chip ${S.retainedFilter === c ? 'on' : ''}" data-filter="${c}">${c}</button>`).join('')}</div>
+      <div class="group">${list.map(([k, n, st, tone]) => `<button class="row" data-action="retained-item" data-n="${n}" data-k="${k}"><span class="ic">${ic('i-archive')}</span><span class="tx"><div class="t">${n}</div><div class="s">${k}</div></span><span class="badge ${tone}">${st}</span>${chev}</button>`).join('') || '<p class="cap" style="padding:16px">暂无保留副本。</p>'}</div>`;
+  }
+
+  // ---------- 记录 ----------
+  function viewHistory() {
+    const h = [['手动备份', '今天 18:12', 'DSHA-data-v5-7f3a…c21e.tar.gz', 'ok', '成功'], ['自动副本', '今天 03:00', '412 MB', 'ok', '已验证'], ['恢复', '10-28 21:52', '对话与附件、设置', 'ok', '已提交'], ['手动备份', '10-23 21:05', '保存位置空间不足', 'err', '未完成'], ['重置配置', '10-20 09:14', '原配置已保留快照', 'gray', '已完成']];
+    return head('i-history', '备份与维护记录', '最近的备份、恢复和维护结果。') +
+      `<div class="group" style="margin-top:18px">${h.map(([k, t, d, tone, st]) => `<div class="row" style="cursor:default"><span class="ic ${tone === 'err' ? 'err' : ''}">${ic(k === '恢复' ? 'i-restore' : k === '重置配置' ? 'i-reset' : 'i-up')}</span><span class="tx"><div class="t">${k} · ${t}</div><div class="s">${d}</div></span><span class="badge ${tone}">${st}</span></div>`).join('')}</div>`;
+  }
+
+  const views = { root: viewRoot, backup: viewBackup, restore: viewRestore, auto: viewAuto, export: viewExport, storage: viewStorage, files: viewFiles, skills: viewSkills, guide: viewGuide, rescue: viewRescue, retained: viewRetained, history: viewHistory };
+
+  // ---------- 渲染与导航 ----------
+  function render(scrollTop) {
+    $('#view').innerHTML = views[S.stack.at(-1)]();
+    $('#list-sub').textContent = S.running ? `正在备份 · ${S.running.pct}%` : stateInfo[S.state].list;
+    if (scrollTop) { $('#detail').scrollTop = 0; $('#detail').focus({ preventScroll: true }); }
+  }
+  const go = (p) => { if (p === 'restore') S.restore = { ...S.restore, step: 0, file: null, verified: false }; if (p === 'files') S.fileDir = ['工作目录']; S.stack.push(p); render(true); };
+  const back = () => { if (S.stack.length > 1) S.stack.pop(); render(true); };
+  const home = () => { S.stack = ['root']; render(true); };
+
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), 2200); }
+  let lastFocus = null;
+  function dialog(title, msg, actions) {
+    lastFocus = document.activeElement;
+    $('#dialog').innerHTML = `<h3 id="dlg-title">${title}</h3><p>${msg}</p><div class="btns">${actions.map((a, i) => `<button class="btn ${a.primary ? 'primary' : a.danger ? 'danger' : ''}" data-dlg="${i}">${a.label}</button>`).join('')}</div>`;
+    $('#scrim').classList.add('show');
+    $('#dialog').querySelectorAll('[data-dlg]').forEach(b => b.onclick = () => { closeDialog(); actions[+b.dataset.dlg].fn?.(); });
+    $('#dialog').querySelector('.btn.primary, .btn.danger, .btn')?.focus();
+  }
+  function closeDialog() { $('#scrim').classList.remove('show'); lastFocus?.focus?.(); }
+  const cancelBtn = { label: '取消' };
+
+  function startBackup() {
+    S.lastDone = false; S.running = { pct: 0, step: 0 }; home();
+    S.running.timer = setInterval(() => {
+      const r = S.running; if (!r) return;
+      r.pct = Math.min(100, r.pct + 4); r.step = r.pct < 15 ? 0 : r.pct < 65 ? 1 : r.pct < 88 ? 2 : 3;
+      if (r.pct >= 100) { clearInterval(r.timer); S.running = null; S.lastDone = true; S.state = 'ok'; $('#ctl-state').value = 'ok'; toast('备份完成并已核验'); }
+      if (S.stack.at(-1) === 'root' || !S.running) render(false);
+    }, 220);
+  }
+
+  const actions = {
+    theme: () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'dark' ? '' : 'dark'; },
+    back, home,
+    'start-backup': startBackup,
+    'cancel-backup': () => dialog('取消备份？', '已写入的临时文件会被清理，原数据不受影响。', [{ label: '继续备份' }, { label: '取消备份', danger: true, fn: () => { clearInterval(S.running.timer); S.running = null; render(false); toast('已取消备份，原数据未改动'); } }]),
+    reset: () => dialog('重置配置？', '先停止 Web、终端和写任务，在隔离服务中重置当前 web profile 的普通设置并读回，再事务提交与工作目录 .env。\n插件构成、对话和凭据保留；原配置可恢复。无法确认时保留原件并显示原因。', [cancelBtn, { label: '保留原件并重置', primary: true, fn: () => toast('配置已重置，原配置已保留快照') }]),
+    'pick-file': () => actions['choose-file'](null, 0),
+    'choose-file': (el, i) => { S.restore.file = el ? +el.dataset.i : i; S.restore.verified = false; S.restore.step = 1; render(true); },
+    verify: () => { const v = $('#pwd')?.value || ''; if (!v) { toast('请输入原备份密码'); return; } S.restore.verified = true; render(false); },
+    'restore-prev': () => { S.restore.step = Math.max(0, S.restore.step - 1); if (S.restore.step === 0) S.restore.verified = false; render(true); },
+    'restore-next': () => { S.restore.step++; render(true); },
+    'restore-run': () => dialog('恢复此备份？', '将停止 Web、终端和写任务，并在恢复前为当前数据生成私有快照。', [cancelBtn, { label: '恢复', primary: true, fn: () => { S.restore.step = 4; render(true); } }]),
+    'auto-mode': (el) => { S.auto.mode = el.dataset.k; render(false); },
+    'auto-now': () => toast('已开始创建自动备份'),
+    'copy-restore': (el) => dialog('预检恢复', `将检查 ${copies[+el.dataset.i].t} 的自动副本，确认范围后才会恢复。`, [cancelBtn, { label: '开始预检', primary: true, fn: () => { S.stack.push('restore'); S.restore = { ...S.restore, file: 0, step: 1, verified: true }; render(true); } }]),
+    'copy-export': () => toast('请选择保存位置，将导出无密码备份'),
+    'pick-project': () => { S.export.projects.push(['DSH-A-mod', 'notes', 'blog'][S.export.projects.length % 3]); render(false); },
+    locations: () => dialog('数据范围与位置', '应用数据：/data/data/…/files/linux\n对话与附件：~/.dsh/sessions\n设置：~/.dsh/config 与工作目录 .env\n插件：~/.dsh/plugins（系统插件不导出）\n导出位置：由你在系统选择器中指定', [{ label: '知道了', primary: true }]),
+    'do-export': () => toast('请在系统选择器中选择保存位置'),
+    clean: () => dialog('清理存储空间？', '将清理可再生缓存与多余运行时副本，约释放 420 MB。\n至少保留两份健康副本；修改过或含额外文件的原件不会删除。', [cancelBtn, { label: '开始清理', primary: true, fn: () => toast('清理完成，释放 418 MB') }]),
+    toast: (el) => toast(el.dataset.msg || '预览：此处打开对应系统页面'),
+    skill: (el) => dialog(el.dataset.n, el.dataset.m === 'true' ? '模型可按需调用 skill 工具读取。\n\n调用命令：/' + el.dataset.n : '此技能禁止模型自主调用，只能手动调用。\n\n调用命令：/' + el.dataset.n, [{ label: '复制调用命令', fn: () => toast('已复制') }, { label: '关闭', primary: true }]),
+    'dlg-rescue-export': () => dialog('只读救援导出', '不启动 Ubuntu 或网页，只读取当前可读取的数据并导出为 tar.gz。无法读取的部分会在报告中列出。', [cancelBtn, { label: '选择保存位置', primary: true, fn: () => toast('请选择保存位置') }]),
+    'dlg-reexport': () => { S.stack.push('auto'); render(true); },
+    'dlg-recover': () => dialog('恢复中断的数据提交', '将先停止写任务，再根据宿主日志恢复一致状态。无需旧 Python 或备份密码，原件将保留。', [cancelBtn, { label: '继续', primary: true, fn: () => { if (S.state === 'pending') { S.state = 'ok'; $('#ctl-state').value = 'ok'; } render(false); toast('已恢复一致状态'); } }]),
+    'dlg-home': () => dialog('选择要使用的数据目录', '会先停止 Web 和终端，再选择已有目录。两份数据都保留，不合并或清空。所选目录必须存在且可读取。', [cancelBtn, { label: '原容器数据目录', fn: () => toast('已切换到原容器数据目录') }, { label: '宿主持久数据目录', primary: true, fn: () => toast('已切换到宿主持久数据目录') }]),
+    'dlg-rollback': () => dialog('回退兼容运行时？', '切回直接健康前代 dsh 0.2.1-rc.4。当前版本保留为原件，可再次切换。', [cancelBtn, { label: '回退', danger: true, fn: () => toast('已回退，请重新启动 DSH') }]),
+    'retained-item': (el) => dialog(el.dataset.n, `类型：${el.dataset.k}\n原件或记录保持保留。\n检查、导出与恢复分别处理，操作前会重新核对文件摘要。`, [{ label: '关闭' }, { label: '检查此记录', primary: true, fn: () => toast('检查通过，摘要一致') }]),
+  };
+
+  // ---------- 事件委托 ----------
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-go],[data-go-replace],[data-action],[data-back],[data-filter],[data-open],[data-dir]');
+    if (!t || t.disabled) return;
+    if (t.dataset.go) { if (t.dataset.go === 'root') home(); else go(t.dataset.go); }
+    else if (t.dataset.goReplace) { S.stack = ['root', t.dataset.goReplace]; render(true); }
+    else if (t.dataset.back) { S.stack = S.stack.slice(0, +t.dataset.back + 1); render(true); }
+    else if (t.dataset.filter) { S.retainedFilter = t.dataset.filter; render(false); }
+    else if (t.dataset.open) { S.fileDir.push(t.dataset.open); render(false); }
+    else if (t.dataset.dir) { S.fileDir = S.fileDir.slice(0, +t.dataset.dir + 1); render(false); }
+    else actions[t.dataset.action]?.(t);
+  });
+  document.addEventListener('change', (e) => {
+    const t = e.target;
+    if (t.dataset.scope) { S.restore.scope[t.dataset.scope] = t.checked; render(false); }
+    else if (t.dataset.exp) { S.export.scope = +t.dataset.exp; render(false); }
+    else if (t.id === 'exp-key') { S.export.key = t.checked; render(false); }
+    else if (t.id === 'auto-on') { S.auto.on = t.checked; render(false); }
+    else if (t.id === 'auto-time') { S.auto.time = t.value || '03:00'; render(false); }
+    else if (t.id === 'auto-hours') { const v = +t.value; if (v >= 1 && v <= 168) { S.auto.hours = v; render(false); } else { toast('请输入 1–168'); t.value = S.auto.hours; } }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if ($('#scrim').classList.contains('show')) closeDialog(); else if (S.stack.length > 1) back();
+  });
+  $('#scrim').addEventListener('click', (e) => { if (e.target.id === 'scrim') closeDialog(); });
+
+  $('#ctl-device').onchange = (e) => $('#device').classList.toggle('phone', e.target.value === 'phone');
+  $('#ctl-state').onchange = (e) => { S.state = e.target.value; S.lastDone = false; render(false); };
+  $('#ctl-theme').onclick = actions.theme;
+  $('#ctl-note').onclick = () => $('#note').classList.toggle('hidden');
+
+  render(false);
+})();
+</script>
+</body>
+</html>

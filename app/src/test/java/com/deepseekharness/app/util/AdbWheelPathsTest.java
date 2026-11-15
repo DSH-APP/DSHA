@@ -192,13 +192,31 @@ public class AdbWheelPathsTest {
           "/sdcard/Documents/dshdata",
           "../sdcard/dshdata",
           "/data/user/0/other.app/files/data",
-          new File(data.getParentFile(), "other-app").getPath()
+          // /storage 与 /sdcard 都是 Android 外部挂载；用真实 guest 外部路径覆盖，
+          // 避免把宿主临时目录（Linux /tmp）误当成 guest 外部绑定。
+          "/storage/emulated/0/other-app"
         }) {
       fs.links.put(link, target);
       assertThrows(target, IOException.class, () -> bind(fs, data));
     }
     assertFalse(new File(link, "wheels").exists());
     assertFalse(new File(data, "files/linux/ubuntu/sdcard").exists());
+  }
+
+  @Test
+  public void guestAbsoluteTemporaryPathNeverResolvesToHostTemporaryDirectory() throws Exception {
+    File data = data();
+    StrictFs fs = new StrictFs();
+    File outside = temporary.newFolder("other-app").getCanonicalFile();
+    // Linux 的绝对 /tmp/... 在 guest 中属于 rootfs；不能按宿主路径读取或写入。
+    String target = outside.getPath().replace(File.separatorChar, '/');
+    if (!target.startsWith("/")) return;
+    fs.links.put(new File(data, "files/linux/ubuntu/root/.dsh"), target);
+    var paths = bind(fs, data);
+    assertEquals(new File(paths.rootfs, target.substring(1)), paths.home);
+    assertNotEquals(outside, paths.home);
+    assertFalse(new File(outside, "wheels").exists());
+    assertEquals(0, outside.list().length);
   }
 
   @Test

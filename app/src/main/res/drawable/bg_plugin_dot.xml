@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 插件行状态点：基础色由 PluginFragment 按真实状态 tint，不在这里固定语义色。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="@color/shell_text_muted" />
+    <size android:width="8dp" android:height="8dp" />
+</shape>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 插件提示条底：12dp 圆角，底色由代码按语气 tint 为 shell_*_soft。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_raised" />
+    <corners android:radius="12dp" />
+</shape>

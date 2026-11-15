@@ -71,8 +71,10 @@ test('键盘和辅助功能显式激活直接打开；取消和右键不导航',
 });
 test('Enter和Space仅行自身单次按键激活，不冒充实际指针事件',()=>{
     assert.match(source,/if \(!event\.repeat\) dshaSessionClick\(\{detail:0\}, result\.id/);
-    assert.match(source,/else if \(event\.key === ' '\)[\s\S]*?if \(!event\.repeat\) dshaSessionClick/);
-    assert.match(source,/if \(event\.target !== event\.currentTarget\) return/);
+    // 0.2.2: tree rows spread getTriggerProps after their own props; DSHA handlers must enter through it.
+    assert.match(source,/onContextMenu: \(event\) => dshaSessionSelection\.pointerCancel\(event, node\.id, currentId\),\n\t+onKeyDown: \(event\) => \{[\s\S]*?if \(!event\.repeat\) dshaSessionClick\(\{ detail: 0 \}, node\.id, currentId, onOpen\);\n\t+\}\n\t+\}\),/);
+    assert.doesNotMatch(source,/\{ onKeyDown: \(event\) => \{\n[^\n]*\n[^\n]*\n[^\n]*\n\t+onOpen\(node\.id\);/);
+    assert.match(source,/if \(event\.target === event\.currentTarget && \(event\.key === "Enter" \|\| event\.key === " "\)\)/);
     assert.match(source,/onClick: \(event\) => dshaSessionClick\(event,/);
     assert.doesNotMatch(source,/Touch or pen: tap to select, double-tap to open/);
 });
@@ -97,13 +99,12 @@ test('移动抽屉不会把单击选中误判为已打开',()=>{
     assert.ok(mobile.includes("dsha-session-open"));
     assert.ok(mobile.includes('onDshaSessionOpen') || mobile.includes('onSessionOpened'));
 });
-test('打开会话的效果不再主动 focus，显式编辑路径仍存在',()=>{
+test('打开会话的效果在移动端不主动 focus（0.2.2 上游 isMobileDevice 已吸收 DSHA_COMPOSER_EXPLICIT_FOCUS_V1）',()=>{
     const patches=JSON.parse(readFileSync(assets+'composer-enter-patch.json','utf8')).patches;
-    const focus=patches.find(p=>p.after.includes('DSHA_COMPOSER_EXPLICIT_FOCUS_V1'));
-    assert.ok(focus); assert.ok(!focus.after.includes('.focus('));
+    assert.equal(patches.some(p=>p.after.includes('DSHA_COMPOSER_EXPLICIT_FOCUS_V1')),false);
     const client=readFileSync(runtime+'/node_modules/@deepseek-ai/dsh-client-ui-conversation/lib/client.js','utf8');
-    const anchors=client.split(focus.before).length-1;
-    assert.ok(anchors===1 || (anchors===0 && client.includes(focus.after)));
-    const patched=anchors===1?client.replace(focus.before,focus.after):client;
-    assert.ok(patched.includes('editor?.getRootElement()?.focus({ preventScroll: true });'));
+    assert.equal(client.split('\t\t\t\tif (locked || editor === null) return;\n\t\t\t\tif ((0, _deepseek_ai_dsh_client_ui_primitives.isMobileDevice)()) return;\n\t\t\t\tfocusDraftEditor(editor, revealSelection);\n\t\t\t}, [\n\t\t\t\tlocked,\n\t\t\t\tsessionId,').length,2);
+    const primitives=readFileSync(runtime+'/node_modules/@deepseek-ai/dsh-client-ui-primitives/lib/index.js','utf8');
+    assert.ok(primitives.includes('mobileDevice = /Android|iPhone|iPad|iPod/i.test(userAgent)'));
+    assert.ok(client.includes('editor?.getRootElement()?.focus({ preventScroll: true });'));
 });

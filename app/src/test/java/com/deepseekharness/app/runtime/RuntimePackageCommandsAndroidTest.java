@@ -133,23 +133,91 @@ public final class RuntimePackageCommandsAndroidTest {
     }
   }
 
+  private static String sha256Hex(byte[] data) throws Exception {
+    return String.format(
+        "%064x",
+        new java.math.BigInteger(
+            1, java.security.MessageDigest.getInstance("SHA-256").digest(data)));
+  }
+
+  private static void putTarHeader(byte[] header, int at, String value) {
+    byte[] data = value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    System.arraycopy(data, 0, header, at, data.length);
+  }
+
+  /** Single-member gzip ustar fixture, so the test does not need an extra tar dependency. */
+  private static byte[] ghArchive(String member, byte[] body) throws Exception {
+    byte[] header = new byte[512];
+    putTarHeader(header, 0, member);
+    putTarHeader(header, 100, "0000755");
+    putTarHeader(header, 124, String.format("%011o", body.length));
+    header[156] = (byte) '0';
+    java.util.Arrays.fill(header, 148, 156, (byte) ' ');
+    int sum = 0;
+    for (byte value : header) sum += value & 255;
+    putTarHeader(header, 148, String.format("%06o", sum));
+    var raw = new java.io.ByteArrayOutputStream();
+    raw.write(header);
+    raw.write(body);
+    raw.write(new byte[(512 - body.length % 512) % 512]);
+    raw.write(new byte[1024]);
+    var compressed = new java.io.ByteArrayOutputStream();
+    try (var gzip = new java.util.zip.GZIPOutputStream(compressed)) {
+      gzip.write(raw.toByteArray());
+    }
+    return compressed.toByteArray();
+  }
+
   private android.content.res.AssetManager packageAssets() throws Exception {
+    return packageAssets(false, "gh-cli.tar.gz");
+  }
+
+  private android.content.res.AssetManager packageAssets(boolean corruptGhDigest) throws Exception {
+    return packageAssets(corruptGhDigest, "gh-cli.tar.gz");
+  }
+
+  /** gh 在 APK 内的打包名：build330 起为 gh-cli.bin，旧包与夹具仍是源名。 */
+  private android.content.res.AssetManager packageAssets(boolean corruptGhDigest, String ghEntry)
+      throws Exception {
     Path archive = Files.createTempFile("dsha-package-assets-", ".apk");
     archive.toFile().deleteOnExit();
+    byte[] ghBinary =
+        "#!/bin/sh\necho fixture gh\n".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    byte[] ghTarball = ghArchive("gh_2.103.3_linux_arm64/bin/gh", ghBinary);
+    String ghDigest = corruptGhDigest ? "0".repeat(64) : sha256Hex(ghBinary);
     var resources = new java.util.LinkedHashMap<String, String>();
     resources.put("runtime-descriptor.json", "{\"runtimeId\":\"" + ID + "\"}");
-    resources.put("managed-runtime-inputs.json", "{\"schema\":1,\"installs\":[]}");
     resources.put(
-        "runtime-patches.json", "{\"schema\":1,\"dshVersion\":\"0.2.1-rc.2\",\"active\":[]}");
+        "managed-runtime-inputs.json",
+        "{\"schema\":1,\"installs\":["
+            + "{\"asset\":\"gh-wrapper.sh\",\"target\":\"root/dsh-bin/gh\",\"executable\":true},"
+            + "{\"asset\":\"gh-proxy.mjs\",\"target\":\"usr/local/share/dsha/gh-proxy.mjs\",\"executable\":false},"
+            + "{\"asset\":\"gh-cli.tar.gz\",\"target\":\"opt/gh/bin/gh\",\"executable\":true,"
+            + "\"extract\":{\"member\":\"gh_2.103.3_linux_arm64/bin/gh\",\"sha256\":\""
+            + ghDigest
+            + "\"}}"
+            + "]}");
+    resources.put(
+        "runtime-patches.json",
+        new JSONObject()
+            .put("schema", 1)
+            .put("dshVersion", com.deepseekharness.app.util.Constants.DSH_VERSION)
+            .put("active", new org.json.JSONArray())
+            .toString());
     resources.put("builtin-plugins.json", "{}");
     resources.put("runtime-tools.json", "{}");
     resources.put("bridge-token-compat.cjs", "// isolated command fixture\n");
+    resources.put("gh-wrapper.sh", "#!/bin/bash\nexec /opt/gh/bin/gh \"$@\"\n");
+    resources.put("gh-proxy.mjs", "// isolated proxy fixture\n");
     try (var zip = new java.util.zip.ZipOutputStream(Files.newOutputStream(archive))) {
       for (var item : resources.entrySet()) {
         zip.putNextEntry(new java.util.zip.ZipEntry("assets/" + item.getKey()));
         zip.write(item.getValue().getBytes(java.nio.charset.StandardCharsets.UTF_8));
         zip.closeEntry();
       }
+      zip.putNextEntry(new java.util.zip.ZipEntry("assets/" + ghEntry));
+      zip.write(ghTarball);
+      zip.closeEntry();
     }
     var constructor = android.content.res.AssetManager.class.getDeclaredConstructor();
     constructor.setAccessible(true);
@@ -189,6 +257,10 @@ public final class RuntimePackageCommandsAndroidTest {
       RuntimeTools.prepare(context, root.toFile());
       Path wrapper = root.resolve("root/dsh-bin/pnpm");
       assertTrue(Files.readString(wrapper).contains("package_import_method"));
+      assertTrue(Files.isExecutable(root.resolve("root/dsh-bin/gh")));
+      assertEquals(
+          "// isolated proxy fixture\n",
+          Files.readString(root.resolve("usr/local/share/dsha/gh-proxy.mjs")));
       // Model the prior APK's valid cached stamp after its old publication.
       Files.writeString(wrapper, OLD_PNPM);
       var stamp = RuntimeTools.class.getDeclaredMethod("stamp", File.class);
@@ -253,7 +325,7 @@ public final class RuntimePackageCommandsAndroidTest {
           Path.of(output),
           new JSONObject()
               .put("wrappers", wrappers)
-              .put("webCommand", WebLaunchCommand.build("ask", true, "zh", "web", 0, 42))
+              .put("webCommand", WebLaunchCommand.build(true, "zh", "web", 0, 42))
               .put("pnpmVersion", BuildConfig.BUNDLED_PNPM_VERSION)
               .toString(2));
   }
@@ -298,6 +370,57 @@ public final class RuntimePackageCommandsAndroidTest {
     assertTrue(ManagedRuntimeLayout.paths().contains("usr/local/lib/dsha-pnpm"));
     assertTrue(ManagedRuntimeLayout.paths().contains("root/.dsha-pnpm-version"));
     assertTrue(ManagedRuntimeLayout.paths().contains("root/dsh-bin/pnpm"));
+    assertTrue(ManagedRuntimeLayout.paths().contains("opt/gh/bin/gh"));
     assertFalse(ManagedRuntimeLayout.paths().contains("usr/local/bin/pnpm"));
+  }
+
+  @Test
+  @Config(application = OwnedApplication.class, shadows = PackageFileSystem.class)
+  public void managedReleaseArchiveInstallsOnlyThePinnedMember() throws Exception {
+    try (var assets = packageAssets()) {
+      Files.writeString(
+          root.getParent().resolve(".runtime-descriptor.json"), "{\"runtimeId\":\"" + ID + "\"}");
+      RuntimeTools.prepare(context, root.toFile());
+      Path binary = root.resolve("opt/gh/bin/gh");
+      assertTrue(Files.isExecutable(binary));
+      assertEquals("#!/bin/sh\necho fixture gh\n", Files.readString(binary));
+      Files.writeString(binary, "tampered");
+      RuntimeTools.stage(context, root.toFile());
+      assertEquals("#!/bin/sh\necho fixture gh\n", Files.readString(binary));
+    }
+  }
+
+  @Test
+  @Config(application = OwnedApplication.class, shadows = PackageFileSystem.class)
+  public void managedReleaseArchiveReadsThePackagedBinName() throws Exception {
+    // build330 的 APK 只有 assets/gh-cli.bin：AGP 不会 gunzip 非 .gz 成员，安装必须成功。
+    try (var assets = packageAssets(false, "gh-cli.bin")) {
+      Files.writeString(
+          root.getParent().resolve(".runtime-descriptor.json"), "{\"runtimeId\":\"" + ID + "\"}");
+      RuntimeTools.prepare(context, root.toFile());
+      Path binary = root.resolve("opt/gh/bin/gh");
+      assertTrue(Files.isExecutable(binary));
+      assertEquals("#!/bin/sh\necho fixture gh\n", Files.readString(binary));
+    }
+  }
+
+  @Test
+  @Config(application = OwnedApplication.class, shadows = PackageFileSystem.class)
+  public void managedReleaseArchiveRejectsAMismatchedMemberDigest() throws Exception {
+    try (var assets = packageAssets(true)) {
+      Files.writeString(
+          root.getParent().resolve(".runtime-descriptor.json"), "{\"runtimeId\":\"" + ID + "\"}");
+      java.io.IOException failure =
+          assertThrows(
+              java.io.IOException.class, () -> RuntimeTools.prepare(context, root.toFile()));
+      boolean matched = false;
+      for (Throwable cause = failure; cause != null; cause = cause.getCause())
+        if (String.valueOf(cause.getMessage()).contains("MANAGED_INPUT_EXTRACT_DIGEST")) {
+          matched = true;
+          break;
+        }
+      assertTrue("unexpected failure: " + failure, matched);
+      assertFalse(Files.exists(root.resolve("opt/gh/bin/gh")));
+    }
   }
 }

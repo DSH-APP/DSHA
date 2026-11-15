@@ -1,24 +1,32 @@
 package com.deepseekharness.app.core;
 
 import com.deepseekharness.app.util.Compat;
-import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import org.json.JSONObject;
 
 /** 插件子进程与界面之间的阶段/取消信号。取消在 Python 提交边界协作处理。 */
 final class PluginTask implements AutoCloseable {
-  final String id = UUID.randomUUID().toString().replace("-", "");
+  final String id;
   private final File progress, cancel;
   private volatile boolean requested;
+  private boolean closed;
 
   PluginTask(File rootfs) {
+    this(rootfs, UUID.randomUUID().toString());
+  }
+
+  PluginTask(File rootfs, String operationId) {
+    id = operationId.replace("-", "");
+    if (!id.matches("[a-f0-9]{32}")) throw new IllegalArgumentException("PLUGIN_TASK_ID");
     progress = new File(rootfs, "root/.dsha-plugin-task-" + id + ".json");
     cancel = new File(rootfs, "root/.dsha-plugin-task-" + id + ".cancel");
   }
 
-  JSONObject read() {
+  synchronized JSONObject read() {
+    if (closed) return new JSONObject();
     try {
       if (progress.isFile() && progress.length() <= 16384)
         return new JSONObject(new String(Compat.readAllBytes(progress), StandardCharsets.UTF_8));
@@ -28,6 +36,8 @@ final class PluginTask implements AutoCloseable {
   }
 
   synchronized void cancel() throws IOException {
+    if (closed) return;
+    requested = true;
     if (!cancel.createNewFile() && !cancel.isFile())
       throw new IOException(com.deepseekharness.app.util.UiText.text("无法发送取消请求"));
     requested = true;
@@ -43,6 +53,7 @@ final class PluginTask implements AutoCloseable {
 
   @Override
   public synchronized void close() {
+    closed = true;
     progress.delete();
     cancel.delete();
     new File(progress.getPath() + ".tmp").delete();

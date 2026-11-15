@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 自检结果圆点（未核验）：不是失败，用中性色区分于需要处理。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval"><solid android:color="@color/shell_text_muted" /><size android:width="8dp" android:height="8dp" /></shape>

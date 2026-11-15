@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.5-20261105.2135-dsh0.2.2-rc.1 / build325
+
+- Corrige l’écran blanc après une installation par-dessus build324 : le pignon du footer de la barre latérale de la coque mobile cède désormais selon sa largeur mesurée, sans dépendre de l’affichage de l’indicateur « état de connexion » de l’hôte ; la barre latérale ne se superpose plus et l’espace de travail ne devient plus blanc.
+- La mise à jour par-dessus déclenche désormais normalement la maintenance/reconstruction de l’environnement, sans traiter « entrer dans l’écran principal » comme action principale.
+- Portée de la vérification : tests hôte, contrôles de source et de descripteurs d’exécution ; l’utilisateur a confirmé sur appareil (paquet de test) que l’écran blanc a disparu et que la reconstruction de l’environnement se déclenche normalement ; visibilité/clic du pignon, avis de première connexion et confirmation d’appel de compétence restent en attente de confirmation et ne sont pas écrits comme réussis. versionCode porté à 325 (basé sur build324).

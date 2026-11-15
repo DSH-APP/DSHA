@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="terminal_workspace" type="id" />
+    <item name="terminal_content" type="id" />
+    <item name="terminal_menu_ball" type="id" />
+    <item name="terminal_reset_ball" type="id" />
+    <item name="terminal_sessions_panel" type="id" />
+    <item name="terminal_workspace_toolbar" type="id" />
+    <item name="terminal_workspace_status" type="id" />
+    <item name="terminal_sessions_host" type="id" />
+    <item name="terminal_sessions_scrim" type="id" />
+    <item name="terminal_sessions_close" type="id" />
+    <item name="terminal_sessions_title" type="id" />
+    <item name="terminal_sessions_scroll" type="id" />
+    <item name="terminal_sessions_actions" type="id" />
+    <item name="terminal_sessions_actions_dense" type="id" />
+    <item name="terminal_sessions_create" type="id" />
+    <item name="terminal_sessions_close_all" type="id" />
+    <item name="terminal_create_pty" type="id" />
+    <item name="terminal_create_simple" type="id" />
+    <item name="terminal_create_cli" type="id" />
+    <item name="terminal_sessions_notice" type="id" />
+    <item name="terminal_workspace_menu" type="id" />
+    <item name="terminal_workspace_settings" type="id" />
+    <item name="terminal_workspace_help" type="id" />
+    <!-- 终端侧栏三向态/图标化/底栏动作新增 ID：全部追加，不改旧 ID。 -->
+    <item name="terminal_workspace_back" type="id" />
+    <item name="terminal_workspace_cli" type="id" />
+    <item name="terminal_sessions_theme" type="id" />
+    <item name="terminal_theme_system" type="id" />
+    <item name="terminal_theme_light" type="id" />
+    <item name="terminal_theme_dark" type="id" />
+    <item name="terminal_sessions_action_home" type="id" />
+    <item name="terminal_sessions_action_display" type="id" />
+    <item name="terminal_sessions_action_keyboard" type="id" />
+    <item name="terminal_sessions_action_paste" type="id" />
+    <item name="terminal_sessions_action_focus" type="id" />
+    <item name="terminal_sessions_action_help" type="id" />
+    <item name="terminal_sessions_action_home_dense" type="id" />
+    <item name="terminal_sessions_action_display_dense" type="id" />
+    <item name="terminal_sessions_action_keyboard_dense" type="id" />
+    <item name="terminal_sessions_action_paste_dense" type="id" />
+    <item name="terminal_sessions_action_focus_dense" type="id" />
+    <item name="terminal_sessions_action_help_dense" type="id" />
+</resources>

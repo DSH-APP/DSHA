@@ -1,12 +1,12 @@
 # 安装、组件检查与环境维护
 
-> 核验日期：2026-10-21。行为按本工作树 build190/F12 源码核对，F10 `087724c` 及 F11 保留参考历史归属。本页更新未执行构建、软件测试、设备或长时验收；最终身份与正式执行数量见 [README](../README.md) 和 [F12记录](releases/v0.2.1-rc.2-build190-fix12-20261021.md)。历史结果不随本文转记。
+> 核验日期：2026-10-31。行为按当前 build356 / DSH 0.2.2-rc.1 源码核对；F10–F13、build190 等记录保留各自历史归属。本页更新未执行设备或长时验收；最终身份、软件与 APK 结果见 [README](../README.md) 与本轮 CI / Release 回执，历史结果不随本文转记。
 
 安装解决“离线环境是否可运行”，组件检查解决“某个工具是否响应”，环境维护解决“受管文件或环境是否需要事务修复”。三者的成功条件不同。入口总览见[环境、数据与插件机制](runtime-data-plugin-architecture.md)，启动后的状态见[启动与诊断](startup-and-diagnostics.md)。
 
 ## 首次准备
 
-首次用户经欢迎页进入准备页，解压并校验 APK 内的完整 Ubuntu 与 DSH 资产；当前 Ubuntu 基础编号为 base10，DSH 为 `0.2.1-rc.2`。缺少固定离线归档的源码检出不能作为完整正式安装包交付。运行引擎默认 proot，可显式选择 proroot，详见[运行引擎](runtime-engines.md)。
+首次用户经欢迎页进入准备页，解压并校验 APK 内的完整 Ubuntu 与 DSH 资产；当前 Ubuntu 基础编号为 base10，DSH 为 `0.2.1-rc.5`。缺少固定离线归档的源码检出不能作为完整正式安装包交付。运行引擎默认 proot，可显式选择 proroot，详见[运行引擎](runtime-engines.md)。
 
 首次空环境走冷安装事务：准备环境、执行运行核验、确认实际运行方式和环境身份。已有环境不会因 Bash 或标记损坏就被组件页自动清除、重新解压。完成后先进入 Main，再提交一次受代次围栏保护的后台 Web 启动请求；模型与 API Key 在 Web 设置中填写。[环境维护实现](../app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java)与[首次 Web 请求](../app/src/main/java/com/deepseekharness/app/ui/FirstRunWebStart.java)是这两段的入口。
 

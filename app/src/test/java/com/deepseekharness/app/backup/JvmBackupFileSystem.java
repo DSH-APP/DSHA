@@ -72,6 +72,22 @@ public class JvmBackupFileSystem implements BackupFileSystem {
     };
   }
 
+  @Override
+  public byte[] currentSnapshot(File file, int limit) throws IOException {
+    if (limit < 1) throw new IOException("METADATA_LIMIT");
+    InputStream in = Files.newInputStream(file.toPath(), LinkOption.NOFOLLOW_LINKS);
+    try (in;
+        ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      byte[] buffer = new byte[4096];
+      int count;
+      while ((count = in.read(buffer)) != -1) {
+        if (out.size() + count > limit) throw new IOException("METADATA_LIMIT");
+        out.write(buffer, 0, count);
+      }
+      return out.toByteArray();
+    }
+  }
+
   public OutputStream create(File file) throws IOException {
     var channel =
         FileChannel.open(

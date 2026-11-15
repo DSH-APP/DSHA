@@ -203,11 +203,83 @@ public final class WebStartProtectionTest {
     Fixture fixture = new Fixture();
     fixture.promote();
     long stopped = fixture.internalStop();
+    long beforeStop = fixture.owner.cancellationRevision();
     fixture.owner.cancelAll();
+    long firstStop = fixture.owner.cancellationRevision();
+    assertEquals(beforeStop + 1, firstStop);
+    assertEquals(stopped, fixture.lifecycle.beginStop());
+    fixture.owner.cancelAll();
+    assertEquals(firstStop + 1, fixture.owner.cancellationRevision());
     assertEquals(stopped, fixture.lifecycle.beginStop());
     fixture.lifecycle.finishStop(stopped);
     assertFalse(fixture.owner.resumeAfterStop(fixture.ticket));
     assertFalse(fixture.owner.canAdmit(fixture.ticket));
+    assertEquals(-1, fixture.admit());
+    assertEquals(stopped, fixture.lifecycle.generation());
+  }
+
+  @Test
+  public void cancellationRevisionRecordsEveryStopEvenWithoutAnOutstandingTicket() {
+    WebLifecycle lifecycle = new WebLifecycle();
+    WebStartProtection owner = new WebStartProtection(lifecycle, () -> 0L);
+    assertEquals(0, owner.cancellationRevision());
+    owner.cancelAll();
+    long stopped = lifecycle.beginStop();
+    long restorationRevision = owner.cancellationRevision();
+    owner.cancelAll();
+    assertEquals(stopped, lifecycle.beginStop());
+    assertEquals(restorationRevision + 1, owner.cancellationRevision());
+    lifecycle.finishStop(stopped);
+    assertFalse(owner.hasPreparing());
+    assertTrue(lifecycle.isUserStopped());
+    assertFalse(lifecycle.isStarting());
+    assertEquals(stopped, lifecycle.generation());
+  }
+
+  @Test
+  public void observingRevisionOrClosingPreparationDoesNotCountAsAnExplicitStop() throws Exception {
+    Fixture fixture = new Fixture();
+    long revision = fixture.owner.cancellationRevision();
+    fixture.promote();
+    assertEquals(revision, fixture.owner.cancellationRevision());
+    long stopped = fixture.internalStop();
+    fixture.lifecycle.finishStop(stopped);
+    assertEquals(revision, fixture.owner.cancellationRevision());
+    assertTrue(fixture.owner.resumeAfterStop(fixture.ticket));
+    fixture.ticket.close();
+    fixture.ticket.close();
+    assertEquals(revision, fixture.owner.cancellationRevision());
+    assertFalse(fixture.owner.canAdmit(fixture.ticket));
+  }
+
+  @Test
+  public void repeatedCancellationStillRequiresFreshPromotionAndOneExactWorkerClaim()
+      throws Exception {
+    Fixture fixture = new Fixture();
+    fixture.promote();
+    long oldGeneration = fixture.admit();
+    fixture.owner.cancelAll();
+    fixture.owner.cancelAll();
+    assertEquals(2, fixture.owner.cancellationRevision());
+    assertFalse(fixture.owner.claimQueuedStart(fixture.ticket, oldGeneration));
+    assertEquals(oldGeneration, fixture.lifecycle.generation());
+    long stopped = fixture.lifecycle.beginStop();
+    fixture.lifecycle.finishStop(stopped);
+
+    WebStartProtection.Ticket next = fixture.owner.begin();
+    assertNotNull(next);
+    assertFalse(fixture.owner.canAdmit(next));
+    assertFalse(
+        fixture.owner.promote(fixture.ticket.id(), fixture.service, fixture.serviceCurrent::get));
+    Object nextService = new Object();
+    assertTrue(fixture.owner.promote(next.id(), nextService, () -> true));
+    next.awaitPromotion();
+    long nextGeneration = fixture.owner.beginStart(next, true);
+    assertEquals(stopped + 1, nextGeneration);
+    assertEquals(2, fixture.owner.cancellationRevision());
+    assertTrue(fixture.owner.claimQueuedStart(next, nextGeneration));
+    assertFalse(fixture.owner.claimQueuedStart(next, nextGeneration));
+    assertEquals(nextGeneration, fixture.owner.serviceDestroyed(nextService));
   }
 
   @Test

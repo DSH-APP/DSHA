@@ -1,0 +1,293 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="about_close_button" formatted="false">"Закрыть"</string>
+    <string name="about_community" formatted="false">"Сообщество QQ"</string>
+    <string name="about_tagline" formatted="false">"Запускатор DSHA для Android"</string>
+    <string name="adb_pairing_service_label" formatted="false">"Сопряжение ADB по Wi-Fi"</string>
+    <string name="alpha_no_seccomp" formatted="false">"Отключить ускорение seccomp"</string>
+    <string name="alpha_static_loader" formatted="false">"Статический загрузчик (proroot)"</string>
+    <string name="build190_auto_port" formatted="false">"Назначать порт автоматически"</string>
+    <string name="build190_restore_port_drafts" formatted="false">"Вернуть черновики"</string>
+    <string name="computer_use_title" formatted="false">"Управление экраном"</string>
+    <string name="copy_text" formatted="false">"Копировать"</string>
+    <string name="device_checking" formatted="false">"Проверка авторизации…"</string>
+    <string name="device_open_access" formatted="false">"Доступ к файлам"</string>
+    <string name="diag248_copy" formatted="false">"Копировать отчёт"</string>
+    <string name="diag248_copy_sub" formatted="false">"Обезличенный текст для отзыва"</string>
+    <string name="diag248_empty" formatted="false">"Результатов нет; проверка только читает локальное состояние"</string>
+    <string name="diag248_export" formatted="false">"Экспорт диагностики"</string>
+    <string name="diag248_export_sub" formatted="false">"Структурированный пакет журналов"</string>
+    <string name="diag248_feedback" formatted="false">"Отзыв"</string>
+    <string name="diag248_idle_sub" formatted="false">"Проверить компоненты и среду"</string>
+    <string name="diag248_idle_title" formatted="false">"Не проверено"</string>
+    <string name="diag248_plugins" formatted="false">"Менеджер плагинов"</string>
+    <string name="diag248_plugins_sub" formatted="false">"Сбой запуска из-за плагинов"</string>
+    <string name="diag248_repair_sub" formatted="false">"Переустановить сертификаты и компоненты среды"</string>
+    <string name="diag248_start" formatted="false">"Проверить"</string>
+    <string name="diag248_status" formatted="false">"Состояние"</string>
+    <string name="diag248_tools" formatted="false">"Инструменты"</string>
+    <string name="dns_auto" formatted="false">"Авто (рекомендуется)"</string>
+    <string name="dns_ipv4" formatted="false">"Совместимость с IPv4 DNS"</string>
+    <string name="dns_native" formatted="false">"Двойной стек"</string>
+    <string name="nh_sub" formatted="false">"Сетевые сбои только записываются, не исправляются"</string>
+    <string name="nh_title" formatted="false">"Состояние сети"</string>
+    <string name="paste_text" formatted="false">"Вставить"</string>
+    <string name="phone_assistant" formatted="false">"Плавающий помощник"</string>
+    <string name="phone_assistant_detail" formatted="false">"Выберите настоящий сеанс DSH на этом телефоне для плавающего чата и приостановки задач."</string>
+    <string name="picture_in_picture_allowed" formatted="false">"Разрешено системой; чат остаётся в небольшом окне при переходе на главный экран или в другое приложение."</string>
+    <string name="picture_in_picture_disabled" formatted="false">"Отключено системой; в фоне небольшое окно не отображается. Нажмите, чтобы изменить."</string>
+    <string name="picture_in_picture_enable" formatted="false">"Включить PiP для чата"</string>
+    <string name="picture_in_picture_landscape" formatted="false">"Альбомная ориентация"</string>
+    <string name="picture_in_picture_opted_out" formatted="false">"По умолчанию выключено. Включите переключатель выше, чтобы чат оставался в небольшом окне при переходе на главный экран."</string>
+    <string name="picture_in_picture_portrait" formatted="false">"Книжная ориентация"</string>
+    <string name="picture_in_picture_settings_unavailable" formatted="false">"Не удалось открыть системные настройки «Картинка в картинке»."</string>
+    <string name="picture_in_picture_title" formatted="false">"Картинка в картинке"</string>
+    <string name="picture_in_picture_unsupported" formatted="false">"Для режима «Картинка в картинке» нужны Android 8.0+ и поддерживаемое устройство."</string>
+    <string name="plugin_sort_az" formatted="false">"Имя A–Z"</string>
+    <string name="plugin_sort_enabled" formatted="false">"Сначала включённые"</string>
+    <string name="plugin_sort_title" formatted="false">"Сортировка плагинов"</string>
+    <string name="plugin_sort_updates" formatted="false">"Сначала обновления"</string>
+    <string name="plugin_sort_za" formatted="false">"Имя Z–A"</string>
+    <string name="text_selection_more" formatted="false">"Ещё…"</string>
+    <string name="ui134_adb_hint" formatted="false">"Android 11+: выполните сопряжение беспроводной отладки в той же сети Wi-Fi. Root не нужен. После смены сети проверьте подключение или повторите сопряжение."</string>
+    <string name="ui134_candidate" formatted="false">"Версия-кандидат"</string>
+    <string name="ui134_candidate_sub" formatted="false">"Изменения, размер и установка"</string>
+    <string name="ui134_changelog" formatted="false">"Этот выпуск"</string>
+    <string name="ui134_check_ready" formatted="false">"Подготовка проверки"</string>
+    <string name="ui134_code" formatted="false">"Код версии"</string>
+    <string name="ui134_current" formatted="false">"Текущее приложение"</string>
+    <string name="ui134_disconnect" formatted="false">"Отключить ADB"</string>
+    <string name="ui134_edition" formatted="false">"Редакция"</string>
+    <string name="ui134_recent_startups" formatted="false">"Пять последних запусков"</string>
+    <string name="ui134_recent_startups_sub" formatted="false">"Этапы, ошибки и коды"</string>
+    <string name="ui134_results" formatted="false">"Результаты проверки"</string>
+    <string name="ui134_root_hint" formatted="false">"На телефоне с root можно напрямую использовать su без сопряжения ADB. При первом запуске разрешите DSHA в менеджере root. Выберите уровень перехвата команд ниже; нативные проверки, например чтение SMS, действуют на всех трёх уровнях."</string>
+    <string name="ui134_screen_setup" formatted="false">"Настроить управление экраном · два шага"</string>
+    <string name="ui134_shizuku_hint" formatted="false">"Запустите службу в менеджере Shizuku, затем разрешите DSHA здесь. После перезагрузки устройства службу обычно нужно запускать снова."</string>
+    <string name="ui134_start_records" formatted="false">"Записи о запусках"</string>
+    <string name="ui134_startup_recovery" formatted="false">"Восстановление запуска"</string>
+    <string name="ui134_startup_recovery_sub" formatted="false">"Проблемы и восстановление"</string>
+    <string name="ui2_about" formatted="false">"О DSHA"</string>
+    <string name="ui2_about_sub" formatted="false">"Версия, лицензии, отзывы"</string>
+    <string name="ui2_adb" formatted="false">"Сопряжение ADB по Wi-Fi"</string>
+    <string name="ui2_adb_intro" formatted="false">"Получите код сопряжения в беспроводной отладке"</string>
+    <string name="ui2_address" formatted="false">"Адреса доступа"</string>
+    <string name="ui2_address_sub" formatted="false">"Локальные адреса и адреса LAN"</string>
+    <string name="ui2_app_version" formatted="false">"Версия приложения"</string>
+    <string name="ui2_backup_restore" formatted="false">"Копия и восстановление"</string>
+    <string name="ui2_backup_restore_sub" formatted="false">"Экспорт, импорт и автобэкап"</string>
+    <string name="ui2_base" formatted="false">"База Ubuntu"</string>
+    <string name="ui2_check_all" formatted="false">"Проверить все компоненты"</string>
+    <string name="ui2_community" formatted="false">"Плагины сообщества"</string>
+    <string name="ui2_community_sub" formatted="false">"Обзор плагинов и источников установки"</string>
+    <string name="ui2_component1" formatted="false">"Среда Ubuntu"</string>
+    <string name="ui2_component2" formatted="false">"Автономные инструменты"</string>
+    <string name="ui2_component3" formatted="false">"Node.js 24"</string>
+    <string name="ui2_component4" formatted="false">"pnpm"</string>
+    <string name="ui2_component5" formatted="false">"DeepSeek Harness"</string>
+    <string name="ui2_component6" formatted="false">"Проверки запуска и среды"</string>
+    <string name="ui2_component_hint" formatted="false">"Результаты и варианты ремонта"</string>
+    <string name="ui2_config_sub" formatted="false">"Порт и режим запуска применятся при следующем запуске"</string>
+    <string name="ui2_connection" formatted="false">"Состояние подключения"</string>
+    <string name="ui2_data_ops" formatted="false">"Копия и восстановление"</string>
+    <string name="ui2_data_sub" formatted="false">"Экспорт, восстановление и обмен файлами."</string>
+    <string name="ui2_data_title" formatted="false">"Резервные копии и данные"</string>
+    <string name="ui2_device_channels" formatted="false">"Каналы команд устройства"</string>
+    <string name="ui2_device_grants" formatted="false">"Разрешения устройства"</string>
+    <string name="ui2_diagnostics" formatted="false">"Диагностика"</string>
+    <string name="ui2_diagnostics_intro" formatted="false">"Проверьте компоненты, хранилище и службы и создайте отчёт со скрытыми секретами."</string>
+    <string name="ui2_diagnostics_sub" formatted="false">"Проверки среды и диагностические журналы"</string>
+    <string name="ui2_display" formatted="false">"Отображение и запуск"</string>
+    <string name="ui2_dns" formatted="false">"Политика DNS"</string>
+    <string name="ui2_environment" formatted="false">"Рабочая среда"</string>
+    <string name="ui2_environment_page" formatted="false">"Установка и среда"</string>
+    <string name="ui2_environment_recovery" formatted="false">"Восстановление среды"</string>
+    <string name="ui2_environment_recovery_sub" formatted="false">"Зависимости и обслуживание"</string>
+    <string name="ui2_environment_state" formatted="false">"Состояние среды"</string>
+    <string name="ui2_environment_sub" formatted="false">"Проверьте каждый компонент и восстановите только то, что требует внимания."</string>
+    <string name="ui2_error_logs" formatted="false">"Журналы ошибок"</string>
+    <string name="ui2_experience" formatted="false">"Удобство работы"</string>
+    <string name="ui2_export" formatted="false">"Экспортировать плагины"</string>
+    <string name="ui2_export_sub" formatted="false">"Копия установленных плагинов"</string>
+    <string name="ui2_floating" formatted="false">"Плавающий статус"</string>
+    <string name="ui2_floating_settings" formatted="false">"Вид и поведение"</string>
+    <string name="ui2_floating_settings_sub" formatted="false">"Стиль, содержимое и просмотр"</string>
+    <string name="ui2_from_link" formatted="false">"Установить по ссылке"</string>
+    <string name="ui2_grants_sub" formatted="false">"Необязательные функции. Для диалогов и терминалов разрешение на управление устройством не требуется."</string>
+    <string name="ui2_import" formatted="false">"Импорт плагинов"</string>
+    <string name="ui2_import_sub" formatted="false">"Выберите ZIP плагина на устройстве"</string>
+    <string name="ui2_install_environment" formatted="false">"Установка и среда"</string>
+    <string name="ui2_installation_log" formatted="false">"Журнал установки"</string>
+    <string name="ui2_installed" formatted="false">"Установленные плагины"</string>
+    <string name="ui2_launch_hint" formatted="false">"Всё готово для вашей следующей задачи."</string>
+    <string name="ui2_local_plugins" formatted="false">"Локальные плагины"</string>
+    <string name="ui2_logs" formatted="false">"Журнал запуска"</string>
+    <string name="ui2_maintenance" formatted="false">"Ремонт и восстановление"</string>
+    <string name="ui2_managed" formatted="false">"Управляемая среда"</string>
+    <string name="ui2_managed_sub" formatted="false">"Обновить встроенные компоненты и сохранить личные данные"</string>
+    <string name="ui2_managed_update" formatted="false">"Обновить среду"</string>
+    <string name="ui2_management" formatted="false">"Управление"</string>
+    <string name="ui2_meet" formatted="false">"Знакомство с DSHA"</string>
+    <string name="ui2_network_runtime" formatted="false">"Среда и сеть"</string>
+    <string name="ui2_offline_badge" formatted="false">"Автономная установка  ·  Без root  ·  %1$s"</string>
+    <string name="ui2_online_notice" formatted="false">"Онлайн-модели получают сообщения и вложения, которые вы решаете отправить."</string>
+    <string name="ui2_overlay" formatted="false">"Плавающий статус"</string>
+    <string name="ui2_overlay_sub" formatted="false">"Содержимое, прозрачность и время показа"</string>
+    <string name="ui2_plugin_link" formatted="false">"Репозиторий или URL"</string>
+    <string name="ui2_port" formatted="false">"Активный веб-порт"</string>
+    <string name="ui2_port_hint" formatted="false">"Если порт занят, автоматически использовать свободный"</string>
+    <string name="ui2_port_preferred" formatted="false">"Предпочтительный веб-порт"</string>
+    <string name="ui2_recovery_tools" formatted="false">"Восстановление среды и данных"</string>
+    <string name="ui2_repair_parts" formatted="false">"Восстановить компоненты"</string>
+    <string name="ui2_repair_parts_sub" formatted="false">"Проверить отсутствующие части и сохранить рабочие компоненты"</string>
+    <string name="ui2_reproduction" formatted="false">"Шаги воспроизведения"</string>
+    <string name="ui2_resolve" formatted="false">"Определить и установить"</string>
+    <string name="ui2_restart" formatted="false">"Перезапустить"</string>
+    <string name="ui2_rollback" formatted="false">"Откат совместимой среды"</string>
+    <string name="ui2_rollback_sub" formatted="false">"После изолированной проверки"</string>
+    <string name="ui2_runtime_compat" formatted="false">"Совместимость среды"</string>
+    <string name="ui2_runtime_config" formatted="false">"Настройки среды"</string>
+    <string name="ui2_sensitive" formatted="false">"Чувствительные функции"</string>
+    <string name="ui2_settings" formatted="false">"Настройки"</string>
+    <string name="ui2_settings_hint" formatted="false">"Настройте рабочее пространство под себя."</string>
+    <string name="ui2_shortcuts" formatted="false">"Быстрый доступ"</string>
+    <string name="ui2_six_steps" formatted="false">"Шесть шагов установки"</string>
+    <string name="ui2_skip" formatted="false">"Пропустить знакомство"</string>
+    <string name="ui2_start" formatted="false">"Запустить DSHA"</string>
+    <string name="ui2_stop" formatted="false">"Остановить"</string>
+    <string name="ui2_stopped" formatted="false">"DSH не запущен"</string>
+    <string name="ui2_storage_files" formatted="false">"Хранилище и файлы"</string>
+    <string name="ui2_storage_files_sub" formatted="false">"Использование места, очистка кеша и обмен файлами"</string>
+    <string name="ui2_support" formatted="false">"Поддержка"</string>
+    <string name="ui2_system_permissions" formatted="false">"Системные разрешения"</string>
+    <string name="ui2_troubleshooting" formatted="false">"Устранение неполадок"</string>
+    <string name="ui2_update_channel" formatted="false">"Канал обновлений"</string>
+    <string name="ui2_updates" formatted="false">"Обновления приложения"</string>
+    <string name="ui2_updates_intro" formatted="false">"Посмотреть версии приложения и компонентов среды."</string>
+    <string name="ui2_updates_sub" formatted="false">"Стабильные и пробные обновления"</string>
+    <string name="ui2_w1_0" formatted="false">"Диалоги и задачи"</string>
+    <string name="ui2_w1_1" formatted="false">"Полноценный терминал"</string>
+    <string name="ui2_w1_2" formatted="false">"Плагины и устройство"</string>
+    <string name="ui2_w2_0" formatted="false">"Диалоги и файлы"</string>
+    <string name="ui2_w2_1" formatted="false">"Модели и учётные данные"</string>
+    <string name="ui2_w2_2" formatted="false">"Действия устройства"</string>
+    <string name="ui2_welcome_lead0" formatted="false">"Пишите код, работайте с файлами и инструментами.\nБерите рабочее пространство с собой."</string>
+    <string name="ui2_welcome_lead1" formatted="false">"Диалоги, файлы и инструменты вместе."</string>
+    <string name="ui2_welcome_lead2" formatted="false">"Разрешение на управление устройством необязательно."</string>
+    <string name="ui2_welcome_title0" formatted="false">"Ваше рабочее пространство ИИ,\nпрямо на телефоне."</string>
+    <string name="ui2_welcome_title1" formatted="false">"От идеи\nк результату."</string>
+    <string name="ui2_welcome_title2" formatted="false">"Ваши разрешения.\nВаши данные."</string>
+    <string name="ui2_workspace" formatted="false">"Рабочее пространство"</string>
+    <string name="ui2_ws1_0" formatted="false">"Решайте задачи вместе с моделями."</string>
+    <string name="ui2_ws1_1" formatted="false">"Команды Ubuntu и независимые сессии."</string>
+    <string name="ui2_ws1_2" formatted="false">"Добавляйте плагины и включайте функции устройства."</string>
+    <string name="ui2_ws2_0" formatted="false">"Хранятся локально, экспортируются вручную."</string>
+    <string name="ui2_ws2_1" formatted="false">"Настраивайте модели и ключи API в Web UI. Имеющиеся нативные учётные данные сохраняются."</string>
+    <string name="ui2_ws2_2" formatted="false">"Root, Shizuku, ADB и SMS имеют отдельные разрешения."</string>
+    <string name="ui_adb_code_label" formatted="false">"Код сопряжения (6 цифр)"</string>
+    <string name="ui_adb_host_label" formatted="false">"Адрес (пусто = автопоиск)"</string>
+    <string name="ui_adb_port_label" formatted="false">"Порт (пусто = автопоиск)"</string>
+    <string name="ui_lan_unencrypted" formatted="false">"Трафик локальной сети не шифруется; только доверенные сети и устройства"</string>
+    <string name="ui_language_title" formatted="false">"Язык"</string>
+    <string name="ui_m0001" formatted="false">"Скачать обновление"</string>
+    <string name="ui_m0002" formatted="false">"Сохранить настройки"</string>
+    <string name="ui_m0003" formatted="false">"Отменить проверку"</string>
+    <string name="ui_m0005" formatted="false">"Запустить"</string>
+    <string name="ui_m0006" formatted="false">"Сохранить и пересоздать"</string>
+    <string name="ui_m0007" formatted="false">"Безопасный запуск"</string>
+    <string name="ui_m0010" formatted="false">"Начать сопряжение"</string>
+    <string name="ui_m0011" formatted="false">"Варианты восстановления"</string>
+    <string name="ui_m0012" formatted="false">"Адрес и порт вручную"</string>
+    <string name="ui_m0013" formatted="false">"Управление плагинами"</string>
+    <string name="ui_m0015" formatted="false">"Авторизовать Shizuku"</string>
+    <string name="ui_m0016" formatted="false">"Плагины"</string>
+    <string name="ui_m0017" formatted="false">"Не проверено"</string>
+    <string name="ui_m0018" formatted="false">"Проверить обновления"</string>
+    <string name="ui_m0020" formatted="false">"Светлая"</string>
+    <string name="ui_m0021" formatted="false">"Терминал"</string>
+    <string name="ui_m0023" formatted="false">"Настройки"</string>
+    <string name="ui_m0024" formatted="false">"Введите команду и нажмите Enter"</string>
+    <string name="ui_m0025" formatted="false">"Журнал пока пуст."</string>
+    <string name="ui_m0026" formatted="false">"Сопряжение и порты"</string>
+    <string name="ui_m0030" formatted="false">"Оставьте выключенным, если не используете беспроводную отладку"</string>
+    <string name="ui_m0031" formatted="false">"Сопряжение ADB по Wi-Fi"</string>
+    <string name="ui_m0039" formatted="false">"Shizuku не авторизован"</string>
+    <string name="ui_m0046" formatted="false">"Скачать журналы"</string>
+    <string name="ui_m0047" formatted="false">"Скачать журналы ошибок"</string>
+    <string name="ui_m0050" formatted="false">"Остановить"</string>
+    <string name="ui_m0053" formatted="false">"Датчики и фонарик"</string>
+    <string name="ui_m0054" formatted="false">"Использовать среду proroot"</string>
+    <string name="ui_m0055" formatted="false">"Совместимый браузер"</string>
+    <string name="ui_m0057" formatted="false">"Настольный веб-интерфейс"</string>
+    <string name="ui_m0060" formatted="false">"Средства ремонта"</string>
+    <string name="ui_m0062" formatted="false">"Разрешить оболочку root"</string>
+    <string name="ui_m0063" formatted="false">"Доступ в локальную сеть"</string>
+    <string name="ui_m0066" formatted="false">"Доступ к местоположению"</string>
+    <string name="ui_m0067" formatted="false">"О приложении"</string>
+    <string name="ui_m0078" formatted="false">"Отменить задачу"</string>
+    <string name="ui_m0079" formatted="false">"Отменить операцию"</string>
+    <string name="ui_m0080" formatted="false">"Сохранить как"</string>
+    <string name="ui_m0081" formatted="false">"Только мои плагины"</string>
+    <string name="ui_m0084" formatted="false">"Проверяйте в фоне при обрыве; перед восстановлением включите беспроводную отладку"</string>
+    <string name="ui_m0089" formatted="false">"Обновления при запуске"</string>
+    <string name="ui_m0090" formatted="false">"Включить доступ к устройству через ADB (по умолчанию выключен)"</string>
+    <string name="ui_m0094" formatted="false">"Посмотреть выпуски в браузере"</string>
+    <string name="ui_m0095" formatted="false">"Открыть в браузере"</string>
+    <string name="ui_m0102" formatted="false">"Копировать"</string>
+    <string name="ui_m0103" formatted="false">"Копировать отчёт"</string>
+    <string name="ui_m0104" formatted="false">"Безопасный режим: восстановить сторонние плагины"</string>
+    <string name="ui_m0106" formatted="false">"Установить плагин"</string>
+    <string name="ui_m0107" formatted="false">"Установить обновление"</string>
+    <string name="ui_m0109" formatted="false">"Экспорт отчёта"</string>
+    <string name="ui_m0118" formatted="false">"Встроенный веб-движок; можно попробовать при проблемах совместимости"</string>
+    <string name="ui_m0121" formatted="false">"Показывать ответы ИИ поверх"</string>
+    <string name="ui_m0125" formatted="false">"Открыть менеджер Shizuku"</string>
+    <string name="ui_m0126" formatted="false">"Данные и бэкапы"</string>
+    <string name="ui_m0128" formatted="false">"Беспроводная отладка"</string>
+    <string name="ui_m0133" formatted="false">"Магазин плагинов"</string>
+    <string name="ui_m0134" formatted="false">"Состояние работы плагина. Нажмите для подробностей."</string>
+    <string name="ui_m0135" formatted="false">"Менеджер плагинов"</string>
+    <string name="ui_m0137" formatted="false">"URL плагина или имя пакета npm"</string>
+    <string name="ui_m0138" formatted="false">"Поиск по названию или описанию"</string>
+    <string name="ui_m0142" formatted="false">"Новый терминал"</string>
+    <string name="ui_m0145" formatted="false">"Терминалов нет\nНажмите «Создать», чтобы открыть"</string>
+    <string name="ui_m0146" formatted="false">"Ещё"</string>
+    <string name="ui_m0158" formatted="false">"Найти плагины"</string>
+    <string name="ui_m0159" formatted="false">"Найти плагины"</string>
+    <string name="ui_m0164" formatted="false">"Очистить"</string>
+    <string name="ui_m0170" formatted="false">"Авторизовать и проверить root"</string>
+    <string name="ui_m0171" formatted="false">"Читать SMS"</string>
+    <string name="ui_m0173" formatted="false">"Стабильный"</string>
+    <string name="ui_m0177" formatted="false">"Простой"</string>
+    <string name="ui_m0178" formatted="false">"Простой терминал"</string>
+    <string name="ui_m0179" formatted="false">"Вставить URL"</string>
+    <string name="ui_m0181" formatted="false">"Считать код сопряжения"</string>
+    <string name="ui_m0182" formatted="false">"Добавьте шаги воспроизведения. Не включайте ключи или личную переписку."</string>
+    <string name="ui_m0185" formatted="false">"Проверить URL"</string>
+    <string name="ui_m0191" formatted="false">"Настройки батареи"</string>
+    <string name="ui_m0201" formatted="false">"Вернуться"</string>
+    <string name="ui_m0202" formatted="false">"К запуску: плагины / безопасный запуск"</string>
+    <string name="ui_m0209" formatted="false">"Повторить проверку"</string>
+    <string name="ui_m0211" formatted="false">"Сбросить, сохранить чаты"</string>
+    <string name="ui_m0212" formatted="false">"Повторить"</string>
+    <string name="ui_m0215" formatted="false">"Просмотр"</string>
+    <string name="ui_m0217" formatted="false">"Проверить подключение"</string>
+    <string name="ui_m0218" formatted="false">"＋ Новый"</string>
+    <string name="ui_m9024" formatted="false">"Изменить"</string>
+    <string name="upd_browser_sub" formatted="false">"Все выпуски и APK"</string>
+    <string name="upd_copy_version" formatted="false">"Копировать версию"</string>
+    <string name="upd_full_notes" formatted="false">"Все изменения"</string>
+    <string name="upd_pane_empty" formatted="false">"Когда найдётся кандидат, здесь появятся изменения, размер и способ установки."</string>
+    <string name="upd_recheck" formatted="false">"Проверить снова"</string>
+    <string name="upd_tab_candidate" formatted="false">"Кандидат"</string>
+    <string name="upd_tab_current" formatted="false">"Эта сборка"</string>
+    <string name="welcome_eyebrow0" formatted="false">"DEEPSEEK HARNESS · ANDROID"</string>
+    <string name="welcome_eyebrow1" formatted="false">"01 / ДЛЯ ВАШЕГО РИТМА РАБОТЫ"</string>
+    <string name="welcome_eyebrow2" formatted="false">"02 / ВАШИ ДАННЫЕ, ВАШ ВЫБОР"</string>
+    <plurals name="plugin_count">
+        <item quantity="one">"%d плагин"</item>
+        <item quantity="few">"%d плагина"</item>
+        <item quantity="many">"%d плагинов"</item>
+        <item quantity="other">"%d плагина"</item>
+    </plurals>
+</resources>

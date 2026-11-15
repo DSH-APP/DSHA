@@ -1,0 +1,21 @@
+{
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-locale/lib/client.js",
+  "patches": [
+    {
+      "before": "ctx.provide(\"locale\", locale);",
+      "after": "ctx.provide(\"locale\", locale);\n            ctx.effect(() => installDshaLanguageBridge(locale), \"DSHA application language\");",
+      "prependAsset": "web-integration/language.js"
+    },
+    {
+      "before": "resolveActive() {\n\t\t\t\tif (this.preference === void 0) return this.provisional;",
+      "after": "resolveActive() {\n                if (typeof window !== \"undefined\") { const dshaLanguage = typeof window.__dshaEffectiveLanguage === \"function\" ? window.__dshaEffectiveLanguage() : window.__DSHA_LANGUAGE__; if ([\"zh\", \"en\", \"ja\", \"es\", \"fr\", \"de\", \"ru\", \"pt\", \"zh-Hant\", \"ko\", \"ar\", \"la\"].includes(dshaLanguage) && this.catalog.has(localeKey(dshaLanguage))) return dshaLanguage; }\n\t\t\t\tif (this.preference === void 0) return this.provisional;"
+    },
+    {
+      "before": "this.preference = match.id;\n\t\t\t\tif (this.snapshot.active !== match.id)",
+      "after": "this.preference = match.id;\n                if (typeof window !== \"undefined\") { if (typeof window.__dshaSelectWebLanguage === \"function\") window.__dshaSelectWebLanguage(match.id); else if (window.__DSHA_LANGUAGE__ && window.__DSHA_LANGUAGE__ !== match.id) { window.__DSHA_LANGUAGE__ = match.id; window.dispatchEvent(new CustomEvent(\"dsha-language-selected\", { detail: match.id })); } }\n\t\t\t\tif (this.snapshot.active !== match.id)"
+    }
+  ],
+  "sourceSha256": "769747aa79323075eba9545ff9982770c0163e0bba3cabcc49ff56581c0f3613",
+  "packageIntegrity": "sha512-ng+uJSp7xNZiFZQaT3FC0GbYgLTMaZHIIxAzY14Fcn3nV8Dcrevl+IXryeSPElITUyxT+X7av2t16NvFGpvMMA=="
+}

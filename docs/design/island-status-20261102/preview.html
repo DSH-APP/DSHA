@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>DSHA · 任务状态上岛重绘（优先级预览 / 方案选择）</title>
+<style>
+/* UI v5 token 离线副本，仅供本预览；与 values{,-night}/shell_ui.xml 对齐（同 config-compact-20261101）。 */
+:root{color-scheme:light;--page:#e9eef6;--bg:#f3f6fb;--surface:#fcfdff;--raised:#e7edf6;--line:rgba(29,58,96,.075);--line-2:rgba(29,58,96,.145);--text:#18273f;--text-2:#50617a;--muted:#61728d;--accent:#1e50d0;--accent-soft:rgba(30,80,208,.08);--on-accent:#fff;--good:#287453;--good-soft:rgba(40,116,83,.10);--warn:#8c600d;--warn-soft:rgba(140,96,13,.10);--bad:#af404b;--bad-soft:rgba(175,64,75,.10);--bezel:#1b2333;--anat:#d0368a;--glass:rgba(250,252,255,.92);--shadow:0 18px 50px rgba(17,32,62,.14);--shadow-soft:0 2px 8px rgba(17,32,62,.08);--sans:system-ui,-apple-system,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+[data-theme="dark"]{color-scheme:dark;--page:#070a10;--bg:#0b0f16;--surface:#131923;--raised:#1b2432;--line:rgba(203,220,255,.07);--line-2:rgba(203,220,255,.13);--text:#edf1f7;--text-2:#b0bbcc;--muted:#8895aa;--accent:#6aa4ff;--accent-soft:rgba(106,164,255,.10);--on-accent:#091729;--good:#93ccaf;--good-soft:rgba(147,204,175,.10);--warn:#e4be83;--warn-soft:rgba(228,190,131,.10);--bad:#eea3a6;--bad-soft:rgba(238,163,166,.10);--bezel:#2a3446;--anat:#ff7ab8;--glass:rgba(25,34,48,.92);--shadow:0 18px 50px rgba(0,0,0,.5);--shadow-soft:0 2px 8px rgba(0,0,0,.35)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{-webkit-tap-highlight-color:transparent;cursor:pointer}
+svg.i{width:1.25em;height:1.25em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* ---------- 设计台（不属于 App） ---------- */
+.top{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 16px;background:var(--page);border-bottom:1px solid var(--line-2)}
+.top h1{margin:0 6px 0 0;font-size:15px;font-weight:650}
+.top h1 small{font-weight:450;color:var(--muted);margin-left:6px;font-size:12px}
+.seg{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:var(--raised)}
+.seg button{min-height:32px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--text-2);font-size:12.5px;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow-soft)}
+.chk{display:inline-flex;align-items:center;gap:6px;min-height:32px;font-size:12.5px;color:var(--text-2);cursor:pointer}
+.chk input{width:16px;height:16px;accent-color:var(--accent);margin:0}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;max-width:1720px;margin:0 auto;padding:20px;align-items:start}
+.devices{display:flex;gap:28px;justify-content:center;align-items:flex-start;min-width:0}
+.dev-col{display:flex;flex-direction:column;align-items:center;gap:8px}
+.dev-cap{font-size:12px;color:var(--muted)}
+.dev-box{position:relative;flex:none}
+.device{position:absolute;transform-origin:0 0;border-radius:var(--rad,34px);overflow:hidden;background:var(--bg);box-shadow:0 0 0 10px var(--bezel),var(--shadow)}
+.inspector{display:flex;flex-direction:column;gap:14px;position:sticky;top:68px;max-height:calc(100vh - 88px);overflow:auto;padding-bottom:8px}
+.panel{background:var(--surface);border:1px solid var(--line-2);border-radius:16px;padding:14px 16px}
+.panel h2{margin:0 0 10px;font-size:13.5px;font-weight:650;display:flex;align-items:center;gap:8px}
+.panel h2 small{font-weight:450;color:var(--muted);font-size:11.5px}
+.panel p,.panel li{font-size:12.5px;line-height:1.6;color:var(--text-2)}
+.panel p{margin:0 0 8px}
+.panel ul{margin:0;padding-left:18px}
+.panel code{font-family:var(--mono);font-size:11.5px}
+.sim{display:flex;flex-direction:column;gap:2px}
+#sys{display:flex;flex-direction:column}
+.task .ops label.chk{flex-direction:row;color:var(--text-2);font-size:12px}
+.mini-btn{min-height:30px;padding:0 10px;border-radius:9px;border:1px solid var(--line-2);background:var(--surface);color:var(--accent);font-size:12px;font-weight:550}
+.mini-btn.pri{background:var(--accent);color:var(--on-accent);border-color:transparent}
+.mini-btn.ghost{border-color:transparent;color:var(--text-2)}
+.mini-btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-row{display:flex;flex-wrap:wrap;gap:6px}
+.metrics{width:100%;border-collapse:collapse;font-size:12px}
+.metrics th,.metrics td{padding:5px 4px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.metrics th{color:var(--muted);font-weight:500;font-size:11.5px}
+.metrics td.num{font-family:var(--mono);text-align:center}
+.metrics tr.win td{background:var(--accent-soft)}
+.metrics tr.out td{color:var(--muted)}
+.tag{display:inline-block;padding:1px 7px;border-radius:7px;font-size:11px;font-weight:600;white-space:nowrap}
+.tag.win{background:var(--accent);color:var(--on-accent)}
+.tag.plain{background:var(--raised);color:var(--text-2)}
+.tag.out{background:none;color:var(--muted);box-shadow:inset 0 0 0 1px var(--line-2)}
+.ladder{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:0 0 10px;font-size:11.5px;color:var(--text-2)}
+.ladder span.l{padding:2px 7px;border-radius:7px;background:var(--raised)}
+.ladder span.l.on{background:var(--accent);color:var(--on-accent);font-weight:600}
+.tasks{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.task{border:1px solid var(--line-2);border-radius:12px;padding:8px 10px;display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;font-size:12px}
+.task.ended{background:var(--bg)}
+.task .hd{grid-column:1/-1;display:flex;align-items:center;gap:6px}
+.task .hd input{flex:1;min-width:0}
+.task label{display:flex;flex-direction:column;gap:2px;color:var(--muted);font-size:11px}
+.task input[type=text],.task input[type=number],.task select{min-height:28px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);padding:0 6px;font-size:12px;color:var(--text)}
+.task .ops{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.task .st{grid-column:1/-1;color:var(--text-2);font-size:11.5px}
+.choice{display:flex;flex-direction:column;gap:8px}
+.ch{display:block;width:100%;text-align:left;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);padding:10px 12px}
+.ch[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.ch b{display:flex;align-items:center;gap:8px;font-size:13px}
+.ch b .rd{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--line-2);flex:none}
+.ch[aria-checked="true"] b .rd{box-shadow:inset 0 0 0 5px var(--accent)}
+.ch small{display:block;margin:4px 0 0 24px;color:var(--text-2);font-size:12px;line-height:1.55}
+.ch .cost{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0 24px}
+.out-text{width:100%;min-height:88px;border:1px solid var(--line-2);border-radius:10px;background:var(--bg);padding:8px;font:12px/1.5 var(--mono);color:var(--text);resize:vertical}
+@media (max-width:1100px){.stage{grid-template-columns:1fr}.inspector{position:static;max-height:none}}
+
+/* ---------- 系统表现（回到桌面后） ---------- */
+.sysbar{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:12px;background:#0f1522;color:#eef2f8;font-size:12.5px;font-weight:600}
+.sysbar .sp{flex:1}
+.cap{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 9px 0 6px;border-radius:11px;background:#2f6bff;color:#fff;font-size:12px;font-weight:600;white-space:nowrap}
+.cap svg{width:14px;height:14px}
+.cap.maybe{background:none;border:1.5px dashed #8fb2ff;color:#cfe0ff}
+.cap.done{background:#2d8a5f}
+.shade{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.nt{position:relative;background:var(--bg);border:1px solid var(--line-2);border-radius:16px;padding:9px 12px 10px}
+.nt.promo{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.nt .h{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.nt .h b{color:var(--text-2);font-weight:600}
+.nt .t{margin-top:3px;font-size:13px;font-weight:600}
+.nt .x{margin-top:1px;font-size:12px;color:var(--text-2);line-height:1.45}
+.nt .pb{margin-top:7px;height:3px;border-radius:2px;background:var(--raised);overflow:hidden;position:relative}
+.nt .pb::after{content:"";position:absolute;top:0;bottom:0;width:30%;background:var(--accent);border-radius:2px;animation:ind 1.4s linear infinite}
+@keyframes ind{from{left:-30%}to{left:100%}}
+.nt .badge{position:absolute;right:10px;top:8px}
+.empty{font-size:12px;color:var(--muted);padding:8px 2px}
+
+/* ---------- App 本体：尺寸以 dp 为 px，--fs 为字体倍率 ---------- */
+.app{--fs:1;position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);color:var(--text);font-size:calc(15px*var(--fs))}
+.sb{flex:none;height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:12px;font-weight:600}
+.abar{flex:none;height:64px;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px;border-bottom:1px solid var(--line)}
+.ibtn{width:48px;height:48px;display:grid;place-items:center;border:0;background:none;border-radius:24px;color:var(--text)}
+.ibtn:active{background:var(--accent-soft)}
+.abar .tt{flex:1;min-width:0;padding-left:4px}
+.abar .tt b{display:block;font-size:calc(17px*var(--fs));font-weight:700;line-height:1.2}
+.abar .tt small{display:block;font-size:calc(12px*var(--fs));color:var(--text-2);margin-top:1px}
+.body{flex:1;min-height:0;display:flex}
+.rail{flex:none;width:96px;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding-top:16px;gap:8px}
+.rail button{width:66px;min-height:72px;border:0;border-radius:18px;background:none;color:var(--text-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:calc(12px*var(--fs))}
+.rail button svg{width:24px;height:24px}
+.rail button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+.rail .lf{margin-top:auto;padding:12px 0;font-size:10px;letter-spacing:1.5px;color:var(--muted)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
+.scroller{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;container-type:inline-size}
+.home-ind{flex:none;height:14px;display:grid;place-items:center}
+.home-ind::after{content:"";width:120px;height:4px;border-radius:2px;background:var(--text);opacity:.5}
+
+/* ---------- 现状（按截图复刻） ---------- */
+.o-wrap{padding:22px 24px 28px}
+.o-title{margin:0 0 12px;font-size:calc(24px*var(--fs));font-weight:800}
+.o-body{margin:0;color:var(--text-2);font-size:calc(14.5px*var(--fs));line-height:1.65}
+.o-sec{margin:22px 4px 10px;font-weight:700;font-size:calc(14px*var(--fs));color:var(--text-2)}
+.o-card{background:var(--surface);border:1px solid var(--line-2);border-radius:22px;padding:18px 18px}
+.o-card + .o-card{margin-top:4px}
+.o-state{font-size:calc(16px*var(--fs))}
+.o-btn{display:block;width:100%;min-height:54px;border:1px solid var(--line-2);border-radius:22px;background:var(--surface);font-size:calc(16px*var(--fs));font-weight:500;margin-top:4px}
+.o-sw{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;width:100%;border:0;background:none;padding:0;text-align:left;font-size:calc(16px*var(--fs))}
+.o-hint{margin:2px 0 14px;color:var(--text-2);font-size:calc(13px*var(--fs));line-height:1.65}
+.o-card .o-body + .o-body{margin-top:4px}
+
+/* ---------- 开关（MaterialSwitch 形态） ---------- */
+.sw{flex:none;width:52px;height:32px;border:0;padding:0;border-radius:16px;position:relative;background:var(--raised);box-shadow:inset 0 0 0 2px var(--line-2);transition:background .18s}
+.sw::after{content:"";position:absolute;top:8px;left:8px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:all .18s cubic-bezier(.22,1,.36,1)}
+.sw[aria-checked="true"]{background:var(--accent);box-shadow:none}
+.sw[aria-checked="true"]::after{top:4px;left:24px;width:24px;height:24px;background:var(--on-accent)}
+.sw[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+
+/* ---------- 重绘：共用紧凑行 ---------- */
+.n-wrap{padding:6px 16px 22px;max-width:880px;margin:0 auto}
+.n-head{display:flex;align-items:center;gap:4px;padding:8px 4px 2px}
+.n-head h3{margin:0;font-size:calc(18px*var(--fs));font-weight:750}
+.n-head .ib{width:40px;height:40px;border:0;background:none;color:var(--accent);display:grid;place-items:center;border-radius:20px}
+.n-sub{margin:0 4px 4px;color:var(--text-2);font-size:calc(12.5px*var(--fs));line-height:1.5}
+.n-lab{margin:14px 4px 6px;font-size:calc(12.5px*var(--fs));font-weight:650;color:var(--muted);letter-spacing:.2px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.n-lab small{font-weight:450;letter-spacing:0}
+.n-card{background:var(--surface);border:1px solid var(--line-2);border-radius:18px;overflow:hidden}
+.n-card > * + *{border-top:1px solid var(--line)}
+.n-row{position:relative;display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 14px 8px 16px;width:100%;border:0;background:none;text-align:left}
+button.n-row:active{background:var(--accent-soft)}
+.n-row .tx{flex:1;min-width:0;cursor:pointer}
+.n-row.static .tx{cursor:default}
+.n-row .tx b{display:block;font-weight:500;font-size:calc(15px*var(--fs));line-height:1.3}
+.n-row .tx small{display:block;margin-top:2px;color:var(--text-2);font-size:calc(12.5px*var(--fs));line-height:1.45}
+.n-row .tx small.warn{color:var(--warn)}
+.n-row .tx .api{font-family:var(--mono);font-size:calc(11px*var(--fs));color:var(--muted);margin-left:6px;font-weight:400}
+.n-row .chev{color:var(--muted)}
+.n-row .val{flex:none;color:var(--text-2);font-size:calc(13px*var(--fs));display:flex;align-items:center;gap:2px}
+.dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--muted)}
+.dot.good{background:var(--good)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
+.chip{flex:none;min-height:36px;padding:0 12px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface);color:var(--accent);font-size:calc(13px*var(--fs));font-weight:550;white-space:nowrap}
+.chip.pri{background:var(--accent);color:var(--on-accent);border-color:transparent}
+.chip:active{background:var(--accent-soft)}
+.n-links{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.n-links .chip{color:var(--text-2);font-weight:500}
+.note{display:flex;gap:8px;align-items:flex-start;margin:0;padding:9px 14px 10px 16px;background:var(--bg);color:var(--text-2);font-size:calc(12px*var(--fs));line-height:1.5}
+.note.warn{background:var(--warn-soft);color:var(--warn)}
+
+/* B：实时预览卡 */
+.pv{padding:14px 14px 12px 16px;display:flex;flex-direction:column;gap:8px}
+.pv .cap-l{font-size:calc(11.5px*var(--fs));color:var(--muted)}
+.pv .sysbar{height:32px;border-radius:11px}
+.pv .nt{background:var(--bg)}
+.pv .nt .t{font-size:calc(13px*var(--fs))}
+.pv .nt .x{font-size:calc(12px*var(--fs))}
+.lv{display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 14px 6px 16px}
+.lv .no{flex:none;width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:var(--raised);color:var(--text-2);font:600 calc(12px*var(--fs))/1 var(--mono)}
+.lv .tx{flex:1;min-width:0}
+.lv .tx b{display:block;font-weight:500;font-size:calc(14.5px*var(--fs))}
+.lv .tx small{display:block;color:var(--muted);font-size:calc(12px*var(--fs))}
+.lv .cnt{flex:none;font-size:calc(12px*var(--fs));color:var(--muted)}
+.lv.on{background:var(--accent-soft)}
+.lv.on .no{background:var(--accent);color:var(--on-accent)}
+.lv.on .cnt{color:var(--accent);font-weight:600}
+.mcap{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;background:var(--raised);color:var(--text-2);font-size:calc(11.5px*var(--fs));font-weight:600;margin-left:6px;vertical-align:1px}
+
+/* C：状态向导 */
+.wiz{padding:16px 16px 14px;display:flex;flex-direction:column;gap:10px}
+.wiz .w-h{display:flex;align-items:flex-start;gap:12px}
+.wiz .w-ic{flex:none;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:var(--raised);color:var(--muted)}
+.wiz .w-ic.good{background:var(--good-soft);color:var(--good)}
+.wiz .w-ic.warn{background:var(--warn-soft);color:var(--warn)}
+.wiz .w-ic svg{width:22px;height:22px}
+.wiz .w-t b{display:block;font-size:calc(16px*var(--fs));font-weight:650}
+.wiz .w-t small{display:block;margin-top:3px;color:var(--text-2);font-size:calc(12.5px*var(--fs));line-height:1.5}
+.wiz .w-a{display:flex;flex-wrap:wrap;gap:8px;padding-left:52px}
+.steps{display:flex;flex-wrap:wrap;align-items:center;gap:4px 2px;padding:12px 14px 4px 16px}
+.steps .s{display:inline-flex;align-items:center;gap:4px;min-height:28px;padding:0 9px;border-radius:9px;background:var(--raised);color:var(--text-2);font-size:calc(12.5px*var(--fs))}
+.steps .s.on{background:var(--accent);color:var(--on-accent);font-weight:600}
+.steps .s i{font-style:normal;font-family:var(--mono);font-size:calc(10.5px*var(--fs));opacity:.7}
+.steps .gt{color:var(--muted);font-size:calc(12px*var(--fs));padding:0 1px}
+.steps-n{padding:4px 14px 12px 16px;color:var(--text-2);font-size:calc(12px*var(--fs));line-height:1.5}
+
+@container (min-width:700px){
+  .n-wrap{padding:10px 28px 26px}
+  .n-two{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;align-items:start}
+}
+
+/* ---------- 弹层 / toast ---------- */
+.scrim{position:absolute;inset:0;z-index:20;background:rgba(8,14,26,.38);display:flex;align-items:flex-end;justify-content:center;animation:fade .15s}
+.sheet{width:100%;max-height:80%;overflow:auto;background:var(--surface);border-radius:24px 24px 0 0;padding:8px 16px 18px;box-shadow:var(--shadow);animation:up .22s cubic-bezier(.22,1,.36,1)}
+.app.tab .scrim{align-items:center}
+.app.tab .sheet{width:460px;border-radius:24px;padding:18px 20px}
+.sheet .grab{width:36px;height:4px;border-radius:2px;background:var(--line-2);margin:4px auto 10px}
+.app.tab .sheet .grab{display:none}
+.sheet h4{margin:4px 4px 8px;font-size:calc(17px*var(--fs))}
+.sheet p{margin:0 4px 10px;color:var(--text-2);font-size:calc(13px*var(--fs));line-height:1.6}
+.sheet ol{margin:0 4px 10px;padding-left:20px;color:var(--text-2);font-size:calc(13px*var(--fs));line-height:1.8}
+.acts{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+.acts button{min-height:44px;padding:0 18px;border-radius:14px;border:0;background:none;color:var(--accent);font-weight:600}
+.toast{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);z-index:25;max-width:calc(100% - 40px);width:max-content;padding:10px 16px;border-radius:14px;background:#1f2a3c;color:#f2f5fa;font-size:calc(13px*var(--fs));line-height:1.5;box-shadow:var(--shadow);animation:up .2s}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translate(-50%,20px);opacity:.4}}
+.sheet{animation-name:upS}
+@keyframes upS{from{transform:translateY(30px);opacity:.4}}
+
+/* ---------- id 标注 ---------- */
+.show-ids [data-id]{position:relative;outline:1px dashed var(--anat);outline-offset:-2px}
+.show-ids [data-id]::before{content:attr(data-id);position:absolute;right:4px;top:2px;z-index:3;padding:0 4px;border-radius:4px;background:var(--anat);color:#fff;font:500 9.5px/1.5 var(--mono);pointer-events:none}
+.measure{position:fixed;left:-99999px;top:0;visibility:hidden;pointer-events:none}
+</style>
+</head>
+<body>
+<header class="top" role="toolbar" aria-label="预览控制">
+  <h1>任务状态上岛<small>重绘原型 · 未改 Android 代码</small></h1>
+  <div class="seg" role="group" aria-label="设备" data-ctl="device">
+    <button data-v="phone">手机 360</button><button data-v="tabP">平板竖 800（截图同款）</button><button data-v="tabL">平板横 1280</button>
+  </div>
+  <div class="seg" role="group" aria-label="方案" data-ctl="scheme">
+    <button data-v="a">A 紧凑</button><button data-v="b">B 实时预览</button><button data-v="c">C 状态向导</button><button data-v="old">现状</button><button data-v="all">并排对比</button>
+  </div>
+  <div class="seg" role="group" aria-label="主题" data-ctl="theme">
+    <button data-v="light">浅色</button><button data-v="dark">深色</button>
+  </div>
+  <div class="seg" role="group" aria-label="胶囊语言" data-ctl="lang">
+    <button data-v="zh">胶囊中文</button><button data-v="en">English</button>
+  </div>
+  <label class="chk"><input type="checkbox" data-opt="big">1.3× 字体</label>
+  <label class="chk"><input type="checkbox" data-opt="short">短屏</label>
+  <label class="chk"><input type="checkbox" data-opt="ids">标注控件</label>
+</header>
+<main class="stage">
+  <section class="devices" id="devices" aria-label="设备预览"></section>
+  <aside class="inspector" aria-label="模拟与说明">
+    <div class="panel sim">
+      <h2>模拟系统状态 <small>对应 IslandSupport.state()</small></h2>
+      <div role="radiogroup" aria-label="系统状态" id="sys"></div>
+      <label class="chk"><input type="checkbox" data-sim="fg">DSHA 原生页面在前台</label>
+      <label class="chk"><input type="checkbox" data-sim="lock">锁屏（只看公开版本）</label>
+    </div>
+
+    <div class="panel" id="prio-panel">
+      <h2>优先级预览 <small>按 IslandText.rank / pickForDisplay 移植</small></h2>
+      <div class="ladder" id="ladder"></div>
+      <div class="btn-row" id="presets"></div>
+      <table class="metrics" id="prio" style="margin-top:10px"></table>
+      <div class="tasks" id="tasks"></div>
+      <div class="btn-row" style="margin-top:8px"><button class="mini-btn" data-sact="add">＋ 添加任务</button><button class="mini-btn ghost" data-sact="clear">清空</button></div>
+    </div>
+
+    <div class="panel">
+      <h2>回到桌面后看到 <small>示意，不是 SystemUI 渲染</small></h2>
+      <div id="system"></div>
+    </div>
+
+    <div class="panel">
+      <h2>方案选择</h2>
+      <div class="choice" role="radiogroup" aria-label="方案" id="choice"></div>
+      <div style="margin-top:10px" class="sim">
+        <label class="chk"><input type="checkbox" data-add="test">附加：发送测试胶囊（解决“无法确认”）</label>
+        <label class="chk"><input type="checkbox" data-add="preview">附加：页内实时预览卡</label>
+        <label class="chk"><input type="checkbox" data-add="inline">附加：优先级顺序内联展示（否则收进弹层）</label>
+      </div>
+      <div class="btn-row" style="margin:10px 0 8px"><button class="mini-btn pri" data-sact="copy">复制决定</button><button class="mini-btn ghost" data-sact="show">切到所选方案</button></div>
+      <textarea class="out-text" id="decision" readonly aria-label="决定摘要"></textarea>
+    </div>
+
+    <div class="panel">
+      <h2>页面高度 <small>离屏测量，非 Android 实测</small></h2>
+      <table class="metrics" id="metrics"></table>
+    </div>
+
+    <div class="panel">
+      <h2>重绘改了什么</h2>
+      <ul>
+        <li>“无法确认系统状态”改成可执行的说明：Android 16 早期版本没有查询接口，DSHA 仍会尝试上岛；配一个“系统设置”入口（C 再加测试胶囊）。</li>
+        <li>状态文字 + 整宽按钮合成一行：状态点、标题、副文案、行尾按钮；API 级别降为等宽小字。</li>
+        <li>开关改为“标题 + 副文案 + 无文字开关”行；计时器开关在总开关关闭时置灰（源码里 <code>islandChronometer = islandEnabled &amp;&amp; …</code>）。</li>
+        <li>补上源码里存在、页面没写的规则：DSHA 原生页面在前台时不发任务通知、不占岛位；任务结束后保留 8 秒。</li>
+        <li>“说明”三段长文收进“支持的设备”弹层；首屏只留状态与开关。</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>不变的约束</h2>
+      <ul>
+        <li>偏好键 <code>task_island</code>（默认开）、<code>task_island_chronometer</code>（默认关）及 <code>ConfigStore</code> 读写不变，即时生效。</li>
+        <li>岛位顺序是固定逻辑（等你确认 5 &gt; 正在停止 4 &gt; 执行工具 3 &gt; 生成回复 2 &gt; 其他 1），页面只展示，不提供排序设置。</li>
+        <li>能力状态每次进页面直接读系统，不缓存；系统设置入口仍用 <code>IslandSupport.settingsIntent</code>，不可用时回退应用通知设置。</li>
+        <li>卡片、按钮共用主题资源；新文案进 <code>messages.json</code> 并过长度政策。</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>待确认</h2>
+      <ul>
+        <li>系统是否在本应用前台时也隐藏胶囊：未核实。测试胶囊文案按“回到桌面查看”写。</li>
+        <li>测试胶囊（C）需新增一条独立通知路径：仅在没有活跃任务时发，8 秒后主动取消，不参与任务选举。属于新增代码，非纯布局改动。</li>
+        <li>B 的页内预览读 <code>AgentTaskState</code> 快照，DSHA 前台时显示“回到桌面时会显示……”，需确认读取频率（建议随页面可见时 1 秒刷新）。</li>
+        <li>36.0（ColorOS 16 等）上 colorized 提升是否生效，只能真机核对；原型中虚线胶囊表示“可能显示”。</li>
+      </ul>
+    </div>
+  </aside>
+</main>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const ICON = {
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  dl: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  contrast: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  play: '<path d="M8 5l11 7-11 7z" fill="currentColor"/>',
+  plug: '<path d="M9 4h6v4h4v6h-4v6H9v-6H5V8h4z"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
+  term: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M13 15h4"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
+  pill: '<rect x="3" y="8" width="18" height="8" rx="4"/><circle cx="8" cy="12" r="1.6" fill="currentColor"/>',
+  spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
+  warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+  off: '<circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/>',
+  dsha: '<path d="M7 5h5a7 7 0 0 1 0 14H7z"/>'
+};
+const ic = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
+
+const DEV = {
+  phone: { w: 360, h: 780, sh: 640, tab: false, rad: 34, cap: '手机 360×780dp' },
+  tabP:  { w: 800, h: 1280, sh: 1000, tab: true, rad: 28, cap: '平板竖屏 800×1280dp' },
+  tabL:  { w: 1280, h: 800, sh: 640, tab: true, rad: 28, cap: '平板横屏 1280×800dp' }
+};
+const SYS = {
+  api35: { state: 'unsupported', api: 35, model: '', label: 'API 35：不支持实时活动' },
+  q0:    { state: 'unknown', api: 36, model: 'old', label: 'API 36.0 旧接口：无法查询（截图状态）' },
+  q1ok:  { state: 'allowed', api: 36, model: 'new', label: 'API 36.1+：已允许' },
+  q1off: { state: 'denied', api: 36, model: 'new', label: 'API 36.1+：用户关闭了实时活动' }
+};
+const GRACE = 8000; // IslandText.TERMINAL_GRACE_MS
+
+let ui = { device: 'tabP', scheme: 'b', theme: 'light', lang: 'zh', big: false, short: false, ids: false, sys: 'q0', fg: false, lock: false, sheet: null, toast: null, choice: 'b', add: { test: false, preview: true, inline: true } };
+try { const s = JSON.parse(localStorage.getItem('dsha-island-choice') || 'null'); if (s && s.choice) { ui.choice = s.choice; ui.add = { ...ui.add, ...s.add }; } } catch (_) {}
+const cfg = { island: true, chrono: false };
+let tasks = [];
+let seq = 0;
+let toastTimer = 0;
+
+/* ---------- 逻辑移植：IslandText / AgentTaskNotifications.phase ---------- */
+const PHASES = [
+  ['reply', '生成回复（reply）'], ['tool', '执行工具（tool）'], ['waiting', '等你确认（waiting）'],
+  ['stop-requested', '已请求停止'], ['other', '其他运行中'], ['unknown', '状态不明（15 秒静默）']
+];
+const REASONS = [['completed', '完成'], ['aborted', '已停止'], ['max-tokens', '已达上限'], ['connection-lost', '已断开'], ['error', '需处理']];
+const cp = s => Array.from(s);
+function clip(text, zh) { const v = cp(String(text || '').trim()); return v.slice(0, zh ? 7 : 9).join(''); }
+function toolName(detail) {
+  if (!detail) return '';
+  const i = detail.indexOf(' · ');
+  let name = (i >= 0 ? detail.slice(0, i) : detail).trim();
+  const sp = name.indexOf(' ');
+  if (sp >= 0) name = name.slice(0, sp);
+  return cp(name).slice(0, 4).join('');
+}
+function rank(r) {
+  if (!r || !r.active || r.dismissed) return 0;
+  if (r.phase === 'unknown') return 0;
+  if (r.stopping || r.phase === 'stop-requested') return 4;
+  return ({ waiting: 5, tool: 3, reply: 2 })[r.phase] || 1;
+}
+function pick(rows) {
+  let best = null, br = 0;
+  for (const r of rows) { const k = rank(r); if (!k) continue; if (!best || k > br || (k === br && r.started < best.started)) { best = r; br = k; } }
+  return best;
+}
+function pickForDisplay(rows, now) {
+  const a = pick(rows);
+  if (a) return a;
+  let recent = null;
+  for (const r of rows) {
+    if (r.active || r.dismissed) continue;
+    const age = now - r.endedAt;
+    if (age < 0 || age > GRACE) continue;
+    if (!recent || r.endedAt > recent.endedAt) recent = r;
+  }
+  return recent;
+}
+const detailOf = r => r.phase === 'tool' && r.tool ? `${r.tool} · ${r.target || ''}`.replace(/ · $/, '') : '';
+function endedShort(reason, zh) {
+  if (reason === 'test') return zh ? '上岛测试' : 'Test';
+  return ({ completed: zh ? '完成' : 'Done', aborted: zh ? '已停止' : 'Stopped', 'max-tokens': zh ? '已达上限' : 'Limit', 'connection-lost': zh ? '已断开' : 'Offline', error: zh ? '需处理' : 'Attention' })[reason] || (zh ? '已结束' : 'Ended');
+}
+function shortText(r, zh) {
+  let t;
+  const ph = r.active ? r.phase : 'ended';
+  if (ph === 'ended') t = endedShort(r.reason, zh);
+  else if (ph === 'waiting') t = zh ? '等你确认' : 'Needs you';
+  else if (ph === 'stop-requested') t = zh ? '正在停止' : 'Stopping';
+  else if (ph === 'tool') { const n = toolName(detailOf(r)); t = n ? (zh ? '执行·' + n : 'Tool ' + n) : (zh ? '执行中' : 'Working'); }
+  else if (ph === 'reply') t = zh ? '思考中' : 'Thinking';
+  else if (ph === 'unknown') t = zh ? '状态未知' : 'Unknown';
+  else t = zh ? '运行中' : 'Running';
+  if (r.active && r.stopping && ph !== 'stop-requested') t = zh ? '正在停止' : 'Stopping';
+  return clip(t, zh);
+}
+function phaseText(r, zh) {
+  if (!r.active) {
+    if (r.reason === 'test') return zh ? '这是一条上岛测试，8 秒后自动收起' : 'Island test; closes in 8 s';
+    return ({ completed: zh ? '任务完成' : 'Task completed', aborted: zh ? '任务已停止' : 'Task stopped', 'max-tokens': zh ? '已达到输出上限' : 'Output limit reached', 'connection-lost': zh ? '连接中断，任务已结束' : 'Connection lost; task ended' })[r.reason] || (zh ? '任务需要处理' : 'Task needs attention');
+  }
+  return ({ reply: zh ? '正在生成回复' : 'Generating reply', tool: zh ? '正在执行工具' : 'Running tool', waiting: zh ? '等你确认' : 'Waiting for you', 'stop-requested': zh ? '已请求停止，等待结束' : 'Stop requested; waiting for end', unknown: zh ? '状态暂不可确认' : 'Status cannot be confirmed' })[r.phase] || (zh ? '任务运行中' : 'Task running');
+}
+function duration(ms, zh) {
+  const s = Math.floor(Math.max(0, ms) / 1000);
+  if (s < 60) return s + 's';
+  const m = Math.floor(s / 60), rest = s % 60;
+  if (m < 60) return zh ? (rest ? `${m}分${rest}秒` : `${m}分`) : (rest ? `${m}m${rest}s` : `${m}m`);
+  const h = Math.floor(m / 60), rm = m % 60;
+  return zh ? `${h}小时${String(rm).padStart(2, '0')}分` : `${h}h${String(rm).padStart(2, '0')}m`;
+}
+const LEVELS = [
+  { k: 5, zh: '等你确认', sample: '等你确认', why: '需要你回答，排最前' },
+  { k: 4, zh: '正在停止', sample: '正在停止', why: '你已点停止，先显示结果' },
+  { k: 3, zh: '执行工具', sample: '执行·read', why: '胶囊带工具名' },
+  { k: 2, zh: '生成回复', sample: '思考中', why: '' },
+  { k: 1, zh: '其他运行中', sample: '运行中', why: '' }
+];
+
+/* ---------- 汇总：当前会显示什么 ---------- */
+function view(now = Date.now()) {
+  const zh = ui.lang === 'zh';
+  const sys = SYS[ui.sys];
+  const winner = pickForDisplay(tasks, now);
+  const rows = tasks.map(r => {
+    const k = rank(r);
+    const gone = !r.active && (r.dismissed || now - r.endedAt > GRACE);
+    let why = '';
+    if (r.dismissed) why = '已划掉';
+    else if (!r.active) why = gone ? '已收起' : '结束保留中';
+    else if (r.phase === 'unknown') why = '状态不明';
+    return { r, k, gone, why, win: winner === r };
+  }).sort((a, b) => (b.k - a.k) || (a.r.started - b.r.started));
+  const promotedTried = cfg.island && !!winner;
+  let capMode = 'none';
+  if (promotedTried && !ui.fg) capMode = sys.state === 'allowed' ? 'yes' : sys.state === 'unknown' ? 'maybe' : 'none';
+  const notices = ui.fg ? [] : rows.filter(x => !x.gone && !x.r.dismissed);
+  return { zh, sys, winner, rows, capMode, notices, promotedTried, now };
+}
+
+/* ---------- 系统表现（inspector 与 B 方案共用） ---------- */
+function capHtml(v) {
+  if (v.capMode === 'none' || !v.winner) return '';
+  const t = shortText(v.winner, v.zh);
+  const done = !v.winner.active;
+  return `<span class="cap${v.capMode === 'maybe' ? ' maybe' : ''}${done ? ' done' : ''}" title="${v.capMode === 'maybe' ? '36.0 旧接口：是否提升由系统决定' : 'setShortCriticalText'}">${ic(done ? 'check' : 'dsha')}${esc(t)}</span>`;
+}
+const clock = ms => { const s = Math.floor(ms / 1000); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+const hhmm = t => { const d = new Date(t); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+function noticeHtml(x, v, compact) {
+  const r = x.r, zh = v.zh;
+  const promoted = x.win && cfg.island;
+  const ph = phaseText(r, zh);
+  const det = detailOf(r);
+  const body = det ? `${ph} · ${det}` : ph;
+  let when = '';
+  if (r.active) when = cfg.island && cfg.chrono ? `<span data-since="${r.started}">${clock(v.now - r.started)}</span>` : hhmm(r.started);
+  const total = r.active ? '' : ` · ${duration(r.endedAt - r.started, zh)}`;
+  const title = ui.lock ? (zh ? 'DSHA 任务' : 'DSHA task') : (r.title || (zh ? 'DSHA 任务' : 'DSHA task'));
+  const text = ui.lock ? ph : body + total;
+  const grace = !r.active ? `<span data-grace="${r.endedAt}">${Math.max(0, Math.ceil((GRACE - (v.now - r.endedAt)) / 1000))}</span>s 后收起` : '';
+  const badge = compact ? '' : promoted ? `<span class="tag win badge">${v.capMode === 'yes' ? '实时活动' : v.capMode === 'maybe' ? '请求提升' : '请求提升（系统未允许）'}</span>` : '';
+  return `<div class="nt${promoted && v.capMode !== 'none' ? ' promo' : ''}">${badge}
+    <div class="h"><b>DSHA</b>· ${zh ? '第' + r.turn + '轮' : 'Turn ' + r.turn}${when ? ' · ' + when : ''}${grace ? ' · ' + grace : ''}</div>
+    <div class="t">${esc(title)}</div><div class="x">${esc(text)}</div>
+    ${r.active && r.phase !== 'unknown' ? '<div class="pb"></div>' : ''}</div>`;
+}
+function systemHtml(v) {
+  if (ui.fg) return `<div class="sysbar"><span>06:20</span><span class="sp"></span><span>97</span></div><p class="empty">DSHA 原生页面在前台：任务通知全部撤下、不占岛位（AgentTaskNotifications：<code>foreground → cancel</code>）。切回后台会重新发布。</p>`;
+  const cap = capHtml(v);
+  const why = !cfg.island ? '总开关已关：只发普通通知。'
+    : !v.winner ? '没有可上岛的任务。'
+    : v.capMode === 'yes' ? `已提升：${esc(v.winner.title || '任务')} 占用唯一岛位。`
+    : v.capMode === 'maybe' ? '36.0 旧接口：已设置 colorized 请求提升，是否显示由系统决定。'
+    : v.sys.state === 'denied' ? '用户关闭了实时活动：请求被系统拒绝，只显示普通通知。'
+    : '系统低于 Android 16：只显示普通通知。';
+  return `<div class="sysbar"><span>06:20</span>${cap}<span class="sp"></span><span>97</span></div>
+    <p class="empty" style="padding:6px 2px 0">${why}</p>
+    <div class="shade">${v.notices.length ? v.notices.map(x => noticeHtml(x, v)).join('') : '<p class="empty">通知栏为空。</p>'}</div>`;
+}
+
+/* ---------- 页面内容：状态文案 ---------- */
+function stateInfo(v) {
+  const s = v.sys.state;
+  const api = `API ${v.sys.api}${v.sys.model === 'old' ? ' · 旧版接口' : ''}`;
+  if (s === 'allowed') return { dot: 'good', icon: 'check', title: '已允许', sub: '回到桌面后，运行中的任务会显示在状态栏胶囊上。', chip: ['sys', '系统设置'], api };
+  if (s === 'denied') return { dot: 'warn', icon: 'warn', title: '实时活动已关闭', sub: '系统支持，但本应用未被允许；现在只显示普通通知。', chip: ['sys', '去打开', true], api };
+  if (s === 'unknown') return { dot: 'warn', icon: 'help', title: '系统支持，开关状态查不到', sub: '这一版 Android 16 没有查询接口，DSHA 仍会尝试上岛。任务时没看到胶囊，就到系统设置打开「实时活动」。', chip: ['sys', '系统设置'], api };
+  return { dot: '', icon: 'off', title: '当前系统不支持', sub: '需要 Android 16 及以上；任务只显示普通通知。', chip: null, api };
+}
+let RID = 'd0';
+function swRow(key, title, sub, o = {}) {
+  const id = `${RID}-${key}`;
+  return `<div class="n-row" data-id="${o.rid || ''}"><div class="tx" data-act="toggle" data-k="${key}" id="${id}-l"><b>${title}</b>${sub ? `<small class="${o.subCls || ''}">${sub}</small>` : ''}</div>
+    <button class="sw" role="switch" aria-checked="${!!cfg[key]}" aria-labelledby="${id}-l"${o.disabled ? ' aria-disabled="true"' : ''} data-act="toggle" data-k="${key}"></button></div>`;
+}
+function behaviorCard(extra = '') {
+  const off = !cfg.island;
+  return `<div class="n-card" data-id="island_behaviors">
+    ${swRow('island', '任务状态上岛', '多个任务同时运行时，只显示优先级最高的一个', { rid: 'island_enabled' })}
+    ${swRow('chrono', '用系统计时器显示耗时', off ? '需先开启任务状态上岛' : cfg.chrono ? '通知显示已用时间，由系统计秒' : '通知显示开始时间', { rid: 'island_chronometer', disabled: off })}
+    ${extra}</div>`;
+}
+function head() {
+  return `<div class="n-head"><h3>任务状态上岛</h3><button class="ib" data-act="sheet" data-v="intro" aria-label="说明">${ic('info')}</button></div>
+    <p class="n-sub">任务运行时把当前阶段显示在状态栏胶囊上；在 DSHA 页面里时不显示。</p>`;
+}
+function statusRow(v, rid = 'island_state') {
+  const s = stateInfo(v);
+  return `<div class="n-row static" data-id="${rid}"><span class="dot ${s.dot}" aria-hidden="true"></span>
+    <div class="tx"><b>${s.title}<span class="api">${s.api}</span></b><small>${s.sub}</small></div>
+    ${s.chip ? `<button class="chip${s.chip[2] ? ' pri' : ''}" data-act="${s.chip[0]}" data-id="island_open_settings">${s.chip[1]}</button>` : ''}</div>`;
+}
+const linkRow = (act, v, title, sub, rid) => `<button class="n-row" data-act="${act}" data-v="${v}" data-id="${rid}"><span class="tx"><b>${title}</b>${sub ? `<small>${sub}</small>` : ''}</span>${ic('chev').replace('class="i"', 'class="i chev"')}</button>`;
+
+/* A：紧凑行 */
+function renderA(v) {
+  const order = linkRow('sheet', 'order', '上岛顺序', '等你确认 › 正在停止 › 执行工具 › 生成回复 › 其他', 'island_order');
+  return `<div class="n-wrap">${head()}
+    <div class="n-lab">系统</div><div class="n-card">${statusRow(v)}</div>
+    <div class="n-lab">行为</div>${behaviorCard(order)}
+    <div class="n-links"><button class="chip" data-act="sheet" data-v="devices">支持的设备</button></div></div>`;
+}
+/* B：实时预览 + 内联优先级 */
+function levelRows(v) {
+  const wk = v.winner && v.winner.active ? rank(v.winner) : 0;
+  return LEVELS.map(l => {
+    const n = tasks.filter(t => rank(t) === l.k).length;
+    return `<div class="lv${wk === l.k ? ' on' : ''}"><span class="no">${l.k}</span><span class="tx"><b>${l.zh}<span class="mcap">${esc(clip(l.sample, true))}</span></b>${l.why ? `<small>${l.why}</small>` : ''}</span>
+      <span class="cnt">${wk === l.k ? '在岛上' : n ? n + ' 个' : ''}</span></div>`;
+  }).join('');
+}
+function previewCard(v) {
+  let inner;
+  if (!tasks.some(t => t.active || (!t.dismissed && v.now - t.endedAt <= GRACE))) inner = `<p class="note" style="background:none;padding:2px 0">现在没有运行中的任务。任务开始后，这里显示回到桌面时的样子。</p>`;
+  else {
+    const top = v.rows.find(x => x.win) || v.rows.find(x => !x.gone && !x.r.dismissed);
+    const vv = { ...v, capMode: !cfg.island || !v.winner ? 'none' : v.sys.state === 'allowed' ? 'yes' : v.sys.state === 'unknown' ? 'maybe' : 'none' };
+    const others = v.rows.filter(x => !x.gone && !x.r.dismissed).length - 1;
+    inner = `<div class="sysbar"><span>06:20</span>${capHtml(vv)}<span class="sp"></span><span>97</span></div>
+      ${top ? noticeHtml(top, vv, true) : ''}${others > 0 ? `<span class="cap-l">另有 ${others} 个任务只显示普通通知</span>` : ''}`;
+  }
+  return `<div class="pv" data-id="island_preview"><span class="cap-l">回到桌面后（示意）</span>${inner}</div>`;
+}
+function renderB(v) {
+  return `<div class="n-wrap">${head()}
+    <div class="n-two"><div>
+      <div class="n-lab">当前状态</div><div class="n-card">${previewCard(v)}${statusRow(v)}</div>
+      <div class="n-lab">行为</div>${behaviorCard()}
+    </div><div>
+      <div class="n-lab">上岛顺序<small>同级先开始的优先 · 结束后保留 8 秒</small></div>
+      <div class="n-card" data-id="island_levels">${levelRows(v)}</div>
+      <div class="n-links"><button class="chip" data-act="sheet" data-v="devices">支持的设备</button></div>
+    </div></div></div>`;
+}
+/* C：状态向导 + 测试胶囊 */
+function renderC(v) {
+  const s = stateInfo(v);
+  const st = v.sys.state;
+  const acts = [];
+  if (st === 'denied') acts.push(`<button class="chip pri" data-act="sys">打开实时活动</button>`);
+  if (st === 'unknown' || st === 'allowed') acts.push(`<button class="chip${st === 'unknown' ? ' pri' : ''}" data-act="test" data-id="island_test">发一条测试</button>`, `<button class="chip" data-act="sys">系统设置</button>`);
+  const wk = v.winner && v.winner.active ? rank(v.winner) : 0;
+  const steps = LEVELS.map((l, i) => `${i ? '<span class="gt">›</span>' : ''}<span class="s${wk === l.k ? ' on' : ''}">${l.zh}<i>${l.k}</i></span>`).join('');
+  return `<div class="n-wrap">${head()}
+    <div class="n-lab">系统</div>
+    <div class="n-card"><div class="wiz" data-id="island_state"><div class="w-h"><span class="w-ic ${s.dot}">${ic(s.icon)}</span>
+      <div class="w-t"><b>${s.title}</b><small>${s.sub}${st === 'unknown' ? '' : ''}</small><small style="font-family:var(--mono);font-size:11px;color:var(--muted)">${s.api}</small></div></div>
+      ${acts.length ? `<div class="w-a">${acts.join('')}</div>` : ''}
+      ${st === 'unknown' || st === 'allowed' ? `<p class="note" style="margin:0 0 0 52px;border-radius:10px;padding:7px 10px">测试会在状态栏放 8 秒“上岛测试”，回到桌面查看；有任务运行时不发。</p>` : ''}</div></div>
+    <div class="n-lab">行为</div>${behaviorCard()}
+    <div class="n-lab">谁会上岛</div>
+    <div class="n-card" data-id="island_levels"><div class="steps">${steps}</div><div class="steps-n">同一级别先开始的优先；任务结束后保留 8 秒显示结果。${wk ? '' : tasks.length ? '' : ''}</div></div>
+    <div class="n-links"><button class="chip" data-act="sheet" data-v="devices">支持的设备</button></div></div>`;
+}
+/* 现状：按截图与 IslandFragment 复刻 */
+function oldStatus(v) {
+  const api = `API ${v.sys.api}`;
+  return ({ allowed: `已允许：任务运行时会显示在状态栏胶囊上。（${api}）`, denied: `系统支持，但本应用当前未被允许。请用上面的按钮在系统设置里打开「实时活动」。（${api}）`, unsupported: `当前系统版本不支持实时活动（需要 Android 16 及以上），只会显示普通通知。（${api}）`, unknown: `无法确认系统状态。（${api}）` })[v.sys.state];
+}
+function renderOld(v) {
+  const sw = (k, t) => `<button class="o-sw" data-act="toggle" data-k="${k}" role="switch" aria-checked="${cfg[k]}"><span>${t}</span><span class="sw" aria-checked="${cfg[k]}"></span></button>`;
+  return `<div class="o-wrap"><h2 class="o-title">任务状态上岛</h2>
+    <p class="o-body">任务运行时把当前阶段显示在系统的状态栏胶囊或灵动岛/流体云上，结束后会短暂保留「完成 / 已停止」；展开通知可看工具、轮次与耗时。只使用 Android 16 的公开实时活动接口，不需要 root、不需要额外授权，任何环节失败都会退回普通通知。</p>
+    <div class="o-sec">系统状态</div><div class="o-card"><div class="o-state">${oldStatus(v)}</div></div>
+    <button class="o-btn" data-act="sys">打开系统实时活动设置</button>
+    <div class="o-sec">行为</div><div class="o-card">${sw('island', '任务状态上岛')}<p class="o-hint">多任务并行时只把优先级最高的一个放上岛，避免胶囊文字来回跳动。</p>
+      ${sw('chrono', '用系统计时器显示耗时')}<p class="o-hint" style="margin-bottom:0">开启后显示已用时间；关闭则显示开始时间。秒数由系统自己走，不再每秒重绘通知，胶囊仍显示阶段文字与工具名。</p></div>
+    <div class="o-sec">说明</div><div class="o-card"><p class="o-body">支持的设备：Android 16 及以上的原生系统、小米澎湃 OS 3.0.300+/4、ColorOS 16、OriginOS 6，以及后续跟进同一接口的厂商。</p>
+      <p class="o-body">更老的系统、以及鸿蒙系统不会显示岛，只会显示普通通知 —— 这是系统能力差异，不是开关失效。</p>
+      <p class="o-body">小米的官方超级岛大岛样式需要向小米申请白名单；本应用不依赖它，自带的能力在未申请时也会自动使用系统生成的胶囊。</p></div></div>`;
+}
+function renderSheet(s) {
+  let body = '';
+  if (s.kind === 'intro') body = `<h4>任务状态上岛</h4><p>任务运行时把当前阶段显示在状态栏胶囊、灵动岛或流体云上；结束后保留 8 秒显示「完成 / 已停止」。展开通知可看工具、轮次与耗时。</p><p>只使用 Android 16 的公开实时活动接口，不需要 root 或额外授权；任何环节失败都退回普通通知。DSHA 页面在前台时不显示任务通知。</p>`;
+  else if (s.kind === 'order') body = `<h4>上岛顺序</h4><p>系统每个应用只显示一个胶囊，多个任务同时运行时按下面的顺序选一个：</p><ol>${LEVELS.map(l => `<li>${l.zh}${l.why ? '：' + l.why : ''}</li>`).join('')}</ol><p>同一级别先开始的优先，胶囊文字不会来回跳。状态不明、已划掉的任务不参与；没有运行中的任务时，刚结束的任务保留 8 秒。</p>`;
+  else if (s.kind === 'devices') body = `<h4>支持的设备</h4><p>Android 16 及以上的原生系统、小米澎湃 OS 3.0.300+/4、ColorOS 16、OriginOS 6，以及后续跟进同一接口的厂商。</p><p>更老的系统和鸿蒙只显示普通通知，这是系统能力差异，不是开关失效。</p><p>小米超级岛的大岛样式需要向小米申请白名单；DSHA 不依赖它，未申请时使用系统生成的胶囊。</p>`;
+  return `<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${s.kind}"><div class="grab"></div>${body}<div class="acts"><button data-act="close">知道了</button></div></div></div>`;
+}
+
+/* ---------- 外壳 ---------- */
+function shell(devKey, scheme, d, v, measure) {
+  RID = `${devKey}-${scheme}`;
+  const content = scheme === 'a' ? renderA(v) : scheme === 'b' ? renderB(v) : scheme === 'c' ? renderC(v) : renderOld(v);
+  const rail = d.tab ? `<nav class="rail" aria-label="主导航"><button data-act="nav">${ic('play')}启动</button><button data-act="nav">${ic('plug')}插件</button>
+      <button aria-current="page" data-act="nav">${ic('gear')}设置</button><button data-act="nav">${ic('term')}终端</button><span class="lf">LOCAL FIRST</span></nav>` : '';
+  const sheet = !measure && ui.sheet && ui.sheet.dev === RID ? renderSheet(ui.sheet) : '';
+  const toast = !measure && ui.toast && ui.toast.dev === RID ? `<div class="toast" role="status">${esc(ui.toast.text)}</div>` : '';
+  return `<div class="app${d.tab ? ' tab' : ''}${ui.ids ? ' show-ids' : ''}" style="--fs:${ui.big ? 1.3 : 1}" data-dev="${RID}">
+    <div class="sb"><span>06:20</span><span>97</span></div>
+    <header class="abar"><button class="ibtn" data-act="nav" aria-label="返回">${ic('back')}</button>
+      <div class="tt"><b>DSH-A-Su</b><small>偏好与管理</small></div>
+      <button class="ibtn" data-act="nav" aria-label="导出">${ic('dl')}</button><button class="ibtn" data-act="theme" aria-label="切换深浅色">${ic('contrast')}</button><button class="ibtn" data-act="nav" aria-label="关于">${ic('info')}</button></header>
+    <div class="body">${rail}<div class="main"><div class="scroller" data-scroll="${RID}">${content}</div></div></div>
+    <div class="home-ind"></div>${sheet}${toast}</div>`;
+}
+const NAMES = { a: 'A 紧凑', b: 'B 实时预览', c: 'C 状态向导', old: '现状' };
+const devSize = () => ({ ...DEV[ui.device], h: ui.short ? DEV[ui.device].sh : DEV[ui.device].h });
+const scrolls = {};
+function renderDevices(v) {
+  document.querySelectorAll('[data-scroll]').forEach(el => { scrolls[el.dataset.scroll] = el.scrollTop; });
+  const list = ui.scheme === 'all' ? ['old', 'a', 'b', 'c'] : [ui.scheme];
+  const d = devSize();
+  const host = $('#devices');
+  const avW = Math.max(320, host.clientWidth), avH = Math.max(420, window.innerHeight - 150);
+  const per = (avW - (list.length - 1) * 28) / list.length;
+  const s = Math.min(1, (per - 20) / d.w, avH / d.h);
+  host.innerHTML = list.map(k => `<div class="dev-col"><div class="dev-cap">${NAMES[k]} · ${d.cap}${ui.short ? ' · 短屏' : ''}${s < 1 ? ` · 缩放 ${Math.round(s * 100)}%` : ''}</div>
+    <div class="dev-box" style="width:${d.w * s + 20}px;height:${d.h * s + 20}px"><div class="device" style="--rad:${d.rad}px;width:${d.w}px;height:${d.h}px;left:10px;top:10px;transform:scale(${s})">${shell(ui.device, k, d, v)}</div></div></div>`).join('');
+  document.querySelectorAll('[data-scroll]').forEach(el => { if (scrolls[el.dataset.scroll]) el.scrollTop = scrolls[el.dataset.scroll]; });
+}
+
+/* ---------- inspector ---------- */
+function renderSys() {
+  $('#sys').innerHTML = Object.entries(SYS).map(([k, s]) => `<label class="chk"><input type="radio" name="sys" value="${k}"${ui.sys === k ? ' checked' : ''}>${s.label}</label>`).join('');
+}
+const PRESETS = {
+  single: { label: '单任务思考中', make: n => [T('修复登录页', 'reply', n - 42000)] },
+  three: { label: '三任务并行', make: n => [T('修复登录页', 'reply', n - 90000), T('整理文档', 'tool', n - 60000, { tool: 'read', target: 'docs/island-status.md' }), T('跑单测', 'other', n - 30000)] },
+  ask: { label: '有任务等你确认', make: n => [T('修复登录页', 'tool', n - 120000, { tool: 'bash', target: 'git' }), T('发布说明', 'waiting', n - 20000)] },
+  tie: { label: '同级取先开始', make: n => [T('任务甲', 'tool', n - 70000, { tool: 'grep', target: 'IslandText' }), T('任务乙', 'tool', n - 15000, { tool: 'edit', target: 'Main.java' })] },
+  done: { label: '刚完成（保留 8 秒）', make: n => [{ ...T('修复登录页', 'reply', n - 95000), active: false, reason: 'completed', endedAt: n }] },
+  stopping: { label: '停止插队', make: n => [T('长任务', 'tool', n - 300000, { tool: 'bash', target: 'npm' }), { ...T('写文档', 'reply', n - 10000), stopping: true }] }
+};
+function T(title, phase, started, o = {}) { return { id: ++seq, title, phase, started, tool: o.tool || '', target: o.target || '', stopping: false, dismissed: false, active: true, reason: '', endedAt: 0, turn: 1 + (seq % 3) }; }
+function renderPrio(v) {
+  const wk = v.winner ? (v.winner.active ? rank(v.winner) : -1) : 0;
+  $('#ladder').innerHTML = LEVELS.map((l, i) => `${i ? '›' : ''}<span class="l${wk === l.k ? ' on' : ''}">${l.zh} ${l.k}</span>`).join('') + `<span style="margin-left:4px">· 不参与 0</span>`;
+  $('#presets').innerHTML = Object.entries(PRESETS).map(([k, p]) => `<button class="mini-btn" data-preset="${k}">${p.label}</button>`).join('');
+  $('#prio').innerHTML = v.rows.length ? `<tr><th>任务</th><th>阶段</th><th>级</th><th>胶囊</th><th>结果</th></tr>` + v.rows.map(x => {
+    const res = x.win ? `<span class="tag win">${cfg.island ? '占岛' : '应占岛（开关关）'}</span>` : x.why ? `<span class="tag out">${x.why}</span>` : '<span class="tag plain">普通通知</span>';
+    return `<tr class="${x.win ? 'win' : x.k === 0 ? 'out' : ''}"><td>${esc(x.r.title || '未命名')}</td><td>${esc(x.r.active ? (x.r.stopping ? '停止中' : PHASES.find(p => p[0] === x.r.phase)[1].replace(/（.*）/, '')) : '已结束')}</td><td class="num">${x.k}</td><td>${esc(shortText(x.r, v.zh))}</td><td>${res}</td></tr>`;
+  }).join('') : '<tr><td class="empty">没有任务。点上面的场景，或添加任务。</td></tr>';
+  const a = document.activeElement;
+  const keep = a && a.closest && a.closest('#tasks') ? [a.dataset.t, a.dataset.f] : null;
+  $('#tasks').innerHTML = tasks.map(t => {
+    const ago = Math.round((v.now - t.started) / 1000);
+    const st = t.active ? `开始于 ${ago} 秒前` : t.dismissed ? '已划掉' : v.now - t.endedAt > GRACE ? '保留期已过，通知已收起' : '已结束，保留期内';
+    return `<div class="task${t.active ? '' : ' ended'}">
+      <div class="hd"><input type="text" value="${esc(t.title)}" data-t="${t.id}" data-f="title" aria-label="任务标题"><button class="mini-btn ghost" data-t="${t.id}" data-tact="del" aria-label="删除">✕</button></div>
+      ${t.active ? `<label>阶段<select data-t="${t.id}" data-f="phase">${PHASES.map(p => `<option value="${p[0]}"${p[0] === t.phase ? ' selected' : ''}>${p[1]}</option>`).join('')}</select></label>
+      <label>${t.phase === 'tool' ? '工具名' : '开始于（秒前）'}${t.phase === 'tool' ? `<input type="text" value="${esc(t.tool)}" data-t="${t.id}" data-f="tool">` : `<input type="number" min="0" value="${ago}" data-t="${t.id}" data-f="ago">`}</label>
+      <div class="ops"><label class="chk"><input type="checkbox" data-t="${t.id}" data-f="stopping"${t.stopping ? ' checked' : ''}>已点停止</label>
+        <label class="chk"><input type="checkbox" data-t="${t.id}" data-f="dismissed"${t.dismissed ? ' checked' : ''}>划掉</label>
+        <select data-t="${t.id}" data-f="reasonSel" aria-label="结束原因">${REASONS.map(r => `<option value="${r[0]}">${r[1]}</option>`).join('')}</select><button class="mini-btn" data-t="${t.id}" data-tact="end">结束</button></div>`
+      : `<div class="ops"><button class="mini-btn" data-t="${t.id}" data-tact="revive">重新开始</button></div>`}
+      <div class="st">${st}</div></div>`;
+  }).join('');
+  if (keep) { const el = document.querySelector(`#tasks [data-t="${keep[0]}"][data-f="${keep[1]}"]`); if (el) el.focus(); }
+}
+const CHOICES = {
+  a: { t: 'A 紧凑行', d: '与“运行配置 v2”同一套行与卡片；首屏只有状态行和两个开关，顺序与设备说明进弹层。', cost: ['只改布局', '约 10 条新文案', '无新逻辑'], add: { test: false, preview: false, inline: false } },
+  b: { t: 'B 实时预览 + 内联顺序', d: '顶部用示意胶囊与通知展示回到桌面后的样子；右栏/下方列出 5 级顺序并高亮当前占岛的那级。', cost: ['布局 + 预览视图', '读 AgentTaskState 快照', '约 18 条新文案'], add: { test: false, preview: true, inline: true } },
+  c: { t: 'C 状态向导 + 测试胶囊', d: '按系统状态给一个主操作：已关闭→去打开；查不到→发一条 8 秒测试胶囊自己确认。顺序用一行台阶展示。', cost: ['新增测试通知路径', '需单测与真机核对', '约 14 条新文案'], add: { test: true, preview: false, inline: true } }
+};
+function renderChoice() {
+  $('#choice').innerHTML = Object.entries(CHOICES).map(([k, c]) => `<button class="ch" role="radio" aria-checked="${ui.choice === k}" data-choice="${k}"><b><span class="rd"></span>${c.t}</b><small>${c.d}</small><span class="cost">${c.cost.map(x => `<span class="tag plain">${x}</span>`).join('')}</span></button>`).join('');
+  document.querySelectorAll('[data-add]').forEach(i => { i.checked = !!ui.add[i.dataset.add]; });
+  const c = CHOICES[ui.choice];
+  const adds = [ui.add.test && '测试胶囊', ui.add.preview && '页内实时预览卡', ui.add.inline ? '优先级内联' : '优先级收进弹层'].filter(Boolean);
+  $('#decision').value = `任务状态上岛页（IslandFragment）重绘：选 ${c.t}\n附加：${adds.join('、')}\n不变：task_island / task_island_chronometer 键与默认值、岛位顺序逻辑、settingsIntent 回退\n原型：docs/design/island-status-20261102/preview.html`;
+  try { localStorage.setItem('dsha-island-choice', JSON.stringify({ choice: ui.choice, add: ui.add })); } catch (_) {}
+}
+function measureOne(k, v) {
+  const d = devSize();
+  const box = document.createElement('div');
+  box.className = 'measure';
+  box.innerHTML = `<div class="device" style="width:${d.w}px;height:${d.h}px;left:0;top:0">${shell(ui.device, k, d, v, true)}</div>`;
+  document.body.appendChild(box);
+  const sc = box.querySelector('.scroller');
+  const h = Math.round(sc.firstElementChild.getBoundingClientRect().height);
+  const vis = sc.clientHeight;
+  box.remove();
+  return { h, vis };
+}
+function renderMetrics(v) {
+  const r = ['old', 'a', 'b', 'c'].map(k => [k, measureOne(k, v)]);
+  $('#metrics').innerHTML = `<tr><th>方案</th><th>内容高 dp</th><th>一屏放下</th></tr>` + r.map(([k, m]) => `<tr><td>${NAMES[k]}</td><td class="num">${m.h}</td><td class="num">${m.h <= m.vis ? '是' : `否（可视 ${m.vis}）`}</td></tr>`).join('');
+}
+function syncToolbar() {
+  document.querySelectorAll('.seg').forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(ui[g.dataset.ctl] === b.dataset.v))));
+  document.querySelectorAll('[data-opt]').forEach(i => { i.checked = !!ui[i.dataset.opt]; });
+  document.querySelectorAll('[data-sim]').forEach(i => { i.checked = !!ui[i.dataset.sim]; });
+}
+let lastSig = '';
+const sigOf = v => [v.winner && v.winner.id, v.capMode, v.rows.map(x => x.gone ? 'g' : 'v').join('')].join('|');
+let mTimer = 0;
+function render() {
+  document.documentElement.dataset.theme = ui.theme;
+  const v = view();
+  lastSig = sigOf(v);
+  renderDevices(v);
+  renderSys();
+  renderPrio(v);
+  $('#system').innerHTML = systemHtml(v);
+  renderChoice();
+  syncToolbar();
+  cancelAnimationFrame(mTimer); mTimer = requestAnimationFrame(() => renderMetrics(view()));
+}
+
+/* ---------- 时钟：计时器与 8 秒保留 ---------- */
+setInterval(() => {
+  const v = view();
+  if (sigOf(v) !== lastSig) { render(); return; }
+  document.querySelectorAll('[data-since]').forEach(el => { el.textContent = clock(v.now - Number(el.dataset.since)); });
+  document.querySelectorAll('[data-grace]').forEach(el => { el.textContent = Math.max(0, Math.ceil((GRACE - (v.now - Number(el.dataset.grace))) / 1000)); });
+}, 1000);
+
+function toast(dev, text) {
+  ui.toast = { dev, text };
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { ui.toast = null; render(); }, 2600);
+}
+
+/* ---------- 事件 ---------- */
+document.addEventListener('click', e => {
+  const seg = e.target.closest('.seg button');
+  if (seg) { ui[seg.parentElement.dataset.ctl] = seg.dataset.v; ui.sheet = null; render(); return; }
+  const pre = e.target.closest('[data-preset]');
+  if (pre) { tasks = PRESETS[pre.dataset.preset].make(Date.now()); render(); return; }
+  const ch = e.target.closest('[data-choice]');
+  if (ch) { ui.choice = ch.dataset.choice; ui.add = { ...CHOICES[ui.choice].add }; render(); return; }
+  const sa = e.target.closest('[data-sact]');
+  if (sa) {
+    const k = sa.dataset.sact;
+    if (k === 'add') tasks.push(T(`任务 ${seq + 1}`, 'reply', Date.now()));
+    else if (k === 'clear') tasks = [];
+    else if (k === 'show') ui.scheme = ui.choice;
+    else if (k === 'copy') { const t = $('#decision'); t.select(); try { navigator.clipboard.writeText(t.value).catch(() => document.execCommand('copy')); } catch (_) { document.execCommand('copy'); } sa.textContent = '已复制'; setTimeout(() => { sa.textContent = '复制决定'; }, 1500); return; }
+    render(); return;
+  }
+  const ta = e.target.closest('[data-tact]');
+  if (ta) {
+    const t = tasks.find(x => x.id === Number(ta.dataset.t));
+    if (!t) return;
+    if (ta.dataset.tact === 'del') tasks = tasks.filter(x => x !== t);
+    else if (ta.dataset.tact === 'end') { const sel = document.querySelector(`#tasks select[data-t="${t.id}"][data-f="reasonSel"]`); t.active = false; t.reason = sel ? sel.value : 'completed'; t.endedAt = Date.now(); t.stopping = false; }
+    else if (ta.dataset.tact === 'revive') { t.active = true; t.reason = ''; t.endedAt = 0; t.dismissed = false; t.started = Date.now(); }
+    render(); return;
+  }
+  const el = e.target.closest('[data-act]');
+  if (!el || !el.closest('#devices')) return;
+  const dev = el.closest('.app').dataset.dev;
+  const st = SYS[ui.sys].state;
+  switch (el.dataset.act) {
+    case 'toggle': {
+      const k = el.dataset.k;
+      if (k === 'chrono' && !cfg.island && !dev.endsWith('-old')) { toast(dev, '先开启任务状态上岛'); break; }
+      cfg[k] = !cfg[k];
+      break;
+    }
+    case 'sys': toast(dev, st === 'unsupported' ? '打开应用通知设置（低于 Android 16 时的回退）' : '打开系统「实时活动」设置（原型不跳转；用右侧模拟切换结果）'); break;
+    case 'test': {
+      if (tasks.some(t => t.active)) { toast(dev, '已有任务在运行，测试不会顶掉它的岛位'); break; }
+      tasks.push({ ...T('上岛测试', 'other', Date.now()), active: false, reason: 'test', endedAt: Date.now() });
+      toast(dev, '已发送：回到桌面查看，8 秒后自动收起');
+      break;
+    }
+    case 'sheet': ui.sheet = { dev, kind: el.dataset.v }; break;
+    case 'scrim': if (e.target !== el) return; ui.sheet = null; break;
+    case 'close': ui.sheet = null; break;
+    case 'theme': ui.theme = ui.theme === 'light' ? 'dark' : 'light'; break;
+    case 'nav': toast(dev, '原型：导航不在本次范围'); break;
+    default: return;
+  }
+  render();
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.opt) { ui[t.dataset.opt] = t.checked; render(); return; }
+  if (t.dataset.sim) { ui[t.dataset.sim] = t.checked; render(); return; }
+  if (t.name === 'sys') { ui.sys = t.value; render(); return; }
+  if (t.dataset.add) { ui.add[t.dataset.add] = t.checked; render(); return; }
+  if (t.dataset.t && t.dataset.f && t.dataset.f !== 'reasonSel') {
+    const task = tasks.find(x => x.id === Number(t.dataset.t));
+    if (!task) return;
+    const f = t.dataset.f;
+    if (f === 'ago') task.started = Date.now() - Math.max(0, Number(t.value) || 0) * 1000;
+    else if (t.type === 'checkbox') task[f] = t.checked;
+    else { task[f] = t.value; if (f === 'phase' && t.value === 'tool' && !task.tool) task.tool = 'read'; }
+    render();
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && ui.sheet) { ui.sheet = null; render(); } });
+window.addEventListener('resize', render);
+window.__preview = { ui, cfg, get tasks() { return tasks; }, set tasks(v) { tasks = v; }, logic: { rank, pick, pickForDisplay, shortText, clip, toolName }, PRESETS, render, view };
+tasks = PRESETS.three.make(Date.now());
+render();
+})();
+</script>
+</body>
+</html>

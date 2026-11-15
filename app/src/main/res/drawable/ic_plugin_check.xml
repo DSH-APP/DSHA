@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 插件头部状态条：成功。描边由代码按语气 tint。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="18dp" android:height="18dp" android:viewportWidth="24" android:viewportHeight="24" android:autoMirrored="false">
+    <path android:pathData="M5,12.5 L9.5,17 L19,7.5" android:strokeColor="@color/shell_text_secondary" android:strokeWidth="1.9" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="@android:color/transparent" />
+</vector>

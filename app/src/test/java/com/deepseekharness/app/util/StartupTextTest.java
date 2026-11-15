@@ -37,4 +37,30 @@ public class StartupTextTest {
         "proroot 进程退出，退出码 127（鉴权后）",
         StartupText.render("proroot process exited with code 127(after authentication)", "zh"));
   }
+
+  @Test
+  public void registerFailureShowsOnlyTheActionableConclusion() {
+    String raw =
+        "插件注册失败：BUILTIN_REGISTER_TIMEOUT: exit=-1 timedOut=true truncated=false"
+            + " output=REGISTER_TIMING: {\"phase\":\"runtime-links-check\",\"elapsedMs\":479409}"
+            + " hostElapsedMs=90012 lastGuestPhase=runtime-links-check GUEST_TIMING_MISMATCH";
+    String zh = StartupText.render(raw, "zh");
+    assertEquals("插件注册失败：插件注册超时，可直接重试。", zh);
+    assertFalse(zh.contains("exit="));
+    assertFalse(zh.contains("timedOut="));
+    assertFalse(zh.contains("elapsedMs"));
+    assertEquals(
+        "Plugin registration failed: plugin registration timed out; retry directly.",
+        StartupText.render(raw, "en"));
+    assertEquals(
+        "插件注册失败：插件配置有待确认的锁，可直接重试。",
+        StartupText.render(
+            "插件注册失败：BUILTIN_REGISTER_EXIT_1: exit=1 output=PLUGIN_PROFILE_LOCK_STALE: dead lock",
+            "zh"));
+    assertEquals(
+        "插件注册失败：插件注册未完成，可直接重试。",
+        StartupText.render("插件注册失败：BUILTIN_REGISTER_RECEIPT_MISSING", "zh"));
+    // 不是注册失败的应用事件仍走原有逐段渲染，不能被吞掉。
+    assertEquals("启动失败：配置检查未通过", StartupText.render("启动失败：配置检查未通过", "zh"));
+  }
 }

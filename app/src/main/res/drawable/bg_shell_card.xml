@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v5 页面卡片：surface 底 + 1dp shell_line 描边；与启动主页共用同一套外壳 token。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_surface" />
+    <corners android:radius="@dimen/shell_launch_radius_card" />
+    <stroke android:width="1dp" android:color="@color/shell_line" />
+</shape>

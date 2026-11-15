@@ -1,0 +1,5 @@
+# DSHA 0.2.1-rc.3-20261101.1600-dsh0.2.1-rc.5 / build246
+
+- Corrige la fenêtre de l’assistant flottant qui n’était pas isolée du clavier : l’assistant replié se trouve en bas de l’écran et, lorsque vous touchiez un champ de saisie dans une autre application, il remontait avec le clavier de cette application et masquait le contenu près de la zone de saisie.
+- L’assistant flottant ne reçoit jamais de saisie de texte (l’édition se fait dans la page distincte de l’assistant). Sa fenêtre ne tient désormais compte que des barres système et ignore le clavier des autres applications, et la zone d’exclusion qu’il enregistre pour l’observation de l’écran ne change plus à l’ouverture ou à la fermeture du clavier.
+- Portée de la vérification : tests unitaires locaux/CI uniquement ; **non testé sur un appareil réel**. Ce correctif peut ne pas fonctionner sur certaines versions d’Android ou ROM (l’assistant peut encore remonter avec le clavier) ; des retours d’utilisateurs sont nécessaires pour le confirmer. versionCode porté à 246. La révision DSHA reste 0.2.1-rc.3 et le DSH intégré reste 0.2.1-rc.5.

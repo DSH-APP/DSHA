@@ -160,6 +160,7 @@ public final class WebLifecycleResponsivenessTest {
   Boot boot;
   Screens screens;
   HarnessController controller;
+  WebLifecycleController lifecycle;
   HarnessSessionState state;
   Pending pending;
 
@@ -178,7 +179,8 @@ public final class WebLifecycleResponsivenessTest {
     controller = new HarnessController(app, boot);
     var web = HarnessController.class.getDeclaredField("web");
     web.setAccessible(true);
-    web.set(controller, new WebLifecycleController(controller, state, screens));
+    lifecycle = new WebLifecycleController(controller, state, screens);
+    web.set(controller, lifecycle);
   }
 
   @After
@@ -287,6 +289,30 @@ public final class WebLifecycleResponsivenessTest {
   }
 
   @Test
+  public void duplicateStopExplainsTheWaitButDeliversOneConclusionOnly() throws Exception {
+    List<String> first = new CopyOnWriteArrayList<>(), second = new CopyOnWriteArrayList<>();
+    controller.stopWeb(first::add);
+    controller.stopWeb(second::add);
+    assertEquals(1, pending.queued.size());
+    assertEquals(1, second.size());
+    assertTrue(second.get(0).contains("停止中"));
+    assertEquals(0, first.size());
+    // 停止阶段 + 已用预算可解释，不暴露内部调用串。
+    assertTrue(controller.stopProgressText().contains("停止中"));
+    Thread worker = new Thread(pending.queued.remove(0), "fixture-duplicate-stop-worker");
+    worker.start();
+    assertTrue(screens.closeEntered.await(2, TimeUnit.SECONDS));
+    screens.releaseClose.countDown();
+    worker.join(2000);
+    assertFalse(worker.isAlive());
+    // 同一个停止请求只发一次结论；重复点击只收到进行中的解释。
+    assertEquals(1, first.size());
+    assertEquals(1, second.size());
+    assertFalse(controller.isStopping());
+    assertTrue(controller.stopProgressText().isEmpty());
+  }
+
+  @Test
   public void staleQueuedManualAndAutomaticRequestsRejectBeforePreflight() throws Exception {
     long old = controller.getWebGeneration();
     state.lifecycle.beginStop();
@@ -305,6 +331,36 @@ public final class WebLifecycleResponsivenessTest {
     assertEquals(0, boot.reads.get());
     assertFalse(controller.startWebIfUnchanged(expected, true, x -> {}));
     assertEquals("explicit Start reaches readiness preflight", 1, boot.reads.get());
+  }
+
+  @Test
+  public void healthyStartPlaceholderCannotOfferForceStop() throws Exception {
+    long running = state.lifecycle.beginStart(false, false);
+    // 正常启动每代次的占位结论：不是失败停止事实。
+    state.lastStopResult =
+        new WebStopCoordinator.Result(
+            WebStopCoordinator.Status.UNCONFIRMED, "WEB_START_PENDING", "");
+    assertFalse(lifecycle.forceStopAvailable());
+    state.lifecycle.finishStart(running);
+    assertFalse(lifecycle.forceStopAvailable());
+    var refused =
+        assertThrows(
+            com.deepseekharness.app.util.WebStopException.class, controller::prepareForceStop);
+    assertEquals(
+        com.deepseekharness.app.util.WebStopDiagnostic.Code.FORCE_REQUIRES_UNCONFIRMED_STOP,
+        refused.diagnostic().code());
+    // 真实失败停止事实（启动前置停止失败 / 用户停止未确认）才允许准备强停候选。
+    state.lastStopResult =
+        new WebStopCoordinator.Result(
+            WebStopCoordinator.Status.UNCONFIRMED, "WEB_START_STOP_UNCONFIRMED", "pending");
+    assertTrue(lifecycle.forceStopAvailable());
+    state.lastStopResult =
+        new WebStopCoordinator.Result(
+            WebStopCoordinator.Status.UNCONFIRMED, "WEB_PROCESS_EXIT_UNCONFIRMED", "pending");
+    assertTrue(lifecycle.forceStopAvailable());
+    state.lastStopResult =
+        new WebStopCoordinator.Result(WebStopCoordinator.Status.STOPPED, "WEB_GUESTS_STOPPED", "");
+    assertFalse(lifecycle.forceStopAvailable());
   }
 
   private void readyProfile() throws Exception {

@@ -30,6 +30,11 @@ export const DESKTOP_QUERY = '(min-width: 1024px)'
  *  windows never arm it, at any width. */
 export const TOUCH_QUERY = '(pointer: coarse)'
 
+/** 宽屏触屏（平板 ≥1024 + 粗指针）：宿主原生布局照旧，本插件只补「触屏缺 hover /
+ *  触屏热区」这一类补丁（2026-10-29 owner 定的方向：平板走原生，不做手机壳）。
+ *  与 MOBILE_QUERY 互补但不重叠；桌面（pointer: fine）任何宽度都不命中。 */
+export const TABLET_TOUCH_QUERY = '(min-width: 1024px) and (pointer: coarse)'
+
 /**
  * Re-arm a mobile-only DOM effect on every query change. Replaces the
  * repeated matchMedia + change-listener scaffold so all breakpoint strings

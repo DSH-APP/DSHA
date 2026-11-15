@@ -1,53 +1,104 @@
 <?xml version='1.0' encoding='utf-8'?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/surface">
-  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingLeft="18dp" android:paddingRight="18dp" android:paddingTop="14dp" android:paddingBottom="22dp">
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_device_grants" android:textSize="24sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_grants_sub" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="7dp" android:layout_marginBottom="18dp" />
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_device_channels" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="16dp" android:layout_marginBottom="12dp">
-      <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_root_shell" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:paddingStart="0dp" android:text="@string/ui_m0062" android:layout_marginTop="8dp" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
-      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_root_hint" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="8dp" />
-      <TextView android:id="@+id/device_root_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginStart="0dp" android:padding="12dp" android:background="@drawable/bg_selection" android:text="@string/device_checking" android:maxLines="2" android:ellipsize="end" android:minHeight="0dp" />
-      <TextView android:id="@+id/config_guard_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/gap_tight" android:layout_marginTop="@dimen/gap_hair" android:visibility="gone" />
-      <Button android:id="@+id/device_root_verify" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_m0170" android:textColor="@color/primary" />
-    </LinearLayout>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="16dp" android:layout_marginBottom="12dp">
-      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_brand_shizuku" android:textSize="14sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="12dp" />
-      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_shizuku_hint" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="8dp" />
-      <TextView android:id="@+id/workspace_shizuku_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0039" android:layout_marginStart="0dp" android:padding="12dp" android:background="@drawable/bg_selection" android:maxLines="2" android:ellipsize="end" android:minHeight="0dp" />
-      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-        <Button android:id="@+id/workspace_shizuku_auth" style="@style/Widget.DSHA.Button" android:layout_width="0dp" android:layout_height="match_parent" android:layout_marginTop="0dp" android:text="@string/ui_m0015" android:textColor="@color/primary" android:layout_weight="1" android:textSize="12sp" />
-        <Button android:id="@+id/device_shizuku_open" style="@style/Widget.DSHA.TextButton" android:layout_width="0dp" android:layout_height="match_parent" android:text="@string/ui_m0125" android:layout_weight="1" android:layout_marginTop="0dp" android:textSize="12sp" />
+<!--
+  设备能力授权（首页）：全局确认、系统权限与独立敏感能力。
+  - 设备执行通道与屏幕操作已各自独立成页（DeviceChannelsFragment / ScreenOperationFragment），
+    首页只保留两行入口（标题 + 状态摘要 + 箭头）；点击走 SettingsPanes.open，
+    手机单栏整页推进、宽窗格在设置详情内推进。
+  - 分区顺序（单栏）：全局权限 / 设备与屏幕入口 / 系统权限 / 独立敏感能力；内容宽 ≥640dp 时
+    DeviceGrantsFragment 把敏感能力移到 grants_col_end。
+  - FullPermissionControls 追加到 grants_global_slot；其余既有 id / 点击 / 二次确认 / 状态绑定保持。
+  - 页面大标题交给顶栏。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/grants_root" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/shell_bg" android:orientation="vertical">
+
+  <ScrollView android:id="@+id/grants_scroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false" android:fillViewport="true">
+    <LinearLayout android:id="@+id/grants_content" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="@dimen/grants_page_pad" android:paddingTop="@dimen/grants_page_top" android:paddingEnd="@dimen/grants_page_pad" android:paddingBottom="@dimen/shell_page_bottom">
+      <LinearLayout android:id="@+id/grants_columns" android:layout_width="match_parent" android:layout_height="wrap_content" android:baselineAligned="false" android:orientation="horizontal">
+
+        <LinearLayout android:id="@+id/grants_col_start" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+
+          <!-- 全局权限：标签 + FullPermissionControls 注入的卡片 -->
+          <LinearLayout android:id="@+id/grants_section_global" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+            <TextView android:id="@+id/grants_global_label" style="@style/ShellSectionIconLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/grants_section_margin" android:drawableStart="@drawable/ic_section_global" />
+            <LinearLayout android:id="@+id/grants_global_slot" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+          </LinearLayout>
+
+          <!-- 设备执行通道 / 屏幕操作：卡片内容已迁到独立页面，这里只保留入口行。 -->
+          <LinearLayout android:id="@+id/grants_section_entries" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/grants_section_gap" android:orientation="vertical">
+            <LinearLayout style="@style/ShellGroup" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+              <LinearLayout android:id="@+id/channels_entry" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp" android:orientation="horizontal">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                  <TextView style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_device_channels" />
+                  <TextView android:id="@+id/channels_entry_status" style="@style/ShellRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/device_checking" />
+                </LinearLayout>
+                <ImageView android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:layout_marginStart="8dp" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
+              </LinearLayout>
+              <View style="@style/ShellDivider" android:layout_marginStart="@dimen/grants_card_pad_h" />
+              <LinearLayout android:id="@+id/screen_entry" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp" android:orientation="horizontal">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                  <TextView style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/computer_use_title" />
+                  <TextView android:id="@+id/screen_entry_status" style="@style/ShellRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/device_checking" />
+                </LinearLayout>
+                <ImageView android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:layout_marginStart="8dp" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
+              </LinearLayout>
+            </LinearLayout>
+          </LinearLayout>
+
+          <!-- 系统权限：两行可点，状态 / 说明作为副标题 -->
+          <LinearLayout android:id="@+id/grants_section_system" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/grants_section_gap" android:orientation="vertical">
+            <TextView style="@style/ShellSectionIconLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/grants_section_margin" android:drawableStart="@drawable/ic_section_system" android:text="@string/ui2_system_permissions" />
+            <LinearLayout style="@style/ShellGroup" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+              <LinearLayout android:id="@+id/config_all_files" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:orientation="vertical" android:paddingStart="@dimen/grants_card_pad_h" android:paddingTop="8dp" android:paddingEnd="@dimen/grants_card_pad_h" android:paddingBottom="8dp">
+                <LinearLayout android:id="@+id/config_all_files_line" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+                  <TextView style="@style/ShellRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/device_open_access" />
+                  <TextView android:id="@+id/config_all_files_status" style="@style/ShellStatusPill" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="@string/device_checking" />
+                  <ImageView android:id="@+id/config_all_files_chevron" android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:layout_marginStart="8dp" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
+                </LinearLayout>
+              </LinearLayout>
+              <View style="@style/ShellDivider" android:layout_marginStart="@dimen/grants_card_pad_h" />
+              <LinearLayout android:id="@+id/config_saf_access" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:paddingStart="@dimen/grants_card_pad_h" android:paddingTop="8dp" android:paddingEnd="@dimen/grants_card_pad_h" android:paddingBottom="8dp">
+                <TextView android:id="@+id/config_saf_access_title" style="@style/ShellRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="" />
+                <TextView android:id="@+id/config_saf_access_status" style="@style/ShellStatusPill" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="" />
+                <ImageView android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:layout_marginStart="8dp" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
+              </LinearLayout>
+              <View style="@style/ShellDivider" android:layout_marginStart="@dimen/grants_card_pad_h" />
+              <LinearLayout android:id="@+id/config_battery_opt" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="52dp" android:paddingStart="@dimen/grants_card_pad_h" android:paddingTop="8dp" android:paddingEnd="@dimen/grants_card_pad_h" android:paddingBottom="8dp">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                  <TextView style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0191" />
+                  <TextView android:id="@+id/config_battery_opt_hint" style="@style/ShellRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:maxLines="3" android:text="@string/ui_m0084" />
+                </LinearLayout>
+                <ImageView android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:layout_marginStart="8dp" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
+              </LinearLayout>
+            </LinearLayout>
+          </LinearLayout>
+
+          <!-- 独立敏感能力 -->
+          <LinearLayout android:id="@+id/grants_section_sensitive" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/grants_section_gap" android:orientation="vertical">
+            <TextView style="@style/ShellSectionIconLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/grants_section_margin" android:drawableStart="@drawable/ic_section_sensitive" android:text="@string/ui2_sensitive" />
+            <LinearLayout style="@style/ShellGroup" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="@dimen/grants_card_pad_h" android:paddingTop="@dimen/grants_card_pad_v" android:paddingEnd="@dimen/grants_card_pad_h" android:paddingBottom="@dimen/grants_card_pad_v">
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="48dp" android:orientation="horizontal">
+                <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/device_sms" style="@style/ShellSwitch" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:minHeight="48dp" android:paddingStart="0dp" android:text="@string/ui_m0171" />
+                <TextView android:id="@+id/device_sms_status" style="@style/ShellStatusPill" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="@string/device_checking" />
+              </LinearLayout>
+              <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+              <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/device_privileged_execution" style="@style/ShellSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:paddingStart="0dp" />
+              <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+              <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:gravity="center_vertical" android:orientation="horizontal">
+                <TextView android:id="@+id/device_clipboard_title" style="@style/ShellRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
+                <TextView android:id="@+id/device_clipboard_status" style="@style/ShellStatusPill" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" />
+              </LinearLayout>
+              <RadioGroup android:id="@+id/device_clipboard_modes" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:orientation="horizontal" />
+              <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+              <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_cap_location" style="@style/ShellSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:paddingStart="0dp" android:text="@string/ui_m0066" />
+              <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+              <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_cap_sensors" style="@style/ShellSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:paddingStart="0dp" android:text="@string/ui_m0053" />
+            </LinearLayout>
+          </LinearLayout>
+        </LinearLayout>
+
+        <!-- 右栏：双栏时放敏感能力；手机上为空且隐藏 -->
+        <LinearLayout android:id="@+id/grants_col_end" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="@dimen/grants_column_gap" android:layout_weight="1" android:orientation="vertical" android:visibility="gone" />
       </LinearLayout>
     </LinearLayout>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="16dp" android:layout_marginBottom="12dp">
-      <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_adb_enable" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:minHeight="48dp" android:paddingStart="0dp" android:text="@string/ui_m0090" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
-      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_adb_hint" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="8dp" />
-      <TextView android:id="@+id/config_adb_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_m0030" android:layout_marginStart="0dp" android:padding="12dp" android:background="@drawable/bg_selection" android:maxLines="2" android:ellipsize="end" android:minHeight="0dp" />
-      <Button android:id="@+id/config_adb_pair" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:background="@drawable/bg_btn" android:text="@string/ui_m0031" android:textAllCaps="false" android:textColor="@color/primary" android:textSize="@dimen/text_body" android:minHeight="@dimen/btn_height" style="@style/Widget.DSHA.Button" />
-    </LinearLayout>
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/computer_use_title" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="14dp">
-      <TextView android:id="@+id/computer_use_hint" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" />
-      <Button android:id="@+id/computer_use_accessibility" style="@style/Widget.DSHA.Button" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_screen_setup" />
-      <TextView android:id="@+id/config_a11y_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="0dp" android:layout_marginTop="8dp" android:padding="12dp" android:background="@drawable/bg_selection" android:text="@string/device_checking" />
-    </LinearLayout>
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_system_permissions" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="14dp">
-      <LinearLayout android:id="@+id/config_all_files" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:minHeight="56dp" android:padding="12dp" android:layout_marginTop="12dp" android:background="@drawable/bg_polished_action" android:clickable="true" android:focusable="true">
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/device_open_access" android:layout_marginTop="0dp" style="@style/DshaText.Body" android:layout_weight="1" />
-        <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_recovery_right" app:tint="@color/primary" android:importantForAccessibility="no" />
-      </LinearLayout>
-      <TextView android:id="@+id/config_all_files_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/text_muted" android:layout_marginTop="8dp" android:text="@string/device_checking" />
-      <TextView android:id="@+id/config_battery_opt_hint" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_hair" android:text="@string/ui_m0084" />
-      <Button android:id="@+id/config_battery_opt" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:background="@drawable/bg_btn" android:text="@string/ui_m0191" android:textAllCaps="false" android:textColor="@color/primary" android:textSize="@dimen/text_body" android:minHeight="@dimen/btn_height" style="@style/Widget.DSHA.Button" />
-    </LinearLayout>
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_sensitive" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="14dp">
-      <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/device_sms" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/ui_m0171" android:textColor="@color/text" android:textSize="16sp" />
-      <TextView android:id="@+id/device_sms_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginStart="0dp" android:padding="12dp" android:background="@drawable/bg_selection" android:text="@string/device_checking" />
-      <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_cap_location" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0066" android:minHeight="48dp" android:layout_marginTop="8dp" android:paddingStart="0dp" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
-      <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_cap_sensors" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0053" android:minHeight="48dp" android:layout_marginTop="8dp" android:paddingStart="0dp" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
-    </LinearLayout>
-  </LinearLayout>
-</ScrollView>
+  </ScrollView>
+</LinearLayout>

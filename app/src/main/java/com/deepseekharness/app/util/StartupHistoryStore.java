@@ -23,7 +23,11 @@ public final class StartupHistoryStore {
 
   public static final class Entry {
     public final String id, status, stage, log, reason;
-    public final long started, elapsed;
+
+    /** 中文时间线：应用自有的固定前缀不随界面语言变化，仅用于失败分类，不直接展示。 */
+    public final String zhLog;
+
+    public final long started, elapsed, runElapsed, backendReadyMs, browserReadyMs;
     public final boolean safe;
 
     Entry(String id, Properties p, String language) {
@@ -31,9 +35,13 @@ public final class StartupHistoryStore {
       status = p.getProperty("status", "interrupted");
       started = Long.parseLong(p.getProperty("started", "0"));
       elapsed = Long.parseLong(p.getProperty("elapsed", "0"));
+      runElapsed = Long.parseLong(p.getProperty("runElapsed", Long.toString(elapsed)));
+      backendReadyMs = Long.parseLong(p.getProperty("backendReadyMs", "-1"));
+      browserReadyMs = Long.parseLong(p.getProperty("browserReadyMs", "-1"));
       safe = Boolean.parseBoolean(p.getProperty("safe", "false"));
       stage = p.getProperty(language + "Stage", "");
       log = p.getProperty(language + "Log", "");
+      zhLog = p.getProperty("zhLog", "");
       reason = p.getProperty("reason", "");
     }
   }
@@ -56,6 +64,9 @@ public final class StartupHistoryStore {
     p.setProperty("status", status);
     p.setProperty("started", Long.toString(started));
     p.setProperty("elapsed", Long.toString(zh.elapsedMs));
+    p.setProperty("runElapsed", Long.toString(zh.runElapsedMs));
+    p.setProperty("backendReadyMs", Long.toString(zh.backendReadyMs));
+    p.setProperty("browserReadyMs", Long.toString(zh.browserReadyMs));
     p.setProperty("safe", Boolean.toString(zh.safe));
     p.setProperty("reason", SensitiveData.redact(reason));
     p.setProperty("zhStage", zh.stage);

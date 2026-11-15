@@ -90,15 +90,6 @@
     ]
   },
   {
-    "id": "m0009",
-    "zh": "导出插件包",
-    "en": "Export plugins",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
-      "app/src/main/res/layout/fragment_plugins.xml"
-    ]
-  },
-  {
     "id": "m0010",
     "zh": "开始配对",
     "en": "Start pairing",
@@ -289,8 +280,8 @@
   },
   {
     "id": "m0030",
-    "zh": "ADB 已关闭。不用无线调试就保持关闭。",
-    "en": "ADB is off. Leave it off if you do not use wireless debugging.",
+    "zh": "不用无线调试时保持关闭",
+    "en": "Keep off unless you use wireless debugging",
     "files": [
       "app/src/main/res/layout/fragment_device_grants.xml"
     ]
@@ -727,8 +718,8 @@
   },
   {
     "id": "m0084",
-    "zh": "后台断连时，可允许 DSHA 后台运行并减少电池限制。厂商仍可能暂停后台；恢复前先确认无线调试已开启，再点「验证已有连接」。",
-    "en": "If the connection drops in the background, allow DSHA to run in the background and reduce battery restrictions. Your device may still suspend it. Before reconnecting, turn on Wireless debugging, then tap Verify connection.",
+    "zh": "后台断连时保持检查；恢复前先开无线调试",
+    "en": "Keep checking when disconnected in background; turn on wireless debugging before reconnecting",
     "files": [
       "app/src/main/res/layout/fragment_device_grants.xml"
     ]
@@ -888,8 +879,8 @@
   },
   {
     "id": "m0104",
-    "zh": "安全模式：恢复此前启用的第三方插件",
-    "en": "Safe mode: restore previously enabled third-party plugins",
+    "zh": "安全模式：恢复第三方插件",
+    "en": "Safe mode: restore third-party plugins",
     "files": [
       "app/src/main/res/layout/fragment_plugins.xml"
     ]
@@ -1001,8 +992,8 @@
   },
   {
     "id": "m0118",
-    "zh": "强制使用内置 Gecko，适合系统网页白屏或不兼容时；关闭后由 App 自动选择可用内核。保存后重新进入对话生效。",
-    "en": "Force the bundled Gecko browser if the system browser shows a blank page or is incompatible. Otherwise, the app selects a compatible engine automatically. Save and reopen the conversation to apply.",
+    "zh": "内置网页内核，兼容问题时可尝试",
+    "en": "Built-in web engine; try it for compatibility issues",
     "files": [
       "app/src/main/res/layout/fragment_config.xml"
     ]
@@ -1049,8 +1040,8 @@
   },
   {
     "id": "m0124",
-    "zh": "手机已 root 时可直接使用 su，无需 ADB 配对。首次执行请在 root 管理器中授权 DSHA；设备保护规则始终生效。",
-    "en": "On a rooted phone, use su directly without ADB pairing. Authorize DSHA in your root manager on first use. Device protection rules always apply.",
+    "zh": "手机已 root 时可直接使用 su，无需 ADB 配对。首次执行请在 root 管理器中授权 DSHA；命令拦截默认严格档，可在下方更改。",
+    "en": "On a rooted phone, use su directly without ADB pairing. Authorize DSHA in your root manager on first use. Command interception defaults to Strict and can be changed below.",
     "files": [
       "app/src/main/res/layout/fragment_device_grants.xml"
     ]
@@ -1217,8 +1208,8 @@
   },
   {
     "id": "m0145",
-    "zh": "暂无终端\\n点击「新建」打开一个终端",
-    "en": "No terminals\\nTap New to open a terminal",
+    "zh": "暂无终端\n点「新建」打开",
+    "en": "No terminals\\nTap New to open one",
     "files": [
       "app/src/main/res/layout/fragment_pty_terminal.xml"
     ]
@@ -1663,7 +1654,7 @@
     "zh": "返回",
     "en": "Back",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java",
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java",
       "app/src/main/res/layout/activity_adb_pair.xml",
       "app/src/main/res/layout/activity_diagnostics.xml",
       "app/src/main/res/layout/activity_plugin_install.xml",
@@ -2002,8 +1993,8 @@
   },
   {
     "id": "m0242",
-    "zh": " · 已兼容切换 proot",
-    "en": " · Switched to proot for compatibility",
+    "zh": " · 已切换到兼容模式",
+    "en": " · Switched to compatibility mode",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
     ]
@@ -2293,16 +2284,16 @@
   },
   {
     "id": "m0278",
-    "zh": "Web 尚未就绪，请返回启动页查看服务状态",
-    "en": "The Web service is not ready. Return to Start to check its status.",
+    "zh": "Web 未就绪，请回启动页",
+    "en": "Web not ready; return to Start",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/PreviewAuth.java"
     ]
   },
   {
     "id": "m0279",
-    "zh": "Web 状态已变化，请等待就绪后重新进入",
-    "en": "The Web service changed. Wait until it is ready, then open it again.",
+    "zh": "状态已变化，请稍后重试",
+    "en": "State changed; try again later",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
     ]
@@ -2582,8 +2573,8 @@
   },
   {
     "id": "m0314",
-    "zh": "任务未完成。请按上方原因处理后重试；本页不会自动覆盖环境。",
-    "en": "The task is incomplete. Address the reason above and retry. This page does not overwrite the environment automatically.",
+    "zh": "任务未完成，请处理后重试",
+    "en": "Task not finished; resolve it and retry",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
     ]
@@ -2719,8 +2710,8 @@
   },
   {
     "id": "m0331",
-    "zh": "停止当前启动，只加载官方基础界面。原插件开关、会话、模型和配置保留；普通重启后回到原配置。安全界面不加载移动插件等扩展。",
-    "en": "Stop the current startup and load only the official basic interface. Preserve plugin switches, conversations, models and settings. A normal restart restores your usual configuration. Safe mode does not load extensions such as the mobile plugin.",
+    "zh": "安全模式：仅加载官方基础界面；插件、会话与配置保留。",
+    "en": "Safe mode: only the official base UI loads; plugins, conversations and configuration are kept",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
     ]
@@ -2799,8 +2790,8 @@
   },
   {
     "id": "m0341",
-    "zh": "先点「启动」，等鉴权链接就绪后再进入",
-    "en": "Tap Start and wait for the authentication link before opening the conversation.",
+    "zh": "请先启动",
+    "en": "Start it first",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
     ]
@@ -2822,7 +2813,7 @@
       "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java",
       "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java",
       "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -2979,7 +2970,8 @@
       "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java",
       "app/src/main/java/com/deepseekharness/app/ui/WebDownloads.java",
       "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java",
-      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java",
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
     ]
   },
   {
@@ -3049,8 +3041,8 @@
   },
   {
     "id": "m0370",
-    "zh": "命令未发送：请检查长度（最多 16K 字符）及空字符，输入已保留",
-    "en": "Command not sent. Check the length (up to 16K characters) and remove null characters. Your input is retained.",
+    "zh": "未发送：命令过长或含空字符",
+    "en": "Not sent: command too long or contains null characters",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/TerminalFragment.java"
     ]
@@ -3375,8 +3367,8 @@
   },
   {
     "id": "m0411",
-    "zh": "尚未配对：点下方「ADB 无线配对」，配对后还会验证连接。",
-    "en": "Not paired. Tap Wireless ADB pairing below; the connection will also be verified after pairing.",
+    "zh": "尚未配对",
+    "en": "Not paired yet",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
     ]
@@ -3415,16 +3407,16 @@
   },
   {
     "id": "m0416",
-    "zh": "局域网权限已允许，请输入本次配对码后开始配对",
-    "en": "LAN permission granted. Enter the current code and start pairing.",
+    "zh": "权限已允许，请输入配对码",
+    "en": "Permission granted; enter the pairing code",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
     ]
   },
   {
     "id": "m0417",
-    "zh": "局域网权限未允许，请先在 DSHA 权限设置中允许",
-    "en": "LAN permission denied. Allow it in DSHA's system app permissions first.",
+    "zh": "局域网权限未允许，请先授权",
+    "en": "LAN permission not granted; allow it first",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
     ]
@@ -3546,8 +3538,8 @@
   },
   {
     "id": "m0432",
-    "zh": "已开始监听，两分钟内有效。请打开系统的「使用配对码配对设备」弹窗。",
-    "en": "Listening for two minutes. Open the system Pair device with pairing code dialog.",
+    "zh": "已开始监听；请打开系统配对弹窗",
+    "en": "Listening; open the system pairing dialog",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
     ]
@@ -3578,8 +3570,8 @@
   },
   {
     "id": "m0436",
-    "zh": "已有数据任务进行中，请等待或处理恢复预览。",
-    "en": "A data task is running. Wait or review the restore preview.",
+    "zh": "已有任务进行中，请稍后重试",
+    "en": "A task is running; try again later",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
     ]
@@ -3594,8 +3586,8 @@
   },
   {
     "id": "m0438",
-    "zh": "已有环境任务或未完成维护，请稍后重试",
-    "en": "An environment task or incomplete maintenance is pending. Try again later.",
+    "zh": "稍后重试",
+    "en": "Retry later",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
     ]
@@ -4001,8 +3993,8 @@
   },
   {
     "id": "m0488",
-    "zh": "支持仓库、分支/子目录、Release 下载和压缩包直链",
-    "en": "Supports repositories, branches/subdirectories, release downloads and direct archive URLs",
+    "zh": "支持仓库、分支与压缩包",
+    "en": "Supports repositories, branches and archives",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
     ]
@@ -4050,8 +4042,8 @@
   },
   {
     "id": "m0494",
-    "zh": "文件管理器返回的地址无法读取，请改用系统文件选择器。",
-    "en": "The file manager returned an unreadable address. Use the system file picker.",
+    "zh": "地址无法读取，请改选文件",
+    "en": "Cannot read the address; choose the file again",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
     ]
@@ -4116,8 +4108,8 @@
   },
   {
     "id": "m0502",
-    "zh": "无法开始安装任务，请稍后重试或先完成正在进行的环境任务",
-    "en": "Could not start installation. Try later or complete the current environment task first.",
+    "zh": "无法开始安装，请稍后重试",
+    "en": "Cannot start installation; try again later",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/InstallFragment.java"
     ]
@@ -4156,16 +4148,16 @@
   },
   {
     "id": "m0507",
-    "zh": "无法打开保存位置，请使用复制报告或检查系统文件管理器",
-    "en": "Could not open the save location. Copy the report or check the system file manager.",
+    "zh": "无法打开保存位置，请复制报告",
+    "en": "Cannot open the save location; copy the report instead",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java"
     ]
   },
   {
     "id": "m0508",
-    "zh": "无法打开文件管理器，请尝试下载到默认目录",
-    "en": "Could not open the file manager. Try downloading to the default directory.",
+    "zh": "无法打开文件管理器，请下载到默认目录",
+    "en": "Cannot open the file manager; download to the default folder",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java"
     ]
@@ -4197,8 +4189,8 @@
   },
   {
     "id": "m0512",
-    "zh": "无法打开日志，可在文件管理器的 Download/DSHA 中查看，或重新下载",
-    "en": "Could not open the log. Find it in Download/DSHA using a file manager, or download it again.",
+    "zh": "无法打开日志，请用文件管理器查看",
+    "en": "Cannot open the log; view it in a file manager",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/DiagnosticActivity.java"
     ]
@@ -4261,8 +4253,8 @@
   },
   {
     "id": "m0520",
-    "zh": "无线 ADB 需要局域网权限，以发现配对端口并连接设备",
-    "en": "Wireless ADB needs LAN permission to discover pairing ports and connect to devices.",
+    "zh": "无线 ADB 需要局域网权限",
+    "en": "Wireless ADB requires LAN permission",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
     ]
@@ -4438,24 +4430,24 @@
   },
   {
     "id": "m0542",
-    "zh": "未允许局域网访问，请在系统 DSHA 权限设置中允许后重试",
-    "en": "LAN access is not allowed. Enable it in DSHA's system app permissions and retry.",
+    "zh": "局域网未授权，请先允许后重试",
+    "en": "LAN not authorized; allow it and retry",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
     ]
   },
   {
     "id": "m0543",
-    "zh": "未允许局域网访问；本机对话仍可使用，LAN / 无线 ADB 需在系统权限设置中开启",
-    "en": "LAN access is not allowed. Local conversations still work; enable system permission for LAN / wireless ADB.",
+    "zh": "局域网未授权，本机对话不受影响",
+    "en": "LAN not authorized; local chats are unaffected",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/MainActivity.java"
     ]
   },
   {
     "id": "m0544",
-    "zh": "未取得悬浮窗权限，请到系统设置 → 应用 → DSHA → 悬浮窗中允许",
-    "en": "Overlay permission is missing. Allow it in Settings → Apps → DSHA → Display over other apps.",
+    "zh": "请授予悬浮窗权限",
+    "en": "Grant overlay permission",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/ConfigFragment.java"
     ]
@@ -4470,7 +4462,7 @@
   },
   {
     "id": "m0546",
-    "zh": "未开启：仅能访问 App 私有目录；去系统设置开启后可访问全部文件",
+    "zh": "未开启：仅能访问应用私有目录；去系统设置开启后可访问全部文件",
     "en": "Disabled: only app-private storage is accessible. Enable all files access in system settings for other files.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
@@ -4478,16 +4470,16 @@
   },
   {
     "id": "m0547",
-    "zh": "未找到 su；请确认手机已 root，且 root 管理器允许 DSHA 使用",
-    "en": "su was not found. Check that the phone is rooted and your root manager allows DSHA.",
+    "zh": "未找到 su，请检查 root 授权",
+    "en": "su not found; check root authorization",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
     ]
   },
   {
     "id": "m0548",
-    "zh": "未找到可用的文件选择器，请启用系统「文件」应用后重试。",
-    "en": "No file picker is available. Enable the system Files app and try again.",
+    "zh": "请启用系统文件应用后重试",
+    "en": "Enable the system Files app and retry",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
     ]
@@ -4518,8 +4510,8 @@
   },
   {
     "id": "m0552",
-    "zh": "未获得文件读取权限，请改用系统文件选择器导入。",
-    "en": "File read permission was denied. Import using the system file picker.",
+    "zh": "无文件权限，请改用系统选择器",
+    "en": "No file permission; use the system picker",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/PluginFragment.java"
     ]
@@ -4646,8 +4638,8 @@
   },
   {
     "id": "m0568",
-    "zh": "检测到插件或配置异常，可查看恢复选项。",
-    "en": "A plugin or configuration issue was detected. See recovery options.",
+    "zh": "配置异常",
+    "en": "Config error",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
     ]
@@ -4714,8 +4706,8 @@
   },
   {
     "id": "m0576",
-    "zh": "正在完成一次配对握手并验证连接，最多约 2 分钟；随后检查自动恢复授权…",
-    "en": "Pairing and verifying the connection (up to about 2 minutes), then checking automatic reconnection authorization…",
+    "zh": "正在配对并验证，最多约 2 分钟",
+    "en": "Pairing and verifying; up to about 2 minutes",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
     ]
@@ -4779,8 +4771,8 @@
   },
   {
     "id": "m0584",
-    "zh": "正在重新发现本机配对端口（最多 6 秒）…",
-    "en": "Rediscovering this device's pairing port (up to 6 seconds)…",
+    "zh": "正在发现配对端口…",
+    "en": "Finding pairing port…",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
     ]
@@ -4819,8 +4811,8 @@
   },
   {
     "id": "m0589",
-    "zh": "正在验证已配对的设备连接，最多约 1 分钟…",
-    "en": "Verifying the paired device connection (up to about 1 minute)…",
+    "zh": "正在验证连接…",
+    "en": "Verifying connection…",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
     ]
@@ -4899,8 +4891,8 @@
   },
   {
     "id": "m0599",
-    "zh": "熄屏空闲 1 分钟后减少保活；有任务时继续运行。",
-    "en": "Reduce keep-alive activity after 1 minute idle with the screen off. Continue running while tasks are active.",
+    "zh": "熄屏 1 分钟后减少保活",
+    "en": "Reduce keep-alive 1 minute after screen off",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
     ]
@@ -4938,14 +4930,6 @@
     ]
   },
   {
-    "id": "m0604",
-    "zh": "环境未就绪 —— 先到「安装」页装完再回来",
-    "en": "Environment not ready. Complete installation on the Install page first.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/PtyTerminalFragment.java"
-    ]
-  },
-  {
     "id": "m0605",
     "zh": "环境未就绪，请先到「安装」页完成安装",
     "en": "Environment not ready. Complete installation on the Install page first.",
@@ -4979,16 +4963,16 @@
   },
   {
     "id": "m0609",
-    "zh": "环境需要恢复",
-    "en": "Environment recovery required",
+    "zh": "需要恢复",
+    "en": "Recovery needed",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
     ]
   },
   {
     "id": "m0610",
-    "zh": "相同基础环境只更新 dsh 与内置插件，个人数据保持原位；基础环境变更时先保护数据再重建。验证失败可恢复原环境。",
-    "en": "When the base environment is unchanged, update only dsh and bundled plugins while keeping personal data in place. If the base changes, protect data before rebuilding. The original environment can be restored if validation fails.",
+    "zh": "更新不移动个人数据；失败可恢复",
+    "en": "Updates leave personal data in place; failures can be recovered",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
     ]
@@ -5126,8 +5110,8 @@
   },
   {
     "id": "m0627",
-    "zh": "系统 WebView 发生异常，点击重试可重新打开；持续出现时请更新内核。",
-    "en": "System WebView encountered an error. Tap Retry to reopen it. Update the browser engine if this continues.",
+    "zh": "WebView 异常，请重试",
+    "en": "WebView error; try again",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
     ]
@@ -5158,8 +5142,8 @@
   },
   {
     "id": "m0631",
-    "zh": "系统可能因内存不足回收了网页，点击重试可重新打开。",
-    "en": "Android may have closed the page due to low memory. Tap Retry to reopen it.",
+    "zh": "网页被系统回收，请重试",
+    "en": "The system reclaimed the page; try again",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
     ]
@@ -5351,8 +5335,8 @@
   },
   {
     "id": "m0655",
-    "zh": "自动读码已到期；请重新点自动读取，或手动输入本次配对码。",
-    "en": "Auto-read expired. Tap Auto-read again, or enter the current pairing code manually.",
+    "zh": "读取已到期，请重试或手动输入",
+    "en": "Read expired; retry or enter manually",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
     ]
@@ -5439,8 +5423,8 @@
   },
   {
     "id": "m0666",
-    "zh": "请先点「恢复中断维护」，原环境尚未确认。",
-    "en": "Tap Resume interrupted maintenance first. The original environment has not been confirmed.",
+    "zh": "请先恢复中断维护",
+    "en": "Recover interrupted maintenance first",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
     ]
@@ -5479,8 +5463,8 @@
   },
   {
     "id": "m0671",
-    "zh": "请手动进入开发者选项 → 无线调试 → 使用配对码配对设备",
-    "en": "Open Developer options → Wireless debugging → Pair device with pairing code manually.",
+    "zh": "手动进入无线调试并打开配对弹窗",
+    "en": "Open Wireless debugging and the pairing dialog manually",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
     ]
@@ -5737,8 +5721,8 @@
   },
   {
     "id": "m0703",
-    "zh": "配对任务被系统中断，结果尚不确定。请先验证已有连接；若仍未配对，再获取新配对码。",
-    "en": "Android interrupted pairing; the result is uncertain. Verify the existing connection first. If it is still unpaired, get a fresh code.",
+    "zh": "配对被中断，请先验证连接",
+    "en": "Pairing interrupted; verify the connection first",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
     ]
@@ -11059,14 +11043,6 @@
     "en": "Shizuku is not installed. Install and start it, then authorize it here.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ShizukuShell.java"
-    ]
-  },
-  {
-    "id": "m1366",
-    "zh": "尚未检查",
-    "en": "Not checked",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/util/InstallTask.java"
     ]
   },
   {
@@ -16694,6 +16670,30 @@
     ]
   },
   {
+    "id": "m9500",
+    "zh": "离开后从最近任务移除；当前卡片不显示页面内容",
+    "en": "Removed from Recents after you leave; the current card hides page content.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "m9501",
+    "zh": "严格模式（实验）",
+    "en": "Strict mode (experimental)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "m9502",
+    "zh": "离开应用即结束界面，卡片不再保留；重新打开会重建页面",
+    "en": "Leaving the app ends the UI so the card is no longer kept; reopening rebuilds the page.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
     "id": "startup_2068",
     "zh": "检查启动配置和插件清单",
     "en": "Checking startup configuration and plugin list",
@@ -16863,8 +16863,8 @@
   },
   {
     "id": "about_tagline",
-    "zh": "DeepSeek Harness 安卓启动器",
-    "en": "DeepSeek Harness for Android",
+    "zh": "DSHA 安卓启动器",
+    "en": "DSHA Android launcher",
     "files": [
       "app/src/main/res/layout/fragment_device_grants.xml"
     ]
@@ -17168,14 +17168,6 @@
     "id": "device_permissions",
     "zh": "权限访问",
     "en": "Permission access",
-    "files": [
-      "app/src/main/res/layout/fragment_device_grants.xml"
-    ]
-  },
-  {
-    "id": "device_channels",
-    "zh": "设备命令通道",
-    "en": "Device command channels",
     "files": [
       "app/src/main/res/layout/fragment_device_grants.xml"
     ]
@@ -17760,8 +17752,8 @@
   },
   {
     "id": "stability_26ae72bd2ff7",
-    "zh": "项目文件需单独选择目录；不会扫描整部手机。",
-    "en": "Choose project folders explicitly; the app does not scan the whole device.",
+    "zh": "项目文件需单独选目录",
+    "en": "Project files need a separate folder",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
     ]
@@ -17864,8 +17856,8 @@
   },
   {
     "id": "stability_177c08bc9baa",
-    "zh": "将先停止写任务，再根据宿主日志恢复一致状态。无需旧 Python 或备份密码，原件将保留。",
-    "en": "Stop writers first, then restore consistency from the host journal. The old Python and backup password are not required. Originals are retained.",
+    "zh": "先停止写任务，再从原数据恢复一致状态。",
+    "en": "Stop write tasks first, then restore consistency from the original data",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
     ]
@@ -18160,8 +18152,8 @@
   },
   {
     "id": "stability_d842548815d3",
-    "zh": "恢复原生 API Key（默认保留本机凭据）",
-    "en": "Restore native API key (keep local credentials by default)",
+    "zh": "恢复原生 API Key",
+    "en": "Restore native API key",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/NativeDataActivity.java"
     ]
@@ -23585,24 +23577,8 @@
   },
   {
     "id": "ui2_start",
-    "zh": "▶  启动 DSHA",
-    "en": "▶  Start DSHA",
-    "files": [
-      "app/src/main/res/values/ui_iteration.xml"
-    ]
-  },
-  {
-    "id": "ui2_restart",
-    "zh": "↻  重启",
-    "en": "↻  Restart",
-    "files": [
-      "app/src/main/res/values/ui_iteration.xml"
-    ]
-  },
-  {
-    "id": "ui2_stop",
-    "zh": "□  停止",
-    "en": "□  Stop",
+    "zh": "启动 DSHA",
+    "en": "Start DSHA",
     "files": [
       "app/src/main/res/values/ui_iteration.xml"
     ]
@@ -23674,7 +23650,7 @@
   {
     "id": "ui2_download",
     "zh": "下载",
-    "en": "Save",
+    "en": "Download",
     "files": [
       "app/src/main/res/values/ui_iteration.xml"
     ]
@@ -24379,8 +24355,8 @@
   },
   {
     "id": "ui2_port_hint",
-    "zh": "端口占用时保留首选设置，自动使用可用端口。",
-    "en": "If occupied, keep the preferred port and use an available one.",
+    "zh": "端口占用时自动换用可用端口",
+    "en": "Switch to an available port automatically if occupied",
     "files": [
       "app/src/main/res/values/ui_iteration.xml"
     ]
@@ -24531,8 +24507,8 @@
   },
   {
     "id": "ui2_adb_intro",
-    "zh": "在系统无线调试中取得配对码，再连接当前设备。",
-    "en": "Get the pairing code from Wireless debugging to connect this device.",
+    "zh": "从系统无线调试获取配对码",
+    "en": "Get the pairing code from Wireless debugging",
     "files": [
       "app/src/main/res/values/ui_iteration.xml"
     ]
@@ -24912,7 +24888,8 @@
     "en": "%s seconds",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/OverlayFragment.java",
-      "app/src/main/java/com/deepseekharness/app/util/Fmt.java"
+      "app/src/main/java/com/deepseekharness/app/util/Fmt.java",
+      "app/src/main/java/com/deepseekharness/app/util/BackgroundTaskModel.java"
     ],
     "uiFormat": true
   },
@@ -25376,6 +25353,15 @@
     "uiFormat": true
   },
   {
+    "id": "build337_ui_7663908fc896",
+    "zh": "%s · 本阶段 %s 秒 · 总计 %s 秒",
+    "en": "%s · Stage %s seconds · Total %s seconds",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ],
+    "uiFormat": true
+  },
+  {
     "id": "build156_ui_9e7973ee5cfe",
     "zh": "%s\n兼容内核 Gecko 143",
     "en": "%s\nCompatibility engine: Gecko 143",
@@ -25530,8 +25516,8 @@
   },
   {
     "id": "build156_ui_d045a6d58749",
-    "zh": "尚未确认 Web 退出；进程身份无法核验，保留运行屏障。请查看诊断后重试停止。",
-    "en": "Web exit is unconfirmed and process identity cannot be verified. The execution barrier remains. Inspect diagnostics and retry stopping.",
+    "zh": "停止未完成",
+    "en": "Stop incomplete",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
     ]
@@ -25546,8 +25532,8 @@
   },
   {
     "id": "build156_ui_f150d6e93e4e",
-    "zh": "普通停止尚未确认 Web 退出。本次已核验进程属于 DSHA；强制结束可能中断正在写入的对话或文件。\n\n确认后只结束这次已核验的 Web 进程；身份或状态变化会拒绝执行。取消会保留现场与运行屏障。",
-    "en": "Normal stopping has not confirmed Web exit. This process was verified as belonging to DSHA. Force stopping may interrupt conversation or file writes.\n\nConfirmation applies only to this verified Web process. Identity or state changes reject the operation. Cancel keeps the process state and execution barrier.",
+    "zh": "普通停止未确认退出。强制结束可能中断写入。\n\n确认后只结束已核验进程；取消会保留现场。",
+    "en": "Normal stop did not confirm exit. Force stop may interrupt writes.\\n\\nConfirming ends only the verified process; cancelling keeps the current state.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
     ]
@@ -27093,7 +27079,8 @@
     "en": "%s min %s s",
     "uiFormat": true,
     "files": [
-      "app/src/main/java/com/deepseekharness/app/util/Fmt.java"
+      "app/src/main/java/com/deepseekharness/app/util/Fmt.java",
+      "app/src/main/java/com/deepseekharness/app/util/BackgroundTaskModel.java"
     ],
     "id": "build156_1a44477ef110"
   },
@@ -27102,7 +27089,8 @@
     "en": "%s h %s min",
     "uiFormat": true,
     "files": [
-      "app/src/main/java/com/deepseekharness/app/util/Fmt.java"
+      "app/src/main/java/com/deepseekharness/app/util/Fmt.java",
+      "app/src/main/java/com/deepseekharness/app/util/BackgroundTaskModel.java"
     ],
     "id": "build156_39052ebfe40c"
   },
@@ -28096,8 +28084,8 @@
     "id": "build156_1a8c4267d698"
   },
   {
-    "zh": "请更新或启用 Android System WebView / Chrome，也可以使用系统浏览器进入对话。",
-    "en": "Update or enable Android System WebView / Chrome. You can also open the conversation in a system browser.",
+    "zh": "请更新系统 WebView 后重试",
+    "en": "Update the system WebView and retry",
     "uiFormat": false,
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/WebPreviewActivity.java"
@@ -28483,8 +28471,8 @@
     "id": "build156_d343d0af604d"
   },
   {
-    "zh": "未完成的操作：%s\n最后记录阶段：%s\n\n%s\n\n原件状态：尚未确认恢复完成。请查看记录后使用“恢复中断维护”；也可进入受限主界面导出可读副本。",
-    "en": "Incomplete operation: %s\nLast recorded stage: %s\n\n%s\n\nOriginal state: recovery has not been confirmed. Inspect the record and use Recover interrupted maintenance, or enter the limited interface to export readable copies.",
+    "zh": "未完成的操作：%s\n最后记录阶段：%s\n\n%s\n\n原件状态：尚未确认恢复完成。请查看记录后使用「恢复中断维护」；也可先点「导出可读副本」保存数据。",
+    "en": "Incomplete operation: %s\nLast recorded stage: %s\n\n%s\n\nOriginal state: recovery has not been confirmed. Inspect the record and use Recover interrupted maintenance, or first save your data with Export readable copy.",
     "uiFormat": true,
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
@@ -28738,7 +28726,7 @@
     "zh": "技能（Skills）",
     "en": "Skills",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java",
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java",
       "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
     ]
   },
@@ -28752,8 +28740,8 @@
   },
   {
     "id": "build158_entry_storage_guide_hint",
-    "zh": "数据位置 · 导出备份 · 恢复与清理",
-    "en": "Data locations · Export backups · Restore and clean up",
+    "zh": "数据位置与备份",
+    "en": "Data location and backup",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
     ]
@@ -28796,7 +28784,8 @@
     "zh": "刷新",
     "en": "Refresh",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java",
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
     ]
   },
   {
@@ -28851,14 +28840,6 @@
     "id": "build158_16",
     "zh": "这个目录没有可读取的文件。",
     "en": "This folder has no readable files.",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
-    ]
-  },
-  {
-    "id": "build158_17",
-    "zh": "已取消文件操作。",
-    "en": "File operation cancelled.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFilesActivity.java"
     ]
@@ -29041,7 +29022,7 @@
   },
   {
     "id": "issue88_storage_export_location",
-    "zh": "新导出文件为 DSHA-data-v5-….tar.gz，无需备份密码。请用系统保存窗口存到 App 外的文档、下载或云盘，并另留一份。导出完成后可先做恢复预检，确认范围和文件可读；预检不会立即覆盖当前数据。",
+    "zh": "新导出文件为 DSHA-data-v5-….tar.gz，无需备份密码。请用系统保存窗口存到应用外的文档、下载或云盘，并另留一份。导出完成后可先做恢复预检，确认范围和文件可读；预检不会立即覆盖当前数据。",
     "en": "New exports are DSHA-data-v5-….tar.gz files and need no backup password. Use the system save dialog to store the file outside the app, in Documents, Downloads or cloud storage, and keep another copy. Then inspect it before restoring to check its scope and readability. Inspection does not immediately overwrite current data.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
@@ -29049,7 +29030,7 @@
   },
   {
     "id": "issue88_storage_local_copies",
-    "zh": "本机自动备份和重建保护副本仍在 App 内，不保证清除全部存储或卸载后可用。历史加密备份仍需保存原密码。",
+    "zh": "本机自动备份和重建保护副本仍在应用内，不保证清除全部存储或卸载后可用。历史加密备份仍需保存原密码。",
     "en": "Local automatic backups and rebuild protection copies stay inside the app and are not guaranteed to survive clearing app storage or uninstalling. Keep the original passwords for older encrypted backups.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
@@ -29097,7 +29078,7 @@
   },
   {
     "id": "issue88_storage_rebuild_failure",
-    "zh": "保护失败时不切换环境，后续失败会尝试回切原环境。建议先把重要数据导出到 App 外；只想腾空间时先用存储页的清理选项。",
+    "zh": "保护失败时不切换环境，后续失败会尝试回切原环境。建议先把重要数据导出到应用外；只想腾空间时先用存储页的清理选项。",
     "en": "If data protection fails, the environment is not switched. Later failures attempt to return to the original environment. Export important data outside the app first. To free space, start with cleanup on the storage page.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
@@ -29169,7 +29150,7 @@
   },
   {
     "id": "issue88_storage_android_erase_scope",
-    "zh": "会删除 App 私有目录中的对话、附件、插件、配置、API Key、本机备份和 Ubuntu 环境。下次打开需要重新解压和设置。卸载应用也会删除这些私有数据。",
+    "zh": "会删除应用私有目录中的对话、附件、插件、配置、API Key、本机备份和 Ubuntu 环境。下次打开需要重新解压和设置。卸载应用也会删除这些私有数据。",
     "en": "This deletes conversations, attachments, plugins, settings, API keys, local backups and Ubuntu from the app's private directory. The next launch needs fresh extraction and setup. Uninstalling also deletes these private data.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
@@ -29177,7 +29158,7 @@
   },
   {
     "id": "issue88_storage_android_erase_recovery",
-    "zh": "本机副本会随私有数据一起删除，不能依赖它救回数据。只有事先存到 App 外且可读的导出文件，才可在重新初始化后手动导入其中的数据范围。未导出的私有数据，App 无法恢复。",
+    "zh": "本机副本会随私有数据一起删除，不能依赖它救回数据。只有事先存到应用外且可读的导出文件，才可在重新初始化后手动导入其中的数据范围。未导出的私有数据，应用无法恢复。",
     "en": "Local copies are deleted along with private data and cannot be relied on for recovery. Only a readable export saved outside the app beforehand can be imported manually after fresh setup, within its exported scope. The app cannot recover private data that was never exported.",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/StorageHelpActivity.java"
@@ -29260,7 +29241,7 @@
     "zh": "从文件导入 SKILL.md，让 DSH 按需读取可复用的任务说明。无需 Root。",
     "en": "Import SKILL.md files so DSH can load reusable task instructions as needed. Root is not required.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29268,15 +29249,15 @@
     "zh": "这里管理用户全局技能。导入仅复制 SKILL.md，正文中的命令不会自动执行；引用的脚本和资料需用文件入口另行放入同一技能目录。",
     "en": "This page manages global user skills. Import copies only SKILL.md and does not run commands in its body. Add referenced scripts and resources to the same skill folder through Files.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
     "id": "b158-skills-004",
-    "zh": "导入 SKILL.md",
-    "en": "Import SKILL.md",
+    "zh": "导入技能",
+    "en": "Import skill",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29284,7 +29265,7 @@
     "zh": "刷新技能",
     "en": "Refresh skills",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29292,7 +29273,7 @@
     "zh": "取消读取",
     "en": "Cancel reading",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29300,7 +29281,7 @@
     "zh": "尚无可读取的用户全局技能。",
     "en": "No readable global user skills yet.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29308,7 +29289,7 @@
     "zh": "可读取的用户全局技能：%s",
     "en": "Readable global user skills: %s",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29316,7 +29297,7 @@
     "zh": "另有 %s 个技能文件无法通过导入格式检查，原件已保留。",
     "en": "%s additional skill files did not pass the import format checks. Their originals were retained.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29324,7 +29305,7 @@
     "zh": "查看 SKILL.md",
     "en": "View SKILL.md",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29332,7 +29313,7 @@
     "zh": "模型可按需调用 skill 工具读取。",
     "en": "The model can load this with the skill tool as needed.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29340,7 +29321,7 @@
     "zh": "此技能禁止模型自主调用。",
     "en": "This skill disables autonomous model invocation.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29348,7 +29329,7 @@
     "zh": "在聊天中输入 /%s 可明确调用。",
     "en": "Enter /%s in chat to invoke it explicitly.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29356,7 +29337,7 @@
     "zh": "复制调用命令",
     "en": "Copy invocation",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29364,7 +29345,7 @@
     "zh": "此技能禁止用户直接调用。",
     "en": "This skill disables direct user invocation.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29372,7 +29353,7 @@
     "zh": "选择技能文件后可查看内容并复制调用命令。",
     "en": "Select a skill to view its contents and copy its invocation.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29380,7 +29361,7 @@
     "zh": "正在读取用户技能…",
     "en": "Reading user skills…",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29388,7 +29369,7 @@
     "zh": "正在读取并检查 SKILL.md…",
     "en": "Reading and checking SKILL.md…",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29396,7 +29377,7 @@
     "zh": "已导入技能：%s\n%s\nDSH 会在后续请求中发现此技能；若目录尚未刷新，可重启 Web。",
     "en": "Imported skill: %s\n%s\nDSH discovers this skill on subsequent requests. Restart Web if its catalog has not refreshed.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29404,7 +29385,7 @@
     "zh": "已取消读取，未导入技能。",
     "en": "Reading cancelled. No skill was imported.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29412,7 +29393,7 @@
     "zh": "请选择名为 SKILL.md 的文件，不能导入目录或压缩包。",
     "en": "Choose a file named SKILL.md. Folders and archives cannot be imported.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29420,7 +29401,7 @@
     "zh": "SKILL.md 必须为非空文件，且不超过 1 MiB。",
     "en": "SKILL.md must be non-empty and at most 1 MiB.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29428,7 +29409,7 @@
     "zh": "SKILL.md 必须是有效 UTF-8 文本。",
     "en": "SKILL.md must contain valid UTF-8 text.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29436,7 +29417,7 @@
     "zh": "技能格式无效。文件需以 --- YAML 开头，包含小写短横线 name 和非空 description；调用开关使用 disable-model-invocation / user-invocable。未导入文件。",
     "en": "Invalid skill format. Start with --- YAML frontmatter, include a lowercase kebab-case name and non-empty description, and use disable-model-invocation / user-invocable for invocation controls. No file was imported.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29444,7 +29425,7 @@
     "zh": "已有同名技能或目录，未覆盖原件。请先在源文件中使用不同的 name。",
     "en": "A skill or folder with this name already exists. The original was retained. Use a different name in the source file first.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29452,7 +29433,7 @@
     "zh": "有安装、备份、恢复或维护任务正在进行，请完成后重试。",
     "en": "An install, backup, restore or maintenance operation is active. Retry after it finishes.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29460,7 +29441,7 @@
     "zh": "当前 DSH 用户目录不可安全读取，请先完成环境安装或修复。未创建替代目录。",
     "en": "The current DSH user folder cannot be read safely. Complete environment setup or repair first. No replacement folder was created.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29468,7 +29449,7 @@
     "zh": "技能目录不是可安全读取的普通目录，或条目超过 512 项。原件已保留。",
     "en": "The skills folder is not a safely readable regular directory, or it has more than 512 entries. Originals were retained.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29476,7 +29457,7 @@
     "zh": "技能操作未完成。请检查文件授权、可用空间和目录状态；已有技能未覆盖。",
     "en": "The skill operation did not finish. Check file access, free space and the folder state. Existing skills were retained.",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29484,7 +29465,7 @@
     "zh": "技能读取",
     "en": "Read skills",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -29492,7 +29473,7 @@
     "zh": "技能导入",
     "en": "Import skill",
     "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/SkillsActivity.java"
+      "app/src/main/java/com/deepseekharness/app/ui/SkillsFragment.java"
     ]
   },
   {
@@ -30034,14 +30015,6 @@
     ]
   },
   {
-    "id": "build162_usage_3692",
-    "zh": "已关闭 · 查询会被阻止",
-    "en": "Off · queries are blocked",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
     "id": "build162_usage_3693",
     "zh": "需要系统定位权限",
     "en": "Location permission required",
@@ -30075,24 +30048,16 @@
   },
   {
     "id": "build162_usage_3697",
-    "zh": "请在系统设置中打开 DSHA 应用权限",
-    "en": "Open DSHA permissions in system settings",
-    "files": [
-      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
-    ]
-  },
-  {
-    "id": "build162_usage_3698",
-    "zh": "已连接，可以在对话中使用 Computer Use。",
-    "en": "Connected. Computer Use is available in conversations.",
+    "zh": "去设置",
+    "en": "Go to settings",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
     ]
   },
   {
     "id": "build162_usage_3699",
-    "zh": "开关已开启，正在等待系统连接；可重新开关服务。",
-    "en": "Enabled, waiting for the system to connect. Try toggling the service.",
+    "zh": "等待连接",
+    "en": "Waiting for connection",
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
     ]
@@ -30134,10 +30099,706 @@
   },
   {
     "id": "m9011",
-    "zh": "ADB_OFFLINE_READY: 离线依赖已准备好，未验证连接。请开启无线调试后再次验证。",
-    "en": "ADB_OFFLINE_READY: Offline dependencies are ready; the connection has not been verified. Enable wireless debugging, then verify again.",
+    "zh": "离线依赖已就绪，未验证连接",
+    "en": "Offline dependencies ready; connection not verified",
     "source": [
       "app/src/main/java/com/deepseekharness/app/ui/AdbPairActivity.java"
+    ]
+  },
+  {
+    "id": "m9013",
+    "zh": "严格（默认）",
+    "en": "Strict (default)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/RootShell.java"
+    ]
+  },
+  {
+    "id": "m9014",
+    "zh": "放宽（保留不可逆操作拦截）",
+    "en": "Relaxed (irreversible operations still blocked)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/RootShell.java"
+    ]
+  },
+  {
+    "id": "m9015",
+    "zh": "完全放宽（不按命令内容拦截）",
+    "en": "Full (no command-content checks)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/RootShell.java"
+    ]
+  },
+  {
+    "id": "m9016",
+    "zh": "命令拦截档位：%s",
+    "en": "Command interception: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/RootShell.java"
+    ]
+  },
+  {
+    "id": "m9017",
+    "zh": "\n== root 命令拦截档位 ==\n设置 → 设备能力授权 → Root 命令拦截：严格（默认，仅白名单）、放宽（任意命令，但拦截格式化/刷机/重启/清数据等不可逆操作）、完全放宽（不按命令内容拦截）。档位只对 root 通道生效；Shizuku/ADB 通用执行器仍按严格档，短信读取三档都需要原生授权。\n",
+    "en": "\n== Root command interception modes ==\nSettings → Device permissions → Root command interception: Strict (default, allow-list only), Relaxed (any command, but irreversible operations such as formatting, flashing, reboot or clearing app data stay blocked), Full (no command-content checks). Modes apply to the root channel only; the generic Shizuku/ADB executor stays strict, and SMS reads still require native authorization in all modes.\n",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/HttpShellService.java"
+    ]
+  },
+  {
+    "id": "m9018",
+    "zh": "Root 命令拦截档位",
+    "en": "Root command interception mode",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "m9019",
+    "zh": "严格：仅放行白名单内的命令，默认档位。\n放宽：允许任意命令，但格式化、刷机、重启、清数据等不可逆操作仍会被拦截。\n完全放宽：不按命令内容拦截，root 命令直接执行。",
+    "en": "Strict: allow-list commands only (default).\nRelaxed: any command is allowed, but irreversible operations such as formatting, flashing, reboot or clearing data stay blocked.\nFull: no command-content checks; root commands run directly.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "m9020",
+    "zh": "确认放宽 root 命令拦截？",
+    "en": "Relax root command interception?",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "m9021",
+    "zh": "仅对 root 通道生效；放宽后助手和插件可执行任意 root 命令。严格档只放行白名单；完全放宽不拦截不可逆操作，可能导致数据丢失或系统损坏。",
+    "en": "Applies to the root channel only. Once relaxed, the assistant and plugins can run arbitrary root commands. Strict allows allow-list commands only; Full blocks no irreversible operations, so data loss or system damage is possible.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "m9022",
+    "zh": "已保存拦截档位：%s",
+    "en": "Interception mode saved: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "m9023",
+    "zh": "命令拦截档位：%s\n仅对 root 通道生效；Shizuku/ADB 通用执行器仍按严格档。",
+    "en": "Command interception: %s\nApplies to the root channel only; the generic Shizuku/ADB executor stays strict.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
+    ]
+  },
+  {
+    "id": "m9024",
+    "zh": "更改",
+    "en": "Change",
+    "files": [
+      "app/src/main/res/layout/fragment_device_grants.xml"
+    ]
+  },
+  {
+    "id": "rescue272_export_copy",
+    "zh": "导出可读副本",
+    "en": "Export readable copy",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java",
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ]
+  },
+  {
+    "id": "rescue272_export_desc",
+    "zh": "只读导出，不停止写入",
+    "en": "Read-only export; writes continue",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/ExtractActivity.java"
+    ]
+  },
+  {
+    "id": "rescue272_pending_hint",
+    "zh": "原环境尚未确认，常规备份和恢复暂不可用。可先导出可读副本保存数据，再恢复中断维护。",
+    "en": "The original environment is unconfirmed, so regular backup and restore are unavailable. Export a readable copy first, then resume the interrupted maintenance.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/WorkspaceFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_01",
+    "zh": "GitHub 登录",
+    "en": "GitHub sign-in",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java",
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_02",
+    "zh": "账号 · 授权 · 登录状态",
+    "en": "Account · authorization · sign-in status",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_03",
+    "zh": "管理 GitHub CLI 登录",
+    "en": "Manage GitHub CLI sign-in",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_04",
+    "zh": "当前账号",
+    "en": "Current account",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_05",
+    "zh": "已登录",
+    "en": "Signed in",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_06",
+    "zh": "未登录",
+    "en": "Not signed in",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_07",
+    "zh": "已登录，但登录记录未保存",
+    "en": "Signed in, but the sign-in record was not saved",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_08",
+    "zh": "已保存 token，但无法确定账号",
+    "en": "A token is stored, but the account is unknown",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_09",
+    "zh": "只有其他 GitHub 主机登录",
+    "en": "Only other GitHub hosts are signed in",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_10",
+    "zh": "登录记录结构无法识别",
+    "en": "Unrecognized sign-in record format",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_11",
+    "zh": "无法读取登录记录",
+    "en": "Cannot read the sign-in record",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_12",
+    "zh": "登录记录超过大小上限",
+    "en": "Sign-in record exceeds the size limit",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_13",
+    "zh": "登录记录不是普通文件",
+    "en": "Sign-in record is not a regular file",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_14",
+    "zh": "正在读取…",
+    "en": "Reading…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_15",
+    "zh": "账号",
+    "en": "Account",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_16",
+    "zh": "作用域",
+    "en": "Scopes",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_17",
+    "zh": "登录记录未含权限范围",
+    "en": "Sign-in record has no permission scope",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_18",
+    "zh": "凭据",
+    "en": "Credential",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_19",
+    "zh": "登录记录已保存（内容不显示）",
+    "en": "Sign-in record saved (contents hidden)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_20",
+    "zh": "登录记录未保存（可能来自环境变量）",
+    "en": "Sign-in record not saved (may come from environment variables)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_21",
+    "zh": "Git 协议",
+    "en": "Git protocol",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_22",
+    "zh": "未记录",
+    "en": "Not recorded",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_23",
+    "zh": "受管 GitHub CLI",
+    "en": "Managed GitHub CLI",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_24",
+    "zh": "缺失",
+    "en": "Missing",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_25",
+    "zh": "大小与固定输入不符",
+    "en": "Size differs from the pinned input",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_26",
+    "zh": "不是普通文件",
+    "en": "Not a regular file",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_27",
+    "zh": "无法读取",
+    "en": "Unreadable",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_28",
+    "zh": "路径",
+    "en": "Path",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_29",
+    "zh": "缺失时会在首次运行自动补齐",
+    "en": "Filled in automatically on first run if missing",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_30",
+    "zh": "在终端核对",
+    "en": "Verify in terminal",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_31",
+    "zh": "在终端核对作用域",
+    "en": "Check scopes in terminal",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_32",
+    "zh": "查看登录状态与权限范围",
+    "en": "View sign-in status and permission scope",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_33",
+    "zh": "登录",
+    "en": "Sign in",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_34",
+    "zh": "重新授权",
+    "en": "Reauthorize",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_35",
+    "zh": "退出登录",
+    "en": "Sign out",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_36",
+    "zh": "登录 GitHub",
+    "en": "Sign in to GitHub",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_37",
+    "zh": "重新授权 GitHub",
+    "en": "Reauthorize GitHub",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_38",
+    "zh": "将打开终端并运行：\n%s\n\n1. 终端显示一次性验证码；用手机浏览器打开\n%s\n2. 输入验证码并按提示授权 GitHub CLI\n3. 回到本页，状态会自动刷新\n\ngh 默认申请作用域：repo、read:org、gist。",
+    "en": "The terminal will open and run:\n%s\n\n1. The terminal shows a one-time code; open this URL in your phone browser:\n%s\n2. Enter the code and authorize GitHub CLI\n3. Return to this page; the status refreshes automatically\n\nDefault scopes requested by gh: repo, read:org, gist.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_39",
+    "zh": "打开终端",
+    "en": "Open terminal",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_40",
+    "zh": "无法打开终端页面",
+    "en": "Could not open the terminal page",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_41",
+    "zh": "退出 GitHub 登录？",
+    "en": "Sign out of GitHub?",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_42",
+    "zh": "将从本机 hosts.yml 删除账号 %s 的登录。只影响本机，不会撤销 GitHub 上的授权；如需撤销，请到 GitHub 设置中操作。",
+    "en": "This removes the sign-in for account %s from the local hosts.yml. It only affects this device and does not revoke access on GitHub; revoke it in GitHub settings if needed.",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_43",
+    "zh": "退出",
+    "en": "Sign out",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_44",
+    "zh": "已退出 GitHub 登录（仅本机）",
+    "en": "Signed out of GitHub (this device only)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_45",
+    "zh": "退出失败",
+    "en": "Sign-out failed",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_46",
+    "zh": "退出失败：%s",
+    "en": "Sign-out failed: %s",
+    "uiFormat": true,
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_47",
+    "zh": "环境未就绪，请先安装",
+    "en": "Environment not ready; install first",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_48",
+    "zh": "重新授权会重新打开网页授权流程。",
+    "en": "Reauthorizing opens the web authorization flow again.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_49",
+    "zh": "GitHub 授权",
+    "en": "GitHub authorization",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_50",
+    "zh": "GitHub 状态",
+    "en": "GitHub status",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_51",
+    "zh": "未写入",
+    "en": "Not written",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_52",
+    "zh": "登录凭据存于容器，网页与插件可能读取",
+    "en": "Sign-in credentials live in the container; web pages and plugins may read them",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_53",
+    "zh": "删除本机登录记录；不影响 GitHub 授权",
+    "en": "Delete the local sign-in record; GitHub authorization is unaffected",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_54",
+    "zh": "在线校验",
+    "en": "Online check",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_55",
+    "zh": "跳过：运行环境未就绪",
+    "en": "Skipped: runtime not ready",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_56",
+    "zh": "跳过：受管 gh 不可用",
+    "en": "Skipped: managed gh unavailable",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_57",
+    "zh": "校验中…",
+    "en": "Checking…",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_58",
+    "zh": "已登录（在线校验通过）",
+    "en": "Signed in (online check passed)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_59",
+    "zh": "token 已失效，需要重新登录",
+    "en": "The token is invalid; sign in again",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_60",
+    "zh": "证书校验失败",
+    "en": "Certificate verification failed",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_61",
+    "zh": "网络不可用",
+    "en": "Network unavailable",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_62",
+    "zh": "校验超时",
+    "en": "Check timed out",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_63",
+    "zh": "无法完成校验",
+    "en": "Check could not complete",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_64",
+    "zh": "未取得（在线校验未通过）",
+    "en": "Not available (online check failed)",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "ghlog_65",
+    "zh": "注意：当前 gh 无法完成 TLS 校验（CA 路径失效），终端会显示真实错误；修复运行环境后再试。",
+    "en": "Note: gh cannot complete TLS verification right now (CA path issue); the terminal will show the real error. Fix the runtime and try again.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/GitHubLoginFragment.java"
+    ]
+  },
+  {
+    "id": "m9025",
+    "zh": "隐藏后台",
+    "en": "Hide in background",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "m9026",
+    "zh": "从最近任务中隐藏 DSHA",
+    "en": "Hide DSHA from Recents",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "m9027",
+    "zh": "已从最近任务隐藏；常驻通知与后台服务不受影响",
+    "en": "Hidden from Recents; the ongoing notification and background service are unaffected.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "m9028",
+    "zh": "已保存，隐藏将在下次生效",
+    "en": "Saved; hiding applies next launch",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/SettingsFragment.java"
+    ]
+  },
+  {
+    "id": "build335_ui_b8303dd168ef",
+    "zh": "放弃上一版 Web 并强制结束？",
+    "en": "Discard the previous-build Web and force stop?",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
+    ]
+  },
+  {
+    "id": "build335_ui_e74a6f26bca8",
+    "zh": "普通停止未确认上一版退出。强制结束可能中断写入。\n\n确认后先结束旧进程；身份变化会拒绝执行；取消会保留现场。",
+    "en": "Normal stop did not confirm the previous build exited. Force stop may interrupt writes.\\n\\nConfirming ends the old process first; identity changes are refused; cancelling keeps the current state.",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/ui/LaunchFragment.java"
     ]
   }
 ]

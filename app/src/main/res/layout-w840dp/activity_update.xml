@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  版本更新（平板横屏，≥ 840dp 两栏，沿用插件页 / 自检页的列表 + 详情逻辑）：
+  左栏 主卡 + 候选摘要行 + 管理；右栏 “候选版本 / 本版本” 两个标签页显示完整更新记录。
+  点左栏候选行或“本版本更新记录”只切换右栏，不弹层。与手机布局共用 update_hero / update_manage 与全部 id。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/shell_bg" android:orientation="vertical">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="@dimen/shell_header_min_height" android:orientation="horizontal" android:paddingStart="16dp" android:paddingEnd="24dp">
+    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/update_back" android:layout_width="48dp" android:layout_height="48dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="@string/ui_m0201" android:padding="12dp" android:src="@drawable/ic_ui_back" app:tint="@color/shell_text" />
+    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:layout_weight="1" android:accessibilityHeading="true" android:includeFontPadding="false" android:text="@string/ui2_updates" android:textColor="@color/shell_text" android:textSize="@dimen/shell_title_text" android:textStyle="bold" />
+  </LinearLayout>
+  <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:baselineAligned="false" android:orientation="horizontal">
+    <ScrollView android:id="@+id/update_scroll" android:layout_width="420dp" android:layout_height="match_parent" android:clipToPadding="false">
+      <LinearLayout android:id="@+id/update_content" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="32dp" android:paddingTop="4dp" android:paddingEnd="20dp" android:paddingBottom="@dimen/shell_page_bottom">
+        <include layout="@layout/update_hero" />
+        <LinearLayout android:id="@+id/update_release_panel" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+          <TextView style="@style/ShellSectionLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/shell_section_gap" android:layout_marginBottom="@dimen/shell_section_margin" android:accessibilityHeading="true" android:text="@string/upd_tab_candidate" />
+          <LinearLayout style="@style/ShellCard" android:layout_width="match_parent" android:layout_height="wrap_content">
+            <LinearLayout android:id="@+id/update_release_detail" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+              <ImageView style="@style/ShellRowIcon" android:layout_width="@dimen/shell_row_icon" android:layout_height="@dimen/shell_row_icon" android:contentDescription="@null" android:src="@drawable/ic_ui2_box" />
+              <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
+                <TextView android:id="@+id/update_release_title" style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                <TextView android:id="@+id/update_release_meta" style="@style/ShellRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:fontFeatureSettings="tnum" />
+              </LinearLayout>
+              <ImageView android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:contentDescription="@null" android:importantForAccessibility="no" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
+            </LinearLayout>
+          </LinearLayout>
+        </LinearLayout>
+        <TextView style="@style/ShellSectionLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/shell_section_gap" android:layout_marginBottom="@dimen/shell_section_margin" android:accessibilityHeading="true" android:text="@string/ui2_management" />
+        <include layout="@layout/update_manage" />
+      </LinearLayout>
+    </ScrollView>
+    <View android:layout_width="1dp" android:layout_height="match_parent" android:background="@color/shell_line_strong" />
+    <ScrollView android:id="@+id/update_pane_scroll" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:clipToPadding="false">
+      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="32dp" android:paddingTop="4dp" android:paddingEnd="32dp" android:paddingBottom="@dimen/shell_page_bottom">
+        <RadioGroup android:id="@+id/update_pane_tabs" android:layout_width="420dp" android:layout_height="wrap_content" android:background="@drawable/bg_plugin_segment_track" android:orientation="horizontal" android:padding="3dp">
+          <RadioButton android:id="@+id/update_pane_candidate" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:background="@drawable/bg_update_channel_tab" android:button="@null" android:gravity="center" android:includeFontPadding="false" android:minHeight="@dimen/touch_min" android:text="@string/upd_tab_candidate" android:textColor="@color/update_channel_text" android:textSize="14sp" android:textStyle="bold" />
+          <RadioButton android:id="@+id/update_pane_current" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="2dp" android:layout_weight="1" android:background="@drawable/bg_update_channel_tab" android:button="@null" android:gravity="center" android:includeFontPadding="false" android:minHeight="@dimen/touch_min" android:text="@string/upd_tab_current" android:textColor="@color/update_channel_text" android:textSize="14sp" android:textStyle="bold" />
+        </RadioGroup>
+        <LinearLayout android:id="@+id/update_pane_candidate_body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:orientation="vertical">
+          <TextView android:id="@+id/update_pane_title" style="@style/ShellCardTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityHeading="true" android:textSize="21sp" />
+          <TextView android:id="@+id/update_pane_meta" style="@style/ShellStatusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:fontFeatureSettings="tnum" />
+          <TextView android:id="@+id/update_notes" style="@style/ShellCardBody" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:maxWidth="640dp" android:textColor="@color/shell_text" android:textIsSelectable="true" android:textSize="14sp" />
+          <TextView android:id="@+id/update_pane_empty" style="@style/ShellCardBody" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:paddingTop="48dp" android:paddingBottom="48dp" android:text="@string/upd_pane_empty" android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout android:id="@+id/update_pane_current_body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:orientation="vertical" android:visibility="gone">
+          <TextView android:id="@+id/update_pane_current_title" style="@style/ShellCardTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityHeading="true" android:textSize="21sp" />
+          <TextView android:id="@+id/update_pane_current_notes" style="@style/ShellCardBody" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:maxWidth="640dp" android:textColor="@color/shell_text" android:textIsSelectable="true" android:textSize="14sp" />
+        </LinearLayout>
+      </LinearLayout>
+    </ScrollView>
+  </LinearLayout>
+</LinearLayout>

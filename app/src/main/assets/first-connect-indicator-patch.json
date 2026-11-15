@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "dshVersion": "0.2.2-rc.1",
+  "module": "@deepseek-ai/dsh-client-ui-settings-general/lib/client.js",
+  "sourceSha256": "91f464ea8a6193df07c72aa359c3fa6f167a5420aadaccbd7d93b880e2c3149e",
+  "packageIntegrity": "sha512-ht85MVguw3SPqmpf33TCihJ36dxjiJLDgBT5LUc7zNyYbh0P4bsdVMnRa2X3O/5OtUkWbKb4gNcgZ6e1707cfw==",
+  "purpose": "DSHA_FIRST_CONNECT_SILENT_V1：页面首次进入时的首个连接只建立记忆，不显示黄色「重新连接中」或绿色「已连接」；真实断开后的恢复提示保留。",
+  "patches": [
+    {
+      "before": "\t\tconst CONNECTING_MIN_VISIBLE_MS = 800;",
+      "after": "\t\tconst CONNECTING_MIN_VISIBLE_MS = 800;\n\t\t/**\n\t\t* DSHA_FIRST_CONNECT_SILENT_V1：记录本页面是否已经成功连上过。\n\t\t* 模块级而非组件 ref，设置面板重新挂载后真实的重连提示不能被再次静默。\n\t\t*/\n\t\tlet hasConnectedOnceInPage = false;\n\t\t/**\n\t\t* DSHA_FIRST_CONNECT_SILENT_V1：推进首次进入页面的连接提示状态。\n\t\t* 页面首次连上只记录“已连上”，不返回绿色恢复提示；undefined 表示保持 showRecovery。\n\t\t*/\n\t\tfunction dshaAdvanceFirstConnect(previous, connectionState, firstConnectPending, hasConnectedOnce) {\n\t\t\tif (connectionState !== \"connected\") return { showRecovery: false, firstConnectPending, hasConnectedOnce };\n\t\t\tif (firstConnectPending || !hasConnectedOnce) return { showRecovery: false, firstConnectPending: false, hasConnectedOnce: true };\n\t\t\tif (previous !== \"disconnected\" && previous !== \"connecting\") return { showRecovery: void 0, firstConnectPending, hasConnectedOnce };\n\t\t\treturn { showRecovery: true, firstConnectPending, hasConnectedOnce };\n\t\t}\n\t\t/**\n\t\t* DSHA_FIRST_CONNECT_SILENT_V1：首次连接完成前不显示连接中/已恢复胶囊；真实断开仍显示红色。\n\t\t*/\n\t\tfunction dshaConnectionIndicator(connectionState, holdConnecting, showRecovery, firstConnectPending) {\n\t\t\tif (firstConnectPending) return connectionState === \"disconnected\" ? \"disconnected\" : void 0;\n\t\t\tif (connectionState === \"connecting\" || holdConnecting) return \"connecting\";\n\t\t\tif (connectionState === \"disconnected\") return \"disconnected\";\n\t\t\tif (showRecovery) return \"recovered\";\n\t\t\treturn void 0;\n\t\t}"
+    },
+    {
+      "before": "\t\t\tconst previousConnectionState = (0, react.useRef)(connectionState);",
+      "after": "\t\t\tconst previousConnectionState = (0, react.useRef)(connectionState);\n\t\t\t// DSHA_FIRST_CONNECT_SILENT_V1：页面首次真实连接保持静默；曾连上过则重连时不再抑制。\n\t\t\tconst firstConnectPending = (0, react.useRef)(!hasConnectedOnceInPage);"
+    },
+    {
+      "before": "\t\t\t(0, react.useLayoutEffect)(() => {\n\t\t\t\tconst previous = previousConnectionState.current;\n\t\t\t\tpreviousConnectionState.current = connectionState;\n\t\t\t\tif (connectionState !== \"connected\") {\n\t\t\t\t\tsetShowRecovery(false);\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tif (previous !== \"disconnected\" && previous !== \"connecting\") return;\n\t\t\t\tsetShowRecovery(true);\n\t\t\t}, [connectionState]);",
+      "after": "\t\t\t(0, react.useLayoutEffect)(() => {\n\t\t\t\tconst previous = previousConnectionState.current;\n\t\t\t\tpreviousConnectionState.current = connectionState;\n\t\t\t\t// DSHA_FIRST_CONNECT_SILENT_V1：页面首次连上不是“恢复”，跨挂载保留已连上事实。\n\t\t\t\tconst next = dshaAdvanceFirstConnect(previous, connectionState, firstConnectPending.current, hasConnectedOnceInPage);\n\t\t\t\tfirstConnectPending.current = next.firstConnectPending;\n\t\t\t\thasConnectedOnceInPage = next.hasConnectedOnce;\n\t\t\t\tif (next.showRecovery === void 0) return;\n\t\t\t\tsetShowRecovery(next.showRecovery);\n\t\t\t}, [connectionState]);"
+    },
+    {
+      "before": "\t\t\t(0, react.useLayoutEffect)(() => {\n\t\t\t\tif (connectionState === \"connecting\") {\n\t\t\t\t\tconnectingShownAt.current = Date.now();\n\t\t\t\t\treturn;\n\t\t\t\t}",
+      "after": "\t\t\t(0, react.useLayoutEffect)(() => {\n\t\t\t\tif (connectionState === \"connecting\") {\n\t\t\t\t\t// DSHA_FIRST_CONNECT_SILENT_V1：被静默的首次连接不留最短可见计时，否则绿色前仍会闪黄。\n\t\t\t\t\tif (!firstConnectPending.current) connectingShownAt.current = Date.now();\n\t\t\t\t\treturn;\n\t\t\t\t}"
+    },
+    {
+      "before": "\t\t\tlet connectionIndicator;\n\t\t\tif (connectionState === \"connecting\" || holdConnecting) connectionIndicator = \"connecting\";\n\t\t\telse if (connectionState === \"disconnected\") connectionIndicator = \"disconnected\";\n\t\t\telse if (showRecovery) connectionIndicator = \"recovered\";",
+      "after": "\t\t\t// DSHA_FIRST_CONNECT_SILENT_V1：首次连接完成前的黄色/绿色提示都不显示，真实重连仍保留。\n\t\t\tconst connectionIndicator = dshaConnectionIndicator(connectionState, holdConnecting, showRecovery, firstConnectPending.current);"
+    }
+  ]
+}

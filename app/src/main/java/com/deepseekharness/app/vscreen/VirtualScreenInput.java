@@ -46,11 +46,32 @@ final class VirtualScreenInput {
 
   private CommandRunner commandRunner = this::runCommand;
 
+  /** 宿主 {@code /system/bin/input} 探测；测试实例固定为「不存在」，不读宿主文件系统。 */
+  private java.util.function.BooleanSupplier hostCommand = VirtualScreenInput::systemCommandExists;
+
+  /**
+   * 测试缝：{@code true} 表示命令可用性由注入的 runner 代表。GitHub runner 没有
+   * {@code /system/bin/input}，真实探测会把只跑 fake runner 的测试提前拒成 REJECTED
+   * （T97 合入后 CI unit-source 红）；生产实例不设置这个标记。
+   */
+  private boolean forcedCommandAvailable;
+
   static VirtualScreenInput commandForTest(int display, CommandRunner runner) {
+    return commandForTest(display, runner, true);
+  }
+
+  /**
+   * 仅测试：{@code forcedAvailable=false} 复现生产实例在没有 input 命令时的拒绝；
+   * 两种情况都不读宿主文件系统，避免测试结果随 CI/本机环境漂移。
+   */
+  static VirtualScreenInput commandForTest(
+      int display, CommandRunner runner, boolean forcedAvailable) {
     VirtualScreenInput result =
         new VirtualScreenInput(
             display, VirtualScreenInputPolicy.BACKEND_COMMAND, "", null, null, null);
     if (runner != null) result.commandRunner = runner;
+    result.hostCommand = () -> false;
+    result.forcedCommandAvailable = forcedAvailable;
     return result;
   }
 
@@ -135,7 +156,7 @@ final class VirtualScreenInput {
       missing += (missing.isEmpty() ? "" : ",") + VirtualScreenInputPolicy.MEMBER_SET_DISPLAY;
     String backend =
         VirtualScreenInputPolicy.backend(
-            manager != null, inject != null, setDisplay != null, commandAvailable());
+            manager != null, inject != null, setDisplay != null, systemCommandExists());
     return new VirtualScreenInput(
         display,
         backend,
@@ -431,7 +452,11 @@ final class VirtualScreenInput {
     }
   }
 
-  private static boolean commandAvailable() {
+  private boolean commandAvailable() {
+    return forcedCommandAvailable || hostCommand.getAsBoolean();
+  }
+
+  private static boolean systemCommandExists() {
     try {
       return new File(VirtualScreenInputPolicy.COMMAND).exists();
     } catch (Throwable unavailable) {

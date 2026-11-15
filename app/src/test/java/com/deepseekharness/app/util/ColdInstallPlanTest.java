@@ -113,8 +113,6 @@ public class ColdInstallPlanTest {
         List.of(
             result(139, true, "SIGSEGV"),
             result(1, true, signalStackFailure().output),
-            new ColdInstallPlan.Observation(
-                139, true, true, signalStackFailure().output, "timeout"),
             result(139, false, signalStackFailure().output))) {
       List<ColdInstallPlan.Mode> calls = new ArrayList<>();
       try {
@@ -142,6 +140,87 @@ public class ColdInstallPlanTest {
         },
         (mode, probe, observation) -> {});
     assertEquals(List.of(ColdInstallPlan.Mode.PROROOT, ColdInstallPlan.Mode.PROOT), calls);
+  }
+
+  @Test
+  public void issue206AssertionFallsBackToProotAfterConfirmedDynamicFailure() throws Exception {
+    List<ColdInstallPlan.Mode> calls = new ArrayList<>(), records = new ArrayList<>();
+    var selected =
+        ColdInstallPlan.runConfigured(
+            ColdInstallPlan.modes(true, true, true, false),
+            true,
+            (mode, probe) -> {
+              calls.add(mode);
+              if (mode == ColdInstallPlan.Mode.PROROOT)
+                return result(
+                    139,
+                    true,
+                    "Fatal glibc error: ../sysdeps/unix/sysv/linux/sysconf-sigstksz.h:25\n"
+                        + "(sysconf_sigstksz): assertion failed: minsigstacksize != 0\n"
+                        + "[proroot] child exited with code 139");
+              return mode == ColdInstallPlan.Mode.PROROOT_DYNAMIC
+                  ? result(139, true, "dynamic failed")
+                  : configuredReady();
+            },
+            (mode, probe, observation) -> records.add(mode));
+    assertEquals(ColdInstallPlan.Mode.PROOT, selected);
+    assertEquals(
+        List.of(
+            ColdInstallPlan.Mode.PROROOT,
+            ColdInstallPlan.Mode.PROROOT_DYNAMIC,
+            ColdInstallPlan.Mode.PROOT),
+        calls);
+    assertEquals(calls, records);
+  }
+
+  @Test
+  public void timeoutStopsAllFurtherProbesEvenWhenTheProcessHasExited() {
+    for (boolean configured : List.of(false, true)) {
+      List<ColdInstallPlan.Mode> calls = new ArrayList<>(), records = new ArrayList<>();
+      ColdInstallPlan.Runner runner =
+          (mode, probe) -> {
+            calls.add(mode);
+            return new ColdInstallPlan.Observation(
+                139, true, true, signalStackFailure().output, "timeout");
+          };
+      ColdInstallPlan.Recorder recorder = (mode, probe, value) -> records.add(mode);
+      IOException error =
+          assertThrows(
+              IOException.class,
+              () -> {
+                if (configured)
+                  ColdInstallPlan.runConfigured(
+                      ColdInstallPlan.modes(true, true, true, false), true, runner, recorder);
+                else
+                  ColdInstallPlan.run(
+                      ColdInstallPlan.modes(true, true, true, false), runner, recorder);
+              });
+      assertEquals("COLD_RUNTIME_PROBE_TIMED_OUT", error.getMessage());
+      assertEquals(List.of(ColdInstallPlan.Mode.PROROOT), calls);
+      assertEquals(calls, records);
+    }
+  }
+
+  @Test
+  public void dynamicLoaderTimeoutDoesNotProceedToProot() {
+    List<ColdInstallPlan.Mode> calls = new ArrayList<>();
+    IOException error =
+        assertThrows(
+            IOException.class,
+            () ->
+                ColdInstallPlan.runConfigured(
+                    ColdInstallPlan.modes(true, true, true, false),
+                    true,
+                    (mode, probe) -> {
+                      calls.add(mode);
+                      return mode == ColdInstallPlan.Mode.PROROOT
+                          ? signalStackFailure()
+                          : new ColdInstallPlan.Observation(125, true, true, "", "timeout");
+                    },
+                    (mode, probe, value) -> {}));
+    assertEquals("COLD_RUNTIME_PROBE_TIMED_OUT", error.getMessage());
+    assertEquals(
+        List.of(ColdInstallPlan.Mode.PROROOT, ColdInstallPlan.Mode.PROROOT_DYNAMIC), calls);
   }
 
   @Test

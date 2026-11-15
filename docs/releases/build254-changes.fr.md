@@ -1,0 +1,6 @@
+# DSHA 0.2.1-rc.3-20261101.2230-dsh0.2.1-rc.5 / build254
+
+- Page installation et environnement compactée : une carte d'état remplace le tableau des versions, avec un verdict en une ligne, trois étiquettes de version à toucher pour copier et une barre de progression ; Tout vérifier et Réparer au besoin sont côte à côte.
+- Les six étapes sont plus basses et se déplient sur place avec détails, Revérifier et Réparer au besoin, sans boîte de dialogue. Le test de vitesse de première installation et Sauvegarder et reconstruire l'environnement passent dans Maintenance et outils ; reconstruire exige d'abord de cocher une confirmation. Le journal est replié sur une ligne par défaut et s'ouvre automatiquement pendant l'exécution ou après un échec.
+- Les résultats du test de vitesse ont leur propre carte ; la page de réparation et de récupération regroupe ses boutons et ajoute des points d'état aux derniers démarrages.
+- Portée de la vérification : tests unitaires locaux et contrôles statiques uniquement ; aucune installation sur appareil, tests d'interface et Lint confiés à la CI. versionCode porté à 254 (basé sur build253). La révision DSHA reste 0.2.1-rc.3 et le DSH intégré reste 0.2.1-rc.5.

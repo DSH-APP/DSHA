@@ -1,6 +1,12 @@
 {
   "schema": 1,
-  "packageName": "dsh.android.client",
-  "certificateSha256": "e7e3a31a75946f2669194c972b3dd0c9aea3fc7c50a8b885d2dee710b22a53f5",
-  "schemes": ["v1", "v2", "v3"]
+  "versionCode": 357,
+  "versionName": "0.2.2-20261111.0200-dsh0.2.2-rc.1",
+  "packageName": "io.github.sunsetrne.dsha",
+  "certificateSha256": "a4b0413c67fa46dd30dc7e2bce3ad56151ed8bfde2a3315fff685baf786b5d5d",
+  "schemes": [
+    "v1",
+    "v2",
+    "v3"
+  ]
 }

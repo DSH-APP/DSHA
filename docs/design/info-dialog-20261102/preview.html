@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>DSHA · ⓘ 说明弹窗适配（交互原型）</title>
+  <style>
+    /* ============================================================
+       UI v5 token 的离线副本，只用于本预览，不参与 Android 资源。
+       设备内 1px = 1dp；文字尺寸乘 --fs 模拟系统字体缩放（sp）。
+       ============================================================ */
+    :root {
+      color-scheme: light;
+      --page: #e9eef6;
+      --bg: #f3f6fb;
+      --surface: #fcfdff;
+      --raised: #e7edf6;
+      --line: rgba(29, 58, 96, .09);
+      --line-2: rgba(29, 58, 96, .16);
+      --text: #18273f;
+      --text-2: #50617a;
+      --muted: #5a6b86;
+      --accent: #1e50d0;
+      --accent-soft: rgba(30, 80, 208, .08);
+      --accent-soft-2: rgba(30, 80, 208, .14);
+      --on-accent: #ffffff;
+      --scrim: rgba(0, 0, 0, .22);
+      --bezel: #1b2333;
+      --anat: #d0368a;
+      --shadow: 0 18px 50px rgba(20, 35, 70, .20);
+      --shadow-pop: 0 12px 32px rgba(20, 35, 70, .18), 0 1px 3px rgba(20, 35, 70, .12);
+      --sans: "Noto Sans SC", "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --page: #070a10;
+      --bg: #0b0f16;
+      --surface: #131923;
+      --raised: #1b2432;
+      --line: rgba(203, 220, 255, .08);
+      --line-2: rgba(203, 220, 255, .15);
+      --text: #edf1f7;
+      --text-2: #b0bbcc;
+      --muted: #8895aa;
+      --accent: #6aa4ff;
+      --accent-soft: rgba(106, 164, 255, .10);
+      --accent-soft-2: rgba(106, 164, 255, .18);
+      --on-accent: #081428;
+      --scrim: rgba(0, 0, 0, .22);
+      --bezel: #2a3446;
+      --anat: #ff7ab8;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .5);
+      --shadow-pop: 0 12px 32px rgba(0, 0, 0, .55), 0 1px 3px rgba(0, 0, 0, .4);
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { background: var(--page); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+    button { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* ---------- 预览外壳 ---------- */
+    .top { padding: 18px clamp(14px, 3vw, 28px) 10px; }
+    .top h1 { margin: 0; font-size: 20px; letter-spacing: .2px; }
+    .top p { margin: 6px 0 0; color: var(--text-2); font-size: 13.5px; line-height: 1.55; max-width: 980px; }
+    .top code { font-family: var(--mono); font-size: 12px; background: var(--raised); padding: 1px 5px; border-radius: 5px; }
+
+    .bar { display: flex; flex-wrap: wrap; gap: 10px 18px; padding: 8px clamp(14px, 3vw, 28px) 12px; align-items: center; }
+    .grp { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .grp > .lbl { font-size: 12px; color: var(--muted); }
+    .seg { display: inline-flex; flex-wrap: wrap; background: var(--raised); border-radius: 11px; padding: 3px; gap: 2px; }
+    .seg button { border: 0; background: transparent; padding: 6px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; color: var(--text-2); min-height: 32px; }
+    .seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); font-weight: 600; }
+    .seg button .rec { color: var(--accent); font-size: 11px; margin-left: 3px; }
+    .tbtn { border: 1px solid var(--line-2); background: var(--surface); padding: 6px 12px; border-radius: 10px; font-size: 13px; cursor: pointer; min-height: 34px; }
+    .size { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+    .size input[type=range] { width: 110px; accent-color: var(--accent); }
+    .size output { font-family: var(--mono); color: var(--text); min-width: 74px; }
+
+    .work { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; padding: 0 clamp(14px, 3vw, 28px) 20px; }
+    @media (max-width: 1000px) { .work { grid-template-columns: minmax(0, 1fr); } }
+    .stage { position: relative; background: repeating-conic-gradient(var(--raised) 0 25%, transparent 0 50%) 0 0 / 22px 22px; border: 1px solid var(--line); border-radius: 18px; display: flex; align-items: center; justify-content: center; padding: 16px; min-height: 480px; height: calc(100vh - 150px); overflow: hidden; }
+    @media (max-width: 1000px) { .stage { height: auto; min-height: 0; } }
+    .stage.matrix { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; justify-items: center; height: auto; overflow: visible; }
+    @media (max-width: 700px) { .stage.matrix { grid-template-columns: minmax(0, 1fr); } }
+    .tile { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .tile figcaption { font-size: 12.5px; color: var(--text-2); text-align: center; }
+    .tile figcaption b { color: var(--text); }
+    .tile .screen { pointer-events: none; }
+    figure { margin: 0; }
+
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; align-self: start; font-size: 13.5px; line-height: 1.55; }
+    .panel h2 { font-size: 15px; margin: 0 0 10px; }
+    .panel h3 { font-size: 13px; margin: 16px 0 6px; color: var(--muted); font-weight: 600; }
+    .kv { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 5px 10px; margin: 0; }
+    .kv dt { color: var(--muted); }
+    .kv dd { margin: 0; }
+    .rules, .pts { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+    .rules li { padding: 7px 10px; border-radius: 10px; background: var(--bg); color: var(--muted); }
+    .rules li.hit { background: var(--accent-soft); color: var(--text); box-shadow: inset 3px 0 0 var(--accent); }
+    .pts li { padding-left: 14px; position: relative; }
+    .pts li::before { content: ""; position: absolute; left: 2px; top: .7em; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+    .pts.bad li::before { background: var(--anat); }
+    .mt { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .mt td, .mt th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .mt th { color: var(--muted); font-weight: 600; }
+
+    .doc { padding: 6px clamp(14px, 3vw, 28px) 40px; max-width: 1180px; }
+    .doc section { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; margin-top: 16px; font-size: 14px; line-height: 1.65; }
+    .doc h2 { margin: 0 0 8px; font-size: 17px; }
+    .doc h3 { margin: 16px 0 6px; font-size: 14.5px; }
+    .doc p { margin: 6px 0; color: var(--text-2); }
+    .doc ol, .doc ul { margin: 6px 0; padding-left: 22px; color: var(--text-2); }
+    .doc li { margin: 3px 0; }
+    .doc code { font-family: var(--mono); font-size: 12.5px; background: var(--raised); padding: 1px 5px; border-radius: 5px; color: var(--text); }
+    .tbl-wrap { overflow-x: auto; }
+    .doc table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 13px; }
+    .doc th, .doc td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .doc th { color: var(--muted); font-weight: 600; background: var(--bg); }
+    .tag { display: inline-block; font-size: 11.5px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft-2); color: var(--accent); margin-left: 6px; vertical-align: 1px; }
+    .foot { color: var(--muted); font-size: 12px; padding: 0 clamp(14px, 3vw, 28px) 30px; }
+
+    /* ---------- 设备 ---------- */
+    .dev-wrap { flex: none; position: relative; }
+    .device { position: absolute; left: 0; top: 0; transform-origin: 0 0; padding: 12px; background: var(--bezel); border-radius: 34px; box-shadow: var(--shadow); }
+    .screen { position: relative; overflow: hidden; border-radius: 24px; background: var(--bg); color: var(--text); font-family: var(--sans); display: flex; flex-direction: column; }
+    .sbar { flex: none; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 12.5px; color: var(--text); font-weight: 600; }
+    .sbar i { display: inline-block; width: 22px; height: 10px; border: 1.5px solid currentColor; border-radius: 3px; opacity: .7; }
+    .abar { flex: none; display: flex; align-items: center; gap: 10px; padding: 0 12px 0 8px; border-bottom: 1px solid var(--line); }
+    .abar .t { flex: 1; min-width: 0; }
+    .abar .t b { display: block; font-size: calc(19px * var(--fs)); line-height: 1.2; }
+    .abar .t small { display: block; color: var(--text-2); font-size: calc(12.5px * var(--fs)); }
+    .ib { width: 44px; height: 44px; display: grid; place-items: center; color: var(--text-2); flex: none; }
+    .ib svg { width: 22px; height: 22px; }
+    .body { flex: 1; min-height: 0; display: flex; }
+    .rail { flex: none; width: 84px; border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; padding: 22px 0 14px; gap: 12px; }
+    .rail .ri { width: 64px; padding: 10px 0; border-radius: 16px; display: grid; justify-items: center; gap: 6px; color: var(--text-2); font-size: calc(12px * var(--fs)); }
+    .rail .ri svg { width: 22px; height: 22px; }
+    .rail .ri.on { background: var(--accent-soft-2); color: var(--accent); }
+    .rail .lf { margin-top: auto; font-size: 9px; letter-spacing: 1.4px; color: var(--muted); }
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .scroll { flex: 1; min-height: 0; overflow: auto; padding: 18px var(--pad) 24px; scrollbar-width: none; }
+    .scroll::-webkit-scrollbar { display: none; }
+    .sec-h { display: block; margin: 6px 4px 10px; }
+    .sec-h.row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .sec-t { font-size: calc(14px * var(--fs)); font-weight: 700; color: var(--text-2); }
+    .sec-h:not(.row) .hint { margin-top: 6px; }
+    .group { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; margin-bottom: 18px; }
+    .cell { display: flex; align-items: center; gap: 12px; padding: 13px 16px; min-height: 56px; border-top: 1px solid var(--line); }
+    .cell:first-child { border-top: 0; }
+    .c-main { flex: 1; min-width: 0; }
+    .c-t { font-size: calc(15.5px * var(--fs)); line-height: 1.35; }
+    span.c-t { flex: 1; min-width: 0; }
+    .c-s { font-size: calc(13px * var(--fs)); color: var(--text-2); margin-top: 2px; line-height: 1.4; }
+    .c-v { color: var(--text-2); font-size: calc(14px * var(--fs)); text-align: right; }
+    .c-main .hint { margin-top: 4px; margin-left: -6px; }
+    .sw { flex: none; width: 50px; height: 30px; border-radius: 999px; background: var(--raised); position: relative; }
+    .sw::after { content: ""; position: absolute; left: 4px; top: 4px; width: 22px; height: 22px; border-radius: 50%; background: var(--muted); opacity: .45; }
+    .sw.on { background: var(--accent); }
+    .sw.on::after { left: 24px; background: var(--on-accent); opacity: 1; }
+    .chip { flex: none; border: 1px solid var(--line-2); border-radius: 14px; padding: 7px 12px; color: var(--accent); font-size: calc(13.5px * var(--fs)); white-space: nowrap; }
+    .segm { flex: none; display: inline-flex; background: var(--raised); border-radius: 13px; padding: 3px; font-size: calc(13.5px * var(--fs)); color: var(--text-2); }
+    .segm b, .segm i { font-style: normal; font-weight: 400; padding: 6px 11px; border-radius: 10px; }
+    .segm b { background: var(--surface); color: var(--text); }
+    .chev { width: 18px; height: 18px; color: var(--muted); flex: none; }
+    .links { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .links .chip { color: var(--text-2); }
+    .links .lk { color: var(--text-2); font-size: calc(13.5px * var(--fs)); padding: 7px 8px; }
+    .save { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px var(--pad); border-top: 1px solid var(--line); font-size: calc(13px * var(--fs)); color: var(--text-2); background: var(--bg); }
+    .save .pb { background: var(--accent); color: var(--on-accent); border-radius: 16px; padding: 12px 22px; font-weight: 600; font-size: calc(14.5px * var(--fs)); }
+    .save.inflow { border-top: 0; padding: 4px 0 0; background: transparent; }
+    .capsule { position: absolute; left: 50%; transform: translateX(-50%); bottom: 22px; width: min(360px, calc(100% - 32px)); height: 64px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow-pop); display: flex; justify-content: space-around; align-items: center; color: var(--text-2); z-index: 5; }
+    .capsule span { display: grid; justify-items: center; gap: 2px; font-size: calc(10.5px * var(--fs)); }
+    .capsule svg { width: 20px; height: 20px; }
+    .capsule .on { color: var(--accent); }
+    .gesture { position: absolute; left: 50%; bottom: 6px; width: 132px; height: 4px; margin-left: -66px; border-radius: 4px; background: var(--text); opacity: .55; z-index: 60; pointer-events: none; }
+
+    /* 触发点：一句摘要 + ⓘ（对应 InfoHint.bind 的 TextView + 末尾图标） */
+    .hint { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; border: 0; background: transparent; color: var(--text-2); font-size: calc(14px * var(--fs)); line-height: 1.4; text-align: start; padding: 5px 6px; border-radius: 9px; min-height: 32px; cursor: pointer; }
+    .sec-h.row .hint { max-width: 62%; }
+    .hint .hint-t { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .hint .hint-i { width: calc(16px * var(--fs)); height: calc(16px * var(--fs)); flex: none; color: var(--accent); transition: transform .18s; }
+    .hint:hover { background: var(--accent-soft); }
+    .hint.is-open { background: var(--accent-soft-2); color: var(--text); }
+    .hint[aria-expanded="true"] .hint-i { transform: rotate(180deg); }
+    .hint.plain { cursor: default; }
+    .more { margin: 2px 4px 12px; padding: 10px 12px; border-radius: 12px; background: var(--accent-soft); color: var(--text-2); font-size: calc(14px * var(--fs)); line-height: 1.55; animation: more-in .18s ease-out; }
+    .c-main .more { margin: 6px 0 2px; }
+
+    /* ---------- 弹层 ---------- */
+    .layer { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
+    .layer > * { pointer-events: auto; }
+    .scrim { position: absolute; inset: 0; background: var(--scrim); animation: fade .2s ease-out; }
+    .scrim.clear { background: transparent; }
+    .sf { position: absolute; display: flex; flex-direction: column; background: var(--surface); color: var(--text); outline: none; overflow: hidden; }
+    .sf-title { margin: 0; font-weight: 600; font-size: calc(18px * var(--fs)); line-height: 1.35; }
+    .sf-body { flex: 1 1 auto; min-height: 0; overflow: auto; color: var(--text-2); font-size: calc(15px * var(--fs)); line-height: 1.55; overscroll-behavior: contain; }
+    .sf-act { flex: none; display: flex; justify-content: flex-end; }
+    .btn-soft { border: 0; cursor: pointer; background: var(--raised); color: var(--accent); border-radius: 16px; min-height: 48px; padding: 0 22px; font-size: calc(15px * var(--fs)); font-weight: 500; }
+    .btn-text { border: 0; cursor: pointer; background: transparent; color: var(--accent); border-radius: 12px; min-height: 44px; padding: 0 14px; font-size: calc(15px * var(--fs)); font-weight: 600; }
+    .btn-text:hover, .btn-soft:hover { background: var(--accent-soft-2); }
+
+    /* 现状：MaterialAlertDialog + DSHA 样式（标题 22sp bold，正文 15sp，48dp 按钮，24dp 圆角） */
+    .dlg-now { border-radius: 24px; padding: 22px 24px 14px; box-shadow: var(--shadow); animation: dlg-in .22s cubic-bezier(.2, 0, 0, 1); }
+    .dlg-now .sf-title { font-size: calc(22px * var(--fs)); font-weight: 700; }
+    .dlg-now .sf-body { margin-top: 14px; }
+    .dlg-now .sf-act { margin-top: 22px; }
+    /* 方案 A：收紧的居中弹窗 */
+    .dlg { border-radius: 24px; padding: 22px 24px 16px; box-shadow: var(--shadow); animation: dlg-in .22s cubic-bezier(.2, 0, 0, 1); }
+    .dlg .sf-body { margin-top: 10px; }
+    .dlg .sf-act { margin-top: 16px; }
+    /* 方案 B · 矮窗紧凑弹窗：按钮与标题同行 */
+    .dlg-short { border-radius: 22px; padding: 12px 12px 16px 24px; box-shadow: var(--shadow); animation: dlg-in .22s cubic-bezier(.2, 0, 0, 1); }
+    .dlg-short .hd { display: flex; align-items: center; gap: 12px; flex: none; }
+    .dlg-short .hd .sf-title { flex: 1; min-width: 0; }
+    .dlg-short .sf-body { margin-top: 4px; padding-right: 12px; }
+    /* 方案 B · 底部说明面板 */
+    .sheet { border-radius: 24px 24px 0 0; padding: 0 24px 36px; border: 1px solid var(--line); border-bottom: 0; box-shadow: 0 -8px 30px rgba(0, 0, 0, .12); animation: sheet-in .26s cubic-bezier(.2, 0, 0, 1); }
+    .sheet .grab { flex: none; height: 24px; display: grid; place-items: center; touch-action: none; cursor: grab; margin: 0 -24px; }
+    .sheet .grab::before { content: ""; width: 36px; height: 4px; border-radius: 4px; background: var(--line-2); }
+    .sheet .sf-body { margin-top: 8px; }
+    .sheet .btn-soft { width: 100%; margin-top: 18px; flex: none; }
+    /* 方案 B · 锚定气泡 */
+    .pop { border-radius: 18px; padding: 10px 8px 16px 18px; border: 1px solid var(--line-2); box-shadow: var(--shadow-pop); overflow: visible; animation: pop-in .16s cubic-bezier(.2, 0, 0, 1); }
+    .pop .hd { display: flex; align-items: center; gap: 8px; flex: none; }
+    .pop .hd .sf-title { flex: 1; min-width: 0; font-size: calc(16px * var(--fs)); }
+    .pop .x { width: 40px; height: 40px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); display: grid; place-items: center; cursor: pointer; flex: none; }
+    .pop .x:hover { background: var(--accent-soft-2); }
+    .pop .x svg { width: 18px; height: 18px; }
+    .pop .sf-body { padding-right: 10px; font-size: calc(14.5px * var(--fs)); }
+    .pop::before { content: ""; position: absolute; left: calc(var(--cx, 50%) - 7px); width: 14px; height: 14px; background: var(--surface); transform: rotate(45deg); }
+    .pop.below::before { top: -8px; border-left: 1px solid var(--line-2); border-top: 1px solid var(--line-2); }
+    .pop.above::before { bottom: -8px; border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); }
+
+    .noanim, .noanim::before { animation: none !important; }
+    @keyframes fade { from { opacity: 0; } }
+    @keyframes dlg-in { from { opacity: 0; transform: translateY(8px) scale(.94); } }
+    @keyframes sheet-in { from { transform: translateY(100%); } }
+    @keyframes pop-in { from { opacity: 0; transform: scale(.92); } }
+    @keyframes more-in { from { opacity: 0; transform: translateY(-4px); } }
+
+    /* 标注 */
+    .annot { outline: 1.5px dashed var(--anat); outline-offset: 3px; }
+    .note { position: absolute; pointer-events: none !important; background: var(--anat); color: #fff; font: 600 calc(11px / var(--s)) / 1.35 var(--sans); padding: calc(3px / var(--s)) calc(7px / var(--s)); border-radius: calc(6px / var(--s)); white-space: nowrap; max-width: calc(100% - 8px); overflow: hidden; text-overflow: ellipsis; z-index: 3; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <h1>ⓘ 说明弹窗适配 · 交互原型</h1>
+    <p>对象：配置页「模型和 API Key 在 Web UI 中配置。ⓘ」点开的弹窗，代码入口 <code>InfoHint.show()</code> → <code>DshaDialogBuilder</code>（全 App 共 17 处 InfoHint 调用同一弹窗）。
+      设备里点任意 ⓘ 打开；可切换设备、方案、主题、1.3 倍字体与语言，或拖动尺寸滑块模拟分屏。<kbd>Esc</kbd> 关闭，底部面板可下滑关闭。</p>
+  </header>
+
+  <div class="bar" id="bar">
+    <div class="grp"><span class="lbl">设备</span><div class="seg" id="presets" role="group" aria-label="设备"></div><button class="tbtn" type="button" id="rotate" aria-label="旋转设备">⟳ 旋转</button></div>
+    <div class="grp"><span class="lbl">方案</span><div class="seg" role="group" aria-label="方案">
+      <button type="button" data-k="scheme" data-v="now">现状</button>
+      <button type="button" data-k="scheme" data-v="a">A 收紧弹窗</button>
+      <button type="button" data-k="scheme" data-v="b">B 自适应<span class="rec">推荐</span></button>
+      <button type="button" data-k="scheme" data-v="c">C 行内展开</button>
+    </div></div>
+    <div class="grp"><span class="lbl">视图</span><div class="seg" role="group" aria-label="视图">
+      <button type="button" data-k="view" data-v="single">单机交互</button>
+      <button type="button" data-k="view" data-v="matrix">四联对比</button>
+    </div></div>
+    <div class="grp"><span class="lbl">文案</span><div class="seg" role="group" aria-label="文案">
+      <button type="button" data-k="sample" data-v="page">页面说明</button>
+      <button type="button" data-k="sample" data-v="lan">局域网说明</button>
+      <button type="button" data-k="sample" data-v="long">长文压力</button>
+    </div></div>
+    <div class="grp"><span class="lbl">外观</span>
+      <div class="seg" role="group" aria-label="主题"><button type="button" data-k="theme" data-v="light">浅色</button><button type="button" data-k="theme" data-v="dark">夜间</button></div>
+      <div class="seg" role="group" aria-label="字体缩放"><button type="button" data-k="fs" data-v="1">1.0×</button><button type="button" data-k="fs" data-v="1.3">1.3×</button></div>
+      <div class="seg" role="group" aria-label="界面语言"><button type="button" data-k="lang" data-v="zh">中</button><button type="button" data-k="lang" data-v="en">EN</button></div>
+      <div class="seg" role="group" aria-label="标注"><button type="button" data-k="notes" data-v="1">标注</button><button type="button" data-k="notes" data-v="0">隐藏</button></div>
+    </div>
+    <div class="grp size">
+      <label for="rw">宽</label><input id="rw" type="range" min="320" max="1400" step="1">
+      <label for="rh">高</label><input id="rh" type="range" min="320" max="1400" step="1">
+      <output id="rsz" aria-live="polite"></output>
+    </div>
+  </div>
+
+  <div class="work">
+    <div class="stage" id="stage" aria-label="设备预览"></div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <main class="doc">
+    <section>
+      <h2>推荐：方案 B，按窗口与锚点选形态<span class="tag">只作用于 InfoHint</span></h2>
+      <p>说明弹窗是「看一眼就走」的轻信息，不该打断操作。宽屏让说明贴着 ⓘ 出现，手机竖屏放到拇指区，矮窗只保证不被挤爆。全局 <code>DshaDialogBuilder</code> 的 560dp 规则保持不变，避免影响确认类弹窗。</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>窗口条件（dp）</th><th>形态</th><th>尺寸</th><th>位置</th><th>关闭</th><th>典型设备</th></tr></thead>
+        <tbody>
+          <tr><td>宽 ≥ 600 且 高 ≥ 480，有锚点</td><td>锚定气泡，无遮罩</td><td>宽 min(360, 屏宽 − 24)；高 ≤ min(420, 锚点一侧可用高度)，超出滚动正文</td><td>ⓘ 下方 8dp；下方放不下且上方更宽裕时翻到上方。水平以图标为中心，夹在左右 12dp 内，小三角始终指向 ⓘ</td><td>点外部 / 返回 / ✕</td><td>平板竖横屏、折叠内屏</td></tr>
+          <tr><td>高 &lt; 480</td><td>紧凑居中弹窗</td><td>宽 min(屏宽 − 48, 560)；高 ≤ 屏高 − 32</td><td>居中；「知道了」与标题同一行，只滚正文</td><td>知道了 / 点外部 / 返回</td><td>手机横屏、上下分屏</td></tr>
+          <tr><td>其余（宽 &lt; 600）</td><td>底部说明面板</td><td>全宽；高 ≤ 60% 屏高</td><td>贴底，含 20dp 手势区留白；盖住底部胶囊（模态期间导航不可用）</td><td>知道了 / 下滑 / 点外部 / 返回</td><td>手机竖屏、左右窄分屏</td></tr>
+          <tr><td>无锚点（程序直接调用）</td><td>方案 A 弹窗</td><td>宽 min(屏宽 − 2m, 400 | 440)，m = 16 | 24</td><td>居中</td><td>知道了 / 点外部 / 返回</td><td>—</td></tr>
+        </tbody>
+      </table></div>
+      <h3>共用排版</h3>
+      <ul>
+        <li>标题 18sp / 600（气泡 16sp），正文 15sp、行高 1.55；文字左右边距 24dp（气泡 18dp）。</li>
+        <li>中文每行控制在约 20–28 字；平板现状 512dp 宽约 32 字，偏长。</li>
+        <li>按钮与 ✕ 触控区 ≥ 48dp（✕ 视觉 40dp，Android 侧用 TouchDelegate 或 minHeight 补足）。</li>
+        <li>所有形态正文都可滚动，标题与关闭入口固定；1.3 倍字体下也能完整读到。</li>
+        <li>打开时焦点落到弹层，TalkBack 先读标题；关闭后焦点回到触发的 ⓘ 行。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>落地到代码（已实现：util/InfoSurfacePolicy、ui/InfoSurface；待真机核对）</h2>
+      <ol>
+        <li>新增纯逻辑 <code>util/InfoSurfacePolicy</code> 并配单测：输入 <code>screenWidthDp</code>、<code>screenHeightDp</code>、是否有锚点；输出形态、宽度、最大高度。边界用例 599/600、479/480、无锚点、1.3 倍字体不改变形态。</li>
+        <li><code>InfoHint.bind()</code> 把触发的 TextView 作为锚点传给新重载 <code>show(context, anchor, title, full)</code>；旧的 <code>show(context, title, full)</code> 保留并走无锚点分支，现有 17 处调用不用改。</li>
+        <li>气泡沿用 <code>DshaDialogBuilder</code> 自定义 view：窗口 <code>gravity = TOP|START</code>，x/y 由 <code>anchor.getLocationInWindow()</code> 与测得高度计算，<code>dimAmount = 0</code>，<code>setCanceledOnTouchOutside(true)</code>。不用 <code>PopupWindow</code>，保留 Dialog 的返回键与 TalkBack 焦点行为。</li>
+        <li>底部面板复用 <code>CardSheet</code> 的贴底动效与滚动测量；说明面板不需要抬到胶囊上方（CardSheet 的 <code>lp.y</code> 偏移只留给需要导航可见的场景）。</li>
+        <li>紧凑弹窗用 <code>BoundedDialogLayout</code> 承载自定义布局，避开 MDC 默认上下 80dp 背景内边距（数值依 MDC 默认推算，未真机测量）对横屏高度的挤占。</li>
+        <li>旋转：<code>MainActivity</code> 未声明 <code>configChanges</code>，旋转会重建并关闭弹窗。若要旋转后保留，改为 <code>DialogFragment</code> 保存提示键，按新窗口重新判定形态（可选项）。</li>
+        <li>验收：<code>LayoutAuditInstrumentation</code> 中英文、日夜、短屏、1.3 倍字体；真机手机竖/横、平板竖/横各截一张，核对气泡不出界、底部面板不被手势条遮挡。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>其他方案取舍</h2>
+      <h3>A 收紧弹窗</h3>
+      <p>只改 InfoHint 的弹窗：阅读宽度 ≤ 440dp（手机 ≤ 400dp），标题 18sp，收紧按钮区，最大高度 = 屏高 − 48。改动最小、风险最低；但平板上仍在正中，离右上角的 ⓘ 远，且遮住正在看的设置项。可作为 B 的第一步先上。</p>
+      <h3>C 行内展开</h3>
+      <p>点 ⓘ 在原位展开其余句子，无弹层、无遮罩，最轻。缺点是推动下方布局，长文在手机上把行撑得很高，也与 v5 方案 A「行内只留一句、详情收进 ⓘ」的初衷相反。只适合极短补充。</p>
+    </section>
+  </main>
+  <p class="foot">本原型只用于评审，不参与 Android 构建。设备内 1px = 1dp；平板竖屏 640×1024dp 由截图 1600px 宽 ÷ 2.5 推算，现状 512dp 宽与截图一致。英文为原有已翻译文案，长文压力样本为真实文案拼接。</p>
+
+  <script>
+  (() => {
+    'use strict';
+    const $ = (s, r = document) => r.querySelector(s);
+    const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+    const PRESETS = [
+      { id: 'ph-p', label: '手机竖屏', w: 393, h: 852 },
+      { id: 'ph-l', label: '手机横屏', w: 852, h: 393 },
+      { id: 'fold', label: '折叠内屏', w: 673, h: 841 },
+      { id: 'tab-p', label: '平板竖屏', w: 640, h: 1024 },
+      { id: 'tab-l', label: '平板横屏', w: 1024, h: 640 },
+      { id: 'split', label: '平板分屏', w: 507, h: 640 }
+    ];
+    const MATRIX = ['ph-p', 'ph-l', 'tab-p', 'tab-l'];
+
+    // 文案取自 res/values{,-en} 现有字符串；不新增翻译。
+    const L = {
+      zh: {
+        title: '运行配置', sub: '偏好与管理', secNet: '运行与网络', secDisp: '显示与启动',
+        pageHint: '模型和 API Key 在 Web UI 中配置。这里的端口与运行方式在下次启动生效。',
+        lanHint: '局域网使用 HTTP，流量未加密。请只在可信网络使用，并只向可信设备分享连接链接。',
+        mode: '运行方式', modeV: 'proroot（可选，实验）', autoPort: '自动分配 Web 端口（推荐）', autoPortSub: '首选 3080，占用时自动换用',
+        dns: 'DNS 解析策略', dnsA: '自动', dnsN: '原生', lan: '允许局域网访问', lanSub: '未设密码 · 用户名 dsha', setPw: '设密码',
+        compat: '运行时兼容选项', compatSub: '静态加载器 开 · seccomp 加速 开', update: '启动时检查更新', overlay: '悬浮显示 AI 输出', overlayBtn: '外观与行为',
+        data: '数据与备份', restore: '恢复旧端口草稿', home: '项目主页', saved: '配置已是最新', save: '保存配置',
+        nav: ['启动', '插件', '设置', '终端'], ok: '知道了', close: '关闭', tap: '（点按查看完整说明）'
+      },
+      en: {
+        title: 'Runtime settings', sub: 'Preferences', secNet: 'Runtime & network', secDisp: 'Display & startup',
+        pageHint: 'Configure models and API keys in Web UI. Port and runtime changes apply on the next start.',
+        lanHint: 'LAN access uses HTTP, with unencrypted traffic. Use trusted networks and share connection links only with trusted devices.',
+        mode: 'Runtime', modeV: 'proroot (optional)', autoPort: 'Auto-assign Web port', autoPortSub: 'Prefers 3080, switches if busy',
+        dns: 'DNS strategy', dnsA: 'Auto', dnsN: 'Native', lan: 'Allow LAN access', lanSub: 'No password · user dsha', setPw: 'Password',
+        compat: 'Runtime compatibility', compatSub: 'Static loader on · seccomp on', update: 'Check updates on start', overlay: 'Floating AI output', overlayBtn: 'Appearance',
+        data: 'Data & backup', restore: 'Restore port draft', home: 'Project home', saved: 'Settings are up to date', save: 'Save',
+        nav: ['Launch', 'Plugins', 'Settings', 'Terminal'], ok: 'Got it', close: 'Close', tap: '(tap for details)'
+      }
+    };
+    L.zh.long = [L.zh.pageHint, '端口占用时保留首选设置，自动使用可用端口。', L.zh.lanHint].join('').repeat(2);
+    L.en.long = [L.en.pageHint, 'If occupied, keep the preferred port and use an available one.', L.en.lanHint].join(' ').repeat(2).replace(/\.(?=\S)/g, '. ');
+
+    const S = { preset: 'tab-p', w: 640, h: 1024, scheme: 'now', view: 'single', sample: 'page', theme: 'light', fs: 1, lang: 'zh', notes: true, open: 'page', inline: { page: true } };
+
+    /* 与 util/SummaryText 同一断句规则：首个句末标点（ASCII 需后接空白）或换行。 */
+    function split(text) {
+      const full = String(text || '').trim();
+      let end = -1;
+      for (let i = 0; i < full.length; i++) {
+        const ch = full[i];
+        if (ch === '\n') { end = i; break; }
+        if ('。！？؟'.includes(ch)) { end = closeQ(full, i + 1); break; }
+        if ('.!?'.includes(ch) && i + 1 < full.length && /\s/.test(full[i + 1])) { end = closeQ(full, i + 1); break; }
+      }
+      if (end < 0 || end >= full.length) return { summary: full, full, rest: '', hasMore: false };
+      const summary = full.slice(0, end).trim(), rest = full.slice(end).trim();
+      if (!summary || !rest) return { summary: full, full, rest: '', hasMore: false };
+      return { summary, full, rest, hasMore: true };
+    }
+    function closeQ(t, i) { while (i < t.length && '」』）)"”’'.includes(t[i])) i++; return i; }
+
+    function hints(c) {
+      const T = L[c.lang];
+      return {
+        page: { title: T.title, text: c.sample === 'long' ? T.long : T.pageHint },
+        lan: { title: T.lan, text: T.lanHint }
+      };
+    }
+
+    /* 各方案的形态判定（B 即建议的 InfoSurfacePolicy）。 */
+    function policy(sc, w, h) {
+      if (sc === 'now') {
+        return {
+          kind: 'dialog-now', label: '居中弹窗（现状）', width: Math.min(560, w) - 48, maxH: Math.max(120, h - 24 - 160),
+          close: '知道了 / 点外部 / 返回', padX: 48,
+          rules: [{ t: '所有窗口：宽 = min(560, 屏宽) − 左右各 24dp 背景内边距', hit: true }, { t: '高 ≤ 屏高 − 24 − 上下各 80dp 背景内边距（MDC 默认，推算）', hit: true }]
+        };
+      }
+      if (sc === 'a') {
+        const m = w >= 600 ? 24 : 16, cap = w >= 600 ? 440 : 400;
+        return {
+          kind: 'dialog', label: '收紧弹窗', width: Math.min(w - 2 * m, cap), maxH: h - 48, close: '知道了 / 点外部 / 返回', padX: 48,
+          rules: [{ t: `宽 = min(屏宽 − 2×${m}, ${cap})`, hit: true }, { t: '高 ≤ 屏高 − 48；正文滚动，标题与按钮固定', hit: true }]
+        };
+      }
+      if (sc === 'b') {
+        const r1 = w >= 600 && h >= 480, r2 = !r1 && h < 480, r3 = !r1 && !r2;
+        const rules = [
+          { t: '宽 ≥ 600 且 高 ≥ 480 且有锚点 → 锚定气泡', hit: r1 },
+          { t: '高 < 480（手机横屏、矮分屏）→ 紧凑弹窗', hit: r2 },
+          { t: '其余（手机竖屏、窄分屏）→ 底部说明面板', hit: r3 },
+          { t: '无锚点（程序调用）→ 方案 A 弹窗', hit: false }
+        ];
+        if (r1) return { kind: 'popover', label: '锚定气泡', width: Math.min(360, w - 24), maxH: 420, close: '点外部 / 返回 / ✕', padX: 36, rules };
+        if (r2) return { kind: 'dialog-short', label: '紧凑弹窗', width: Math.min(w - 48, 560), maxH: h - 32, close: '知道了 / 点外部 / 返回', padX: 48, rules };
+        return { kind: 'sheet', label: '底部说明面板', width: w, maxH: Math.round(h * 0.6), close: '知道了 / 下滑 / 点外部 / 返回', padX: 48, rules };
+      }
+      return { kind: 'inline', label: '行内展开', rules: [{ t: '所有窗口：在原位置展开其余句子，无遮罩', hit: true }] };
+    }
+
+    const NOTES = {
+      now: { bad: true, items: ['宽 = min(560, 屏宽) − 48：平板竖屏 512dp，两句说明每行约 32 个汉字，偏长', '卡片在屏幕正中，离右上角 ⓘ 远，且盖住正在看的设置项', 'MDC 默认上下 80dp 背景内边距（推算）：手机横屏卡片可用高度仅约 209dp', '正文与按钮之间留白偏大，短说明显得空'] },
+      a: { items: ['只改 InfoHint 的弹窗，不动 DshaDialogBuilder 全局 560dp', '阅读宽度 ≤ 440dp，中文每行约 26 字', '标题 18sp，正文 15sp / 1.55，收紧按钮区', '改动最小；平板上仍远离触发点'] },
+      b: { items: ['宽屏：气泡贴着 ⓘ 出现，无遮罩，视线不跳，点外部即关', '手机竖屏：底部面板，按钮在拇指区，可下滑关闭', '矮窗：紧凑弹窗，按钮与标题同行，只滚正文', '无锚点调用自动退回方案 A，现有调用不必改'] },
+      c: { items: ['原位展开其余句子，无弹层、无遮罩', '会推动下方布局；长文在手机上把行撑高', '与 v5「行内只留一句」初衷相反，只适合极短补充'] }
+    };
+
+    const ICON = {
+      info: cls => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.6" r=".6" fill="currentColor"/></svg>`,
+      back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+      dl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+      half: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>',
+      play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg>',
+      plug: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6v3a2 2 0 1 0 0 4v2h3v6h-6v-2a2 2 0 1 0-4 0v2H4v-6h2a2 2 0 1 0 0-4H4V4h5z"/></svg>',
+      gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M5.5 18.5l1.8-1.8M16.7 7.3l1.8-1.8"/></svg>',
+      term: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M7.5 9.5l3 2.5-3 2.5M12.5 15h4"/></svg>',
+      chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
+      x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+    };
+
+    /* ---------- 设备界面 ---------- */
+    function screenHTML(c, uid) {
+      const T = L[c.lang], H = hints(c);
+      const wide = c.w >= 600, rail = Math.min(c.w, c.h) >= 600;
+      const hp = split(H.page.text), hl = split(H.lan.text);
+      const inl = c.scheme === 'c';
+      const hintBtn = (id, sp) => {
+        if (!sp.hasMore) return `<span class="hint plain">${esc(sp.summary)}</span>`;
+        const open = !inl && c.open === id;
+        const aria = inl ? `aria-expanded="${!!c.inline[id]}" aria-controls="${uid}-more-${id}"` : 'aria-haspopup="dialog"';
+        return `<button type="button" class="hint${open ? ' is-open' : ''}" data-hint="${id}" ${aria} aria-label="${esc(sp.summary + ' ' + T.tap)}"><span class="hint-t">${esc(sp.summary)}</span>${ICON.info('hint-i')}</button>`;
+      };
+      const more = (id, sp) => inl && c.inline[id] && sp.hasMore ? `<div class="more" id="${uid}-more-${id}">${esc(sp.rest)}</div>` : '';
+      const nav = T.nav, icons = [ICON.play, ICON.plug, ICON.gear, ICON.term];
+      const railHTML = rail ? `<nav class="rail" aria-hidden="true">${nav.map((n, i) => `<div class="ri${i === 2 ? ' on' : ''}">${icons[i]}<span>${esc(n)}</span></div>`).join('')}<div class="lf">LOCAL FIRST</div></nav>` : '';
+      const saveHTML = `<div class="save${rail ? '' : ' inflow'}"><span>${esc(T.saved)}</span><span class="pb">${esc(T.save)}</span></div>`;
+      return `
+        <div class="sbar" aria-hidden="true"><span>06:18</span><i></i></div>
+        <div class="abar" style="height:${rail ? 72 : 60}px"><span class="ib">${ICON.back}</span><div class="t"><b>${esc(T.title)}</b><small>${esc(T.sub)}</small></div><span class="ib">${ICON.dl}</span><span class="ib">${ICON.half}</span>${rail ? `<span class="ib">${ICON.info('')}</span>` : ''}</div>
+        <div class="body">${railHTML}
+          <div class="main" style="--pad:${rail ? 28 : 20}px">
+            <div class="scroll" style="${rail ? '' : 'padding-bottom:110px'}">
+              <div class="sec-h${wide ? ' row' : ''}"><span class="sec-t">${esc(T.secNet)}</span>${hintBtn('page', hp)}</div>
+              ${more('page', hp)}
+              <div class="group">
+                <div class="cell"><span class="c-t">${esc(T.mode)}</span><span class="c-v">${esc(T.modeV)}</span></div>
+                <div class="cell"><div class="c-main"><div class="c-t">${esc(T.autoPort)}</div><div class="c-s">${esc(T.autoPortSub)}</div></div><span class="sw on"></span></div>
+                <div class="cell"><span class="c-t">${esc(T.dns)}</span><span class="segm"><b>${esc(T.dnsA)}</b><i>IPv4</i><i>${esc(T.dnsN)}</i></span></div>
+                <div class="cell"><div class="c-main"><div class="c-t">${esc(T.lan)}</div><div class="c-s">${esc(T.lanSub)}</div>${hintBtn('lan', hl)}${more('lan', hl)}</div><span class="chip">${esc(T.setPw)}</span><span class="sw"></span></div>
+                <div class="cell"><div class="c-main"><div class="c-t">${esc(T.compat)}</div><div class="c-s">${esc(T.compatSub)}</div></div>${ICON.chev}</div>
+              </div>
+              <div class="sec-h"><span class="sec-t">${esc(T.secDisp)}</span></div>
+              <div class="group">
+                <div class="cell"><span class="c-t">${esc(T.update)}</span><span class="sw on"></span></div>
+                <div class="cell"><span class="c-t">${esc(T.overlay)}</span><span class="chip">${esc(T.overlayBtn)}</span><span class="sw on"></span></div>
+              </div>
+              <div class="links"><span class="chip">${esc(T.data)}</span><span class="chip">${esc(T.restore)}</span><span class="lk">${esc(T.home)}</span></div>
+              ${rail ? '' : saveHTML}
+            </div>
+            ${rail ? saveHTML : ''}
+          </div>
+        </div>
+        ${rail ? '' : `<div class="capsule" aria-hidden="true">${nav.map((n, i) => `<span class="${i === 2 ? 'on' : ''}">${icons[i]}${esc(n)}</span>`).join('')}</div>`}
+        <div class="gesture" aria-hidden="true"></div>
+        <div class="layer"></div>`;
+    }
+
+    function deviceHTML(c, uid, s) {
+      return `<div class="dev-wrap" style="width:${(c.w + 24) * s}px;height:${(c.h + 24) * s}px">
+        <div class="device" style="width:${c.w + 24}px;height:${c.h + 24}px;transform:scale(${s})">
+          <div class="screen" id="${uid}" lang="${c.lang === 'zh' ? 'zh-CN' : 'en'}" style="width:${c.w}px;height:${c.h}px;--fs:${c.fs};--s:${s}">${screenHTML(c, uid)}</div>
+        </div></div>`;
+    }
+
+    /* ---------- 弹层 ---------- */
+    function surfaceHTML(p, hint, T, uid) {
+      const t = esc(hint.title), b = esc(hint.text), tid = `${uid}-sft`;
+      const base = `role="dialog" aria-modal="true" aria-labelledby="${tid}" tabindex="-1"`;
+      switch (p.kind) {
+        case 'dialog-now':
+        case 'dialog':
+          return `<div class="sf ${p.kind === 'dialog' ? 'dlg' : 'dlg-now'}" ${base}><h2 class="sf-title" id="${tid}">${t}</h2><div class="sf-body">${b}</div><div class="sf-act"><button type="button" class="btn-soft" data-close>${esc(T.ok)}</button></div></div>`;
+        case 'dialog-short':
+          return `<div class="sf dlg-short" ${base}><div class="hd"><h2 class="sf-title" id="${tid}">${t}</h2><button type="button" class="btn-text" data-close>${esc(T.ok)}</button></div><div class="sf-body">${b}</div></div>`;
+        case 'sheet':
+          return `<div class="sf sheet" ${base}><div class="grab" aria-hidden="true"></div><h2 class="sf-title" id="${tid}">${t}</h2><div class="sf-body">${b}</div><button type="button" class="btn-soft" data-close>${esc(T.ok)}</button></div>`;
+        case 'popover':
+          return `<div class="sf pop" ${base}><div class="hd"><h2 class="sf-title" id="${tid}">${t}</h2><button type="button" class="x" data-close aria-label="${esc(T.close)}">${ICON.x}</button></div><div class="sf-body">${b}</div></div>`;
+      }
+      return '';
+    }
+
+    function mountSurface(scr, c, uid, animate) {
+      const layer = $('.layer', scr);
+      layer.innerHTML = '';
+      if (!c.open || c.scheme === 'c') return null;
+      const T = L[c.lang], hint = hints(c)[c.open], p = policy(c.scheme, c.w, c.h);
+      layer.innerHTML = `<div class="scrim${p.kind === 'popover' ? ' clear' : ''}" data-close></div>${surfaceHTML(p, hint, T, uid)}`;
+      const sf = $('.sf', layer);
+      if (!animate) { sf.classList.add('noanim'); $('.scrim', layer).classList.add('noanim'); }
+      sf.style.width = p.width + 'px';
+      const info = { p, W: p.width };
+
+      if (p.kind === 'popover') {
+        const btn = $(`[data-hint="${c.open}"]`, scr);
+        const anchor = btn && ($('.hint-i', btn) || btn);
+        const sr = scr.getBoundingClientRect(), s = sr.width / c.w;
+        const ar = anchor ? anchor.getBoundingClientRect() : { left: sr.left + c.w * s / 2, top: sr.top + 120 * s, width: 0, height: 0 };
+        const r = { l: (ar.left - sr.left) / s, t: (ar.top - sr.top) / s, w: ar.width / s, h: ar.height / s };
+        r.b = r.t + r.h; r.cx = r.l + r.w / 2;
+        const m = 12, gap = 8;
+        const below = (c.h - m) - (r.b + gap), above = (r.t - gap) - (28 + m);
+        sf.style.maxHeight = 'none';
+        const natural = sf.offsetHeight;
+        const down = natural <= below || below >= above;
+        sf.style.maxHeight = Math.min(p.maxH, down ? below : above) + 'px';
+        const H = sf.offsetHeight;
+        const left = clamp(r.cx - p.width / 2, m, c.w - m - p.width);
+        const top = down ? r.b + gap : r.t - gap - H;
+        const cx = clamp(r.cx - left, 22, p.width - 22);
+        Object.assign(sf.style, { left: left + 'px', top: top + 'px', transformOrigin: `${cx}px ${down ? 0 : H}px` });
+        sf.style.setProperty('--cx', cx + 'px');
+        sf.classList.add(down ? 'below' : 'above');
+        Object.assign(info, { H, left, top, place: `ⓘ ${down ? '下方' : '上方'} ${gap}dp；距左 ${Math.round(left)} / 右 ${Math.round(c.w - left - p.width)}dp`, extra: `指向 ⓘ ${down ? '下方' : '上方'}` });
+      } else if (p.kind === 'sheet') {
+        sf.style.maxHeight = p.maxH + 'px';
+        const H = sf.offsetHeight, left = (c.w - p.width) / 2, top = c.h - H;
+        Object.assign(sf.style, { left: left + 'px', bottom: '0px' });
+        Object.assign(info, { H, left, top, place: `贴底全宽；上限 ${p.maxH}dp（60% 屏高）`, extra: '贴底' });
+      } else {
+        sf.style.maxHeight = p.maxH + 'px';
+        const H = sf.offsetHeight, left = (c.w - p.width) / 2, top = (c.h - H) / 2;
+        Object.assign(sf.style, { left: left + 'px', top: top + 'px' });
+        Object.assign(info, { H, left, top, place: `居中；左右各 ${Math.round(left)}dp`, extra: `左右各 ${Math.round(left)}dp` });
+      }
+      const body = $('.sf-body', sf);
+      info.scroll = body.scrollHeight > body.clientHeight + 1;
+      if (c.notes) addNote(layer, sf, info);
+      return info;
+    }
+
+    function addNote(layer, sf, info) {
+      sf.classList.add('annot');
+      const n = document.createElement('div');
+      n.className = 'note';
+      n.textContent = `${info.p.label} · ${Math.round(info.W)}×${Math.round(info.H)}dp · ${info.extra}${info.scroll ? ' · 正文滚动' : ''}`;
+      layer.appendChild(n);
+      const nh = n.offsetHeight, nw = n.offsetWidth, W = layer.clientWidth, Hh = layer.clientHeight;
+      // 气泡上方是 ⓘ 本身，标注放下方，免得盖住锚点。
+      const preferBelow = info.p.kind === 'popover' && !$('.sf', layer).classList.contains('above');
+      let top = preferBelow ? info.top + info.H + 10 : info.top - nh - 8;
+      if (!preferBelow && top < 30) top = info.top + info.H + 8;
+      if (top + nh > Hh - 4) top = Math.max(30, info.top - nh - 8);
+      Object.assign(n.style, { left: clamp(info.left, 4, Math.max(4, W - nw - 4)) + 'px', top: top + 'px' });
+    }
+
+    function bindSheetDrag(sf, s) {
+      const grab = $('.grab', sf);
+      if (!grab) return;
+      let y0 = null, dy = 0;
+      grab.addEventListener('pointerdown', e => { y0 = e.clientY; dy = 0; grab.setPointerCapture(e.pointerId); sf.style.transition = 'none'; });
+      grab.addEventListener('pointermove', e => { if (y0 == null) return; dy = Math.max(0, (e.clientY - y0) / s); sf.style.transform = `translateY(${dy}px)`; });
+      const end = () => { if (y0 == null) return; y0 = null; sf.style.transition = 'transform .18s'; if (dy > 80) closeSurface(); else sf.style.transform = ''; };
+      grab.addEventListener('pointerup', end);
+      grab.addEventListener('pointercancel', end);
+    }
+
+    /* ---------- 渲染 ---------- */
+    const ctx = over => Object.assign({ w: S.w, h: S.h, scheme: S.scheme, sample: S.sample, fs: S.fs, lang: S.lang, notes: S.notes, open: S.open, inline: S.inline }, over || {});
+    const narrowPage = () => innerWidth <= 1000;
+
+    function renderSingle(animate) {
+      const stage = $('#stage');
+      stage.className = 'stage';
+      const c = ctx();
+      const avW = stage.clientWidth - 34;
+      // 工具栏会换行，按舞台实际顶边算可用高度，保证整机露出。
+      const top = stage.getBoundingClientRect().top + scrollY;
+      const avH = narrowPage() ? innerHeight * 0.72 : Math.max(440, innerHeight - top - 20) - 34;
+      const s = Math.min(1, avW / (c.w + 24), avH / (c.h + 24));
+      stage.style.height = ((c.h + 24) * s + 34) + 'px';
+      stage.innerHTML = deviceHTML(c, 'd0', s);
+      const scr = $('#d0');
+      const info = mountSurface(scr, c, 'd0', animate);
+      const sf = $('.sf', scr);
+      if (sf) {
+        if (animate) sf.focus({ preventScroll: true });
+        bindSheetDrag(sf, s);
+      }
+      renderPanel(c, info);
+    }
+
+    function renderMatrix() {
+      const stage = $('#stage');
+      stage.className = 'stage matrix';
+      stage.style.height = '';
+      const cols = stage.clientWidth > 700 ? 2 : 1;
+      const tileW = (stage.clientWidth - 34 - 16 * (cols - 1)) / cols;
+      const maxH = cols === 2 ? innerHeight * 0.42 : innerHeight * 0.62;
+      const open = S.sample === 'lan' ? 'lan' : 'page';
+      const results = [];
+      stage.innerHTML = MATRIX.map((id, i) => {
+        const pr = PRESETS.find(p => p.id === id);
+        const c = ctx({ w: pr.w, h: pr.h, open, inline: { [open]: true } });
+        const s = Math.min(1, tileW / (c.w + 24), maxH / (c.h + 24));
+        const p = policy(c.scheme, c.w, c.h);
+        results.push({ pr, c, p });
+        return `<figure class="tile">${deviceHTML(c, 'm' + i, s)}<figcaption><b>${pr.label}</b> ${pr.w}×${pr.h} · ${p.label}</figcaption></figure>`;
+      }).join('');
+      results.forEach((r, i) => { r.info = mountSurface($('#m' + i), r.c, 'm' + i, false); });
+      renderMatrixPanel(results);
+    }
+
+    const wClass = w => w < 600 ? 'Compact' : w < 840 ? 'Medium' : 'Expanded';
+    const hClass = h => h < 480 ? 'Compact' : h < 900 ? 'Medium' : 'Expanded';
+    function cpl(c, p, info) {
+      if (!info) return '';
+      const cw = info.W - p.padX, unit = 15 * c.fs;
+      return c.lang === 'zh' ? `约 ${Math.floor(cw / unit)} 个汉字` : `约 ${Math.floor(cw / (unit * 0.5))} 个字符`;
+    }
+    function notesHTML(sc) {
+      const n = NOTES[sc];
+      return `<h3>${sc === 'now' ? '现状问题' : '方案要点'}</h3><ul class="pts${n.bad ? ' bad' : ''}">${n.items.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
+    }
+
+    function renderPanel(c, info) {
+      const p = policy(c.scheme, c.w, c.h);
+      const rail = Math.min(c.w, c.h) >= 600;
+      const rows = [['窗口', `${c.w} × ${c.h} dp`], ['尺寸档', `宽 ${wClass(c.w)} · 高 ${hClass(c.h)}`], ['导航', rail ? '左侧导航栏（sw ≥ 600）' : '底部悬浮胶囊']];
+      if (p.kind === 'inline') rows.push(['形态', '行内展开（点 ⓘ 切换）']);
+      else if (info) rows.push(['形态', p.label], ['尺寸', `${Math.round(info.W)} × ${Math.round(info.H)} dp${info.scroll ? '（正文滚动）' : ''}`], ['位置', info.place], ['关闭', p.close], ['每行', cpl(c, p, info)]);
+      else rows.push(['形态', `${p.label}（点 ⓘ 打开）`]);
+      $('#panel').innerHTML = `<h2>当前判定</h2><dl class="kv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+        <h3>规则</h3><ul class="rules">${p.rules.map(r => `<li class="${r.hit ? 'hit' : ''}">${esc(r.t)}</li>`).join('')}</ul>${notesHTML(c.scheme)}`;
+    }
+
+    function renderMatrixPanel(results) {
+      const rows = results.map(r => `<tr><td>${r.pr.label}<br><small>${r.pr.w}×${r.pr.h}</small></td><td>${esc(r.p.label)}</td><td>${r.info ? `${Math.round(r.info.W)}×${Math.round(r.info.H)}${r.info.scroll ? '<br><small>正文滚动</small>' : ''}` : '原位展开'}</td></tr>`).join('');
+      $('#panel').innerHTML = `<h2>四联对比</h2><p style="margin:0 0 8px;color:var(--text-2)">同一方案、同一文案在四种窗口下的结果；四联为静态快照，交互请切回单机。</p>
+        <table class="mt"><thead><tr><th>设备</th><th>形态</th><th>尺寸 dp</th></tr></thead><tbody>${rows}</tbody></table>${notesHTML(S.scheme)}`;
+    }
+
+    function render(animate = false) {
+      document.documentElement.dataset.theme = S.theme;
+      syncBar();
+      if (S.view === 'single') renderSingle(animate); else renderMatrix();
+    }
+
+    function closeSurface() {
+      const id = S.open;
+      S.open = null;
+      render(false);
+      const b = id && $(`#d0 [data-hint="${id}"]`);
+      if (b) b.focus({ preventScroll: true });
+    }
+
+    /* ---------- 工具栏 ---------- */
+    $('#presets').innerHTML = PRESETS.map(p => `<button type="button" data-k="preset" data-v="${p.id}">${p.label}</button>`).join('');
+    function syncBar() {
+      $$('#bar [data-k]').forEach(b => {
+        const k = b.dataset.k, v = b.dataset.v;
+        const cur = k === 'notes' ? (S.notes ? '1' : '0') : String(S[k]);
+        b.setAttribute('aria-pressed', String(cur === v));
+      });
+      $('#rw').value = S.w; $('#rh').value = S.h;
+      $('#rsz').value = `${S.w}×${S.h}dp`;
+    }
+    $('#bar').addEventListener('click', e => {
+      const b = e.target.closest('[data-k]');
+      if (!b) return;
+      const k = b.dataset.k, v = b.dataset.v;
+      let animate = false;
+      if (k === 'preset') { const p = PRESETS.find(x => x.id === v); Object.assign(S, { preset: v, w: p.w, h: p.h }); }
+      else if (k === 'fs') S.fs = Number(v);
+      else if (k === 'notes') S.notes = v === '1';
+      else if (k === 'sample') { S.sample = v; S.open = v === 'lan' ? 'lan' : 'page'; S.inline = { [S.open]: true }; animate = true; }
+      else if (k === 'scheme') { S.scheme = v; if (v === 'c') S.inline = { [S.open || 'page']: true }; else if (!S.open) S.open = S.sample === 'lan' ? 'lan' : 'page'; animate = true; }
+      else S[k] = v;
+      render(animate);
+    });
+    $('#rotate').addEventListener('click', () => {
+      [S.w, S.h] = [S.h, S.w];
+      const p = PRESETS.find(x => x.w === S.w && x.h === S.h);
+      S.preset = p ? p.id : 'custom';
+      render(false);
+    });
+    ['#rw', '#rh'].forEach(sel => $(sel).addEventListener('input', () => {
+      S.w = Number($('#rw').value); S.h = Number($('#rh').value);
+      const p = PRESETS.find(x => x.w === S.w && x.h === S.h);
+      S.preset = p ? p.id : 'custom';
+      render(false);
+    }));
+
+    /* ---------- 设备内交互 ---------- */
+    $('#stage').addEventListener('click', e => {
+      if (S.view !== 'single') return;
+      const h = e.target.closest('[data-hint]');
+      if (h) {
+        const id = h.dataset.hint;
+        if (S.scheme === 'c') { S.inline = Object.assign({}, S.inline, { [id]: !S.inline[id] }); render(false); $(`#d0 [data-hint="${id}"]`).focus({ preventScroll: true }); }
+        else { S.open = id; render(true); }
+        return;
+      }
+      if (e.target.closest('[data-close]')) closeSurface();
+    });
+    document.addEventListener('keydown', e => {
+      if (S.view !== 'single' || !S.open || S.scheme === 'c') return;
+      const sf = $('#d0 .sf');
+      if (!sf) return;
+      if (e.key === 'Escape') { e.preventDefault(); closeSurface(); return; }
+      if (e.key === 'Tab') {
+        const f = $$('button', sf);
+        const first = f[0], last = f[f.length - 1], a = document.activeElement;
+        if (!sf.contains(a)) { e.preventDefault(); first.focus(); }
+        else if (e.shiftKey && (a === first || a === sf)) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && a === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+    let rt = 0;
+    addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => render(false), 120); });
+
+    render(true);
+  })();
+  </script>
+</body>
+</html>

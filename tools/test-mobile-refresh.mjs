@@ -71,30 +71,47 @@ try {
     swapTest.restoreConversationScroll();
   });
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(resolve)));
-  assert.equal(await page.locator('#scroller').evaluate(el=>el.scrollTop),0,'new DOM never inherits the old scroller position');
+  // 上游 3.3.1 起恢复改为跨节点：热换重建滚动区后按 window.__dshaMobileLastScroll 回填
+  // （见 dsh-web-mobile src/client/index.tsx 的 remounted-tree 分支），不再要求新 DOM 停在 0。
+  assert.equal(await page.locator('#scroller').evaluate(el=>el.scrollTop),100,'remounted scroller restores the remembered position');
   const sessionLog=await page.evaluate(()=>{
     const frame=document.querySelector('[data-mobile-nav="frame"]');
     const column=document.createElement('div');column.className='fixture_sidebarCol';
     column.innerHTML='<div class="fixture_logoRow"><button>Brand</button><button>Toggle</button></div>';frame.append(column);
-    let snapshot={byId:{}},listener=null,subscriptions=0,unsubscribed=0;const downloaded=[];
+    let snapshot={byId:{}},listener=null,subscriptions=0,unsubscribed=0;const downloaded=[];let downloadsOpened=0;
+    window.DSHA={openDownloads:()=>{downloadsOpened++;return Promise.resolve();}};
     const task=mobileRequire('./effects/drawer-session-log.js').createDrawerSessionLogTask({
       locale:{bind:()=>key=>key},sessions:{list:{getSnapshot:()=>snapshot,subscribe(fn){listener=fn;subscriptions++;return()=>unsubscribed++;}}},
       sessionLogDownload:{download:id=>downloaded.push(id)},
     });
     task.ensure();task.ensure();
     const button=column.querySelector('[data-mobile-nav="session-log"]');
-    const emptyDisabled=button.disabled;button.click();
-    snapshot={byId:{fixture:{id:'fixture-current',retainedBy:{mainView:1}}}};listener();button.click();
-    const enabled=!button.disabled,label=button.getAttribute('aria-label');
-    const nested=button.parentElement.tagName==='SPAN',directButtons=column.firstChild.querySelectorAll(':scope > button').length;
+    const nested=button.parentElement.tagName==='SPAN';
+    const directButtons=column.firstChild.querySelectorAll(':scope > button').length;
+    const label=button.getAttribute('aria-label');
+    button.click();
+    const menu=document.querySelector('[data-mobile-nav="session-log-menu"]');
+    const exportItem=menu.querySelector('[data-mobile-nav="session-log-export"]');
+    const emptyDisabled=exportItem.disabled;
+    snapshot={byId:{fixture:{id:'fixture-current',retainedBy:{mainView:1}}}};listener();
+    const enabled=!exportItem.disabled;
+    exportItem.click();
+    const exported=downloaded.slice();
+    const closedAfterExport=document.querySelector('[data-mobile-nav="session-log-menu"]')===null;
+    button.click();
+    document.querySelector('[data-mobile-nav="session-log-downloads"]').click();
+    const closedAfterDownloads=document.querySelector('[data-mobile-nav="session-log-menu"]')===null;
     column.firstChild.replaceWith(column.firstChild.cloneNode(false));task.ensure();
     const remounted=column.querySelector('[data-mobile-nav="session-log"]')===button;
     const count=column.querySelectorAll('[data-mobile-nav="session-log"]').length;
     task.dispose();const removed=!column.querySelector('[data-mobile-nav="session-log"]');column.remove();
-    return {emptyDisabled,enabled,label,nested,directButtons,downloaded,remounted,count,subscriptions,unsubscribed,removed};
+    delete window.DSHA;
+    return {emptyDisabled,enabled,label,nested,directButtons,downloaded:exported,downloadsOpened,
+      closedAfterExport,closedAfterDownloads,remounted,count,subscriptions,unsubscribed,removed};
   });
-  assert.deepEqual(sessionLog,{emptyDisabled:true,enabled:true,label:'sessionLog',nested:true,directButtons:2,
-    downloaded:['fixture-current'],remounted:true,count:1,subscriptions:1,unsubscribed:1,removed:true});
+  assert.deepEqual(sessionLog,{emptyDisabled:true,enabled:true,label:'downloadMenu',nested:true,directButtons:2,
+    downloaded:['fixture-current'],downloadsOpened:1,closedAfterExport:true,closedAfterDownloads:true,
+    remounted:true,count:1,subscriptions:1,unsubscribed:1,removed:true});
   await page.setViewportSize({width:1200,height:800});
   await tapDescription();
   assert.equal(await page.evaluate(()=>opens),6,'desktop description is not forwarded');

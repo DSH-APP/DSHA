@@ -151,7 +151,7 @@ public final class StartupRecoveryLifecycleTest {
   }
 
   public static final class NativeMain extends MainActivity {
-    TextView banner;
+    com.deepseekharness.app.ui.EnvironmentNoticeBanner banner;
     SelectedNavigation navigation;
     androidx.lifecycle.LifecycleRegistry visibleLifecycle;
     final java.util.List<android.content.Intent> starts = new java.util.ArrayList<>();
@@ -344,7 +344,8 @@ public final class StartupRecoveryLifecycleTest {
     value.set(null, snapshot.newInstance(true, true, false, false));
     running.setBoolean(null, true);
     var main = Robolectric.buildActivity(NativeMain.class).get();
-    main.banner = new TextView(RuntimeEnvironment.getApplication());
+    main.banner =
+        new com.deepseekharness.app.ui.EnvironmentNoticeBanner(RuntimeEnvironment.getApplication());
     // Only getSelectedItemId is used; avoid inflating unrelated Material resources in NoApkRunner.
     Class<?> unsafeType = Class.forName("sun.misc.Unsafe");
     var unsafeField = unsafeType.getDeclaredField("theUnsafe");
@@ -369,7 +370,7 @@ public final class StartupRecoveryLifecycleTest {
       try (var query = EnvironmentTaskGate.tryAcquire("插件操作")) {
         poll.run();
         assertEquals(0, main.starts.size());
-        assertFalse(main.banner.getText().toString().contains("维护进行中"));
+        assertFalse(main.banner.text().toString().contains("维护进行中"));
       }
       poll.run();
       assertEquals(1, main.starts.size());

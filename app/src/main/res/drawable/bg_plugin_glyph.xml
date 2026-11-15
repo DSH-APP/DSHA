@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 插件卡片图标块：raised 底 + 10dp 圆角，图标由 ShellRowIcon 同一强调色 tint。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/shell_raised" />
+    <corners android:radius="10dp" />
+</shape>

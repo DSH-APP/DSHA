@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 底部弹层退出：向下收回 + 淡出，260ms 与进入对称。 -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="220"
+    android:interpolator="@android:interpolator/fast_out_linear_in">
+    <alpha
+        android:fromAlpha="1"
+        android:toAlpha="0" />
+    <translate
+        android:fromYDelta="0"
+        android:toYDelta="14%" />
+</set>

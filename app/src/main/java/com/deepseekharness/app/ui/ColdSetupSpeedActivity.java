@@ -2,6 +2,8 @@ package com.deepseekharness.app.ui;
 
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.deepseekharness.app.R;
 import com.deepseekharness.app.util.UiText;
@@ -27,18 +29,23 @@ public final class ColdSetupSpeedActivity extends androidx.appcompat.app.AppComp
                 else cancel();
               }
             });
-    CardPage page =
-        new CardPage(
-            this,
-            UiText.choose("首次安装测速", "First-install timing"),
-            UiText.choose(
-                "在独立目录完整执行首次安装，保留当前环境、数据和设置。开始时会正常停止 DSH 和终端；测速期间请保持应用在前台。",
-                "Run a complete first install in an isolated directory while keeping the existing environment, data and settings. DSH and terminals stop normally before timing. Keep the app in the foreground."));
+    // 2026-11-01 压缩：长说明拆成三条要点，结果单独成卡（原型见 docs/design/install-env-20261101）。
+    CardPage page = new CardPage(this, UiText.choose("首次安装测速", "First-install timing"), null);
     setContentView(page.root);
-    status =
-        page.text(
-            com.deepseekharness.app.core.ColdSetupTiming.report(this, false), 14, R.color.text);
-    page.content.addView(status);
+    LinearLayout facts = page.card();
+    fact(page, facts, R.drawable.ic_ui2_box, UiText.text("在独立目录执行首次安装，现有环境不变"));
+    fact(page, facts, R.drawable.ic_onb_info, UiText.text("开始时会正常停止 DSH 和终端"));
+    fact(page, facts, R.drawable.ic_recovery_clock, UiText.text("测速期间请保持应用在前台"));
+    page.label(UiText.text("最近一次结果"));
+    LinearLayout result = page.card();
+    String previous = com.deepseekharness.app.core.ColdSetupTiming.report(this, false).trim();
+    status = page.text(previous.isEmpty() ? "—" : previous, 13, R.color.shell_text);
+    status.setTypeface(android.graphics.Typeface.MONOSPACE);
+    status.setLineSpacing(page.dp(3), 1);
+    status.setTextIsSelectable(true);
+    status.setPadding(0, page.dp(4), 0, page.dp(4));
+    status.setAccessibilityLiveRegion(android.view.View.ACCESSIBILITY_LIVE_REGION_POLITE);
+    result.addView(status);
     start = page.button(page.footer, UiText.choose("开始测速", "Start timing"), true, this::run);
     back =
         page.button(
@@ -49,6 +56,27 @@ public final class ColdSetupSpeedActivity extends androidx.appcompat.app.AppComp
               if (!running) finish();
               else cancel();
             });
+  }
+
+  /** 要点行：小图标 + 一句说明，不可点按。 */
+  private static void fact(CardPage page, LinearLayout card, int icon, String value) {
+    LinearLayout row = new LinearLayout(page.context);
+    row.setGravity(android.view.Gravity.TOP);
+    row.setPadding(0, page.dp(7), 0, page.dp(7));
+    ImageView mark = new ImageView(page.context);
+    mark.setImageResource(icon);
+    mark.setImageTintList(
+        android.content.res.ColorStateList.valueOf(page.context.getColor(R.color.shell_accent)));
+    mark.setImportantForAccessibility(android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+    LinearLayout.LayoutParams mp = new LinearLayout.LayoutParams(page.dp(16), page.dp(16));
+    mp.topMargin = page.dp(1);
+    row.addView(mark, mp);
+    TextView words = page.text(value, 13, R.color.shell_text_secondary);
+    words.setLineSpacing(page.dp(3), 1);
+    LinearLayout.LayoutParams wp = new LinearLayout.LayoutParams(0, -2, 1);
+    wp.leftMargin = page.dp(10);
+    row.addView(words, wp);
+    card.addView(row);
   }
 
   private void run() {

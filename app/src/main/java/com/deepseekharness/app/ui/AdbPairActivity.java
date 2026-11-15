@@ -39,10 +39,13 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
     model = new ViewModelProvider(this).get(PairModel.class);
     model.restore(saved);
     setContentView(buildUi());
+    PressFeedback.attachButtons(findViewById(android.R.id.content));
     model.status.observe(
         this,
         text -> {
-          statusText.setText(text == null ? "" : text.split("\n\n", 2)[0]);
+          // 状态行淡入（审计 C-08）；忙碌时按钮保留动作「开始配对」（XML 默认文案），
+          // 只禁用并用状态行说明进度，不再把动作标签换成状态句（审计 C-07）。
+          UiMotion.crossFadeText(statusText, text == null ? "" : text.split("\n\n", 2)[0]);
           hostEt.setEnabled(!model.busy);
           portEt.setEnabled(!model.busy);
           if (!model.busy && !portEt.hasFocus()) portEt.setText(model.pairPort);
@@ -51,10 +54,6 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
           autoBtn.setEnabled(!model.busy);
           manualBtn.setEnabled(!model.busy);
           codeEt.setEnabled(!model.busy);
-          startBtn.setText(
-              model.busy
-                  ? com.deepseekharness.app.util.UiText.text("正在处理，请等待结果…")
-                  : com.deepseekharness.app.util.UiText.text("开始配对"));
           if (!codeEt.getText().toString().equals(model.code))
             codeEt.setText(com.deepseekharness.app.util.UiText.raw(model.code));
         });
@@ -68,7 +67,7 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
   }
 
   private void requestNetworkPermission() {
-    model.message(com.deepseekharness.app.util.UiText.text("无线 ADB 需要局域网权限，以发现配对端口并连接设备"));
+    model.message(com.deepseekharness.app.util.UiText.text("无线 ADB 需要局域网权限"));
     requestPermissions(new String[] {LocalNetworkAccess.PERMISSION}, 37);
   }
 
@@ -78,8 +77,8 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
     if (code == 37)
       model.message(
           LocalNetworkAccess.granted(this)
-              ? com.deepseekharness.app.util.UiText.text("局域网权限已允许，请输入本次配对码后开始配对")
-              : com.deepseekharness.app.util.UiText.text("未允许局域网访问，请在系统 DSHA 权限设置中允许后重试"));
+              ? com.deepseekharness.app.util.UiText.text("权限已允许，请输入配对码")
+              : com.deepseekharness.app.util.UiText.text("局域网未授权，请先允许后重试"));
   }
 
   private View buildUi() {
@@ -113,7 +112,7 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
     statusText.setMaxLines(3);
     statusText.setEllipsize(android.text.TextUtils.TruncateAt.END);
     TextView detail = new TextView(this);
-    detail.setText(com.deepseekharness.app.util.UiText.choose("查看连接详情 ›", "Connection details ›"));
+    detail.setText(com.deepseekharness.app.util.UiText.choose("连接详情", "Connection details ›"));
     detail.setTextSize(12);
     detail.setTextColor(getColor(com.deepseekharness.app.R.color.primary));
     detail.setGravity(Gravity.CENTER_VERTICAL);
@@ -215,7 +214,7 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
         startActivity(
             new Intent(android.provider.Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS));
       } catch (RuntimeException ignored) {
-        model.message(com.deepseekharness.app.util.UiText.text("请手动进入开发者选项 → 无线调试 → 使用配对码配对设备"));
+        model.message(com.deepseekharness.app.util.UiText.text("手动进入无线调试并打开配对弹窗"));
       }
     }
   }
@@ -347,14 +346,14 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
       connectPort = saved.getString("adb-connect-port", "");
       status.setValue(
           saved.getBoolean("adb-pair-busy")
-              ? com.deepseekharness.app.util.UiText.text("配对任务被系统中断，结果尚不确定。请先验证已有连接；若仍未配对，再获取新配对码。")
+              ? com.deepseekharness.app.util.UiText.text("配对被中断，请先验证连接")
               : saved.getString(
                   "adb-pair-status", com.deepseekharness.app.util.UiText.text("请输入本次配对码")));
     }
 
     void watch() {
       final long epoch = ++watchEpoch;
-      message(com.deepseekharness.app.util.UiText.text("已开始监听，两分钟内有效。请打开系统的「使用配对码配对设备」弹窗。"));
+      message(com.deepseekharness.app.util.UiText.text("已开始监听；请打开系统配对弹窗"));
       DshaAccessibilityService.startWatch(
           (value, address, port, connectionPort) ->
               main.post(
@@ -375,7 +374,7 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
             if (!cleared && !busy && epoch == watchEpoch) {
               watchEpoch++;
               DshaAccessibilityService.stopWatch();
-              message(com.deepseekharness.app.util.UiText.text("自动读码已到期；请重新点自动读取，或手动输入本次配对码。"));
+              message(com.deepseekharness.app.util.UiText.text("读取已到期，请重试或手动输入"));
             }
           },
           120_000);
@@ -409,7 +408,7 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
         return;
       }
       if (!prepareOffline && !LocalNetworkAccess.granted(getApplication())) {
-        message(com.deepseekharness.app.util.UiText.text("局域网权限未允许，请先在 DSHA 权限设置中允许"));
+        message(com.deepseekharness.app.util.UiText.text("局域网权限未允许，请先授权"));
         return;
       }
       final String value = code.trim();
@@ -491,9 +490,7 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
         if (cleared || Thread.currentThread().isInterrupted())
           return com.deepseekharness.app.util.UiText.text("ADB 操作已取消");
         if (offlineOnly) {
-          String detail =
-              com.deepseekharness.app.util.UiText.text(
-                  "ADB_OFFLINE_READY: 离线依赖已准备好，未验证连接。请开启无线调试后再次验证。");
+          String detail = com.deepseekharness.app.util.UiText.text("离线依赖已就绪，未验证连接");
           DeviceBridgeService.adbDetail = detail;
           DeviceBridgeService.adbState = "need_manual";
           return new StringBuilder(prep).append('\n').append(detail).toString();
@@ -501,7 +498,7 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
         String address = selectedHost == null ? "" : selectedHost;
         String port = pp;
         if (!verify && port.isEmpty()) {
-          message(com.deepseekharness.app.util.UiText.text("正在重新发现本机配对端口（最多 6 秒）…"));
+          message(com.deepseekharness.app.util.UiText.text("正在发现配对端口…"));
           AdbBridge.Endpoint endpoint =
               AdbBridge.discover(getApplication(), "_adb-tls-pairing._tcp.", 6000, this::message);
           if (endpoint != null) {
@@ -513,8 +510,8 @@ public class AdbPairActivity extends androidx.appcompat.app.AppCompatActivity {
           return com.deepseekharness.app.util.UiText.text("ADB 操作已取消");
         message(
             verify
-                ? com.deepseekharness.app.util.UiText.text("正在验证已配对的设备连接，最多约 1 分钟…")
-                : com.deepseekharness.app.util.UiText.text("正在完成一次配对握手并验证连接，最多约 2 分钟；随后检查自动恢复授权…"));
+                ? com.deepseekharness.app.util.UiText.text("正在验证连接…")
+                : com.deepseekharness.app.util.UiText.text("正在配对并验证，最多约 2 分钟"));
         String connectionPort = cp;
         if (connectionPort.isEmpty()) {
           AdbBridge.Endpoint endpoint =

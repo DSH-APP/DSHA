@@ -1,441 +1,115 @@
 <?xml version='1.0' encoding='utf-8'?>
-
 <resources>
-
-    <string name="accessibility_desc" formatted="false">"Two purposes: (1) Read the pairing code from Android's Wireless debugging dialog, so you do not have to copy a code that expires after two minutes. (2) Let the AI assistant read the screen, tap, type, press keys and take screenshots (Android 11+), enabling device control without ADB or Shizuku.\n\nDSHA does not record your screen in the background. Screen contents are read only when the assistant explicitly requests them, returned to the current conversation. Ordinary requested screenshots are saved in the app screenshot folder; MCP screenshots are encoded in memory. DSHA does not upload screenshots independently; configured models and plugins may process returned results. Pairing codes are read only during the two minutes after you tap Auto-read pairing code."</string>
-
-
-
-
-
-
-
-
-
-
-
+    <string name="adb_pairing_service_label" formatted="false">"Wireless ADB pairing"</string>
+    <string name="copy_text" formatted="false">"Copy"</string>
+    <string name="diag248_copy" formatted="false">"Copy diagnostic report"</string>
+    <string name="diag248_copy_sub" formatted="false">"Redacted text to paste into feedback"</string>
+    <string name="diag248_empty" formatted="false">"No results yet; checks only read local state"</string>
+    <string name="diag248_export" formatted="false">"Export diagnostics"</string>
+    <string name="diag248_export_sub" formatted="false">"Structured log package"</string>
+    <string name="diag248_feedback" formatted="false">"Feedback"</string>
+    <string name="diag248_idle_sub" formatted="false">"Check components and environment"</string>
+    <string name="diag248_idle_title" formatted="false">"Not checked"</string>
+    <string name="diag248_plugins" formatted="false">"Plugin manager"</string>
+    <string name="diag248_plugins_sub" formatted="false">"Troubleshoot startup problems caused by plugins"</string>
+    <string name="diag248_repair_sub" formatted="false">"Reinstall certificates and runtime components"</string>
+    <string name="diag248_start" formatted="false">"Inspect"</string>
+    <string name="diag248_status" formatted="false">"Status"</string>
+    <string name="diag248_tools" formatted="false">"Tools"</string>
+    <string name="nh_sub" formatted="false">"Network issues are recorded, not repaired"</string>
+    <string name="nh_title" formatted="false">"Network health"</string>
+    <string name="paste_text" formatted="false">"Paste"</string>
+    <string name="text_selection_more" formatted="false">"More…"</string>
     <string name="ui_m0001" formatted="false">"Download update"</string>
-
     <string name="ui_m0002" formatted="false">"Save settings"</string>
-
     <string name="ui_m0003" formatted="false">"Cancel check"</string>
-
-
-
     <string name="ui_m0005" formatted="false">"Start"</string>
-
     <string name="ui_m0006" formatted="false">"Back up and rebuild"</string>
-
     <string name="ui_m0007" formatted="false">"Safe start"</string>
-
-
-
-
-
     <string name="ui_m0010" formatted="false">"Start pairing"</string>
-
     <string name="ui_m0011" formatted="false">"Recovery options"</string>
-
     <string name="ui_m0012" formatted="false">"Manual address &amp; port"</string>
-
     <string name="ui_m0013" formatted="false">"Manage plugins"</string>
-
-
-
     <string name="ui_m0015" formatted="false">"Authorize Shizuku"</string>
-
     <string name="ui_m0016" formatted="false">"Plugins"</string>
-
     <string name="ui_m0017" formatted="false">"Not checked"</string>
-
     <string name="ui_m0018" formatted="false">"Check for updates"</string>
-
-
-
     <string name="ui_m0020" formatted="false">"Light"</string>
-
     <string name="ui_m0021" formatted="false">"Terminal"</string>
-
-
-
     <string name="ui_m0023" formatted="false">"Settings"</string>
-
     <string name="ui_m0024" formatted="false">"Enter a command and press Enter"</string>
-
     <string name="ui_m0025" formatted="false">"No logs yet."</string>
-
     <string name="ui_m0026" formatted="false">"Pairing and ports"</string>
-
-    <string name="ui_m0030" formatted="false">"ADB is off. Leave it off if you do not use wireless debugging."</string>
-
+    <string name="ui_m0030" formatted="false">"Keep off unless you use wireless debugging"</string>
     <string name="ui_m0031" formatted="false">"Wireless ADB pairing"</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     <string name="ui_m0039" formatted="false">"Shizuku is not authorized"</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
     <string name="ui_m0046" formatted="false">"Download logs"</string>
-
     <string name="ui_m0047" formatted="false">"Download error logs"</string>
-
-
-
     <string name="ui_m0050" formatted="false">"Stop"</string>
-
-
-
-
-
     <string name="ui_m0053" formatted="false">"Sensors &amp; flashlight"</string>
-
     <string name="ui_m0054" formatted="false">"Use proroot runtime"</string>
-
     <string name="ui_m0055" formatted="false">"Use compatibility browser"</string>
-
-
-
     <string name="ui_m0057" formatted="false">"Use desktop web layout"</string>
-
-
-
-
-
     <string name="ui_m0060" formatted="false">"Repair tools"</string>
-
-
-
     <string name="ui_m0062" formatted="false">"Allow root shell"</string>
-
     <string name="ui_m0063" formatted="false">"Allow LAN access"</string>
-
-
-
-
-
     <string name="ui_m0066" formatted="false">"Allow location access"</string>
-
     <string name="ui_m0067" formatted="false">"About"</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     <string name="ui_m0078" formatted="false">"Cancel task"</string>
-
     <string name="ui_m0079" formatted="false">"Cancel operation"</string>
-
     <string name="ui_m0080" formatted="false">"Save as"</string>
-
     <string name="ui_m0081" formatted="false">"Only my plugins"</string>
-
-
-
-
-
-    <string name="ui_m0084" formatted="false">"If the connection drops in the background, allow DSHA to run in the background and reduce battery restrictions. Your device may still suspend it. Before reconnecting, turn on Wireless debugging, then tap Verify connection."</string>
-
-
-
-
-
-
-
-
-
+    <string name="ui_m0084" formatted="false">"Keep checking when disconnected in background; turn on wireless debugging before reconnecting"</string>
     <string name="ui_m0089" formatted="false">"Check for updates on startup"</string>
-
     <string name="ui_m0090" formatted="false">"Enable ADB device access (off by default)"</string>
-
-
-
-
-
-
-
     <string name="ui_m0094" formatted="false">"View releases in browser"</string>
-
     <string name="ui_m0095" formatted="false">"Open in browser"</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
     <string name="ui_m0102" formatted="false">"Copy"</string>
-
     <string name="ui_m0103" formatted="false">"Copy report"</string>
-
-    <string name="ui_m0104" formatted="false">"Safe mode: restore previously enabled third-party plugins"</string>
-
-
-
+    <string name="ui_m0104" formatted="false">"Safe mode: restore third-party plugins"</string>
     <string name="ui_m0106" formatted="false">"Install plugin"</string>
-
     <string name="ui_m0107" formatted="false">"Install update"</string>
-
-
-
     <string name="ui_m0109" formatted="false">"Export report"</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <string name="ui_m0118" formatted="false">"Force the bundled Gecko browser if the system browser shows a blank page or is incompatible. Otherwise, the app selects a compatible engine automatically. Save and reopen the conversation to apply."</string>
-
-
-
+    <string name="ui_m0118" formatted="false">"Built-in web engine; try it for compatibility issues"</string>
     <string name="ui_m0121" formatted="false">"Show AI output in an overlay"</string>
-
-
-
-
-
-
-
     <string name="ui_m0125" formatted="false">"Open Shizuku manager"</string>
-
     <string name="ui_m0126" formatted="false">"Open backup &amp; data"</string>
-
-
-
     <string name="ui_m0128" formatted="false">"Wireless debugging settings"</string>
-
-
-
-
-
-
-
-
-
     <string name="ui_m0133" formatted="false">"Plugin marketplace"</string>
-
     <string name="ui_m0134" formatted="false">"Plugin operation status. Tap for details."</string>
-
     <string name="ui_m0135" formatted="false">"Plugin manager"</string>
-
     <string name="ui_m0137" formatted="false">"Plugin URL or npm package name"</string>
-
     <string name="ui_m0138" formatted="false">"Search plugin names or descriptions"</string>
-
-
-
-
-
-
-
     <string name="ui_m0142" formatted="false">"New terminal"</string>
-
-
-
-
-
-    <string name="ui_m0145" formatted="false">"No terminals\nTap New to open a terminal"</string>
-
+    <string name="ui_m0145" formatted="false">"No terminals\nTap New to open one"</string>
     <string name="ui_m0146" formatted="false">"More"</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     <string name="ui_m0158" formatted="false">"Detect installed plugins"</string>
-
     <string name="ui_m0159" formatted="false">"Detect plugins"</string>
-
-
-
-
-
-
-
-
-
     <string name="ui_m0164" formatted="false">"Clear"</string>
-
-
-
-
-
-
-
-
-
-
-
     <string name="ui_m0170" formatted="false">"Authorize and verify root"</string>
-
     <string name="ui_m0171" formatted="false">"Read SMS"</string>
-
-
-
     <string name="ui_m0173" formatted="false">"Stable"</string>
-
-
-
-
-
-
-
     <string name="ui_m0177" formatted="false">"Simple"</string>
-
     <string name="ui_m0178" formatted="false">"Simple terminal"</string>
-
     <string name="ui_m0179" formatted="false">"Paste URL"</string>
-
-
-
     <string name="ui_m0181" formatted="false">"Auto-read pairing code"</string>
-
     <string name="ui_m0182" formatted="false">"Add steps to reproduce. Do not include keys or private conversations."</string>
-
-
-
-
-
     <string name="ui_m0185" formatted="false">"Inspect URL"</string>
-
-
-
-
-
-
-
-
-
-
-
     <string name="ui_m0191" formatted="false">"Battery settings"</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     <string name="ui_m0201" formatted="false">"Go back"</string>
-
     <string name="ui_m0202" formatted="false">"Back to Start: plugins / safe start"</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
     <string name="ui_m0209" formatted="false">"Run checks again"</string>
-
-
-
     <string name="ui_m0211" formatted="false">"Reset settings, keep conversations"</string>
-
     <string name="ui_m0212" formatted="false">"Retry"</string>
-
-
-
-
-
     <string name="ui_m0215" formatted="false">"Preview"</string>
-
-
-
     <string name="ui_m0217" formatted="false">"Verify connection"</string>
-
     <string name="ui_m0218" formatted="false">"＋ New"</string>
-
+    <string name="ui_m9024" formatted="false">"Change"</string>
+    <string name="upd_browser_sub" formatted="false">"All releases and APKs"</string>
+    <string name="upd_copy_version" formatted="false">"Copy version info"</string>
+    <string name="upd_full_notes" formatted="false">"Full release notes"</string>
+    <string name="upd_pane_empty" formatted="false">"Release notes, size and install method appear here once a candidate is found."</string>
+    <string name="upd_recheck" formatted="false">"Check again"</string>
+    <string name="upd_tab_candidate" formatted="false">"Candidate"</string>
+    <string name="upd_tab_current" formatted="false">"This build"</string>
 </resources>

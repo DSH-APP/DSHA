@@ -1,8 +1,8 @@
 {
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-client-ui-tool/lib/client.js",
-  "packageVersion": "0.2.1-rc.2",
-  "canonicalSourceSha256": "a0012c1f4bdc34d68ba6b267294884ffeec6b6c467540ceabe0ff5d6135f9e05",
+  "packageVersion": "0.2.2-rc.1",
+  "canonicalSourceSha256": "d4b0ee6d04a583f63e5e701de989b7d1645d17d09a85b43338e4a11748ea23ac",
   "patches": [
     {
       "before": "\t\t\treturn call.phase === \"result\" ? call.block.call?.name ?? \"\" : call.block.name;",

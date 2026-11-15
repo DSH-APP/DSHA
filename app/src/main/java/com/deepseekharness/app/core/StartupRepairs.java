@@ -59,13 +59,43 @@ public final class StartupRepairs {
     var engine = snapshots(c.context());
     var control = BackupTask.currentControl(null);
     String command = request.optString("command");
-    if (java.util.List.of("new", "restore", "recover").contains(command)
+    if (java.util.List.of("new", "restore", "recover", "discard", "discard-retained")
+            .contains(command)
         && !com.deepseekharness.app.core.MaintenanceCoordinator.isOwner())
       throw new IOException("RECOVERY_REQUIRES_MAINTENANCE");
+    try {
+      return dispatch(engine, control, command, request);
+    } finally {
+      // 已提交操作之后的整理失败不改变结果，只进入诊断。
+      for (String warning : engine.drainWarnings())
+        DiagnosticLog.record(c.context(), "STARTUP_CHECKPOINT_TIDY", SensitiveData.redact(warning));
+    }
+  }
+
+  private static JSONObject dispatch(
+      com.deepseekharness.app.backup.ConfigurationSnapshots engine,
+      com.deepseekharness.app.backup.BackupControl control,
+      String command,
+      JSONObject request)
+      throws IOException {
     try {
       switch (command) {
         case "list":
           return new JSONObject(engine.list(control));
+        case "discard":
+          return new JSONObject()
+              .put("status", "ok")
+              .put(
+                  "message",
+                  engine.discard(
+                      request.getString("slot"),
+                      request.optString("id", null),
+                      request.optString("fingerprint", null),
+                      control));
+        case "discard-retained":
+          return new JSONObject()
+              .put("status", "ok")
+              .put("removed", engine.discardRetained(request.getString("target"), control));
         case "before":
           return new JSONObject().put("status", "ok").put("slot", engine.before(control));
         case "prepare":
@@ -104,6 +134,21 @@ public final class StartupRepairs {
       EnvironmentMaintenance.ensureSingleRecovery(c);
     JSONObject result = checkpoint(c, request);
     if (pending(context)) throw new IOException("RECOVERY_PENDING");
+    String command = request.optString("command");
+    if ("discard".equals(command))
+      return "RECOVERY_DISCARD_DEFERRED".equals(result.optString("message"))
+          ? UiText.choose(
+              "快照已从列表移除；残留文件暂未清理完，下次整理时继续。当前配置未改动。",
+              "The snapshot was removed from the list. Leftover files will be cleaned up next time. Current configuration was not changed.")
+          : UiText.choose(
+              "快照已删除，当前配置未改动。", "Snapshot deleted. Current configuration was not changed.");
+    if ("discard-retained".equals(command))
+      return String.format(
+          java.util.Locale.ROOT,
+          UiText.choose(
+              "已删除 %d 份隔离的异常快照，当前配置未改动。",
+              "Deleted %d quarantined damaged snapshots. Current configuration was not changed."),
+          result.optInt("removed"));
     if ("RECOVERY_MARKER_RETAINED".equals(result.optString("message")))
       return UiText.choose(
           "旧状态标记已保留到私有记录中。没有配置日志可回滚，当前配置保持原样；可继续检查或修复运行环境。",

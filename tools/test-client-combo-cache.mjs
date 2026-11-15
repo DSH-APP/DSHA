@@ -10,7 +10,8 @@ import {countNewlines, createComboCache} from '../app/src/main/assets/client-com
 
 const root = path.resolve(import.meta.dirname, '..');
 const runtime = testRuntime('raw');
-const original = fs.readFileSync(path.join(runtime, 'node_modules/@deepseek-ai/dsh-client-modules/lib/index.js'), 'utf8');
+const clientModulesUrl = pathToFileURL(path.join(runtime, 'node_modules/@deepseek-ai/dsh-client-modules/lib/index.js'));
+const original = fs.readFileSync(clientModulesUrl, 'utf8');
 const recipe = JSON.parse(fs.readFileSync(path.join(root, 'app/src/main/assets/client-combo-patch.json'), 'utf8'));
 let patched = original;
 for (const {before, after} of recipe.patches) {
@@ -19,8 +20,8 @@ for (const {before, after} of recipe.patches) {
 }
 function load(source) {
   const context = {createRequire, createHash, randomBytes, ...fs, ...path, fileURLToPath, pathToFileURL,
-    Service:class {}, URL, Buffer, Map, Set, Response, countNewlines, createComboCache};
-  return vm.runInNewContext(source.replace(/^import [^\n]*\n/gm, '').replace(/^export .*;\s*$/m, '')
+    clientModulesUrl, Service:class {}, URL, Buffer, Map, Set, Response, countNewlines, createComboCache};
+  return vm.runInNewContext(source.replace(/^import [^\n]*\n/gm, '').replaceAll('import.meta.url', 'clientModulesUrl').replace(/^export .*;\s*$/m, '')
     + '\n({buildCombo,ClientModuleRegistry,newlineCount})', context);
 }
 const before = load(original), after = load(patched);

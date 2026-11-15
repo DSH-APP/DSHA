@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 当前会话行：强调浅底 + 12dp 圆角 + 起始侧 3dp 强调条（不再整圈描边）。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/terminal_accent_bg" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+    <item
+        android:width="3dp"
+        android:bottom="14dp"
+        android:gravity="start|fill_vertical"
+        android:top="14dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/terminal_accent" />
+            <corners android:radius="2dp" />
+        </shape>
+    </item>
+</layer-list>

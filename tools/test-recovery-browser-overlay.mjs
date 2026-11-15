@@ -12,7 +12,7 @@ const descriptor = JSON.parse(await readFile(path.join(output, 'recovery-runtime
 const rows = descriptor.overlays;
 assert.equal(rows.length, 4);
 for (const name of ['web-integration/es-compat.js','web-integration/startup.js',
-  'pdf-compat-patch.json','language-patch.json','web-integration/language.js']) {
+  `recovery-recipes/${descriptor.dshVersion}/pdf-compat-patch.json`,`recovery-recipes/${descriptor.dshVersion}/language-patch.json`,'web-integration/language.js']) {
   const bytes = await readFile(path.join(root,'app/src/main/assets',name));
   assert.equal(descriptor.overlayInputs[name],createHash('sha256').update(bytes).digest('hex'));
 }
@@ -80,6 +80,23 @@ await localeExports.apply({fiber:{uid:1},configForms:{get(){return undefined;}},
 });
 assert.equal(service.getSnapshot().active,'en');
 assert.equal(pageDocument.documentElement.lang,'en');
+// 0.2.2：上游自带 ja/es/fr/de/ru/pt，DSHA 只补 zh-Hant/ko/ar/la；选择器不得重复。
+const dshaTags=['zh-Hant','ko','ar','la'],tags=['zh','en','ja','es','fr','de','ru','pt',...dshaTags];
+assert.deepEqual([...service.getSnapshot().locales].map(row=>row.id),tags);
+for(const tag of tags){
+  pageWindow.__DSHA_LANGUAGE__=tag;pageWindow.dispatchEvent({type:'dsha-language'});
+  assert.equal(service.getSnapshot().active,tag);
+  assert.equal(pageDocument.documentElement.lang,tag);
+  assert.equal(pageDocument.documentElement.dir,tag==='ar'?'rtl':'ltr');
+  if(dshaTags.includes(tag)){
+    const dictionary=JSON.parse(await readFile(path.join(root,'tools/i18n/web-translations',tag+'.json'),'utf8'));
+    assert.equal(service.bind('common')('cancel'),dictionary['common:cancel']);
+    assert.equal(service.bind('conversation')('placeholder.default'),dictionary['conversation:placeholder.default']);
+  }else if(tag!=='zh'&&tag!=='en'){
+    // 上游语言使用上游自己的 common 文案，DSHA 不再覆盖。
+    assert.notEqual(service.bind('common')('cancel'),'cancel');
+  }
+}
 pageWindow.__DSHA_LANGUAGE__='zh';
 pageWindow.dispatchEvent({type:'dsha-language'});
 assert.equal(service.getSnapshot().active,'zh');
@@ -104,4 +121,4 @@ vm.runInNewContext(relay,{window:foreignWindow,
   location:{protocol:'http:',hostname:'127.0.0.1',port:'3081',username:'',password:''},
   browser:{runtime:{connectNative(){foreignConnects++;throw new Error('foreign origin reached locale bridge');}}}});
 assert.equal(foreignConnects,0);
-console.log('PASS locked recovery HTML/PDF Worker/resource overlay and real rc2 locale EN/ZH, cancellation, invalid origin');
+console.log('PASS locked recovery HTML/PDF Worker/resource overlay and real upstream 8 + DSHA 4 language locale, RTL, cancellation, invalid origin');

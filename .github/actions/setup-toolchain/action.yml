@@ -1,0 +1,29 @@
+name: DSHA toolchain
+description: 核对源码锁定的工具链并安装对应 JDK 与 Node（调用前必须已 checkout）。
+inputs:
+  gradle-cache:
+    description: Restore/save the Gradle dependency cache (artifacts are re-checked by gradle/verification-metadata.xml)
+    required: false
+    default: 'true'
+outputs:
+  java:
+    description: Locked Java major version
+    value: ${{ steps.toolchain.outputs.java }}
+  node:
+    description: Locked Node version
+    value: ${{ steps.toolchain.outputs.node }}
+runs:
+  using: composite
+  steps:
+    - name: Verify toolchain against source configuration
+      id: toolchain
+      shell: bash
+      run: python3 tools/ci-toolchain.py --github-output
+    - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      with:
+        distribution: temurin
+        java-version: ${{ steps.toolchain.outputs.java }}
+        cache: ${{ inputs.gradle-cache == 'true' && 'gradle' || '' }}
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: ${{ steps.toolchain.outputs.node }}

@@ -1,0 +1,137 @@
+name: "Node: Standard unit tests"
+
+# 可复用节点：Standard JVM 单测。full 使用交接的固定输入并要求 0 失败 / 0 跳过；
+# source-only 跳过资产准备，仅汇总（不是完整固定输入运行）。
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Exact commit to check out (defaults to the caller's commit)
+        required: false
+        type: string
+        default: ''
+      mode:
+        description: full or source-only
+        required: true
+        type: string
+      handoff:
+        description: Input handoff artifact from _node-inputs.yml
+        required: true
+        type: string
+      require_fixtures:
+        description: Require the seven external-fixture tests to run once and pass (full, unfiltered only)
+        required: false
+        type: boolean
+        default: false
+      sunset_test:
+        description: Pass -Pdsha.sunsetTest=true
+        required: false
+        type: boolean
+        default: true
+      tests:
+        description: Optional space-separated Gradle --tests patterns (full runs become filtered)
+        required: false
+        type: string
+        default: ''
+      rerun:
+        description: Pass --rerun-tasks
+        required: false
+        type: boolean
+        default: false
+      forks:
+        description: Test JVM forks (maxParallelForks, 1-4); same tests and fresh reports
+        required: false
+        type: number
+        default: 1
+      artifact:
+        description: Name of the uploaded JUnit/receipt artifact
+        required: false
+        type: string
+        default: unit-results
+    outputs:
+      artifact:
+        description: Uploaded JUnit/receipt artifact name
+        value: ${{ inputs.artifact }}
+permissions:
+  contents: read
+jobs:
+  unit:
+    name: Standard unit tests (${{ inputs.mode }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup-toolchain
+      - uses: ./.github/actions/android-sdk
+        with:
+          ndk: ${{ inputs.mode == 'full' }}
+      - uses: ./.github/actions/restore-handoff
+        with:
+          artifact: ${{ inputs.handoff }}
+          fixture: 'true'
+      # Robolectric 默认在单测中途临时下载 android-all，runner 网络抖动会让整批 sdk=N 测试类
+      # 以 MavenArtifactFetcher IOException 失败（build273、build277）。改为测试前按锁文件准备、
+      # 逐个核对 sha256（缓存命中也重新核对），单测走 robolectric.offline。
+      - name: Restore Robolectric android-all cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/robolectric-deps
+          key: robolectric-android-all-${{ hashFiles('tools/robolectric-sdk.lock.json') }}
+      - name: Prepare pinned Robolectric android-all jars
+        run: python3 tools/prepare-robolectric-sdks.py --dir "$RUNNER_TEMP/robolectric-deps"
+      - name: Run Standard unit tests
+        env:
+          DSHA_ROBOLECTRIC_DEPENDENCY_DIR: ${{ runner.temp }}/robolectric-deps
+          MODE: ${{ inputs.mode }}
+          TESTS: ${{ inputs.tests }}
+          RERUN: ${{ inputs.rerun }}
+          SUNSET_TEST: ${{ inputs.sunset_test }}
+          FORKS: ${{ inputs.forks }}
+        run: |
+          set -euf
+          args=(:app:testStandardDebugUnitTest --no-daemon --max-workers=2)
+          case "$MODE" in
+            full) args+=(-Pdsha.sourceOnlyTests=false) ;;
+            source-only) args+=(-Pdsha.sourceOnlyTests=true -x :app:prepareStandardAssets -x :app:prepareRecoveryAssets) ;;
+            *) echo "unknown mode: $MODE"; exit 2 ;;
+          esac
+          if [ "$SUNSET_TEST" = true ]; then args+=(-Pdsha.sunsetTest=true); fi
+          if [ "$RERUN" = true ]; then args+=(--rerun-tasks); fi
+          case "$FORKS" in 1|2|3|4) ;; *) echo "forks must be 1-4"; exit 2 ;; esac
+          if [ "$FORKS" != 1 ]; then
+            # 与 tools/verify-stability.py --test-forks 相同：init 脚本放在仓库外，只改 fork 数。
+            init="$RUNNER_TEMP/dsha-test-forks.init.gradle"
+            printf '%s\n' "gradle.projectsEvaluated { rootProject.allprojects { p -> p.tasks.withType(org.gradle.api.tasks.testing.Test).configureEach { t -> t.maxParallelForks = $FORKS } } }" > "$init"
+            args+=(--init-script "$init")
+          fi
+          for pattern in $TESTS; do
+            case "$pattern" in *[!A-Za-z0-9_.*\$-]*) echo "unsafe --tests pattern"; exit 2 ;; esac
+            args+=(--tests "$pattern")
+          done
+          chmod +x gradlew
+          ./gradlew "${args[@]}"
+      - name: Verify unit-test results
+        if: always()
+        env:
+          MODE: ${{ inputs.mode }}
+          TESTS: ${{ inputs.tests }}
+          REQUIRE_FIXTURES: ${{ inputs.require_fixtures }}
+        run: |
+          args=(--mode "$MODE" --output out/unit-tests.json)
+          if [ "$REQUIRE_FIXTURES" = true ]; then
+            if [ -n "$TESTS" ]; then echo "require_fixtures needs an unfiltered run"; exit 2; fi
+            args+=(--require-fixtures)
+          fi
+          python3 tools/verify-unit-results.py "${args[@]}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ${{ inputs.artifact }}
+          path: |
+            app/build/test-results/testStandardDebugUnitTest
+            out/unit-tests.json
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 当前会话行左侧 2dp 强调条：Java 按条宽 2dp × 行高使用。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/terminal_accent" />
+    <corners android:radius="2dp" />
+</shape>

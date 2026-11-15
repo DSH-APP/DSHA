@@ -238,8 +238,22 @@
   async function digest(text) { const bytes = await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)); return Array.from(new Uint8Array(bytes),b => b.toString(16).padStart(2,'0')).join(''); }
   async function run(config) {
     const status = document.getElementById('status');
-    const text = (zh,en) => config.language === 'en' ? en : zh;
-    const title=document.querySelector('h1'); if (title) title.textContent=text('恢复旧端口草稿','Restore previous-port drafts');
+    const uiMessages = {
+      zh: {title:'恢复旧端口草稿', saving:'保存图片候选 ', retained:'旧数据候选已保留，正在恢复…', result:'恢复结果：写入 ', conflicts:'，冲突 ', unknown:'，未知 ', completed:'。候选和旧端口数据已保留。', incomplete:'恢复未完成：', retry:'。旧端口数据和已保存候选均保留，可稍后重试。'},
+      en: {title:'Restore previous-port drafts', saving:'Saving image candidates ', retained:'Previous data was retained. Restoring…', result:'Restore result: written ', conflicts:', conflicts ', unknown:', unknown ', completed:'. Candidates and previous-port data were retained.', incomplete:'Restore incomplete: ', retry:'. Previous data and saved candidates were retained. Retry later.'},
+      'zh-Hant': {title:'還原舊連接埠草稿', saving:'儲存圖片候選 ', retained:'舊資料候選已保留，正在還原…', result:'還原結果：寫入 ', conflicts:'，衝突 ', unknown:'，未知 ', completed:'。候選和舊連接埠資料已保留。', incomplete:'還原未完成：', retry:'。舊連接埠資料和已儲存候選均已保留，可稍後重試。'},
+      ru: {title:'Восстановление черновиков с прежнего порта', saving:'Сохранение изображений для восстановления ', retained:'Прежние данные сохранены. Восстановление…', result:'Результат восстановления: записано ', conflicts:', конфликтов ', unknown:', неизвестных ', completed:'. Кандидаты для восстановления и данные прежнего порта сохранены.', incomplete:'Восстановление не завершено: ', retry:'. Прежние данные и сохранённые кандидаты для восстановления оставлены без изменений. Повторите попытку позже.'},
+      ja: {title:'以前のポートの下書きを復元', saving:'画像の復元候補を保存中 ', retained:'以前のデータ候補を保持しました。復元中…', result:'復元結果：書き込み ', conflicts:'、競合 ', unknown:'、不明 ', completed:'。復元候補と以前のポートのデータは保持されています。', incomplete:'復元は完了していません：', retry:'。以前のポートのデータと保存済みの復元候補は保持されています。後で再試行できます。'},
+      ko: {title:'이전 포트의 초안 복원', saving:'이미지 복원 후보 저장 중 ', retained:'이전 데이터 후보가 보존되었습니다. 복원 중…', result:'복원 결과: 기록 ', conflicts:', 충돌 ', unknown:', 알 수 없음 ', completed:'. 복원 후보와 이전 포트의 데이터가 보존되었습니다.', incomplete:'복원 미완료: ', retry:'. 이전 포트의 데이터와 저장된 복원 후보가 모두 보존되었습니다. 나중에 다시 시도하세요.'},
+      ar: {title:'استعادة المسودات من المنفذ السابق', saving:'جارٍ حفظ الصور المرشحة للاستعادة ', retained:'تم الاحتفاظ بالبيانات السابقة المرشحة. جارٍ الاستعادة…', result:'نتيجة الاستعادة: تم تسجيل ', conflicts:'، تعارضات ', unknown:'، غير معروف ', completed:'. تم الاحتفاظ بالنسخ المرشحة للاستعادة وبيانات المنفذ السابق.', incomplete:'لم تكتمل الاستعادة: ', retry:'. تم الاحتفاظ ببيانات المنفذ السابق والنسخ المحفوظة المرشحة للاستعادة. يمكنك إعادة المحاولة لاحقًا.'},
+      pt: {title:'Restaurar rascunhos da porta anterior', saving:'Salvando imagens candidatas à restauração ', retained:'Os dados anteriores foram preservados. Restaurando…', result:'Resultado da restauração: gravados ', conflicts:', conflitos ', unknown:', desconhecidos ', completed:'. As cópias candidatas e os dados da porta anterior foram preservados.', incomplete:'Restauração incompleta: ', retry:'. Os dados anteriores e as cópias candidatas salvas foram preservados. Tente novamente mais tarde.'},
+      la: {title:'Restitue adumbrationes portae prioris', saving:'Imagines ad restitutionem servantur ', retained:'Exemplaria priorum datorum servata sunt. Restituuntur…', result:'Exitus restitutionis: scripta ', conflicts:', conflictus ', unknown:', ignota ', completed:'. Exemplaria et data portae prioris servata sunt.', incomplete:'Restitutio imperfecta: ', retry:'. Data priora et exemplaria servata manent. Postea iterum tempta.'},
+      fr: {title:'Restaurer les brouillons de l’ancien port', saving:'Enregistrement des images candidates à la restauration ', retained:'Les données précédentes ont été conservées. Restauration…', result:'Résultat de la restauration : écritures ', conflicts:', conflits ', unknown:', inconnus ', completed:'. Les copies candidates et les données de l’ancien port ont été conservées.', incomplete:'Restauration incomplète : ', retry:'. Les données précédentes et les copies candidates enregistrées ont été conservées. Réessayez plus tard.'}
+    };
+    const locale = String(config.language || 'zh').replace(/_/g,'-').toLowerCase();
+    const language = /^zh-(?:hant|tw|hk|mo)(?:-|$)/.test(locale) ? 'zh-Hant' : locale.split('-')[0];
+    const text = key => (uiMessages[language] || uiMessages.zh)[key];
+    const title=document.querySelector('h1'); if (title) title.textContent=text('title');
     const call = async (path, options={}) => {
       const response = await fetch(config.transport+path,{...options,credentials:'omit',cache:'no-store',headers:{...options.headers,'X-DSHA-Restore':config.secret}});
       if (!response.ok) throw Error('RESTORE_HTTP_'+response.status); return response;
@@ -248,8 +262,8 @@
       if (config.mode === 'capture') {
         const snapshot = await capture(localStorage,indexedDB);
         await call('/manifest',{method:'POST',body:JSON.stringify(snapshot.manifest)});
-        for (let i=0;i<snapshot.parts.length;i++) { status.textContent=text('保存图片候选 ','Saving image candidates ')+(i+1)+'/'+snapshot.parts.length; await call('/part/'+i,{method:'POST',body:snapshot.parts[i]}); }
-        await call('/captured',{method:'POST',body:'{}'}); status.textContent=text('旧数据候选已保留，正在恢复…','Previous data was retained. Restoring…');
+        for (let i=0;i<snapshot.parts.length;i++) { status.textContent=text('saving')+(i+1)+'/'+snapshot.parts.length; await call('/part/'+i,{method:'POST',body:snapshot.parts[i]}); }
+        await call('/captured',{method:'POST',body:'{}'}); status.textContent=text('retained');
       } else {
         const manifestText = await (await call('/manifest')).text(), identity = await (await call('/snapshot')).json();
         if (await digest(manifestText)!==identity.snapshot) throw Error('RESTORE_SOURCE_METADATA_CHANGED');
@@ -257,10 +271,10 @@
         for (let i=0;i<manifest.parts.length;i++) blobs.push(await (await call('/part/'+i)).blob());
         const verify = async (blob,index) => { try { await call('/verify/'+index,{method:'POST',body:blob}); return true; } catch (error) { if (error.message==='RESTORE_HTTP_409') return false; throw error; } };
         const result = await restore(manifest,blobs,localStorage,indexedDB,() => call('/lease'),verify);
-        status.textContent=text('恢复结果：写入 ','Restore result: written ')+result.applied+text('，冲突 ',', conflicts ')+result.conflicts+text('，未知 ',', unknown ')+result.unknown+text('。候选和旧端口数据已保留。','. Candidates and previous-port data were retained.');
+        status.textContent=text('result')+result.applied+text('conflicts')+result.conflicts+text('unknown')+result.unknown+text('completed');
         await call('/finished',{method:'POST',body:JSON.stringify({...result,snapshot:identity.snapshot})});
       }
-    } catch (error) { status.textContent=text('恢复未完成：','Restore incomplete: ')+error.message+text('。旧端口数据和已保存候选均保留，可稍后重试。','. Previous data and saved candidates were retained. Retry later.'); }
+    } catch (error) { status.textContent=text('incomplete')+error.message+text('retry'); }
   }
   scope.DshaOriginState = {keyAllowed,textValid,knownImage,capture,restore,run};
   if (typeof document !== 'undefined') window.addEventListener('dsha-origin-restore-start',event => {

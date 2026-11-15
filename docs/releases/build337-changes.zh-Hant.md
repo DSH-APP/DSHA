@@ -1,0 +1,11 @@
+# DSHA 0.2.1-rc.5-20261107.1900-dsh0.2.2-rc.1 / build337
+
+- 手機任務介面 409 修復（T115，`a9c718e2`）：build336 正式包的實體螢幕手機任務窗無法建立——內建 `dsh-status-overlay` 的 `sessions.status` / `sessions.cancel` 仍在呼叫 0.2.2-rc.1 已移除的 `SessionController.inspect`，`sessions.status` 拋 TypeError，橋統一回 409，Java 端只看見 `ASSISTANT_TASK_CHANGED`。現改為 `controller.state` + `controller.events` 的有界讀取（最近 16 條訊息事件裁剪為最近 8 條可見對話；turnId / turnActive 優先採用 Host 的 turnBoundary 投影），回應欄位與 Java 讀取一致；host 測試 11/11 通過。**正式包真機待使用者安裝 build337 後驗證。**
+- Web 終端 `pty.fork` 修復（T116，`adab1698`）：同一 Node 行程中 `sharp` 先於 `node-pty` 載入，會把 `pty.node` 匯出註冊到 sharp/libvips 鍵，之後開啟 Web 終端會報 `pty.fork is not a function`（重試無效）。啟動預載 `startup-observer.cjs` 在插件載入前 require node-pty，失敗時靜默、不影響啟動。
+- UI 長文字整改第一批（T114，`c4c79941`）：稽核報告 §2.3 的 12 處 P1 預設可見長文改為頁內 1–2 行摘要，完整說明沿用既有 InfoHint / InfoSurface 彈層（不新增翻譯鍵，安全／隱私語意不變）；`UiMotion` 新增 `crossFadeText` 與 `animateCounter`，試接維護頁狀態、自動備份狀態與啟動頁大標題；新增 UiMotionTest（9 項）與 InfoHintTest（6 項），ui 套件 53 個測試類 449 項通過。
+- 隱藏背景最近任務重放（T111，`e809f72c`）：`MainActivity.onCreate`、`WebPreviewActivity.onCreate` 與 `onResume` 重放 `BrowserTasks.applyRecentsPreference`，補上行程重啟／覆蓋更新／系統重建任務後「新任務預設可見」的缺口；清單只保留任務根 Activity 的 `excludeFromRecents`。定向單元測試 51 項通過；ColorOS 16 與 Lenovo 真機行為未驗證，不據此宣稱現場已修好。
+- 文案與 CI／文件修復：T109 切片 1 合併 15 處原生 UI 同義／近重複並統一本語、修正唯一一處俄文超長（`44e44119`）；啟動狀態列補十語文案（`c4fd2828`）；補齊 Java 格式清單（`ec532d9a`）與六份翻譯位元組釘（`6b573957`），恢復 contracts / java-format 門檻。UI 基準線 v2–v5 與 T112 稽核（51 項，P1 22）為 docs-only 紀錄。
+- 內建 `dsh-web-mobile` 維持上游 3.3.1 與預設啟用不變；本版不更換插件，也不改 Ubuntu 基礎環境。
+- 版本與受管輸入：版本碼提升為 337（基於 build336）；DSHA 修訂號維持 `0.2.1-rc.5`，內建 DSH 為 `0.2.2-rc.1`。受管輸入隨 T115/T116 重算 runtime-descriptor（runtimeId `da08b4cb…`）；版本與文件改動不改變它；固定輸入未重建，不新增受管執行環境。
+- **未包含／未驗收**：**T110 頁面保活不在本版**——從網頁返回原生主頁面再回網頁時，側欄連線狀態重走「黃→綠→隱藏」與原生載入遮罩的已知問題仍在；**K5 未驗收**（自動化被 build336 正式包 409 阻塞，需按測試包流程手動執行，或等 build337 正式包後再自動化）；T111／T115／T116 的真機行為待使用者安裝正式包驗證。**build337 尚未真機驗收**，驗收項是 336→337 首次覆蓋成功、手機任務工具可 begin、Web 終端可開啟、隱藏背景依開關生效、資料完好、READY。
+- 驗證範圍：發佈身份與前置檢查、宿主 contracts 整組 12 項、host-tests fast 與 runtime、全量 `:app:testStandardDebugUnitTest`、全樹 Java 格式、`git diff --check`、`generate-changelog --check` 與文件連結檢查；結果以本機發佈準備回執與本次 CI run 為準。Lint 由 release-production 的 CI lint 節點執行。

@@ -1,7 +1,5 @@
-# 固定 rc2 应急 Profile；正式环境的 Profile 和用户插件不会参与。
+# 独立锁定的应急 Profile；正式环境的 Profile 和用户插件不会参与。
 - id: tools
-  config:
-    mode: native
 - id: tool-working-directory
   disabled: true
 - id: agent-preset-registry
@@ -46,6 +44,9 @@
   disabled: true
 - id: ui-plugin-manager
   disabled: true
+# rc.3 entry customization requires pluginNavigation from the intentionally disabled manager.
+- id: entry-customization
+  disabled: true
 - id: ui-settings-plugin-inventory
   disabled: true
 - id: ui-settings-plugins
@@ -57,6 +58,9 @@
 - id: ui-open-in-app
   disabled: true
 - id: ui-deliverables
+  disabled: true
+# 0.2.2: file context-menu actions call remote.workspaceFiles, which recovery keeps disabled.
+- id: ui-file-actions
   disabled: true
 - id: session-telemetry-otel
   disabled: true

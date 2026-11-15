@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 提示条（warn）：软底无描边。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="@color/shell_warn_soft" /><corners android:radius="@dimen/onb_radius_tile" /></shape>

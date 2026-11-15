@@ -1,6 +1,6 @@
 # 应用更新与受管运行时更新
 
-> 核验日期：2026-10-21。参考基线：已发布 F10 `087724c`；按本工作树 build190 的实际更新代码核验。本文未检查实时远端清单，也未安装 APK 或执行设备验收。
+> 核验基线：2026-10-21（按 build190 的实际更新代码核对）；当前发布身份为 build356 / `io.github.sunsetrne.dsha` / 单一 Standard。F10–F13/build190 记录属于历史。本文未检查实时远端清单，也未安装 APK 或执行设备验收。
 
 应用 APK 更新和 Ubuntu 内受管组件更新是两条链。APK 先通过下载与包身份检查，再交系统安装器；受管组件先审阅计划、正常停止运行任务、准备候选并试运行，再事务切换。两者都保留具体失败状态，不能用版本文案替代实际结果。
 
@@ -19,12 +19,14 @@
 | 稳定/预览通道 | 空闲时切换并立即重新检查 | 稳定通道只收 stable；预览可收 stable/preview；按更大的 versionCode 选择，不能按 rc 文件名猜先后 |
 | 默认通道 | 无已保存选择时初始化 | 版本名含 `-` 默认 preview，否则 stable |
 | 重新检查 | 用户点击，或首次进入无任务的更新页 | 网络失败保留当前通道上次结果；来源不明的旧候选不能直接安装 |
-| 下载/继续下载 | 用户选择候选后启动应用范围的前台下载任务 | 离开页面/旋转不重新开始；取消保留部分进度，可再次请求继续 |
+| 下载/继续下载 | 用户选择候选后启动应用范围的前台下载任务 | 离开页面/旋转不重新开始；取消入口在下载通知栏（页面不放取消），取消保留部分进度，可再次请求继续 |
 | 安装更新 | 完整校验后由前台页面领取一次结果 | 校验期间通道或候选改变则拒绝；进程重建中断校验后要求用户重试 |
+
+页面只有一个主按钮，它本身就是进度条，宽高与位置不变：检查中流光 → 下载中从起始边填充并显示百分比与字节数 → 核验中填满 → “安装更新”；进行中不可点、通道锁定。显示规则由 [UpdateActionPolicy](../app/src/main/java/com/deepseekharness/app/util/UpdateActionPolicy.java) 推导。平板横屏（≥ 840dp）为两栏：左栏主卡与管理，右栏“候选版本 / 本版本”更新记录。
 
 [UpdatePolicy](../app/src/main/java/com/deepseekharness/app/util/UpdatePolicy.java)还检查当前 flavor、minSdk、`arm64-v8a`、版本码、有效 HTTPS 来源、64 位十六进制 SHA-256 与大小（至多 1 GiB）。旧候选记录的“查询通道”与发布自身通道分开保存，不能从当前偏好推断来源。
 
-同为 code190 的 F10/F11修订即使版本名更晚，也不会被当前应用内更新器当作更高版本选中；更新器要求候选 `versionCode > BuildConfig.VERSION_CODE`。当前私有 Release 是否发布、附件摘要与人工下载请从[F11记录](releases/v0.2.1-rc.2-build190-fix11-20261021.md)、[README](../README.md)和实际 Release 核查；F11附件状态按实际Release及独立外部回执核验，不能由“暂无更新”推断远端没有预发布附件。
+同为 code190 的 F10/F11 修订即使版本名更晚，也不会被当前应用内更新器当作更高版本选中；更新器要求候选 `versionCode > BuildConfig.VERSION_CODE`。当前公开预发布 Release 的附件与摘要请从 [README](../README.md) 和实际 Release 核查；附件状态按实际 Release 及独立外部回执核验，不能由“暂无更新”推断远端没有预发布附件。
 
 ## 下载、校验与系统安装
 
@@ -32,10 +34,10 @@
 
 - 与当前安装的包名相同，且 `debuggable=false`。
 - 实际 versionCode 与清单相符且更大，Android 版本兼容。
-- versionName 与当前 Standard/Low 变体对应。
+- versionName 与当前单一 Standard 变体对应；Low 已删除，不再接受 Low 候选。
 - 候选完整当前签名集合与已安装应用完全一致，不能只匹配一个子集。
 
-当前正式交付沿用 `dsh.android.client` 和 E7E3 发布证书；源码签名比较实际针对已安装证书集合，不凭文档中的指纹缩写放行。摘要证明字节一致，同签名证明安装身份延续，两者都不证明插件代码无害。手动 APK 核验见[下载校验](download-verification.md)。
+当前正式交付使用 `io.github.sunsetrne.dsha` 和 Mod 自有发布证书（见 `ci/release-identity.json`）；签名比较实际针对已安装证书集合，不凭文档中的指纹缩写放行。摘要证明字节一致，同签名证明安装身份延续，两者都不证明插件代码无害。手动 APK 核验见[下载校验](download-verification.md)。
 
 Android 8+ 未允许此应用安装未知来源时，页面先打开系统授权设置；用户返回后再发起校验。Android 13+ 下载前会请求通知权限，回调后继续请求下载；通知权限不授予安装权限。系统安装器仍由用户确认，不做静默安装。
 
@@ -48,6 +50,8 @@ Android 8+ 未允许此应用安装未知来源时，页面先打开系统授权
 更新页的“检查更新计划”进入环境维护页，比较当前环境和包内组件，确认后走[EnvironmentMaintenance](../app/src/main/java/com/deepseekharness/app/core/EnvironmentMaintenance.java)。同一 Ubuntu base 下只更新受管组件；个人数据保持原位，UI-only APK 变化不应直接重建环境。基础不适合局部更新时，进入保数据重建计划。
 
 受管提交先经过[MaintenanceCoordinator](../app/src/main/java/com/deepseekharness/app/core/MaintenanceCoordinator.java)正常停止 Web/终端和退出屏障，再准备候选、记录摘要及前代、进行[RuntimeTrial](../app/src/main/java/com/deepseekharness/app/runtime/RuntimeTrial.java)，核验真实端口/鉴权、会话与存储、网页握手和进程退出后提交。失败保留原件，未知退出不能切换、清理或重放。兼容运行时回退用当前启动器重新试运行，不回退用户对话快照；详见[安装与维护](install-and-maintenance.md)。
+
+覆盖安装后补丁级更新是否进维护页、自动开始被旧 Web 会话拦住时如何保留用户入口、以及发布前必跑清单与真机覆盖验收步骤，见[覆盖升级、运行时维护与插件依赖契约](overwrite-upgrade-and-maintenance.md)。
 
 ## 修改与验证入口
 

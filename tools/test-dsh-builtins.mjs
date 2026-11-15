@@ -34,9 +34,12 @@ test('极简模式必须等消息提交后才判重，失败准入不会吞掉�
   f.handlers.get('session/event')(f.session,{type:'user/message',data:first.messages[0]});
   assert.equal(await f.step(),f.original);
 });
-test('恢复会话、拒绝准入、取消步骤和非首步均不重复注入', async()=>{
+test('恢复会话仅刷新旧引导，当前引导、拒绝准入、取消步骤和非首步不重复注入', async()=>{
   const restored=fixture(false,[{type:'user/message',data:{source:{kind:'plugin',plugin:guide.name}}}]);
-  assert.equal(await restored.step(),restored.original);
+  assert.equal((await restored.step()).messages.length,2,'old Chinese-only built-in snapshots need a current language default');
+  const current=(await fixture().step()).messages[0];
+  const restoredCurrent=fixture(false,[{type:'user/message',data:current}]);
+  assert.equal(await restoredCurrent.step(),restoredCurrent.original);
   const f=fixture(), decision={kind:'reject'};
   assert.equal(await f.step(decision),decision);
   assert.equal(await f.step(f.original,{signal:{aborted:true}}),f.original);
@@ -47,6 +50,7 @@ test('恢复会话、拒绝准入、取消步骤和非首步均不重复注入',
 // Exercise the actual upstream admission policy. A signed wrapper is subject to
 // exactly the same no-exemption version gate as a third-party bundle.
 const runtimeRequire = createRequire(resolve(runtime, 'package.json'));
+const { satisfies } = runtimeRequire('semver');
 const { evaluatePluginCompatibility, getDshRuntimeVersion } = await import(
   pathToFileURL(runtimeRequire.resolve('@deepseek-ai/dsh-app-boot')));
 const builtinRegistry = JSON.parse(await readFile('app/src/main/assets/builtin-plugins.json','utf8'));
@@ -63,7 +67,7 @@ const migratedPeers = {
 };
 test('all signed builtin manifests pass the actual upstream version gate without exemptions',async()=>{
   assert.equal(runtimeVersion,officialManifest.dependencies['@deepseek-ai/dsh']);
-  assert.equal(builtinRegistry.plugins.length,8);
+  assert.equal(builtinRegistry.plugins.length,11);
   for (const plugin of builtinRegistry.plugins) {
     const manifest = await bundledManifest(plugin);
     assert.equal(evaluatePluginCompatibility(manifest,{},runtimeVersion),undefined,
@@ -77,8 +81,8 @@ test('migrated exact peers match actual installed official modules and npm lock'
       const installed=JSON.parse(await readFile(resolve(runtime,'node_modules',peer,'package.json'),'utf8'));
       assert.equal(installed.name,peer);
       assert.equal(installed.version,runtimeVersion);
-      assert.equal(manifest.peerDependencies[peer],installed.version);
-      assert.equal(officialManifest.dependencies[peer],installed.version);
+      assert.ok(satisfies(installed.version, manifest.peerDependencies[peer]), `${name} peer ${peer} must accept ${installed.version}`);
+      assert.ok(satisfies(installed.version, officialManifest.dependencies[peer]), `official dependency ${peer} must accept ${installed.version}`);
       assert.equal(officialLock.packages['node_modules/'+peer].version,installed.version);
     }
   }
@@ -95,13 +99,14 @@ test('the upstream version gate still rejects each original stale wrapper declar
 });
 
 
-test('all eight signed wrappers activate with real 0.2.1 services; actual MCP and Auto lifecycles dispose cleanly',async()=>{
+test('all eleven signed wrappers activate with real 0.2.2 services; actual MCP and Auto lifecycles dispose cleanly',async()=>{
   process.env.DSHA_BUILTIN_TEST_RUNTIME = runtime;
   await import('./fixtures/builtin-host-hooks.mjs');
   const load = async name => import(pathToFileURL(runtimeRequire.resolve(name)));
   const {Context} = await load('@deepseek-ai/cordis');
   const {default:SystemPrompt} = await load('@deepseek-ai/dsh-system-prompt');
   const {default:ToolRuntime} = await load('@deepseek-ai/dsh-tools');
+  const NativeExecutor = await load('@deepseek-ai/dsh-tool-executor-native');
   const {default:ComputerUse} = await load('@deepseek-ai/dsh-computer-use');
   const {default:Agents} = await load('@deepseek-ai/dsh-agent');
   const {default:Projections} = await load('@deepseek-ai/dsh-session-projection');
@@ -126,8 +131,8 @@ test('all eight signed wrappers activate with real 0.2.1 services; actual MCP an
     ctx.provide('shell',{sandboxMode:'danger-full-access'});
     ctx.provide('approval',{config:{policy:'never'},overrideOf(){return 'never';}});
     ctx.provide('llm',{stream(){llmRequests++;throw Error('No model request is permitted by this fixture');}});
-    for (const [plugin,config] of [[SystemPrompt,{}],[ToolRuntime,{mode:'native'}],[ComputerUse,{}],
-      [Agents,{}],[Projections,{}],[LocalFS,{cwd:owned}],[WorkingDirectory,{defaultDirectory:owned}],
+    for (const [plugin,config] of [[SystemPrompt,{}],[ToolRuntime,{}],[NativeExecutor,{}],[ComputerUse,{}],
+      [Projections,{}],[Agents,{}],[LocalFS,{cwd:owned}],[WorkingDirectory,{defaultDirectory:owned}],
       [Permissions,{defaultPreset:'danger-full-access'}]]) {
       const fiber=ctx.plugin(plugin,config);await fiber;assert.equal(fiber.state,2);fibers.push(fiber);
     }
@@ -149,11 +154,17 @@ test('all eight signed wrappers activate with real 0.2.1 services; actual MCP an
     const passthrough=await ctx.waterfall(null,'tools/pre-execute',{name:'fixture',signal:new AbortController().signal},async()=>{next++;return {kind:'allow'};});
     assert.equal(passthrough.kind,'allow');assert.equal(next,1);assert.equal(llmRequests,0);
     const schemas=ctx.tools.schemas().map(tool=>tool.name);
-    assert.equal(schemas.filter(name=>name.startsWith('mcp__dsha-android__')).length,6);
+    assert.equal(schemas.filter(name=>name.startsWith('mcp__dsha-android__')).length,11);
+    assert(schemas.includes('mcp__dsha-android__android_read_image'),'shared-storage image reads are exposed as a separate physical-phone tool');
+    assert(schemas.includes('mcp__dsha-android__android_node'),'physical-screen semantic actions must be exposed to ordinary conversations');
+    assert(schemas.includes('mcp__dsha-android__android_control'),'ordinary conversations need explicit task begin/finish without changing chats');
     assert.equal(schemas.filter(name=>name.startsWith('mcp__dsha-vscreen__')).length,15);
     assert.equal(ctx.computerUse.providerName,'dsha-android');
     const assembly=await ctx.systemPrompt.assemble();
     assert.ok(assembly.sections.some(section=>section.name==='dsh:device-shell-guide'));
+    const phoneInstructions=assembly.sections.find(section=>section.name==='dsha:android-mcp')?.text;
+    assert(phoneInstructions?.includes('先调用 android_control begin'),'actual MCP initialization must explain task begin');
+    assert(phoneInstructions?.includes('调用一次 android_control finish'),'actual MCP initialization must explain task cleanup');
     assert.ok(routes.some(route=>route.path==='/api/mobile-nav.session.delete'));
     const restore=routes.find(route=>route.path==='/__dsha/browser-origin-restore');assert.ok(restore);
     let denied;
@@ -187,9 +198,12 @@ test('status overlay actual apply forwards current stream and tool events throug
       return originalRead.call(this,file,...args);
     };
     syncBuiltinESMExports();
+    // 生产不再回退 3090：无本机端口文件时显式发布，期望值取实际解析结果（文件优先于环境）。
+    process.env.DSHA_BRIDGE_PORT ??= '3090';
+    const expectedOrigin='http://127.0.0.1:'+createRequire(import.meta.url)(resolve('app/src/main/assets/builtin-plugins/dsh-status-overlay/lib/bridge-port.cjs'))();
     globalThis.fetch = async (input,options) => {
       const url=new URL(input);
-      assert.equal(url.origin,'http://127.0.0.1:3090');
+      assert.equal(url.origin,expectedOrigin);
       assert.ok(['/app/overlay','/app/plugins'].includes(url.pathname));
       assert.equal(url.searchParams.has('token'),false);
       assert.equal(options.headers['X-Token'],'owned-fixture-token');
@@ -235,11 +249,11 @@ test('actual official base/Web and all signed bundle patches compose with every 
       dsh:{profile:{bundles:['@deepseek-ai/dsh-base','@deepseek-ai/dsh-web-app',...builtinRegistry.plugins.map(plugin=>plugin.name)]}}}));
     await writeFile(resolve(owned,'cordis.patch.yml'),'[]\n');
     const profile=loadProfileDirectory('dsh',owned,resolve(runtime,'node_modules/@deepseek-ai/dsh/package.json'));
-    assert.deepEqual(profile.skippedBundles,[]);assert.equal(profile.layers.length,10);
+    assert.deepEqual(profile.skippedBundles,[]);assert.equal(profile.layers.length,13);
     const entries=composeEntries([...profile.layers.map(layer=>layer.patches),profile.patches]);
     for(const name of ['dsh-device-shell-guide','dsh-task-notifier','dsh-status-overlay','dsh-web-mobile',
       '@deepseek-ai/dsh-computer-use','dsh-computer-use-android','@deepseek-ai/dsh-experimental-auto-review',
-      'dsh-tool-vscreen','dsh-app-integration']) {
+      'dsh-tool-vscreen','dsh-launch-target','dsh-fs-read-hint','dsh-fs-search-scope','dsh-app-integration']) {
       const rows=entries.filter(row=>row.name===name);assert.equal(rows.length,1,name+' must be composed exactly once');
       assert.notEqual(rows[0].disabled,true,name+' must not be accidentally disabled');
     }

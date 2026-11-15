@@ -37,7 +37,7 @@ public final class LegacyNativeCredentialFallbackTest {
       delegate.stopLan();
     }
 
-    public String stopWeb() throws IOException {
+    public List<com.deepseekharness.app.util.WebStopDiagnostic> stopWeb() throws IOException {
       return delegate.stopWeb();
     }
 
@@ -69,8 +69,9 @@ public final class LegacyNativeCredentialFallbackTest {
       return delegate.legacyPlugins();
     }
 
-    public BoundedProcessRunner.Result materializeCasLinks() throws Exception {
-      return delegate.materializeCasLinks();
+    public BoundedProcessRunner.Result materializeCasLinks(
+        java.util.function.Consumer<String> timing) throws Exception {
+      return delegate.materializeCasLinks(timing);
     }
 
     public String recordId() {

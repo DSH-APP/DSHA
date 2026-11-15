@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v5 终端会话侧栏（抽屉/内联共用）尺寸 token。
+     只影响侧栏会话行、空态与底栏动作，不改 terminal_panel / terminal_workspace_toolbar
+     的颜色合同（TerminalThemeTest 精确断言），也不改遮罩色。 -->
+<resources>
+    <!-- 会话行：原型 .session-row 的 11px 圆角 / 50px 最小高度。 -->
+    <dimen name="terminal_sidebar_row_radius">11dp</dimen>
+    <dimen name="terminal_sidebar_row_min_height">50dp</dimen>
+    <!-- 分组标题：原型 .group-head 的 36px 最小高度。 -->
+    <dimen name="terminal_sidebar_group_min_height">36dp</dimen>
+    <!-- 空态虚线卡：原型 .group-empty 的 10px 圆角。 -->
+    <dimen name="terminal_sidebar_empty_radius">10dp</dimen>
+    <!-- 底栏动作：原型 .drawer-actions button 的 10px 圆角。 -->
+    <dimen name="terminal_sidebar_action_radius">10dp</dimen>
+    <!-- 新建会话主按钮：原型 .new-session 的 54px 最小高度。 -->
+    <dimen name="terminal_sidebar_create_min_height">54dp</dimen>
+</resources>

@@ -152,10 +152,8 @@ public abstract class WebBrowserAudit extends Instrumentation {
   @Override
   public void onStart() {
     Bundle result = new Bundle();
-    String type =
-        arguments.getString("engine", "gecko").equals("standard")
-            ? "com.deepseekharness.app.ui.WebPreviewActivity"
-            : "com.deepseekharness.app.ui.GeckoPreviewActivity";
+    // 单 Standard 变体：浏览器审计只打开系统 WebView 预览。
+    String type = com.deepseekharness.app.ui.WebPreviewActivity.class.getName();
     android.content.SharedPreferences prefs =
         getTargetContext().getSharedPreferences(Constants.PREFS, 0);
     try {

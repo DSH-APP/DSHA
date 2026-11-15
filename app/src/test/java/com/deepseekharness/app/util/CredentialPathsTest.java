@@ -10,9 +10,11 @@ public class CredentialPathsTest {
         new String[] {
           ".bridge_token",
           ".bridge_headers",
+          ".bridge_port",
           ".bridge_token.retained-fixture",
           ".bridge_token.previous",
           ".bridge_status.tmp-fixture",
+          ".bridge_port.tmp-fixture",
           ".anonymous-user-id"
         }) {
       assertTrue(name, CredentialPaths.machine(name));

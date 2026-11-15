@@ -11,6 +11,7 @@ import {testRuntime} from './test-runtime-fixture.mjs';
 import {reuseConversationRuntime} from './qa-rc21/conversation-stop-runtime.mjs';
 const stage=(phase,facts={})=>process.stderr.write(JSON.stringify({phase,at:new Date().toISOString(),...facts})+'\n');
 stage('conversation-stop-runtime-binding-before');
+const currentDshVersion=JSON.parse(readFileSync('app/src/main/assets/runtime-patches.json','utf8')).dshVersion;
 const namedProof=process.env.DSHA_STOP_REUSE_INPUTS?reuseConversationRuntime(process.env.DSHA_STOP_REUSE_INPUTS,{sourceRoot:process.cwd(),environmentRuntime:process.env.DSHA_STOP_RUNTIME}):undefined;
 const runtime=namedProof?.runtime??(process.env.DSHA_STOP_RUNTIME ? testRuntime('raw', 'DSHA_STOP_RUNTIME') : testRuntime('raw'));
 stage('conversation-stop-runtime-binding-after',{controlRole:namedProof?'PRIOR_MANAGED_UNCHANGED_CONTROL':'RAW_LOCKED_CONTROL',currentWholeRootProofExecuted:!namedProof});
@@ -33,6 +34,8 @@ function render({running=true,draft='',phase='plain',attachments=[],subagent=nul
   const tree=context.render({useSession:select=>select(session),useInput:select=>select(input),inputActions:{},keyboard:{editor:null,submit(){submits++;}},
     resolveDraftAttachments:()=>attachments,useBusyEnter:select=>select('queue'),useFileUploads:select=>select({}),useNotices:select=>select(null),
     useLexicon:select=>select([]),useMenuLauncher:select=>select(null),useStopShortcut:select=>select([]),useProjection:()=>undefined,
+    // 0.2.2-rc.1 InputBar gates prompt/cancel/upload by session access; undefined means allowed.
+    useAccess:()=>undefined,
     stop:stopProvided?()=>{stops++;onStop?.();}:undefined,t:key=>key,renderSlot:()=>null,sessionId:'fixture-session',variant:'composer',blocked});
   const buttons=[];
   function visit(value){if(!value||typeof value!=='object')return;if(Array.isArray(value)){value.forEach(visit);return;}if(value.type==='button')buttons.push(value);visit(value.props?.children);}
@@ -73,7 +76,7 @@ const modulePath = name => require.resolve(name);
 const moduleSource = name => {const file=modulePath(name);namedProof?.observe(file);return readFileSync(file,'utf8');};
 function applyRecipe(text,name){
   const recipe=JSON.parse(readFileSync('app/src/main/assets/'+name,'utf8'));
-  assert.equal(recipe.dshVersion,'0.2.1-rc.2');
+  assert.equal(recipe.dshVersion,currentDshVersion);
   for(const {before,after}of recipe.patches){assert.equal(text.split(before).length-1,1,name+' source anchor');text=text.replace(before,after);}
   return text;
 }

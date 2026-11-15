@@ -22,4 +22,10 @@ public final class StorageCategoryLabels {
     String[] names = LABELS.get(key);
     return names == null ? key : names[english ? 1 : 0];
   }
+
+  public static String label(String key) {
+    if (key == null) return null;
+    String[] names = LABELS.get(key);
+    return names == null ? key : UiText.choose(names[0], names[1]);
+  }
 }

@@ -1,0 +1,4 @@
+# DSHA 0.2.1-rc.5-20261104.1830-dsh0.2.1-rc.5 / build308
+
+- Expérimental : les notifications d’îlot corrigent l’envoi inactif en choix multiple et le dépassement de la limite système de boutons d’action (contributeur Ralsei1337) ; la garde de lecture Root vérifie les chemins des fichiers de motifs grep -f/-nfFILE (amont #215) ; la page de diagnostic active Copier lorsque les résultats arrivent après un échec précoce (amont #213) ; le panneau du plug-in de cible de lancement ne laisse plus de grand vide sous le libellé en disposition verticale étroite, et le contrôle segmenté occupe désormais toute la ligne (expérimental, non vérifié sur appareil).
+- Portée de la vérification : tests unitaires ciblés, Lint et contrôles de source locaux uniquement ; non vérifié sur appareil. versionCode porté à 308 (basé sur build307). La révision DSHA passe de 0.2.1-rc.3 à 0.2.1-rc.5, alignée sur le DSH intégré 0.2.1-rc.5.

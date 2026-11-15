@@ -11,6 +11,7 @@ try {
     window.__ModuleLoader__={load:({factory})=>factory(()=>({}))};
   });
   await page.addScriptTag({content:fs.readFileSync('app/src/main/assets/web-integration/files.js','utf8')});
+  await page.evaluate(() => __dshaFilesBind({nonce:'fixture-document', generation:1, instance:'fixture-runtime'}));
   const header='__modules["components/file-share-controls.js"] = function (require, module, exports) {';
   const bundle=fs.readFileSync('app/src/main/assets/builtin-plugins/dsh-web-mobile/lib/client.js','utf8')
     .replace('var __cache = {};','window.mobileRequire=__localRequire; var __cache = {};')
@@ -29,10 +30,17 @@ try {
     const outcome=await transfer;
     const cancelled=core.deliverFile(file,controls.auditPlatformDeps());const cancel=requests.shift();
     DshaFiles.onmessage({data:JSON.stringify({id:cancel.id,ok:false,detail:'AbortError'})});
-    return {name:request.name,bytes:request.bytes,outcome,cancelled:await cancelled,extraRequests:requests.length};
+    const cancelOutcome = await cancelled;
+    const failed=core.deliverFile(file,controls.auditPlatformDeps()).then(()=>'unexpected',error=>error.message);
+    const fail=requests.shift(); DshaFiles.onmessage({data:JSON.stringify({id:fail.id,ok:false,detail:'SHARE_UNAVAILABLE'})});
+    const failure=await failed;
+    const tooLarge=await core.deliverFile(new File([new Uint8Array(32*1024*1024+1)],'large.bin'),controls.auditPlatformDeps())
+      .then(()=>'unexpected',error=>error.message);
+    return {name:request.name,bytes:request.bytes,outcome,cancelled:cancelOutcome,failure,tooLarge,extraRequests:requests.length};
   });
   assert.equal(shared.name,'实际附件-α.txt');assert.equal(shared.bytes,2048);
   assert.equal(shared.outcome.kind,'shared');assert.equal(shared.cancelled.kind,'cancelled');assert.equal(shared.extraRequests,0);
+  assert.equal(shared.failure,'SHARE_UNAVAILABLE'); assert.match(shared.tooLarge,/32 MiB/);
   await page.evaluate(()=>{
     document.getElementById('root').innerHTML='<div data-composer-card><input type="file" multiple hidden><button data-mobile-nav="file-upload">Attach</button></div>';
     window.picks=[];window.changed=[];window.currentSession='old';window.stops=[];

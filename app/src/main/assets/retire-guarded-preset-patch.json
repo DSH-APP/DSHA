@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "dshVersion": "0.2.1-rc.2",
+  "dshVersion": "0.2.2-rc.1",
   "module": "@deepseek-ai/dsh-permission-presets/lib/index.js",
-  "sourceSha256": "4f23c620145098d611d04d8363bc6716f49b26930c9141a21dc9a8df2b72ba63",
+  "sourceSha256": "08f06dac668d2639e963753c127230ec8818b47be72e5aed7f5bf637c9f6c16e",
   "patches": [
     {
       "before": "return [...Object.keys(this.presets), ...this.autoAdmit === void 0 ? [] : [AUTO_PRESET]];",

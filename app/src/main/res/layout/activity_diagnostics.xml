@@ -1,57 +1,32 @@
 <?xml version='1.0' encoding='utf-8'?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/surface">
-  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingStart="12dp" android:paddingEnd="18dp" android:gravity="center_vertical">
-    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/diagnostic_back" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_ui_back" android:contentDescription="@string/ui_m0201" app:tint="@color/text" />
-    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:text="@string/ui2_diagnostics" android:textSize="18sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" android:layout_weight="1" android:layout_marginStart="10dp" />
+<!--
+  自检与诊断（build248 简化版，手机单栏）：状态 → 检查结果 → 反馈 → 工具。
+  - 顶栏承担页面标题，不再重复大标题；状态卡只说结论，主按钮唯一。
+  - diagnostic_results 由 DiagnosticActivity 按 DiagnosticSummary 分组填充：问题置顶，正常项折叠为一行。
+  - 导出格式、保存位置与补充复现步骤移入导出弹层；平板两栏见 layout-sw600dp。
+  - DiagnosticPtyAudit / LayoutPreviewActivity 依赖的 diagnostic_status / diagnostic_report / diagnostic_repair 保持不变。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/shell_bg">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingStart="8dp" android:paddingEnd="12dp" android:gravity="center_vertical">
+    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/diagnostic_back" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:src="@drawable/ic_ui_back" android:contentDescription="@string/ui_m0201" app:tint="@color/shell_text" />
+    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:layout_weight="1" android:accessibilityHeading="true" android:includeFontPadding="false" android:text="@string/ui2_diagnostics" android:textColor="@color/shell_text" android:textSize="@dimen/shell_title_text" android:textStyle="bold" />
   </LinearLayout>
-  <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
-      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_diagnostics" android:textSize="24sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_diagnostics_intro" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="6dp" android:layout_marginBottom="18dp" />
-      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="16dp" android:layout_marginBottom="12dp">
-        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_check_ready" android:textSize="18sp" android:textColor="@color/text" android:includeFontPadding="false" android:id="@+id/diagnostic_headline" android:textStyle="bold" />
-        <TextView android:id="@+id/diagnostic_status" style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="" />
-        <Button android:id="@+id/diagnostic_refresh" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0209" />
+  <ScrollView android:id="@+id/diagnostic_scroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true" android:clipToPadding="false">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="@dimen/shell_page_pad" android:paddingEnd="@dimen/shell_page_pad" android:paddingTop="8dp" android:paddingBottom="@dimen/shell_page_bottom">
+      <include layout="@layout/diagnostic_hero" />
+
+      <TextView style="@style/ShellSectionLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/shell_section_gap" android:layout_marginBottom="@dimen/shell_section_margin" android:accessibilityHeading="true" android:text="@string/ui134_results" />
+      <LinearLayout android:id="@+id/diagnostic_results" style="@style/ShellCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+        <TextView android:id="@+id/diagnostic_empty" style="@style/ShellCardBody" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:padding="20dp" android:text="@string/diag248_empty" />
       </LinearLayout>
-      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_results" android:textSize="11sp" android:textColor="@color/text" android:includeFontPadding="false" android:layout_marginTop="10dp" android:layout_marginBottom="8dp" />
-      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="0dp" android:layout_marginBottom="12dp" android:id="@+id/diagnostic_results" />
-      <TextView android:id="@+id/diagnostic_report" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:textIsSelectable="true" android:fontFamily="monospace" android:paddingEnd="8dp" android:visibility="gone" />
-      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
-        <Button android:id="@+id/diagnostic_copy" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="@string/ui_m0103" style="@style/Widget.DSHA.Button" />
-        <Button android:id="@+id/diagnostic_export" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="@string/ui_m0109" style="@style/Widget.DSHA.Button" />
-      </LinearLayout>
-      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_start_records" android:textSize="11sp" android:textColor="@color/text" android:includeFontPadding="false" android:layout_marginTop="10dp" android:layout_marginBottom="8dp" />
-      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="0dp" android:layout_marginBottom="12dp">
-        <LinearLayout android:id="@+id/diagnostic_history" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp" android:minHeight="64dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
-          <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_recovery_document" android:padding="7dp" android:background="@drawable/bg_logo" android:contentDescription="@null" app:tint="@color/primary" />
-          <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_recent_startups" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_recent_startups_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
-          </LinearLayout>
-          <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" />
-        </LinearLayout>
-        <LinearLayout android:id="@+id/diagnostic_recovery" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp" android:minHeight="64dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
-          <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui2_box" android:padding="7dp" android:background="@drawable/bg_logo" android:contentDescription="@null" app:tint="@color/primary" />
-          <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_startup_recovery" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui134_startup_recovery_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
-          </LinearLayout>
-          <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" />
-        </LinearLayout>
-      </LinearLayout>
-      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_error_logs" android:textSize="11sp" android:textColor="@color/text" android:includeFontPadding="false" android:layout_marginTop="10dp" android:layout_marginBottom="8dp" />
-      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="16dp" android:layout_marginBottom="12dp">
-        <TextView android:id="@+id/diagnostic_logs_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="44dp" android:gravity="center_vertical" android:paddingTop="8dp" android:paddingBottom="8dp" android:textColor="@color/primary" android:clickable="true" android:focusable="true" />
-        <Button android:id="@+id/diagnostic_logs_download" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0047" />
-        <Button android:id="@+id/diagnostic_logs_save_as" style="@style/Widget.DSHA.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="@string/ui_m0080" />
-      </LinearLayout>
-      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_troubleshooting" android:textSize="11sp" android:textColor="@color/text" android:includeFontPadding="false" android:layout_marginTop="10dp" android:layout_marginBottom="8dp" />
-      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="16dp" android:layout_marginBottom="12dp">
-        <Button android:id="@+id/diagnostic_repair" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="@string/ui_m0060" />
-        <Button android:id="@+id/diagnostic_plugins" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/ui_m0013" />
-      </LinearLayout>
-      <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_reproduction" android:textSize="11sp" android:textColor="@color/text" android:includeFontPadding="false" android:layout_marginTop="10dp" android:layout_marginBottom="8dp" />
-      <EditText android:id="@+id/diagnostic_steps" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="80dp" android:layout_marginTop="12dp" android:background="@drawable/bg_input" android:padding="12dp" android:gravity="top" android:inputType="textMultiLine" android:hint="@string/ui_m0182" android:maxLength="2000" />
+      <!-- 完整脱敏报告只用于复制 / 导出与调试审计，不在页面上显示。 -->
+      <TextView android:id="@+id/diagnostic_report" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone" />
+
+      <TextView style="@style/ShellSectionLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/shell_section_gap" android:layout_marginBottom="@dimen/shell_section_margin" android:accessibilityHeading="true" android:text="@string/diag248_feedback" />
+      <include layout="@layout/diagnostic_feedback" />
+
+      <TextView style="@style/ShellSectionLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/shell_section_gap" android:layout_marginBottom="@dimen/shell_section_margin" android:accessibilityHeading="true" android:text="@string/diag248_tools" />
+      <include layout="@layout/diagnostic_tools" android:id="@+id/diagnostic_tools" />
     </LinearLayout>
   </ScrollView>
 </LinearLayout>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 由 tools/generate-theme-palettes.py 生成，勿手改。 -->
+<resources>
+    <attr name="dsha_pal_primary" format="color" />
+    <attr name="dsha_pal_primary_dark" format="color" />
+    <attr name="dsha_pal_accent_on" format="color" />
+    <attr name="dsha_pal_ripple" format="color" />
+    <attr name="dsha_pal_logo_top" format="color" />
+    <attr name="dsha_pal_terminal_accent" format="color" />
+    <attr name="dsha_pal_terminal_accent_bg" format="color" />
+    <attr name="dsha_pal_terminal_accent_soft_2" format="color" />
+    <attr name="dsha_pal_terminal_accent_line" format="color" />
+    <attr name="dsha_pal_terminal_on_accent" format="color" />
+    <attr name="dsha_pal_terminal_ripple" format="color" />
+    <attr name="dsha_pal_terminal_state_idle" format="color" />
+    <attr name="dsha_pal_shell_accent" format="color" />
+    <attr name="dsha_pal_shell_accent_soft" format="color" />
+    <attr name="dsha_pal_shell_accent_tonal" format="color" />
+    <attr name="dsha_pal_shell_on_accent" format="color" />
+    <attr name="dsha_pal_shell_nav_ripple" format="color" />
+    <attr name="dsha_pal_onb_accent_line" format="color" />
+    <attr name="dsha_pal_surface" format="color" />
+    <attr name="dsha_pal_card" format="color" />
+    <attr name="dsha_pal_raised" format="color" />
+    <attr name="dsha_pal_disabled" format="color" />
+    <attr name="dsha_pal_preview" format="color" />
+    <attr name="dsha_pal_shell_bg" format="color" />
+    <attr name="dsha_pal_shell_surface" format="color" />
+    <attr name="dsha_pal_shell_raised" format="color" />
+    <attr name="dsha_pal_shell_nav_bg" format="color" />
+    <attr name="dsha_pal_shell_glass" format="color" />
+    <attr name="dsha_pal_terminal_panel" format="color" />
+    <attr name="dsha_pal_terminal_panel_card" format="color" />
+    <attr name="dsha_pal_terminal_raised" format="color" />
+    <attr name="dsha_pal_terminal_tile" format="color" />
+    <attr name="dsha_pal_terminal_tile_pressed" format="color" />
+</resources>

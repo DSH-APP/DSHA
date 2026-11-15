@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 设备能力授权页「全局权限」分组标题前的 16dp 图标（包装 ic_plugin_bolt，颜色由 drawableTint 决定）。 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="16dp" android:height="16dp" android:drawable="@drawable/ic_plugin_bolt" />
+</layer-list>

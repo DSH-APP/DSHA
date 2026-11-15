@@ -1,7 +1,8 @@
 package com.deepseekharness.app.util;
 
-import org.junit.Test;
 import static org.junit.Assert.*;
+
+import org.junit.Test;
 
 public class EnvironmentIdentityTest {
   @Test
@@ -44,6 +45,79 @@ public class EnvironmentIdentityTest {
   }
 
   @Test
+  public void newApkCannotAutomaticallyReplayInterruptedOrCancelledTask() {
+    String oldAttempt = EnvironmentIdentity.attemptKey("runtime:abc", 100);
+    String newAttempt = EnvironmentIdentity.attemptKey("runtime:abc", 200);
+    for (var status :
+        new BackupTaskState.Status[] {
+          BackupTaskState.Status.INTERRUPTED, BackupTaskState.Status.CANCELLED
+        })
+      assertFalse(
+          EnvironmentIdentity.shouldAutoStart(
+              false, false, false, newAttempt, oldAttempt, status, true, false));
+    assertTrue(
+        EnvironmentIdentity.shouldAutoStart(
+            false,
+            false,
+            false,
+            newAttempt,
+            oldAttempt,
+            BackupTaskState.Status.FAILED,
+            true,
+            false));
+    assertFalse(
+        EnvironmentIdentity.shouldAutoStart(
+            false,
+            false,
+            false,
+            newAttempt,
+            oldAttempt,
+            BackupTaskState.Status.FAILED,
+            false,
+            false));
+    assertFalse(
+        EnvironmentIdentity.shouldAutoStart(
+            false,
+            false,
+            false,
+            newAttempt,
+            oldAttempt,
+            BackupTaskState.Status.FAILED,
+            true,
+            true));
+    assertFalse(
+        EnvironmentIdentity.shouldAutoStart(
+            false,
+            false,
+            true,
+            newAttempt,
+            oldAttempt,
+            BackupTaskState.Status.FAILED,
+            true,
+            false));
+    assertFalse(
+        EnvironmentIdentity.shouldAutoStart(
+            false,
+            false,
+            false,
+            newAttempt,
+            newAttempt,
+            BackupTaskState.Status.FAILED,
+            true,
+            false));
+    assertFalse(
+        EnvironmentIdentity.shouldAutoStart(
+            true,
+            false,
+            false,
+            newAttempt,
+            oldAttempt,
+            BackupTaskState.Status.FAILED,
+            true,
+            false));
+  }
+
+  @Test
   public void successMessageWithoutReadinessCannotNavigateBackIntoMaintenance() {
     assertFalse(
         EnvironmentIdentity.mayAdvanceAfterMaintenance(true, true, true, false, false, false));
@@ -60,6 +134,32 @@ public class EnvironmentIdentityTest {
     String candidate = "runtime:" + "a".repeat(64);
     for (int reopened = 0; reopened < 30; reopened++)
       assertFalse(EnvironmentIdentity.shouldAutoStart(false, false, false, candidate, candidate));
+  }
+
+  @Test
+  public void busyPluginReadCannotHideUnattemptedRuntimeMaintenance() {
+    String candidate = "runtime:" + "b".repeat(64);
+    String previous = "runtime:" + "a".repeat(64);
+    // 后台插件读取只影响维护执行时机，不改变覆盖安装后必须更新的事实。
+    assertFalse(EnvironmentIdentity.shouldAutoStart(false, true, false, candidate, previous));
+    assertTrue(
+        EnvironmentIdentity.shouldBlockRuntimeStart(false, true, true, false, candidate, previous));
+    assertTrue(
+        EnvironmentIdentity.shouldBlockRuntimeStart(
+            false, true, false, false, candidate, previous));
+  }
+
+  @Test
+  public void pendingMaintenanceCannotHideNewCandidateButAttemptedFallbackRemainsAvailable() {
+    String candidate = "runtime:" + "b".repeat(64);
+    assertFalse(EnvironmentIdentity.shouldAutoStart(false, false, true, candidate, ""));
+    assertTrue(
+        EnvironmentIdentity.shouldBlockRuntimeStart(false, true, false, true, candidate, ""));
+    assertTrue(EnvironmentIdentity.shouldBlockRuntimeStart(false, true, true, true, candidate, ""));
+    // 已尝试候选的健康兼容前代仍交给独立的任务/退出/维护门禁决定是否可运行。
+    assertFalse(
+        EnvironmentIdentity.shouldBlockRuntimeStart(false, true, true, true, candidate, candidate));
+    assertFalse(EnvironmentIdentity.shouldBlockRuntimeStart(true, true, true, true, candidate, ""));
   }
 
   @Test

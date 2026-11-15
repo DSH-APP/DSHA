@@ -27,8 +27,21 @@ def main():
                 '-sourcepath', os.pathsep.join([str(sources), str(generated)]), str(probe)]
         args.extend(str(path) for path in generated.rglob('*.java'))
         subprocess.run([javac, *args], check=True, timeout=90)
-        subprocess.run([java, '-cp', str(fixture / 'classes'), 'DevicePolicyProbe'],
-                       check=True, timeout=30)
+        probe_run = subprocess.run(
+            [java, '-cp', str(fixture / 'classes'), 'DevicePolicyProbe'],
+            check=True, timeout=30, capture_output=True, text=True)
+        lines = [line for line in probe_run.stdout.splitlines() if line.strip()]
+        summary = lines[-1] if lines else ''
+        prefix = 'PASS native device dry plans: '
+        if not summary.startswith(prefix):
+            raise SystemExit('NATIVE_DEVICE_POLICY_PROBE_SUMMARY_MISSING: ' + summary)
+        try:
+            checked = int(summary[len(prefix):].split(';', 1)[0])
+        except ValueError:
+            raise SystemExit('NATIVE_DEVICE_POLICY_PROBE_SUMMARY_INVALID: ' + summary)
+        if checked < 1:
+            raise SystemExit('NATIVE_DEVICE_POLICY_PROBE_CHECKED_NOTHING')
+        print(summary)
     return 0
 
 

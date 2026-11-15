@@ -20,7 +20,8 @@ function fixture() {
   const editor={isComposing:()=>false,update(fn,{onUpdate}){fn();onUpdate();},registerUpdateListener(){return()=>{}},registerRootListener(fn){fn(root,null);composingRoot=fn;return()=>fn(null,root)},registerCommand(id,fn){commands.set(id,fn);return()=>commands.delete(id)}};
   const handlers={arbitrate:()=>menu,canSubmit:()=>allowed,submit:accelerated=>sent.push(accelerated),dismissPopup(){},space:()=>false};
   const ctx={Date:{now:()=>now},Eu:(...disposers)=>()=>disposers.forEach(fn=>fn())};
-  for(const name of ['sn$2','ln$2','hn$2','fn$1','an$1','cn$1','Je$2'])ctx[name]=name;
+  // 0.2.2-rc.1 bundles two more Lexical commands (tn$2/nn$2) into the same keymap.
+  for(const name of ['tn$2','nn$2','sn$2','ln$2','hn$2','fn$1','an$1','cn$1','Je$2'])ctx[name]=name;
   vm.createContext(ctx);vm.runInContext(source.slice(start,end)+'\nglobalThis.install=registerComposerKeymap;',ctx);
   const dispose=ctx.install(editor,handlers);
   const enter=(properties={})=>{let prevented=0;const event=properties===null?null:{preventDefault(){prevented++},getModifierState(name){return this.modifierState?.[name]===true},...properties};const consumed=commands.get('cn$1')(event);return{consumed,prevented}};

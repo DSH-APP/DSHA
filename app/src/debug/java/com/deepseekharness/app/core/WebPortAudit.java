@@ -131,10 +131,7 @@ public final class WebPortAudit extends Instrumentation {
         }
         if (runtime.equals("proot")) {
           String cookie = c.exchangeDshAuthCookie();
-          String name =
-              com.deepseekharness.app.BuildConfig.LOW_ANDROID
-                  ? "com.deepseekharness.app.ui.GeckoPreviewActivity"
-                  : "com.deepseekharness.app.ui.WebPreviewActivity";
+          String name = "com.deepseekharness.app.ui.WebPreviewActivity";
           ActivityMonitor monitor = addMonitor(name, null, false);
           try {
             runOnMainSync(

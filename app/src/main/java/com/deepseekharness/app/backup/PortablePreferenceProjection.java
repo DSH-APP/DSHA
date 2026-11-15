@@ -11,12 +11,16 @@ public final class PortablePreferenceProjection {
       Set.of(
           Constants.KEY_PORT,
           Constants.KEY_WORKDIR,
-          Constants.KEY_PERMISSION_MODE,
           "ui_theme",
           "ui_language",
           "plugin_sort_order",
           "dns_mode",
           Constants.KEY_PICTURE_IN_PICTURE_LAYOUT);
+
+  /** 原生授权偏好只属于本机，绝不进入便携设置或系统备份。 */
+  private static final Set<String> NATIVE_ONLY =
+      Set.of("clipboard_read_mode_v1", "sms_read", "dsha_device_grants");
+
   private static final Set<String> FLAGS =
       Set.of(
           Constants.KEY_CONFIRM_SHELL,
@@ -26,7 +30,12 @@ public final class PortablePreferenceProjection {
           Constants.KEY_PICTURE_IN_PICTURE);
 
   public static boolean transferable(String key) {
-    return TEXT.contains(key) || FLAGS.contains(key);
+    return !NATIVE_ONLY.contains(key) && (TEXT.contains(key) || FLAGS.contains(key));
+  }
+
+  /** Explicitly documents preferences that must never become portable authority. */
+  public static boolean nativeOnly(String key) {
+    return NATIVE_ONLY.contains(key);
   }
 
   public static Map<String, Object> project(Map<String, ?> values) {
@@ -35,12 +44,7 @@ public final class PortablePreferenceProjection {
       Object value = values.get(key);
       if (value instanceof String
           && ((String) value).length() <= 2048
-          && ((String) value).indexOf('\0') < 0)
-        result.put(
-            key,
-            key.equals(Constants.KEY_PERMISSION_MODE)
-                ? com.deepseekharness.app.util.PermissionMode.normalize((String) value)
-                : value);
+          && ((String) value).indexOf('\0') < 0) result.put(key, value);
     }
     for (String key : FLAGS) {
       Object value = values.get(key);

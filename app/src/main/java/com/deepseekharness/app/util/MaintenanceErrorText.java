@@ -11,7 +11,7 @@ public final class MaintenanceErrorText {
     if (value == null || value.isEmpty()) return value == null ? "" : value;
     if (value.trim().equalsIgnoreCase("Permission denied"))
       return UiText.choose(
-          "当前步骤被系统拒绝访问，尚不能判断是文件权限还是进程核验失败。请保持 DSHA 在前台，先点“恢复中断维护”重试；应用会保留原件，不会把失败显示成已恢复。\nPermission denied",
+          "当前步骤被系统拒绝访问，尚不能判断是文件权限还是进程核验失败。请保持 DSHA 在前台，先点「恢复中断维护」重试；应用会保留原件，不会把失败显示成已恢复。\nPermission denied",
           "The system denied access during this step. Keep DSHA in the foreground and retry Recover interrupted maintenance; originals stay protected and a failed recovery is never shown as complete.\nPermission denied");
     String code = value.matches("[A-Z_0-9]{2,100}") ? value : "";
     if (code.isEmpty()) {
@@ -25,7 +25,7 @@ public final class MaintenanceErrorText {
                   "RETAINED_OPERATION_LIMIT",
                   "OPERATION_LIMIT" ->
               UiText.choose(
-                  "维护历史记录已达到安全上限；原件和失败候选均未删除。请打开“保留数据”检查后再重试。",
+                  "维护历史记录已达到安全上限；原件和失败候选均未删除。请打开「保留数据」检查后再重试。",
                   "The safe maintenance-history limit was reached. Originals and failed candidates were retained. Review Retained data, then retry.");
           case "RUNTIME_RECOVERY_REQUIRED",
                   "ENVIRONMENT_RECOVERY_REQUIRED",
@@ -34,7 +34,7 @@ public final class MaintenanceErrorText {
                   "MULTIPLE_RUNTIME_TRANSACTIONS",
                   "MULTIPLE_ENVIRONMENT_TRANSACTIONS" ->
               UiText.choose(
-                  "检测到未完成的维护事务；请先选择“恢复中断维护”，确认原环境回切后再继续。",
+                  "检测到未完成的维护事务；请先选择「恢复中断维护」，确认原环境回切后再继续。",
                   "An interrupted maintenance transaction was found. Recover interrupted maintenance and confirm the original environment before continuing.");
           case "STOP_DSH_AND_TERMINALS_FIRST" ->
               UiText.choose(
@@ -42,7 +42,7 @@ public final class MaintenanceErrorText {
                   "Stop DSH, terminals, and active data jobs first. Originals were not changed; retry shortly.");
           case "WEB_PROCESS_SIGNAL_DENIED" ->
               UiText.choose(
-                  "系统拒绝了旧 Web 进程信号。应用会保留原环境；请保持 DSHA 前台并再次点“恢复中断维护”，系统将只对本次已登记的 Web 启动器执行优雅退出。",
+                  "系统拒绝了旧 Web 进程信号。应用会保留原环境；请保持 DSHA 前台并再次点「恢复中断维护」，系统将只对本次已登记的 Web 启动器执行优雅退出。",
                   "The system denied the signal to the old Web process. The original environment is retained. Keep DSHA in the foreground and retry Recover interrupted maintenance; only this run's registered Web launcher will be asked to exit gracefully.");
           case "RUNTIME_HEALTH_INCOMPLETE",
                   "TRIAL_PROCESS_UNCONFIRMED",

@@ -17,7 +17,9 @@
     <exclude domain="file" path="user-data-v5/dsh/sessions/.sessions-trash/" />
     <exclude domain="file" path="user-data-v5/dsh/profiles/.bridge_token" />
     <exclude domain="file" path="user-data-v5/dsh/profiles/.bridge_headers" />
+    <exclude domain="file" path="user-data-v5/dsh/profiles/.bridge_port" />
     <exclude domain="file" path="linux/ubuntu/root/.dsh/sessions/.sessions-trash/" />
     <exclude domain="file" path="linux/ubuntu/root/.dsh/profiles/.bridge_token" />
     <exclude domain="file" path="linux/ubuntu/root/.dsh/profiles/.bridge_headers" />
+    <exclude domain="file" path="linux/ubuntu/root/.dsh/profiles/.bridge_port" />
 </full-backup-content>

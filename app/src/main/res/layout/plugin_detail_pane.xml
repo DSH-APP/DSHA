@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  插件详情窗格（UI v5 方案 A，窗口宽度 ≥ 840dp）：插件页右侧常驻。
+  2026-11-01 起直接复用列表的 item_plugin 卡片（DETAIL 密度），名称、状态、提示条、属性表、开关、更多与删除
+  走同一份 PluginFragment.bindCard 绑定，不再单独维护一套取值。
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/shell_bg" android:clipToPadding="false" android:fillViewport="true">
+
+    <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="@dimen/shell_page_pad" android:paddingTop="@dimen/shell_page_top" android:paddingEnd="@dimen/shell_page_pad" android:paddingBottom="@dimen/shell_page_bottom">
+
+        <TextView android:id="@+id/plugin_detail_empty" style="@style/ShellStatusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="40dp" android:gravity="center" android:visibility="gone" />
+
+        <LinearLayout android:id="@+id/plugin_detail_content" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+
+            <TextView android:id="@+id/plugin_detail_label" style="@style/ShellSectionLabel" android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+            <include android:id="@+id/plugin_detail_card" layout="@layout/item_plugin" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/shell_section_margin" />
+        </LinearLayout>
+    </FrameLayout>
+</ScrollView>

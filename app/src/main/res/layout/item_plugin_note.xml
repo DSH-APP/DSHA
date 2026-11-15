@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 插件卡片提示条：语气色图标 + 文案 + 可选动作；底色与图标色由 PluginFragment 按语气 tint。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="@drawable/bg_plugin_note" android:gravity="center_vertical" android:minHeight="40dp" android:orientation="horizontal" android:paddingStart="10dp" android:paddingTop="4dp" android:paddingEnd="4dp" android:paddingBottom="4dp">
+
+    <ImageView android:id="@+id/pluginNoteIcon" android:layout_width="16dp" android:layout_height="16dp" android:contentDescription="@null" android:importantForAccessibility="no" app:tint="@color/shell_warn" />
+
+    <TextView android:id="@+id/pluginNoteText" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_weight="1" android:includeFontPadding="false" android:lineSpacingExtra="2dp" android:paddingTop="6dp" android:paddingBottom="6dp" android:textColor="@color/shell_text" android:textSize="12.5sp" />
+
+    <Button android:id="@+id/pluginNoteAction" style="@style/ShellTextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:background="@drawable/bg_plugin_note_action" android:minHeight="40dp" android:minWidth="0dp" android:paddingStart="12dp" android:paddingEnd="12dp" android:textStyle="bold" android:visibility="gone" />
+</LinearLayout>

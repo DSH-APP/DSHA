@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 阶段分段条（warn）：3dp 圆角实色，不显示百分比。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="@color/shell_warn" /><corners android:radius="3dp" /></shape>

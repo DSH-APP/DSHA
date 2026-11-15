@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>DSHA · 运行配置压缩（交互原型）</title>
+<style>
+/* UI v5 token 离线副本，仅供本预览；与 values{,-night}/shell_ui.xml 对齐。 */
+:root{color-scheme:light;--page:#e9eef6;--bg:#f3f6fb;--surface:#fcfdff;--raised:#e7edf6;--line:rgba(29,58,96,.075);--line-2:rgba(29,58,96,.145);--text:#18273f;--text-2:#50617a;--muted:#61728d;--accent:#1e50d0;--accent-soft:rgba(30,80,208,.08);--on-accent:#fff;--good:#287453;--warn:#8c600d;--warn-soft:rgba(140,96,13,.10);--bad:#af404b;--bad-soft:rgba(175,64,75,.10);--bezel:#1b2333;--anat:#d0368a;--glass:rgba(250,252,255,.92);--shadow:0 18px 50px rgba(17,32,62,.14);--shadow-soft:0 2px 8px rgba(17,32,62,.08);--sans:system-ui,-apple-system,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+[data-theme="dark"]{color-scheme:dark;--page:#070a10;--bg:#0b0f16;--surface:#131923;--raised:#1b2432;--line:rgba(203,220,255,.07);--line-2:rgba(203,220,255,.13);--text:#edf1f7;--text-2:#b0bbcc;--muted:#8895aa;--accent:#6aa4ff;--accent-soft:rgba(106,164,255,.10);--on-accent:#091729;--good:#93ccaf;--warn:#e4be83;--warn-soft:rgba(228,190,131,.10);--bad:#eea3a6;--bad-soft:rgba(238,163,166,.10);--bezel:#2a3446;--anat:#ff7ab8;--glass:rgba(25,34,48,.92);--shadow:0 18px 50px rgba(0,0,0,.5);--shadow-soft:0 2px 8px rgba(0,0,0,.35)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{-webkit-tap-highlight-color:transparent;cursor:pointer}
+svg.i{width:1.25em;height:1.25em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* ---------- 设计台（不属于 App） ---------- */
+.top{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 16px;background:var(--page);border-bottom:1px solid var(--line-2)}
+.top h1{margin:0 6px 0 0;font-size:15px;font-weight:650}
+.top h1 small{font-weight:450;color:var(--muted);margin-left:6px;font-size:12px}
+.seg{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:var(--raised)}
+.seg button{min-height:32px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--text-2);font-size:12.5px;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow-soft)}
+.chk{display:inline-flex;align-items:center;gap:6px;min-height:32px;font-size:12.5px;color:var(--text-2);cursor:pointer}
+.chk input{width:16px;height:16px;accent-color:var(--accent);margin:0}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;max-width:1680px;margin:0 auto;padding:20px;align-items:start}
+.devices{display:flex;gap:28px;justify-content:center;align-items:flex-start;min-width:0}
+.dev-col{display:flex;flex-direction:column;align-items:center;gap:8px}
+.dev-cap{font-size:12px;color:var(--muted)}
+.dev-box{position:relative;flex:none}
+.device{position:absolute;transform-origin:0 0;border-radius:var(--rad,34px);overflow:hidden;background:var(--bg);box-shadow:0 0 0 10px var(--bezel),var(--shadow)}
+.inspector{display:flex;flex-direction:column;gap:14px;position:sticky;top:68px;max-height:calc(100vh - 88px);overflow:auto;padding-bottom:8px}
+.panel{background:var(--surface);border:1px solid var(--line-2);border-radius:16px;padding:14px 16px}
+.panel h2{margin:0 0 10px;font-size:13.5px;font-weight:650}
+.panel p,.panel li{font-size:12.5px;line-height:1.6;color:var(--text-2)}
+.panel p{margin:0 0 8px}
+.panel ul{margin:0;padding-left:18px}
+.panel code{font-family:var(--mono);font-size:11.5px}
+.metrics{width:100%;border-collapse:collapse;font-size:12.5px}
+.metrics th,.metrics td{padding:5px 4px;text-align:right;border-bottom:1px solid var(--line)}
+.metrics th:first-child,.metrics td:first-child{text-align:left;color:var(--text-2);font-weight:450}
+.metrics .win{color:var(--good);font-weight:650}
+.sim{display:flex;flex-direction:column;gap:2px}
+@media (max-width:1100px){.stage{grid-template-columns:1fr}.inspector{position:static;max-height:none}}
+
+/* ---------- App 本体：尺寸以 dp 为 px，--fs 为字体倍率 ---------- */
+.app{--fs:1;position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);color:var(--text);font-size:calc(15px*var(--fs))}
+.sb{flex:none;height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:12px;font-weight:600}
+.abar{flex:none;height:64px;display:flex;align-items:center;gap:4px;padding:0 8px 0 4px;border-bottom:1px solid var(--line)}
+.ibtn{width:48px;height:48px;display:grid;place-items:center;border:0;background:none;border-radius:24px;color:var(--text)}
+.ibtn:active{background:var(--accent-soft)}
+.abar .tt{flex:1;min-width:0;padding-left:4px}
+.abar .tt b{display:block;font-size:calc(17px*var(--fs));font-weight:700;line-height:1.2}
+.abar .tt small{display:block;font-size:calc(12px*var(--fs));color:var(--text-2);margin-top:1px}
+.body{flex:1;min-height:0;display:flex}
+.rail{flex:none;width:96px;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding-top:16px;gap:8px}
+.rail button{width:66px;min-height:72px;border:0;border-radius:18px;background:none;color:var(--text-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:calc(12px*var(--fs))}
+.rail button svg{width:24px;height:24px}
+.rail button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+.rail .lf{margin-top:auto;padding:12px 0;font-size:10px;letter-spacing:1.5px;color:var(--muted)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
+.panes{flex:1;min-height:0;display:flex}
+.list-pane{flex:none;width:300px;border-right:1px solid var(--line);overflow:auto;padding:12px}
+.list-pane h3{margin:14px 10px 6px;font-size:calc(12px*var(--fs));color:var(--muted);font-weight:600}
+.list-pane button{display:block;width:100%;text-align:left;min-height:48px;padding:0 12px;border:0;border-radius:12px;background:none;font-size:calc(14px*var(--fs))}
+.list-pane button[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.list-pane .demo{margin:12px 10px;font-size:11px;color:var(--muted)}
+.detail{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;position:relative;container-type:inline-size}
+.scroller{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.bnav{flex:none;margin:6px 14px 10px;height:64px;border-radius:22px;background:var(--glass);box-shadow:var(--shadow-soft),inset 0 0 0 1px var(--line-2);display:flex}
+.bnav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-2);font-size:calc(11px*var(--fs))}
+.bnav button[aria-current="page"]{color:var(--accent);font-weight:600}
+.home-ind{flex:none;height:14px;display:grid;place-items:center}
+.home-ind::after{content:"";width:120px;height:4px;border-radius:2px;background:var(--text);opacity:.5}
+
+/* ---------- 现状（按截图复刻：大标题、整宽下拉、全部展开、整宽保存） ---------- */
+.o-wrap{padding:22px 24px 24px}
+.o-head{display:flex;align-items:center;gap:18px}
+.o-tile{width:52px;height:52px;border-radius:14px;background:var(--raised);display:grid;place-items:center;color:var(--accent)}
+.o-tile svg{width:26px;height:26px}
+.o-title{font-size:calc(29px*var(--fs));font-weight:800;margin:0}
+.o-hint{margin:18px 0 0;color:var(--text-2);font-size:calc(15px*var(--fs));display:flex;gap:4px;align-items:center}
+.o-sec{margin:34px 0 16px;display:flex;gap:10px;align-items:center;font-weight:700;font-size:calc(14px*var(--fs));color:var(--text-2)}
+.o-sec svg{color:var(--accent)}
+.o-card{background:var(--surface);border:1px solid var(--line-2);border-radius:20px;padding:18px}
+.o-select{width:100%;min-height:56px;border:1px solid var(--line-2);border-radius:16px;background:var(--surface);display:flex;align-items:center;justify-content:center;position:relative;font-size:calc(17px*var(--fs))}
+.o-select svg{position:absolute;right:20px}
+.o-div{height:1px;background:var(--line-2);margin:14px 0 6px}
+.o-sw{min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:calc(16.5px*var(--fs));width:100%;border:0;background:none;padding:0;text-align:left}
+.o-lab{margin:14px 0 8px;color:var(--text-2);font-size:calc(14px*var(--fs))}
+.o-input{width:100%;min-height:56px;border:1px solid var(--line-2);border-radius:16px;background:var(--surface);padding:0 16px;font-size:calc(17px*var(--fs))}
+.o-status{margin-top:12px;color:var(--text-2);font-size:calc(13.5px*var(--fs));line-height:1.6;display:flex;gap:8px;align-items:center}
+.o-link{display:block;width:100%;min-height:52px;border:0;background:none;color:var(--accent);font-size:calc(16px*var(--fs));margin-top:4px}
+.o-ct{margin:16px 0 0;font-size:calc(18px*var(--fs));font-weight:700}
+.o-row{min-height:60px;display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;padding:6px 0;text-align:left}
+.o-row .t{flex:1}
+.o-row b{display:block;font-weight:500;font-size:calc(16px*var(--fs))}
+.o-row small{display:block;color:var(--text-2);margin-top:3px;font-size:calc(13px*var(--fs));line-height:1.45}
+.o-sec2btn{width:100%;min-height:52px;margin-top:14px;border:1px solid var(--line-2);border-radius:16px;background:var(--surface);color:var(--accent);font-size:calc(15px*var(--fs))}
+.o-foot{text-align:center;color:var(--muted);margin:22px 0 4px;font-size:calc(12.5px*var(--fs))}
+.o-save{flex:none;margin:10px 24px 16px;min-height:62px;border:0;border-radius:18px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:calc(17px*var(--fs))}
+
+/* ---------- 开关（两版共用 MaterialSwitch 形态） ---------- */
+.sw{flex:none;width:52px;height:32px;border:0;padding:0;border-radius:16px;position:relative;background:var(--raised);box-shadow:inset 0 0 0 2px var(--line-2);transition:background .18s}
+.sw::after{content:"";position:absolute;top:8px;left:8px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:all .18s cubic-bezier(.22,1,.36,1)}
+[aria-checked="true"] > .sw,.sw[aria-checked="true"]{background:var(--accent);box-shadow:none}
+[aria-checked="true"] > .sw::after,.sw[aria-checked="true"]::after{top:4px;left:24px;width:24px;height:24px;background:var(--on-accent)}
+[aria-disabled="true"] > .sw,.sw[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+
+/* ---------- 重构：紧凑行 ---------- */
+.n-wrap{padding:8px 16px 20px;max-width:1080px;margin:0 auto}
+.n-hint{display:flex;align-items:center;gap:2px;min-height:40px;color:var(--text-2);font-size:calc(13px*var(--fs));padding:0 4px}
+.n-hint button{border:0;background:none;color:var(--accent);padding:0;width:40px;height:40px;display:grid;place-items:center;border-radius:20px}
+.n-cols{display:contents}
+.n-sec{display:flex;flex-direction:column}
+.n-lab{margin:12px 4px 6px;font-size:calc(12.5px*var(--fs));font-weight:650;color:var(--muted);letter-spacing:.2px}
+.n-card{background:var(--surface);border:1px solid var(--line-2);border-radius:18px;overflow:hidden}
+.n-row{position:relative;display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 14px 8px 16px;width:100%;border:0;background:none;text-align:left}
+.n-card > * + *,.n-card > div > * + *{border-top:1px solid var(--line)}
+.n-card > div[id] > :first-child{border-top:1px solid var(--line)}
+button.n-row:active,.n-row .tap:active{background:var(--accent-soft)}
+.n-row .tx{flex:1;min-width:0;cursor:pointer}
+.n-row.static .tx{cursor:default}
+.n-row .tx b{display:block;font-weight:500;font-size:calc(15px*var(--fs));line-height:1.3}
+.n-row .tx small{display:block;margin-top:2px;color:var(--text-2);font-size:calc(12.5px*var(--fs));line-height:1.4}
+.n-row .tx small.warn{color:var(--warn)}
+.n-row .tx small.bad{color:var(--bad)}
+.n-row .val{flex:none;color:var(--text-2);font-size:calc(13.5px*var(--fs));display:flex;align-items:center;gap:2px;max-width:50%;text-align:right}
+.n-row .val svg,.n-row .chev{color:var(--muted)}
+.n-row.static .val{color:var(--muted)}
+.n-sub{background:var(--bg);padding-left:28px}
+.chip{flex:none;min-height:36px;padding:0 12px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface);color:var(--accent);font-size:calc(13px*var(--fs));font-weight:550;white-space:nowrap}
+.chip:active{background:var(--accent-soft)}
+.chip[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+.port{flex:none;width:calc(96px*var(--fs));min-height:40px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);padding:0 10px;font-family:var(--mono);font-size:calc(15px*var(--fs));text-align:right}
+.port[aria-invalid="true"]{border-color:var(--bad);box-shadow:0 0 0 2px var(--bad-soft)}
+.segc{flex:none;display:inline-flex;padding:3px;gap:2px;border-radius:12px;background:var(--raised)}
+.segc button{min-height:36px;min-width:48px;padding:0 10px;border:0;border-radius:9px;background:none;color:var(--text-2);font-size:calc(13px*var(--fs));white-space:nowrap}
+.segc button[aria-checked="true"]{background:var(--surface);color:var(--text);font-weight:600;box-shadow:var(--shadow-soft)}
+.n-row.wrapc{flex-wrap:wrap}
+.n-row.wrapc .segc{margin-left:auto}
+.note{display:flex;gap:8px;align-items:flex-start;margin:0;padding:10px 14px 12px 16px;background:var(--warn-soft);color:var(--warn);font-size:calc(12.5px*var(--fs));line-height:1.5}
+.badge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:8px;background:var(--warn-soft);color:var(--warn);font-size:calc(11px*var(--fs));font-weight:600;vertical-align:1px}
+.n-adv .chev{transition:transform .2s}
+.n-adv[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.n-foot{text-align:center;margin:14px 0 0}
+.n-foot button{border:0;background:none;color:var(--muted);font-size:calc(12px*var(--fs));min-height:40px;padding:0 12px}
+/* 窄屏单列：order 决定顺序；详情窗格 ≥720dp：两列 */
+.o-net{order:1}.o-disp{order:2}.o-float{order:3}.o-adv{order:4}.o-more{order:5}
+.n-grid{display:flex;flex-direction:column}
+@container (min-width:720px){
+  .n-wrap{padding:8px 28px 24px}
+  .v2.n-wrap{padding:4px 28px 16px}
+  .n-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;align-items:start}
+  .n-cols{display:flex;flex-direction:column}
+  .save{padding:10px 28px 14px}
+}
+
+/* ---------- v2：进一步压低高度 ---------- */
+.v2.n-wrap{padding:4px 16px 16px}
+.v2 .n-lab{margin:10px 4px 4px}
+.v2 .n-lab-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 8px}
+.v2 .n-hint2{display:inline-flex;align-items:center;font-weight:450;letter-spacing:0;color:var(--text-2);font-size:calc(12px*var(--fs))}
+.v2 .n-hint2 button{width:36px;height:36px;margin:-9px -10px -9px -6px;border:0;background:none;color:var(--accent);display:grid;place-items:center;border-radius:18px}
+.v2 .n-card{border-radius:16px}
+.v2 .n-row{min-height:48px;padding:5px 12px 5px 14px;gap:10px}
+.v2 .n-row .tx small{margin-top:1px;font-size:calc(12px*var(--fs));line-height:1.35}
+.v2 .n-sub{padding-left:24px}
+.v2 .chip{min-height:32px;padding:0 10px;border-radius:10px}
+.v2 .segc{padding:2px}
+.v2 .segc button{min-height:32px;min-width:44px;padding:0 9px}
+.v2 .port{min-height:36px}
+.v2 .note{padding:8px 12px 9px 14px}
+.v2 .n-links{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.v2 .n-links .chip{color:var(--text-2);font-weight:500}
+.v2 .n-links .chip.ghost{border-color:transparent;background:none;color:var(--muted)}
+.save.v2{padding:7px 16px 9px}
+.save.v2 .st{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.save.v2 .st b{display:inline;margin-right:6px}
+.save.v2 .pri{min-height:44px;padding:0 20px;border-radius:14px}
+.save.v2 .ghost{min-height:44px;padding:0 10px}
+@container (min-width:720px){.save.v2{padding:8px 28px 10px}}
+
+/* ---------- 保存条 ---------- */
+.save{flex:none;padding:10px 16px 12px;border-top:1px solid var(--line);background:var(--glass)}
+.save-in{display:flex;align-items:center;gap:10px;width:100%;max-width:1080px;margin:0 auto}
+.save .st{flex:1;min-width:0;font-size:calc(12.5px*var(--fs));color:var(--text-2);line-height:1.4}
+.save .st b{display:block;color:var(--text);font-size:calc(13.5px*var(--fs));font-weight:600}
+.save .st.bad b{color:var(--bad)}
+.save .ghost{flex:none;min-height:44px;padding:0 14px;border:0;border-radius:14px;background:none;color:var(--accent);font-weight:550;font-size:calc(14px*var(--fs))}
+.save .pri{flex:none;min-height:48px;padding:0 22px;border:0;border-radius:16px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:calc(15px*var(--fs))}
+.save .pri:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------- 弹层 / toast ---------- */
+.scrim{position:absolute;inset:0;z-index:20;background:rgba(8,14,26,.38);display:flex;align-items:flex-end;justify-content:center;animation:fade .15s}
+.sheet{width:100%;max-height:80%;overflow:auto;background:var(--surface);border-radius:24px 24px 0 0;padding:8px 16px 18px;box-shadow:var(--shadow);animation:up .22s cubic-bezier(.22,1,.36,1)}
+.app.tab .scrim{align-items:center}
+.app.tab .sheet{width:440px;border-radius:24px;padding:18px 20px}
+.sheet .grab{width:36px;height:4px;border-radius:2px;background:var(--line-2);margin:4px auto 10px}
+.app.tab .sheet .grab{display:none}
+.sheet h4{margin:4px 4px 6px;font-size:calc(17px*var(--fs))}
+.sheet p{margin:0 4px 12px;color:var(--text-2);font-size:calc(13px*var(--fs));line-height:1.55}
+.opt{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:6px 12px;border:0;border-radius:14px;background:none;text-align:left}
+.opt[aria-checked="true"]{background:var(--accent-soft)}
+.opt .tx{flex:1}
+.opt b{display:block;font-weight:550;font-size:calc(15px*var(--fs))}
+.opt small{display:block;color:var(--text-2);font-size:calc(12.5px*var(--fs));margin-top:2px}
+.opt .rd{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--line-2)}
+.opt[aria-checked="true"] .rd{box-shadow:inset 0 0 0 6px var(--accent)}
+.fld{display:block;width:100%;min-height:48px;margin:0 0 10px;padding:0 14px;border:1px solid var(--line-2);border-radius:14px;background:var(--bg)}
+.ferr{margin:-4px 4px 10px;color:var(--bad);font-size:calc(12.5px*var(--fs))}
+.acts{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+.acts button{min-height:44px;padding:0 18px;border-radius:14px;border:0;background:none;color:var(--accent);font-weight:600}
+.acts .pri{background:var(--accent);color:var(--on-accent)}
+.toast{position:absolute;left:50%;bottom:var(--toast-b,96px);transform:translateX(-50%);z-index:25;max-width:calc(100% - 40px);width:max-content;padding:10px 16px;border-radius:14px;background:#1f2a3c;color:#f2f5fa;font-size:calc(13px*var(--fs));line-height:1.45;box-shadow:var(--shadow);animation:fade .15s}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(30px);opacity:.4}}
+
+/* ---------- id 标注 ---------- */
+.show-ids [data-id]{position:relative;outline:1px dashed var(--anat);outline-offset:-2px}
+.show-ids [data-id]::before{content:attr(data-id);position:absolute;right:4px;top:2px;z-index:3;padding:0 4px;border-radius:4px;background:var(--anat);color:#fff;font:500 9.5px/1.5 var(--mono);pointer-events:none}
+.measure{position:fixed;left:-99999px;top:0;visibility:hidden;pointer-events:none}
+</style>
+</head>
+<body>
+<header class="top" role="toolbar" aria-label="预览控制">
+  <h1>运行配置压缩<small>交互原型 · 未改 Android 代码</small></h1>
+  <div class="seg" role="group" aria-label="设备" data-ctl="device">
+    <button data-v="phone">手机 360</button><button data-v="phoneL">手机 412</button><button data-v="tabP">平板竖 800</button><button data-v="tabL">平板横 1280</button>
+  </div>
+  <div class="seg" role="group" aria-label="版本" data-ctl="version">
+    <button data-v="v2">重构 v2</button><button data-v="new">v1</button><button data-v="old">现状</button><button data-v="both">三版对比</button>
+  </div>
+  <div class="seg" role="group" aria-label="主题" data-ctl="theme">
+    <button data-v="light">浅色</button><button data-v="dark">深色</button>
+  </div>
+  <label class="chk"><input type="checkbox" data-opt="big">1.3× 字体</label>
+  <label class="chk"><input type="checkbox" data-opt="short">短屏</label>
+  <label class="chk" data-only="tab"><input type="checkbox" data-opt="pane">从设置进入（双栏）</label>
+  <label class="chk" data-only="phone"><input type="checkbox" data-opt="bnav">显示底部导航</label>
+  <label class="chk"><input type="checkbox" data-opt="ids">标注控件 id</label>
+</header>
+<main class="stage">
+  <section class="devices" id="devices" aria-label="设备预览"></section>
+  <aside class="inspector" aria-label="说明">
+    <div class="panel">
+      <h2>压缩效果（实时测量）</h2>
+      <table class="metrics" id="metrics"></table>
+      <p style="margin-top:8px">“首屏可见设置项”= 17 个可操作项中完整落在滚动区可视范围内的个数；高级项折叠时不计入。离屏按当前设备、字体与状态重排测得，不是 Android 实测。</p>
+    </div>
+    <div class="panel">
+      <h2>未保存的改动</h2>
+      <ul id="dirty"></ul>
+    </div>
+    <div class="panel sim">
+      <h2>模拟条件</h2>
+      <label class="chk"><input type="checkbox" data-sim="busy">有环境任务进行中（保存被拒）</label>
+      <label class="chk"><input type="checkbox" data-sim="pipUnsupported">设备不支持画中画</label>
+      <label class="chk"><input type="checkbox" data-sim="pipSys">系统已允许画中画</label>
+      <label class="chk"><input type="checkbox" data-sim="noOverlay">未授予悬浮窗权限</label>
+    </div>
+    <div class="panel">
+      <h2>v2 再压了什么</h2>
+      <ul>
+        <li>页面说明并入第一个分组标签行，不再单占一行。</li>
+        <li>行高 56 → 48dp（触控仍 ≥48dp），分组标签、卡片内边距、保存条同步收紧。</li>
+        <li>五组卡片 → 两张：“高级”并入运行与网络末行；悬浮条并入显示与启动，“外观与行为”变行尾按钮。</li>
+        <li>网页内核只有一项，改成桌面布局行的副文案。</li>
+        <li>数据与备份、恢复旧端口草稿、项目主页改成卡片下方一行链接按钮。</li>
+        <li>副文案压成一行（画中画只显示状态；局域网未设密码的后果移到开启后的提示里）。</li>
+        <li>保存条状态改单行。</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>v1 压缩了什么</h2>
+      <ul>
+        <li>去掉与顶栏重复的大标题和图标块；说明压成一行 + ⓘ。</li>
+        <li>整宽下拉 → “标签 + 当前值”行（运行方式）；内核只有一项，改只读；DNS 改分段控件。</li>
+        <li>自动端口开启时，首选端口作副文案；关闭后在行下展开固定端口输入。</li>
+        <li>局域网：开关、密码状态、设密码合成一行；开启后才显示 HTTP 未加密提示。</li>
+        <li>画中画开关与系统状态合并，“系统设置”成行尾按钮。</li>
+        <li>静态加载器 / seccomp 收进可折叠“高级”，摘要显示当前值，非默认值标“已改”。</li>
+        <li>恢复旧端口草稿、数据与备份移到“更多”。</li>
+        <li>保存条显示未保存项数与撤销；详情区 ≥720dp 两列，保存按钮不再整宽。</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>不变的约束</h2>
+      <ul>
+        <li>既有 id、<code>ConfigStore</code> 键、保存时机与 <code>EnvironmentTaskGate</code> 不变；画中画、局域网密码仍即时生效。</li>
+        <li>端口校验仍用 <code>ConfigInput.port</code>（1–65535，3081/3082/3090–3099 保留）。</li>
+        <li>无改动时保存仍可点（保存会重新套用局域网与悬浮条状态）。</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>待确认</h2>
+      <ul>
+        <li>新增短文案（“自动 / IPv4 / 原生”、画中画短状态、“更多”、未保存提示等）需进 <code>messages.json</code> 并过长度政策。</li>
+        <li>静态加载器是否只对 proroot 生效：源码只见冷启动选择处引用，未确认，暂不按运行方式隐藏。</li>
+        <li>手机从启动页推进到配置页时是否显示底部导航，未在真机核对。</li>
+        <li>两列阈值取 720dp（详情窗格宽度，非屏幕宽度）。</li>
+      </ul>
+    </div>
+  </aside>
+</main>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const ICON = {
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  dl: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  contrast: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  play: '<path d="M8 5l11 7-11 7z" fill="currentColor"/>',
+  plug: '<path d="M9 4h6v4h4v6h-4v6H9v-6H5V8h4z"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
+  term: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M13 15h4"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
+  down: '<path d="M6 9l6 6 6-6"/>',
+  warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>'
+};
+const ic = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const DEV = {
+  phone:  { w: 360,  h: 780,  sh: 640,  tab: false, rad: 34, cap: '手机 360×780dp' },
+  phoneL: { w: 412,  h: 892,  sh: 700,  tab: false, rad: 36, cap: '手机 412×892dp' },
+  tabP:   { w: 800,  h: 1280, sh: 1000, tab: true,  rad: 28, cap: '平板竖屏 800×1280dp' },
+  tabL:   { w: 1280, h: 800,  sh: 640,  tab: true,  rad: 28, cap: '平板横屏 1280×800dp' }
+};
+// 与 ConfigStore 默认值一致
+const DEFAULTS = { runtime: 'proot', autoPort: true, port: '3080', dns: 'auto', lan: false, staticLoader: true, noSeccomp: false, desktop: false, checkUpdate: true, overlay: false };
+const LABEL = { runtime: '运行方式', autoPort: '自动分配端口', port: '首选端口', dns: 'DNS', lan: '局域网访问', staticLoader: '静态加载器', noSeccomp: '禁用 seccomp 加速', desktop: '桌面版网页布局', checkUpdate: '启动时检查更新', overlay: '悬浮显示 AI 输出' };
+const KEYS = Object.keys(DEFAULTS);
+const ui = { device: 'phone', version: 'v2', theme: 'light', big: false, short: false, pane: false, bnav: false, ids: false, sheet: null, toast: null, advOpen: false, pwErr: '', busy: false, pipUnsupported: false, pipSys: false, noOverlay: false };
+let cur = { ...DEFAULTS, pip: false, lanPwd: false };
+let saved = { ...cur };
+const scrolls = {};
+let toastTimer = 0;
+
+const fmt = (k, v) => k === 'dns' ? ({auto:'自动', ipv4:'IPv4', native:'原生'})[v] : typeof v === 'boolean' ? (v ? '开' : '关') : v;
+const dirtyKeys = () => KEYS.filter(k => cur[k] !== saved[k] && !(k === 'port' && cur.autoPort));
+function portError() {
+  if (cur.autoPort) return '';
+  const s = String(cur.port).trim();
+  if (!/^\d+$/.test(s)) return '端口请输入 1—65535 的整数';
+  const n = Number(s);
+  if (n < 1 || n > 65535) return '端口请输入 1—65535 的整数';
+  if (n === 3081 || n === 3082 || (n >= 3090 && n <= 3099)) return '3081、3082 和 3090–3099 已用于 App 桥接，请换一个端口';
+  return '';
+}
+function pipStatus() {
+  if (ui.pipUnsupported) return ['当前设备不支持系统画中画', ''];
+  if (!cur.pip) return ['已关闭；返回桌面时不显示小窗', ''];
+  return ui.pipSys ? ['系统已允许；返回桌面时保留对话小窗', ''] : ['系统已关闭小窗，点“系统设置”更改', 'warn'];
+}
+
+/* ---------- 重构版 ---------- */
+let RID = 'd0';
+function sw(key, on, o) {
+  const id = `${RID}-${key}`;
+  return `<div class="n-row${o.cls ? ' ' + o.cls : ''}" data-ctl="${key}" data-id="${o.rid}">
+    <div class="tx" data-act="toggle" data-k="${key}" id="${id}-l"><b>${o.title}</b>${o.sub ? `<small class="${o.subCls || ''}">${o.sub}</small>` : ''}</div>
+    ${o.extra || ''}
+    <button class="sw" role="switch" aria-checked="${on}" aria-labelledby="${id}-l"${o.disabled ? ' aria-disabled="true"' : ''} data-act="toggle" data-k="${key}"></button>
+  </div>`;
+}
+function renderNew() {
+  const err = portError();
+  const [pipSub, pipCls] = pipStatus();
+  const advChanged = cur.staticLoader !== DEFAULTS.staticLoader || cur.noSeccomp !== DEFAULTS.noSeccomp;
+  const net = `<div class="n-sec o-net"><div class="n-lab">运行与网络</div><div class="n-card">
+    <button class="n-row" data-act="sheet" data-v="runtime" data-ctl="runtime" data-id="config_runtime_choice">
+      <div class="tx"><b>运行方式</b></div><span class="val">${cur.runtime === 'proroot' ? 'proroot（实验）' : 'proot（默认）'}${ic('chev')}</span>
+    </button>
+    ${sw('autoPort', cur.autoPort, { rid: 'config_automatic_port', title: '自动分配 Web 端口（推荐）',
+        sub: cur.autoPort ? `首选 ${esc(saved.port)}；占用时自动使用可用端口` : '关闭后使用下方固定端口' })}
+    ${cur.autoPort ? '' : `<div class="n-row n-sub" data-ctl="port" data-id="config_port">
+      <div class="tx"><b><label for="${RID}-port">首选 Web 端口</label></b>${err ? `<small class="bad" id="${RID}-perr">${esc(err)}</small>` : ''}</div>
+      <input class="port" id="${RID}-port" data-in="port" inputmode="numeric" autocomplete="off" value="${esc(cur.port)}" aria-invalid="${!!err}"${err ? ` aria-describedby="${RID}-perr"` : ''}>
+    </div>`}
+    <div class="n-row wrapc" data-ctl="dns" data-id="config_dns_choice">
+      <div class="tx" style="cursor:default"><b id="${RID}-dnsl">DNS 解析策略</b></div>
+      <div class="segc" role="radiogroup" aria-labelledby="${RID}-dnsl">
+        ${[['auto','自动'],['ipv4','IPv4'],['native','原生']].map(([v, t]) => `<button role="radio" aria-checked="${cur.dns === v}" data-act="dns" data-v="${v}">${t}</button>`).join('')}
+      </div>
+    </div>
+    ${sw('lan', cur.lan, { rid: 'config_lan_mode', title: '允许局域网访问',
+        sub: cur.lanPwd ? '密码已设置 · 用户名 dsha' : (cur.lan ? '未设密码，监听不会启动 · 用户名 dsha' : '密码未设置 · 用户名 dsha'),
+        subCls: !cur.lanPwd && cur.lan ? 'warn' : '',
+        extra: `<button class="chip" data-act="lanpwd" data-ctl="lanpwd" data-id="config_lan_password">${cur.lanPwd ? '改密码' : '设密码'}</button>` })}
+    ${cur.lan ? `<p class="note" data-id="config_lan_hint">${ic('warn')}<span>局域网使用 HTTP，流量未加密。只在可信网络使用，只向可信设备分享链接。</span></p>` : ''}
+  </div></div>`;
+  const adv = `<div class="n-sec o-adv"><div class="n-lab">高级</div><div class="n-card">
+    <button class="n-row n-adv" data-act="adv" aria-expanded="${ui.advOpen}" aria-controls="${RID}-adv">
+      <div class="tx"><b>运行时兼容选项${advChanged ? '<span class="badge">已改</span>' : ''}</b>
+        <small>静态加载器 ${cur.staticLoader ? '开' : '关'} · seccomp 加速 ${cur.noSeccomp ? '已禁用' : '开'}</small></div>
+      <span class="chev">${ic('chev')}</span>
+    </button>
+    <div id="${RID}-adv"${ui.advOpen ? '' : ' hidden'}>
+      ${sw('staticLoader', cur.staticLoader, { rid: 'config_static_loader', cls: 'n-sub', title: '使用 proroot 静态加载器' })}
+      ${sw('noSeccomp', cur.noSeccomp, { rid: 'config_no_seccomp', cls: 'n-sub', title: '禁用 proot seccomp 加速' })}
+    </div>
+  </div></div>`;
+  const disp = `<div class="n-sec o-disp"><div class="n-lab">显示与启动</div><div class="n-card">
+    ${sw('desktop', cur.desktop, { rid: 'config_desktop_mode', title: '使用桌面版网页布局' })}
+    <div class="n-row static" data-ctl="core" data-id="config_core_choice"><div class="tx"><b>网页内核</b></div><span class="val">System WebView</span></div>
+    ${sw('pip', cur.pip, { rid: 'config_picture_in_picture', title: '开启对话画中画', sub: pipSub, subCls: pipCls, disabled: ui.pipUnsupported,
+        extra: `<button class="chip" data-act="pipsys" data-ctl="pipsys" data-id="config_picture_in_picture_settings"${ui.pipUnsupported ? ' aria-disabled="true"' : ''}>系统设置</button>` })}
+    ${sw('checkUpdate', cur.checkUpdate, { rid: 'config_check_update', title: '启动时检查更新' })}
+  </div></div>`;
+  const flt = `<div class="n-sec o-float"><div class="n-lab">悬浮条</div><div class="n-card">
+    ${sw('overlay', cur.overlay, { rid: 'config_overlay_stream', title: '悬浮显示 AI 输出', sub: cur.overlay && ui.noOverlay ? '保存后需授予悬浮窗权限' : '', subCls: 'warn' })}
+    <button class="n-row" data-act="overlaystyle" data-ctl="overlaystyle" data-id="config_overlay_style"><div class="tx"><b>悬浮条外观与行为</b><small>单独编辑样式、内容与预览</small></div><span class="chev">${ic('chev')}</span></button>
+  </div></div>`;
+  const more = `<div class="n-sec o-more"><div class="n-lab">更多</div><div class="n-card">
+    <button class="n-row" data-act="restore" data-ctl="restore" data-id="config_restore_port_drafts"><div class="tx"><b>恢复旧端口草稿</b><small>端口变化后找回旧网页里的草稿</small></div><span class="chev">${ic('chev')}</span></button>
+    <button class="n-row" data-act="data" data-ctl="data" data-id="config_workspace_entry"><div class="tx"><b>数据与备份</b></div><span class="chev">${ic('chev')}</span></button>
+  </div><div class="n-foot"><button data-act="repo" data-id="config_repo_link">DSHA · 项目主页</button></div></div>`;
+  return `<div class="n-wrap">
+    <div class="n-hint" data-id="config_page_hint">模型和 API Key 在 Web UI 中配置。<button data-act="info" aria-label="查看完整说明">${ic('info')}</button></div>
+    <div class="n-grid"><div class="n-cols">${net}${adv}</div><div class="n-cols">${disp}${flt}${more}</div></div>
+  </div>`;
+}
+function saveNew() {
+  const n = dirtyKeys().length, err = portError();
+  const st = err ? '<div class="st bad"><b>端口无效</b>修正后才能保存</div>'
+    : n ? `<div class="st"><b>${n} 项未保存</b>端口与运行时需重启 Web</div>`
+    : '<div class="st"><b>配置已是最新</b>端口与运行方式下次启动生效</div>';
+  return `<div class="save"><div class="save-in">${st}${n && !err ? '<button class="ghost" data-act="undo">撤销</button>' : ''}<button class="pri" data-act="save" data-id="config_save"${err ? ' disabled' : ''}>保存配置</button></div></div>`;
+}
+
+/* ---------- v2：两张卡 + 链接行 ---------- */
+function renderV2() {
+  const err = portError();
+  const pipShort = ui.pipUnsupported ? ['设备不支持', ''] : !cur.pip ? ['已关闭', ''] : ui.pipSys ? ['系统已允许', ''] : ['系统已关闭小窗', 'warn'];
+  const advChanged = cur.staticLoader !== DEFAULTS.staticLoader || cur.noSeccomp !== DEFAULTS.noSeccomp;
+  const net = `<div class="n-sec o-net">
+    <div class="n-lab n-lab-h"><span>运行与网络</span><span class="n-hint2" data-id="config_page_hint">模型和 API Key 在 Web UI 中配置。<button data-act="info" aria-label="查看完整说明">${ic('info')}</button></span></div>
+    <div class="n-card">
+    <button class="n-row" data-act="sheet" data-v="runtime" data-ctl="runtime" data-id="config_runtime_choice">
+      <div class="tx"><b>运行方式</b></div><span class="val">${cur.runtime === 'proroot' ? 'proroot（实验）' : 'proot（默认）'}${ic('chev')}</span>
+    </button>
+    ${sw('autoPort', cur.autoPort, { rid: 'config_automatic_port', title: '自动分配 Web 端口（推荐）',
+        sub: cur.autoPort ? `首选 ${esc(saved.port)}，占用时自动换用` : '' })}
+    ${cur.autoPort ? '' : `<div class="n-row n-sub" data-ctl="port" data-id="config_port">
+      <div class="tx"><b><label for="${RID}-port">首选 Web 端口</label></b>${err ? `<small class="bad" id="${RID}-perr">${esc(err)}</small>` : ''}</div>
+      <input class="port" id="${RID}-port" data-in="port" inputmode="numeric" autocomplete="off" value="${esc(cur.port)}" aria-invalid="${!!err}"${err ? ` aria-describedby="${RID}-perr"` : ''}>
+    </div>`}
+    <div class="n-row wrapc" data-ctl="dns" data-id="config_dns_choice">
+      <div class="tx" style="cursor:default"><b id="${RID}-dnsl">DNS 解析策略</b></div>
+      <div class="segc" role="radiogroup" aria-labelledby="${RID}-dnsl">
+        ${[['auto','自动'],['ipv4','IPv4'],['native','原生']].map(([v, t]) => `<button role="radio" aria-checked="${cur.dns === v}" data-act="dns" data-v="${v}">${t}</button>`).join('')}
+      </div>
+    </div>
+    ${sw('lan', cur.lan, { rid: 'config_lan_mode', title: '允许局域网访问',
+        sub: cur.lanPwd ? '已设密码 · 用户名 dsha' : '未设密码 · 用户名 dsha',
+        subCls: !cur.lanPwd && cur.lan ? 'warn' : '',
+        extra: `<button class="chip" data-act="lanpwd" data-ctl="lanpwd" data-id="config_lan_password">${cur.lanPwd ? '改密码' : '设密码'}</button>` })}
+    ${cur.lan ? `<p class="note" data-id="config_lan_hint">${ic('warn')}<span>${cur.lanPwd ? '' : '未设密码时监听不会启动。'}局域网使用 HTTP，流量未加密，只在可信网络使用。</span></p>` : ''}
+    <button class="n-row n-adv" data-act="adv" aria-expanded="${ui.advOpen}" aria-controls="${RID}-adv">
+      <div class="tx"><b>运行时兼容选项${advChanged ? '<span class="badge">已改</span>' : ''}</b>
+        <small>静态加载器 ${cur.staticLoader ? '开' : '关'} · seccomp 加速 ${cur.noSeccomp ? '已禁用' : '开'}</small></div>
+      <span class="chev">${ic('chev')}</span>
+    </button>
+    <div id="${RID}-adv"${ui.advOpen ? '' : ' hidden'}>
+      ${sw('staticLoader', cur.staticLoader, { rid: 'config_static_loader', cls: 'n-sub', title: '使用 proroot 静态加载器' })}
+      ${sw('noSeccomp', cur.noSeccomp, { rid: 'config_no_seccomp', cls: 'n-sub', title: '禁用 proot seccomp 加速' })}
+    </div>
+  </div></div>`;
+  const disp = `<div class="n-sec o-disp"><div class="n-lab">显示与启动</div><div class="n-card">
+    ${sw('desktop', cur.desktop, { rid: 'config_desktop_mode', title: '使用桌面版网页布局',
+        sub: `<span data-ctl="core" data-id="config_core_choice">网页内核 System WebView</span>` })}
+    ${sw('pip', cur.pip, { rid: 'config_picture_in_picture', title: '开启对话画中画', sub: pipShort[0], subCls: pipShort[1], disabled: ui.pipUnsupported,
+        extra: `<button class="chip" data-act="pipsys" data-ctl="pipsys" data-id="config_picture_in_picture_settings"${ui.pipUnsupported ? ' aria-disabled="true"' : ''}>系统设置</button>` })}
+    ${sw('checkUpdate', cur.checkUpdate, { rid: 'config_check_update', title: '启动时检查更新' })}
+    ${sw('overlay', cur.overlay, { rid: 'config_overlay_stream', title: '悬浮显示 AI 输出', sub: cur.overlay && ui.noOverlay ? '保存后需授予悬浮窗权限' : '', subCls: 'warn',
+        extra: `<button class="chip" data-act="overlaystyle" data-ctl="overlaystyle" data-id="config_overlay_style">外观与行为</button>` })}
+  </div>
+  <div class="n-links">
+    <button class="chip" data-act="data" data-ctl="data" data-id="config_workspace_entry">数据与备份</button>
+    <button class="chip" data-act="restore" data-ctl="restore" data-id="config_restore_port_drafts">恢复旧端口草稿</button>
+    <button class="chip ghost" data-act="repo" data-id="config_repo_link">项目主页</button>
+  </div></div>`;
+  return `<div class="n-wrap v2"><div class="n-grid"><div class="n-cols">${net}</div><div class="n-cols">${disp}</div></div></div>`;
+}
+function saveV2() {
+  const n = dirtyKeys().length, err = portError();
+  const st = err ? '<div class="st bad"><b>端口无效</b>修正后才能保存</div>'
+    : n ? `<div class="st"><b>${n} 项未保存</b>端口与运行时需重启 Web</div>`
+    : '<div class="st"><b>配置已是最新</b></div>';
+  return `<div class="save v2"><div class="save-in">${st}${n && !err ? '<button class="ghost" data-act="undo">撤销</button>' : ''}<button class="pri" data-act="save" data-id="config_save"${err ? ' disabled' : ''}>保存配置</button></div></div>`;
+}
+
+/* ---------- 现状（复刻） ---------- */
+const oSw = (key, on, title, rid, dis) => `<button class="o-sw" role="switch" aria-checked="${on}" data-act="toggle" data-k="${key}" data-ctl="${key}" data-id="${rid}"${dis ? ' aria-disabled="true"' : ''}><span>${title}</span><span class="sw"></span></button>`;
+function renderOld() {
+  const err = portError();
+  const [pipSub] = pipStatus();
+  return `<div class="o-wrap">
+    <div class="o-head"><div class="o-tile">${ic('gear')}</div><h2 class="o-title">运行配置</h2></div>
+    <p class="o-hint" data-id="config_page_hint">模型和 API Key 在 Web UI 中配置。<button class="ibtn" style="width:40px;height:40px;color:var(--accent)" data-act="info" aria-label="查看完整说明">${ic('info')}</button></p>
+    <div class="o-sec">${ic('link')}运行与网络</div>
+    <div class="o-card">
+      <button class="o-select" data-act="sheet" data-v="runtime" data-ctl="runtime" data-id="config_runtime_choice">${cur.runtime === 'proroot' ? 'proroot（可选，实验）' : 'proot（默认，稳定）'}${ic('down')}</button>
+      <div class="o-div"></div>
+      ${oSw('autoPort', cur.autoPort, '自动分配 Web 端口（推荐）', 'config_automatic_port')}
+      <div class="o-lab"><label for="${RID}-port">首选 Web 端口</label></div>
+      <input class="o-input" id="${RID}-port" data-in="port" inputmode="numeric" value="${esc(cur.autoPort ? saved.port : cur.port)}"${cur.autoPort ? ' disabled' : ''} data-ctl="port" data-id="config_port" aria-invalid="${!!err}">
+      <div class="o-status"${err ? ' style="color:var(--bad)"' : ''}>${err ? esc(err) : '端口占用时保留首选设置，自动使用可用端口。'}</div>
+      <button class="o-link" data-act="restore" data-ctl="restore" data-id="config_restore_port_drafts">恢复旧端口草稿</button>
+      <div class="o-div"></div>
+      <h3 class="o-ct">DNS 解析策略</h3>
+      <button class="o-select" style="margin-top:12px" data-act="sheet" data-v="dns" data-ctl="dns" data-id="config_dns_choice">${({auto:'自动（推荐）', ipv4:'IPv4', native:'原生'})[cur.dns]}${ic('down')}</button>
+      <div class="o-div"></div>
+      ${oSw('lan', cur.lan, '允许局域网访问', 'config_lan_mode')}
+      <button class="o-link" data-act="lanpwd" data-ctl="lanpwd" data-id="config_lan_password">设置局域网密码</button>
+      <div class="o-status">${cur.lanPwd ? '密码已设置。用户名：dsha' : '密码未设置；局域网监听不会启动。用户名：dsha'}</div>
+      <div class="o-status">局域网使用 HTTP，流量未加密。${ic('info')}</div>
+    </div>
+    <div class="o-sec">${ic('gear')}运行时兼容选项</div>
+    <div class="o-card">
+      ${oSw('staticLoader', cur.staticLoader, '使用 proroot 静态加载器', 'config_static_loader')}
+      <div class="o-div" style="margin:4px 0"></div>
+      ${oSw('noSeccomp', cur.noSeccomp, '禁用 proot seccomp 加速', 'config_no_seccomp')}
+    </div>
+    <div class="o-sec">${ic('contrast')}显示与启动</div>
+    <div class="o-card">
+      ${oSw('desktop', cur.desktop, '使用桌面版网页布局', 'config_desktop_mode')}
+      <button class="o-select" data-act="sheet" data-v="core" data-ctl="core" data-id="config_core_choice">System WebView${ic('down')}</button>
+      <div class="o-div"></div>
+      ${oSw('pip', cur.pip, '开启对话画中画', 'config_picture_in_picture', ui.pipUnsupported)}
+      <button class="o-row" data-act="pipsys" data-ctl="pipsys" data-id="config_picture_in_picture_settings"><span class="t"><b>系统画中画设置</b><small>${pipSub}</small></span>${ic('chev')}</button>
+      <div class="o-div" style="margin:4px 0"></div>
+      ${oSw('checkUpdate', cur.checkUpdate, '启动时检查更新', 'config_check_update')}
+    </div>
+    <div class="o-sec">${ic('term')}悬浮条</div>
+    <div class="o-card">
+      ${oSw('overlay', cur.overlay, '悬浮显示 AI 输出', 'config_overlay_stream')}
+      <div class="o-div" style="margin:4px 0"></div>
+      <button class="o-row" data-act="overlaystyle" data-ctl="overlaystyle" data-id="config_overlay_style"><span class="t"><b>悬浮条外观与行为</b><small>单独编辑样式、内容与预览</small></span>${ic('chev')}</button>
+    </div>
+    <button class="o-sec2btn" data-act="data" data-ctl="data" data-id="config_workspace_entry">打开数据与备份</button>
+    <div class="o-foot" data-act="repo" data-id="config_repo_link">DSHA</div>
+  </div>`;
+}
+const saveOld = () => `<button class="o-save" data-act="save" data-id="config_save"${portError() ? ' disabled style="opacity:.45"' : ''}>保存配置</button>`;
+
+/* ---------- 外壳 ---------- */
+function shell(devKey, version, d, measure) {
+  RID = `${devKey}-${version}`;
+  const pane = d.tab && ui.pane;
+  const content = version === 'v2' ? renderV2() : version === 'new' ? renderNew() : renderOld();
+  const save = version === 'v2' ? saveV2() : version === 'new' ? saveNew() : saveOld();
+  const rail = d.tab ? `<nav class="rail" aria-label="主导航">
+      <button data-act="nav">${ic('play')}启动</button><button data-act="nav">${ic('plug')}插件</button>
+      <button aria-current="page" data-act="nav">${ic('gear')}设置</button><button data-act="nav">${ic('term')}终端</button><span class="lf">LOCAL FIRST</span></nav>` : '';
+  const listPane = pane ? `<nav class="list-pane" aria-label="设置列表">
+      <h3>运行环境</h3><button aria-current="true">运行配置</button><button data-act="nav">数据与备份</button><button data-act="nav">设备能力授权</button>
+      <h3>使用体验</h3><button data-act="nav">外观</button><button data-act="nav">语言 / Language</button><button data-act="nav">悬浮条</button>
+      <h3>支持</h3><button data-act="nav">版本更新</button><button data-act="nav">自检与诊断</button><button data-act="nav">关于 DSHA</button>
+      <p class="demo">左栏为示意，条目以 fragment_settings 为准。</p></nav>` : '';
+  const showBnav = !d.tab && ui.bnav;
+  const bnav = showBnav ? `<nav class="bnav" aria-label="主导航"><button data-act="nav">${ic('play')}启动</button><button data-act="nav">${ic('plug')}插件</button><button aria-current="page" data-act="nav">${ic('gear')}设置</button><button data-act="nav">${ic('term')}终端</button></nav>` : '';
+  const detail = `<div class="detail"><div class="scroller" data-scroll="${RID}">${content}</div>${save}</div>`;
+  const sheet = !measure && ui.sheet && ui.sheet.dev === RID ? renderSheet(ui.sheet) : '';
+  const toast = !measure && ui.toast && ui.toast.dev === RID ? `<div class="toast" role="status">${esc(ui.toast.text)}</div>` : '';
+  const toastB = (showBnav ? 84 : 0) + (version === 'v2' ? 74 : version === 'new' ? 92 : 104);
+  return `<div class="app${d.tab ? ' tab' : ''}${ui.ids ? ' show-ids' : ''}" style="--fs:${ui.big ? 1.3 : 1};--toast-b:${toastB}px" data-dev="${RID}">
+    <div class="sb"><span>21:15</span><span>100%</span></div>
+    <header class="abar"><button class="ibtn" data-act="nav" aria-label="返回">${ic('back')}</button>
+      <div class="tt"><b>运行配置</b><small>偏好与管理</small></div>
+      <button class="ibtn" data-act="nav" aria-label="导出">${ic('dl')}</button><button class="ibtn" data-act="theme" aria-label="切换深浅色">${ic('contrast')}</button><button class="ibtn" data-act="info" aria-label="说明">${ic('info')}</button></header>
+    <div class="body">${rail}<div class="main">${pane ? `<div class="panes">${listPane}${detail}</div>` : detail}${bnav}</div></div>
+    <div class="home-ind"></div>${sheet}${toast}</div>`;
+}
+function renderSheet(s) {
+  const opt = (act, v, on, t, sub) => `<button class="opt" role="radio" aria-checked="${on}" data-act="${act}" data-v="${v}"><span class="rd"></span><span class="tx"><b>${t}</b>${sub ? `<small>${sub}</small>` : ''}</span></button>`;
+  let body = '';
+  if (s.kind === 'runtime') body = `<h4>运行方式</h4><p>端口与运行时需重启 Web 后生效。</p><div role="radiogroup" aria-label="运行方式">
+      ${opt('pickRuntime', 'proot', cur.runtime === 'proot', 'proot（默认，稳定）')}${opt('pickRuntime', 'proroot', cur.runtime === 'proroot', 'proroot（可选，实验）', '鉴权前明确退出时仅回退一次 proot')}</div>`;
+  else if (s.kind === 'dns') body = `<h4>DNS 解析策略</h4><div role="radiogroup" aria-label="DNS 解析策略">${opt('dns', 'auto', cur.dns === 'auto', '自动（推荐）')}${opt('dns', 'ipv4', cur.dns === 'ipv4', 'IPv4')}${opt('dns', 'native', cur.dns === 'native', '原生')}</div>`;
+  else if (s.kind === 'core') body = `<h4>网页内核</h4><div role="radiogroup" aria-label="网页内核">${opt('close', 'x', true, 'System WebView')}</div>`;
+  else if (s.kind === 'info') body = `<h4>运行配置</h4><p>模型和 API Key 在 Web UI 中配置。这里的端口与运行方式在下次启动生效。</p><div class="acts"><button data-act="close">知道了</button></div>`;
+  else if (s.kind === 'lanpwd') body = `<h4>设置局域网密码</h4><p>输入 8–128 个字符的新密码；HTTP 未加密，请仅在可信网络使用。</p>
+      <input class="fld" type="password" id="${s.dev}-pw1" placeholder="新密码" autocomplete="new-password" aria-label="新密码">
+      <input class="fld" type="password" id="${s.dev}-pw2" placeholder="确认密码" autocomplete="new-password" aria-label="确认密码">
+      ${ui.pwErr ? `<div class="ferr" role="alert">${esc(ui.pwErr)}</div>` : ''}
+      <div class="acts"><button data-act="close">取消</button><button class="pri" data-act="pwSave">保存</button></div>`;
+  return `<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${s.kind}"><div class="grab"></div>${body}</div></div>`;
+}
+
+/* ---------- 布局与渲染 ---------- */
+const devSize = () => ({ ...DEV[ui.device], h: ui.short ? DEV[ui.device].sh : DEV[ui.device].h });
+function render() {
+  document.documentElement.dataset.theme = ui.theme;
+  document.querySelectorAll('[data-scroll]').forEach(el => { scrolls[el.dataset.scroll] = el.scrollTop; });
+  const a = document.activeElement;
+  const focusId = a && a.id && a.closest('#devices') ? a.id : null;
+  const caret = focusId && typeof a.selectionStart === 'number' ? a.selectionStart : null;
+  const pw = ui.sheet && ui.sheet.kind === 'lanpwd' ? [1, 2].map(i => (document.getElementById(`${ui.sheet.dev}-pw${i}`) || {}).value || '') : null;
+  const vers = ui.version === 'both' ? ['old', 'new', 'v2'] : [ui.version];
+  const d = devSize();
+  const host = $('#devices');
+  const avW = Math.max(320, host.clientWidth);
+  const avH = Math.max(420, window.innerHeight - 150);
+  const per = (avW - (vers.length - 1) * 28) / vers.length;
+  const s = Math.min(1, (per - 20) / d.w, avH / d.h);
+  host.innerHTML = vers.map(v => `<div class="dev-col"><div class="dev-cap">${({ v2: '重构 v2', new: 'v1', old: '现状' })[v]} · ${d.cap}${ui.short ? ' · 短屏' : ''}${s < 1 ? ` · 缩放 ${Math.round(s * 100)}%` : ''}</div>
+      <div class="dev-box" style="width:${d.w * s + 20}px;height:${d.h * s + 20}px"><div class="device" style="--rad:${d.rad}px;width:${d.w}px;height:${d.h}px;left:10px;top:10px;transform:scale(${s})">${shell(ui.device, v, d)}</div></div></div>`).join('');
+  document.querySelectorAll('[data-scroll]').forEach(el => { if (scrolls[el.dataset.scroll]) el.scrollTop = scrolls[el.dataset.scroll]; });
+  if (pw) pw.forEach((val, i) => { const f = document.getElementById(`${ui.sheet.dev}-pw${i + 1}`); if (f) f.value = val; });
+  if (focusId) { const el = document.getElementById(focusId); if (el) { el.focus(); if (caret != null && el.setSelectionRange) el.setSelectionRange(caret, caret); } }
+  else if (ui.sheet && ui.sheet.kind === 'lanpwd') { const f = document.getElementById(`${ui.sheet.dev}-pw1`); if (f) f.focus(); }
+  syncToolbar();
+  cancelAnimationFrame(mTimer); mTimer = requestAnimationFrame(measureAll);
+}
+function syncToolbar() {
+  document.querySelectorAll('.seg').forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(ui[g.dataset.ctl] === b.dataset.v))));
+  document.querySelectorAll('[data-opt]').forEach(i => { i.checked = !!ui[i.dataset.opt]; });
+  document.querySelectorAll('[data-sim]').forEach(i => { i.checked = !!ui[i.dataset.sim]; });
+  const tab = DEV[ui.device].tab;
+  document.querySelectorAll('[data-only]').forEach(l => { l.hidden = (l.dataset.only === 'tab') !== tab; });
+  const dk = dirtyKeys();
+  $('#dirty').innerHTML = dk.length ? dk.map(k => `<li>${LABEL[k]}：${esc(fmt(k, saved[k]))} → <b>${esc(fmt(k, cur[k]))}</b></li>`).join('') : '<li>无（画中画与局域网密码即时生效，不计入）</li>';
+}
+let mTimer = 0;
+function measureOne(version) {
+  const d = devSize();
+  const box = document.createElement('div');
+  box.className = 'measure';
+  box.innerHTML = `<div class="device" style="width:${d.w}px;height:${d.h}px;left:0;top:0">${shell(ui.device, version, d, true)}</div>`;
+  document.body.appendChild(box);
+  const sc = box.querySelector('.scroller');
+  const r = sc.getBoundingClientRect();
+  const seen = new Set();
+  box.querySelectorAll('[data-ctl]').forEach(el => {
+    const b = el.getBoundingClientRect();
+    if (b.height > 0 && b.top >= r.top - 1 && b.bottom <= r.bottom + 1) seen.add(el.dataset.ctl);
+  });
+  const out = { content: Math.round(sc.scrollHeight), view: Math.round(sc.clientHeight), visible: seen.size };
+  box.remove();
+  return out;
+}
+function measureAll() {
+  const m = { old: measureOne('old'), new: measureOne('new'), v2: measureOne('v2') };
+  const o = m.old;
+  const pct = x => `${Math.round((1 - x.content / o.content) * 100)}%`;
+  const cell = (x, best, txt) => `<td class="${best ? 'win' : ''}">${txt}</td>`;
+  const bestBy = f => { const v = ['old', 'new', 'v2'].map(k => f(m[k])); return Math.max(...v); };
+  const minC = Math.min(m.new.content, m.v2.content), maxV = bestBy(x => x.visible);
+  const scr = x => x.content / x.view, minS = Math.min(scr(m.new), scr(m.v2));
+  $('#metrics').innerHTML = `<tr><th>${DEV[ui.device].cap}${ui.short ? ' 短屏' : ''}${ui.big ? ' · 1.3×' : ''}</th><th>现状</th><th>v1</th><th>v2</th></tr>
+    <tr><td>内容高度</td><td>${o.content}</td>${cell(0, m.new.content === minC, `${m.new.content}<br><small>−${pct(m.new)}</small>`)}${cell(0, m.v2.content === minC, `${m.v2.content}<br><small>−${pct(m.v2)}</small>`)}</tr>
+    <tr><td>滚动区可视</td><td>${o.view}</td><td>${m.new.view}</td><td>${m.v2.view}</td></tr>
+    <tr><td>首屏可见项 /17</td><td>${o.visible}</td>${cell(0, m.new.visible === maxV, m.new.visible)}${cell(0, m.v2.visible === maxV, m.v2.visible)}</tr>
+    <tr><td>需滚动屏数</td><td>${scr(o).toFixed(1)}</td>${cell(0, scr(m.new) === minS, scr(m.new).toFixed(1))}${cell(0, scr(m.v2) === minS, scr(m.v2).toFixed(1))}</tr>`;
+  window.__lastMetrics = m;
+}
+
+/* ---------- 交互 ---------- */
+function toast(dev, text) {
+  ui.toast = { dev, text };
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { ui.toast = null; render(); }, 2600);
+}
+function doSave(dev) {
+  if (portError()) return;
+  if (ui.busy) { toast(dev, '正在安装环境，完成后再保存配置'); return; }
+  const dk = dirtyKeys();
+  if (cur.autoPort) cur.port = saved.port;
+  saved = { ...cur };
+  let msg = '已保存；网页显示选项重新进入对话生效，端口与运行时需重启 Web';
+  if (cur.lan && !cur.lanPwd) msg = '密码未设置；局域网监听不会启动。用户名：dsha';
+  else if (cur.lan && dk.includes('lan')) msg = '局域网配置已保存，请在启动页查看实际监听状态。';
+  if (cur.overlay && ui.noOverlay) msg += '（随后打开系统悬浮窗授权页）';
+  toast(dev, msg);
+}
+document.addEventListener('click', e => {
+  const seg = e.target.closest('.seg button');
+  if (seg) { ui[seg.parentElement.dataset.ctl] = seg.dataset.v; ui.sheet = null; render(); return; }
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const app = t.closest('.app');
+  const dev = app ? app.dataset.dev : null;
+  const act = t.dataset.act;
+  if (act === 'scrim') { if (e.target === t) { ui.sheet = null; ui.pwErr = ''; render(); } return; }
+  switch (act) {
+    case 'toggle': {
+      const k = t.dataset.k;
+      if (k === 'pip') { if (ui.pipUnsupported) return; cur.pip = !cur.pip; saved.pip = cur.pip; }
+      else cur[k] = !cur[k];
+      if (k === 'autoPort' && cur.autoPort) cur.port = saved.port;
+      break;
+    }
+    case 'sheet': ui.sheet = { dev, kind: t.dataset.v }; break;
+    case 'pickRuntime': cur.runtime = t.dataset.v; ui.sheet = null; break;
+    case 'dns': cur.dns = t.dataset.v; ui.sheet = null; break;
+    case 'close': ui.sheet = null; ui.pwErr = ''; break;
+    case 'info': ui.sheet = { dev, kind: 'info' }; break;
+    case 'adv': ui.advOpen = !ui.advOpen; break;
+    case 'lanpwd': ui.pwErr = ''; ui.sheet = { dev, kind: 'lanpwd' }; break;
+    case 'pwSave': {
+      const a = document.getElementById(`${dev}-pw1`).value, b = document.getElementById(`${dev}-pw2`).value;
+      if (a.length < 8 || a.length > 128 || a !== b) { ui.pwErr = '两次密码须一致，长度为 8–128 个字符。'; break; }
+      ui.pwErr = ''; ui.sheet = null; cur.lanPwd = saved.lanPwd = true;
+      toast(dev, cur.lan ? '密码已保存，请在启动页查看实际局域网监听状态。' : '密码已保存。');
+      break;
+    }
+    case 'pipsys': toast(dev, ui.pipUnsupported ? '当前设备不支持系统画中画，需要 Android 8.0+ 及设备支持。' : '打开系统画中画设置（原型不跳转；用右侧“系统已允许画中画”模拟结果）'); break;
+    case 'overlaystyle': toast(dev, '进入悬浮条外观与行为（双栏时留在详情窗格）'); break;
+    case 'restore': toast(dev, '打开恢复旧端口草稿（BrowserOriginRestore，逻辑不变）'); break;
+    case 'data': toast(dev, '进入数据与备份（WorkspaceFragment）'); break;
+    case 'repo': toast(dev, '打开项目主页'); break;
+    case 'nav': toast(dev, '原型：导航不在本次范围'); break;
+    case 'theme': ui.theme = ui.theme === 'light' ? 'dark' : 'light'; break;
+    case 'undo': { const keep = { pip: cur.pip, lanPwd: cur.lanPwd }; cur = { ...saved, ...keep }; toast(dev, '已撤销未保存的改动'); break; }
+    case 'save': doSave(dev); break;
+    default: return;
+  }
+  render();
+});
+document.addEventListener('input', e => { if (e.target.dataset.in === 'port') { cur.port = e.target.value; render(); } });
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.opt) { ui[t.dataset.opt] = t.checked; render(); }
+  if (t.dataset.sim) { ui[t.dataset.sim] = t.checked; render(); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && ui.sheet) { ui.sheet = null; ui.pwErr = ''; render(); }
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.in === 'port') e.target.blur();
+});
+window.addEventListener('resize', render);
+window.__preview = { ui, get cur() { return cur; }, get saved() { return saved; }, render, measureOne };
+render();
+})();
+</script>
+</body>
+</html>

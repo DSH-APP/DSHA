@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 开关轨道填充：开=主题主色（与 Material 默认一致）；关=近白底，避免和浅灰卡片融在一起。
+     描边沿用 MaterialSwitch 自带的 trackDecoration，不再自绘轨道（android:track 会被组件忽略）。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true" android:color="?attr/dsha_pal_primary" />
+    <item android:color="?attr/dsha_pal_shell_surface" />
+</selector>

@@ -34,7 +34,7 @@
 
 ## 交付
 
-最新 APK 与 `.apk.sha256` 位于 `F:\DSHA_RESTART\release`。调整前原件保留在 `release/history/rc1.4-before-layout-20260907`。历史发布签名、环境版本 9 和官网公开更新清单保持不变。
+最新 APK 与 `.apk.sha256` 位于 `<local-workspace>`。调整前原件保留在 `release/history/rc1.4-before-layout-20260907`。历史发布签名、环境版本 9 和官网公开更新清单保持不变。
 
 | 文件 | 字节数 | SHA-256 |
 |---|---:|---|

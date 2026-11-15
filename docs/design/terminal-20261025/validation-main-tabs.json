@@ -1,0 +1,689 @@
+{
+  "startedAt": "2026-10-26T05:59:16.133Z",
+  "scope": "offline source-mapped HTML only, not Android",
+  "loadMethod": "page.setContent exact HTML; no server",
+  "previewSha256": "36f3bb360b257e403b3b202e2797b6481afb2252d033c5c6675f18021d4b23d7",
+  "checks": [
+    {
+      "name": "320×568 launch有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320×568 launch主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320×568 launch导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320×568 plugins有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320×568 plugins主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320×568 plugins导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320×568 settings有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320×568 settings主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320×568 settings导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320×568配置子页独立返回",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320×568配置保存按钮可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320×568终端返回原子页与草稿",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "320×568子页返回对应设置Tab",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844 launch有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844 launch主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844 launch导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844 plugins有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844 plugins主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844 plugins导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844 settings有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844 settings主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844 settings导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844配置子页独立返回",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844配置保存按钮可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844终端返回原子页与草稿",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "390×844子页返回对应设置Tab",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360 launch有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360 launch主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360 launch导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360 plugins有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360 plugins主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360 plugins导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360 settings有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360 settings主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360 settings导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360配置子页独立返回",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360配置保存按钮可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360终端返回原子页与草稿",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "740×360子页返回对应设置Tab",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900 launch有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900 launch主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900 launch导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900 plugins有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900 plugins主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900 plugins导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900 settings有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900 settings主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900 settings导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900配置子页独立返回",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900配置保存按钮可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900终端返回原子页与草稿",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "840×900子页返回对应设置Tab",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768 launch有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768 launch主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768 launch导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768 plugins有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768 plugins主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768 plugins导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768 settings有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768 settings主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768 settings导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768配置子页独立返回",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768配置保存按钮可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768终端返回原子页与草稿",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1024×768子页返回对应设置Tab",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800 launch有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800 launch主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800 launch导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800 plugins有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800 plugins主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800 plugins导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800 settings有实质内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800 settings主壳不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800 settings导航完整可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800配置子页独立返回",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800配置保存按钮可达",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800终端返回原子页与草稿",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "1280×800子页返回对应设置Tab",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "启动显示准备而非立即成功",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "启动期间主按钮禁用避免重复",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "启动日志记录鉴权阶段",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "取消停止保持Web就绪",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "停止Web不关闭终端或计数",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "失败不显示READY成功",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "未准备时终端门禁不新建会话",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "未准备可看电脑工作区",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "电脑配对只增加虚构未连接条目",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "随包四条+虚构一条且不声称本机列表",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "插件搜索真的过滤",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "切Tab保留搜索与分段",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "插件无匹配空态可见且不注入HTML",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "隐藏内置只剩虚构用户样例",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "异步启停等待期间禁用",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "用户样例启用反馈区分模拟",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "详情展开真实可见",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "取消删除保留样例",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "删除后过滤空态",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "禁用随包组件有风险确认",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "名称倒序生效",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "拒绝危险/不支持来源",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "npm 包名离线识别但不假装联网",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "HTTPS 压缩包离线识别但不假装联网",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "GitHub 仓库离线识别但不假装联网",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "模拟安装增加固定样例且切管理",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "离线更新不假称最新版",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "省电只更新模拟偏好",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "十种语言加跟随系统",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "语言选择不谎称全页翻译",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "拒绝桥接保留端口",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "未保存子页草稿保留",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "下次模拟启动采用新首选端口",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "运行中改配置不篡改既有实例端口",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "运行中可先停止再安全启动",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "安全启动后普通重启恢复普通模式",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "install子页有对应结构与可达内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "组件模拟检查仍标未实测",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "backup子页有对应结构与可达内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "取消备份预览不假称已生成",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "完成备份流程也明确没生成文件",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "grants子页有对应结构与可达内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "overlay子页有对应结构与可达内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "updates子页有对应结构与可达内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "更新离线结果保持未检查",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "diagnostics子页有对应结构与可达内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "about子页有对应结构与可达内容",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "两倍字号 launch 内容不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "两倍字号 plugins 内容不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "两倍字号 settings 内容不横溢出",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "含select的弹层焦点仍在弹层内",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "所有DOM id唯一",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "刷新文档不会保留样例副作用",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "没有脚本异常",
+      "passed": true,
+      "detail": "[]"
+    },
+    {
+      "name": "没有外部请求",
+      "passed": true,
+      "detail": "[]"
+    }
+  ],
+  "pageErrors": [],
+  "requests": [],
+  "screenshots": [
+    "phone-launch-v2.png",
+    "phone-plugins-v2.png",
+    "phone-settings-v2.png",
+    "tablet-launch-v2.png",
+    "tablet-plugins-v2.png",
+    "tablet-settings-v2.png",
+    "phone-plugin-management-v2.png",
+    "tablet-config-v2.png"
+  ],
+  "browser": "141.0.7390.37",
+  "passed": true,
+  "finishedAt": "2026-10-26T06:00:13.885Z",
+  "checkCount": 133
+}

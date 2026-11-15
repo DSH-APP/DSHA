@@ -1,34 +1,44 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+  关于对话框（UI v5）：图标 + 版本 + 说明 + 一张 shell_page 卡片内的两行入口。
+  - 保留 about_version / about_repository / about_community / about_github /
+    about_qq / about_close 等 id 与文本资源，AboutDialog 绑定不变；
+  - 不新增文案。
+-->
 <com.deepseekharness.app.ui.BoundedDialogLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-    <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:fillViewport="false" android:layout_weight="1" android:id="@+id/about_content_scroll">
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="20dp" android:paddingEnd="20dp" android:paddingTop="24dp" android:paddingBottom="16dp">
+    <ScrollView android:id="@+id/about_content_scroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="false">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="20dp" android:paddingTop="24dp" android:paddingEnd="20dp" android:paddingBottom="16dp">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
-                <ImageView android:layout_width="48dp" android:layout_height="48dp" android:background="@drawable/bg_selection" android:padding="12dp" android:src="@drawable/ic_terminal" app:tint="@color/primary" android:importantForAccessibility="no" />
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="12dp">
-                    <TextView android:id="@+id/about_version" style="@style/DshaText.Title" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                <ImageView android:layout_width="48dp" android:layout_height="48dp" android:background="@drawable/bg_logo" android:importantForAccessibility="no" android:padding="12dp" android:src="@drawable/ic_terminal" app:tint="@color/shell_accent" />
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
+                    <TextView android:id="@+id/about_version" style="@style/ShellCardTitle" android:layout_width="match_parent" android:layout_height="wrap_content" />
                 </LinearLayout>
             </LinearLayout>
-            <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/about_tagline" />
-            <TextView style="@style/DshaText.Label" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/edition_description" />
-            <LinearLayout android:id="@+id/about_github" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="72dp" android:layout_marginTop="20dp" android:padding="12dp" android:orientation="horizontal" android:gravity="center_vertical" android:background="@drawable/bg_polished_action" android:clickable="true" android:focusable="true">
-                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:padding="8dp" android:background="@drawable/bg_logo" android:src="@drawable/ic_ui_link" android:importantForAccessibility="no" app:tint="@color/primary" />
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
-                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_brand_github" android:textStyle="bold" style="@style/DshaText.Body" />
-                    <TextView android:id="@+id/about_repository" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" style="@style/DshaText.Caption" />
+            <TextView style="@style/ShellStatusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/about_tagline" />
+            <TextView style="@style/ShellRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/edition_description" />
+            <LinearLayout style="@style/ShellCard" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:orientation="vertical">
+                <LinearLayout android:id="@+id/about_github" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="72dp">
+                    <ImageView style="@style/ShellRowIcon" android:layout_width="36dp" android:layout_height="36dp" android:contentDescription="@null" android:src="@drawable/ic_ui_link" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_marginEnd="8dp" android:layout_weight="1" android:orientation="vertical">
+                        <TextView style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_brand_github" />
+                        <TextView android:id="@+id/about_repository" style="@style/ShellRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" />
+                    </LinearLayout>
+                    <ImageView android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:contentDescription="@null" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
                 </LinearLayout>
-                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_recovery_right" android:importantForAccessibility="no" app:tint="@color/text_muted" />
-            </LinearLayout>
-            <LinearLayout android:id="@+id/about_qq" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="72dp" android:layout_marginTop="10dp" android:padding="12dp" android:orientation="horizontal" android:gravity="center_vertical" android:background="@drawable/bg_polished_action" android:clickable="true" android:focusable="true">
-                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:padding="8dp" android:background="@drawable/bg_logo" android:src="@drawable/ic_ui_chat" android:importantForAccessibility="no" app:tint="@color/primary" />
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="12dp" android:layout_marginEnd="8dp">
-                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/about_community" android:textStyle="bold" style="@style/DshaText.Body" />
-                    <TextView android:id="@+id/about_community" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" style="@style/DshaText.Caption" />
+                <View style="@style/ShellDivider" />
+                <LinearLayout android:id="@+id/about_qq" style="@style/ShellRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="72dp">
+                    <ImageView style="@style/ShellRowIcon" android:layout_width="36dp" android:layout_height="36dp" android:contentDescription="@null" android:src="@drawable/ic_ui_chat" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_marginEnd="8dp" android:layout_weight="1" android:orientation="vertical">
+                        <TextView style="@style/ShellRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/about_community" />
+                        <TextView android:id="@+id/about_community" style="@style/ShellRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" />
+                    </LinearLayout>
+                    <ImageView android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:contentDescription="@null" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
                 </LinearLayout>
-                <ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_recovery_right" android:importantForAccessibility="no" app:tint="@color/text_muted" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="20dp" android:paddingEnd="20dp" android:paddingBottom="16dp">
-        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />
-        <Button android:id="@+id/about_close" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/about_close_button" style="@style/Widget.DSHA.PrimaryButton" />
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/shell_line" />
+        <Button android:id="@+id/about_close" style="@style/ShellPrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/about_close_button" />
     </LinearLayout>
 </com.deepseekharness.app.ui.BoundedDialogLayout>

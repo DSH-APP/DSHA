@@ -18,7 +18,7 @@ curl -s -G -H @/root/.dsh/.bridge_headers \
 
 ## 端点地图与请求边界
 
-[BridgeRoutes](../app/src/main/java/com/deepseekharness/app/util/BridgeRoutes.java)定义33条精确路径和两个前缀。以下按用途分组，参数和返回值仍需查看当前运行时 `/app/help`；此表不是允许任意路径或命令的通配规则。
+[BridgeRoutes](../app/src/main/java/com/deepseekharness/app/util/BridgeRoutes.java)定义54条精确路径和两个前缀。以下按用途分组，参数和返回值仍需查看当前运行时 `/app/help`；此表不是允许任意路径或命令的通配规则。
 
 | 用途 | 路径 | 主要限制 |
 |---|---|---|
@@ -30,6 +30,7 @@ curl -s -G -H @/root/.dsh/.bridge_headers \
 | 插件与悬浮条 | `/app/plugins`、`/app/overlay` | 加载状态上报不是安装证明；悬浮窗另需系统能力 |
 | 任务 | `/app/tasks/context`、`event`、`claim`、`ack` | task 身份、代次与确认状态，不是通用 shell 接口 |
 | 设备执行与许可 | `/device/plan`、`execute`、`vscreen/start`、`vscreen/commit`、`consent`；`/app/native-policy`；`/confirm`、`/exec` | 白名单、许可和单次派发身份；未知结果不切通道重放 |
+| 跨应用文件 | `/app/saf/trees`、`ls`、`stat`、`read`、`write`、`mkdir`、`rm`、`pull`、`push` | 只认短 id；写/删需本地「允许写入」；`rm` 两段式 + 一次性 token（`confirm=<token>`，60 秒）；单次读 256 KiB、写/传输 32 MiB、最多 2 个并发传输 |
 
 未明确支持的 HTTP 方法返回405；桥默认 GET，只有当前代码明确列出的虚拟屏 POST 路由接收对应正文。不能把“路由存在”理解为任意 POST 或带正文 GET 可执行。头部解析由[HttpProtocol](../app/src/main/java/com/deepseekharness/app/util/HttpProtocol.java)限制：首行96 KiB、单头16 KiB、累计128 KiB、100头、单调时钟总5秒；正文和鉴权后的执行预算另算。设备命令原文上限8192字符，不用更小的头预算截断合法百分号编码命令。
 
@@ -56,6 +57,14 @@ curl -s -G -H @/root/.dsh/.bridge_headers \
 核心 anchor（包括 `linux/ubuntu/root/.dsh`、`user-data-v5/dsh`）不可改名/删除；这不意味着任意子内容只读。guest 绝对链接按所选 rootfs 解析，最多40层，越界拒绝。删除树时不跟随链接去删除目标；写入先打开 FD、复核 `/proc/self/fd` 身份后才截断。Provider 通过 Android 的 `MANAGE_DOCUMENTS` 合同授权访问，不是导出给任意网页的通用路径 API。用户通过文件管理器主动编辑仍可能影响工作数据，维护期间应遵守应用提示。
 
 SAF 流共用[DocumentStreams](../app/src/main/java/com/deepseekharness/app/backup/DocumentStreams.java)，保留 AFD offset/length 与取消行为；不能在主线程等远端 Provider。外置工作区维护只断开私有引用，不遍历删除、覆盖或改名外部内容。
+
+## 跨应用文件访问（SAF）
+
+设备能力授权页让用户用系统文档选择器逐目录授权；桥不接收 URI/authority，只接收 `SafGrants` 的短 id。`/app/saf/trees` 返回 id、应用标签、`readable`/`writable`/`valid`，轻量列表不查询 Provider；`ls`/`stat`/`read`/`write`/`mkdir`/`rm` 走相对授权根的路径（拒绝 `..`），`pull`/`push` 在容器路径与授权文件之间搬运（≤32 MiB，最多 2 个并发传输）。
+
+安全边界：容器路径用 `O_NOFOLLOW|O_NONBLOCK` + `lstat/fstat` 身份 + `readlink /proc/self/fd/<fd>` 真实路径复核，目录逐级 `O_PATH|O_NOFOLLOW` 锚定，pull 经父目录 fd 原子发布；拒绝硬链接、proot `.l2s` 实体、祖先换链与 `.dsh` 凭据区。写/删要求该目录在本地设置里打开「允许写入」；只给写权限的树在添加时拒绝（`WRITE_ONLY`），旧只写记录需移除后重新授权。`rm` 是两段式 + 一次性 token：第一次只返回 `NEEDS_CONFIRM`（目标 + 子项数 + 60 秒 token，绑定 tree/path/目标身份），第二次必须带 `confirm=<token>`，消费即删；`confirm=1` 一律返回 `CONFIRM_REQUIRED`，未知 token 同样拒绝，单条请求不能绕过确认。目录内容递归删除前逐层预检，任何一层超过 500 子项直接 `SCAN_LIMIT`、不先删任何项（分页递归删除留待后续）；不再先列目录判空/非空，消除检查与删除之间的竞态。
+
+错误码：`NO_GRANT`/`PERMISSION_DENIED`（授权失效/系统状态不可读用 `PERMISSION_STATE_UNAVAILABLE`）、`READ_ONLY`、`WRITE_ONLY`、`NOT_FOUND`、`IS_DIRECTORY`、`NEEDS_CONFIRM`、`CONFIRM_REQUIRED`、`CONFIRM_EXPIRED`、`CONFIRM_MISMATCH`、`BAD_PATH`、`BAD_CHILD_URI`、`OFFSET_OUT_OF_RANGE`、`TOO_LARGE`、`SIZE_MISMATCH`、`SCAN_LIMIT`、`PROVIDER_ERROR`、`TIMEOUT`。每个公开操作有独立 15 秒截止时间；Provider 完全忽略取消时仍可能占住后台线程，桥侧 `trees` 不查询 Provider。已知限制：`cp/mv` 复制内容会新建 inode，按 inode 识别不了；`push` 覆盖已有目标时可能留下半截文件；Provider 不给 `COLUMN_SIZE` 时写后只验证写调用成功。
 
 ## 修改和验证入口
 

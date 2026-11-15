@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  顶栏「+」气泡弹窗：下载记录 / 关于 DSHA 常驻，运行环境 · 检查与维护 / 访问地址 只在启动页出现。
+  文案由 QuickActionsBubble 按 UiText 写入；这里只固定结构、图标与描边。
+  根部留 8dp 透明边距给卡片阴影，气泡窗口本身不带背景。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/quick_actions_root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/shell_quick_action_shadow">
+
+    <LinearLayout
+        android:id="@+id/quick_actions_card"
+        android:layout_width="@dimen/shell_quick_action_width"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_shell_bubble"
+        android:elevation="10dp"
+        android:orientation="vertical"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
+
+        <LinearLayout
+            android:id="@+id/quick_action_downloads"
+            style="@style/ShellQuickActionRow">
+
+            <ImageView
+                style="@style/ShellQuickActionIcon"
+                android:src="@drawable/ic_ui_downloads"
+                app:tint="@color/shell_text_secondary" />
+
+            <TextView
+                android:id="@+id/quick_action_downloads_label"
+                style="@style/ShellQuickActionLabel" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/quick_action_divider_downloads"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:background="@color/shell_line" />
+
+        <LinearLayout
+            android:id="@+id/quick_action_about"
+            style="@style/ShellQuickActionRow">
+
+            <ImageView
+                style="@style/ShellQuickActionIcon"
+                android:src="@drawable/ic_about"
+                app:tint="@color/shell_text_secondary" />
+
+            <TextView
+                android:id="@+id/quick_action_about_label"
+                style="@style/ShellQuickActionLabel" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/quick_action_divider_about"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:background="@color/shell_line" />
+
+        <LinearLayout
+            android:id="@+id/quick_action_environment"
+            style="@style/ShellQuickActionRow"
+            android:visibility="gone">
+
+            <ImageView
+                style="@style/ShellQuickActionIcon"
+                android:src="@drawable/ic_ui2_box"
+                app:tint="@color/shell_text_secondary" />
+
+            <TextView
+                android:id="@+id/quick_action_environment_label"
+                style="@style/ShellQuickActionLabel" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/quick_action_divider_environment"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:background="@color/shell_line" />
+
+        <LinearLayout
+            android:id="@+id/quick_action_address"
+            style="@style/ShellQuickActionRow"
+            android:visibility="gone">
+
+            <ImageView
+                style="@style/ShellQuickActionIcon"
+                android:src="@drawable/ic_ui_link"
+                app:tint="@color/shell_text_secondary" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="13dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/quick_action_address_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
+                    android:textColor="@color/shell_text"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/quick_action_address_sub"
+                    style="@style/ShellQuickActionSub" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-scale="1" data-short="false" data-lang="zh" data-device="phone">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>DSHA · 崩溃后对话页重绘（实验性交互原型 v2）</title>
+  <style>
+    /* UI v5 token 离线副本，仅用于本预览；与 shell_ui.xml 日夜色对齐。 */
+    :root {
+      color-scheme: light;
+      --page: #e9eef6; --bg: #f3f6fb; --surface: #fcfdff; --raised: #e7edf6;
+      --line: rgba(29, 58, 96, .075); --line-2: rgba(29, 58, 96, .145);
+      --text: #18273f; --text-2: #50617a; --muted: #5a6b86;
+      --accent: #1e50d0; --accent-soft: rgba(30, 80, 208, .08); --on-accent: #fff;
+      --good: #287453; --good-soft: rgba(40, 116, 83, .10);
+      --warn: #8c600d; --warn-soft: rgba(140, 96, 13, .10);
+      --bad: #af404b; --bad-soft: rgba(175, 64, 75, .10);
+      --idle: #7b879a;
+      --bezel: #1b2333; --shadow: 0 18px 50px rgba(17, 32, 62, .14);
+      --sans: system-ui, -apple-system, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --ease: cubic-bezier(.22, 1, .36, 1);
+      --fs: 1;
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --page: #070a10; --bg: #0b0f16; --surface: #131923; --raised: #1b2432;
+      --line: rgba(203, 220, 255, .07); --line-2: rgba(203, 220, 255, .13);
+      --text: #edf1f7; --text-2: #b0bbcc; --muted: #8895aa;
+      --accent: #6aa4ff; --accent-soft: rgba(106, 164, 255, .1); --on-accent: #091729;
+      --good: #93ccaf; --good-soft: rgba(147, 204, 175, .12);
+      --warn: #e4be83; --warn-soft: rgba(228, 190, 131, .12);
+      --bad: #eea3a6; --bad-soft: rgba(238, 163, 166, .12);
+      --idle: #8895aa;
+      --bezel: #2a3446; --shadow: 0 18px 50px rgba(0, 0, 0, .5);
+    }
+    [data-scale="1.3"] { --fs: 1.3; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--page); color: var(--text); font-family: var(--sans);
+      display: flex; gap: 32px; justify-content: center; align-items: flex-start; padding: 28px 20px; flex-wrap: wrap; }
+    button, select { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .hide { display: none !important; }
+
+    /* ---------- 控制面板 ---------- */
+    .panel { width: 380px; max-width: 100%; background: var(--surface); border: 1px solid var(--line-2); border-radius: 18px;
+      padding: 18px 18px 8px; box-shadow: var(--shadow); }
+    .panel h1 { font-size: 17px; margin: 0 0 4px; }
+    .panel > p { margin: 0 0 12px; color: var(--text-2); font-size: 13px; line-height: 1.5; }
+    .exp { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 9px 11px; font-size: 12.5px; line-height: 1.55; margin-bottom: 12px; }
+    .exp b { display: block; margin-bottom: 2px; }
+    fieldset { border: 0; padding: 0; margin: 0 0 12px; }
+    legend { font-size: 12px; font-weight: 700; color: var(--text-2); margin-bottom: 6px; letter-spacing: .03em; }
+    .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+    .seg + .seg { margin-top: 6px; }
+    .seg button { border: 1px solid var(--line-2); background: var(--bg); border-radius: 999px; padding: 5px 11px; font-size: 12.5px; cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+    .seg .grp { width: 100%; font-size: 11.5px; color: var(--muted); margin: 4px 0 -2px; }
+    .dims { display: grid; grid-template-columns: 76px 1fr; gap: 6px 8px; align-items: center; font-size: 12.5px; }
+    .dims label { color: var(--text-2); }
+    .dims select { width: 100%; border: 1px solid var(--line-2); background: var(--bg); border-radius: 9px; padding: 5px 8px; font-size: 12.5px; }
+    .dims select:disabled { opacity: .5; }
+    .verdict { margin-top: 10px; border: 1px solid var(--line-2); border-radius: 12px; padding: 10px 12px; font-size: 12.5px; line-height: 1.6; background: var(--bg); }
+    .verdict dt { font-weight: 700; color: var(--text-2); font-size: 11.5px; letter-spacing: .03em; margin-top: 6px; }
+    .verdict dt:first-child { margin-top: 0; }
+    .verdict dd { margin: 0; }
+    .verdict code { font-family: var(--mono); font-size: 11.5px; }
+    .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-left: 4px; vertical-align: 1px; }
+    .tag.paint { background: var(--good-soft); color: var(--good); }
+    .tag.behave { background: var(--warn-soft); color: var(--warn); }
+    .tag.keep { background: var(--accent-soft); color: var(--accent); }
+    .notes { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.6; color: var(--text-2); }
+    .notes b { color: var(--text); }
+    details.fold summary { cursor: pointer; font-size: 12px; font-weight: 700; color: var(--text-2); letter-spacing: .03em; margin-bottom: 6px; }
+    .chain { font-family: var(--mono); font-size: 11.5px; line-height: 1.6; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; color: var(--text-2); white-space: pre-wrap; margin: 0 0 12px; }
+
+    /* ---------- 设备外框 ---------- */
+    .phone { width: 380px; height: 800px; background: var(--bezel); border-radius: 44px; padding: 12px; box-shadow: var(--shadow); flex: none; }
+    [data-device="phone"][data-short="true"] .phone { height: 560px; }
+    .stage { flex: none; position: relative; }
+    .stage .phone { transform-origin: 0 0; position: absolute; left: 0; top: 0; }
+    [data-device="tp"] .phone { width: 820px; height: 1300px; border-radius: 40px; }
+    [data-device="tl"] .phone { width: 1300px; height: 820px; border-radius: 40px; }
+    [data-device="tp"] .screen, [data-device="tl"] .screen { border-radius: 30px; }
+    .screen { position: relative; width: 100%; height: 100%; border-radius: 34px; overflow: hidden; background: var(--bg); display: flex; flex-direction: column; container: screen / inline-size; }
+    .statusbar { height: 30px; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 0 22px; font-size: 12px; font-weight: 600; }
+
+    /* 被覆盖的对话页示意 */
+    .web { position: absolute; inset: 30px 0 0; background: var(--bg); padding: 14px; transition: filter .3s; }
+    .web .main { height: 100%; position: relative; }
+    .web .msg { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; font-size: calc(13px * var(--fs)); color: var(--text-2); }
+    .web .msg.me { margin-left: 48px; background: var(--accent-soft); color: var(--text); }
+    .web .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 44px; border-radius: 22px; background: var(--surface); border: 1px solid var(--line-2); }
+    .web .side { display: none; }
+    .ok-tip { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); background: var(--good-soft); color: var(--good); font-size: 12.5px; padding: 6px 12px; border-radius: 999px; font-weight: 600; z-index: 3; }
+
+    /* ---------- 新方案覆盖层 ---------- */
+    .over { position: absolute; inset: 30px 0 0; display: flex; flex-direction: column; background: var(--bg); }
+    .over.dim { background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(3px); }
+    .top { flex: none; display: flex; align-items: center; gap: 4px; padding: 4px 8px; }
+    .icon-btn { width: 44px; height: 44px; border: 0; background: transparent; border-radius: 12px; display: grid; place-items: center; cursor: pointer; }
+    .icon-btn:hover { background: var(--raised); }
+    .top .ttl { font-size: calc(15px * var(--fs)); font-weight: 600; color: var(--text-2); }
+    .body { flex: 1; overflow: auto; padding: 4px 16px 20px; display: flex; flex-direction: column; }
+    .center { margin: auto 0; }
+    .hero { text-align: center; padding: 8px 6px 4px; }
+    .badge { width: 64px; height: 64px; border-radius: 20px; margin: 0 auto 14px; display: grid; place-items: center; }
+    .badge svg { width: 30px; height: 30px; }
+    [data-tone="bad"] .badge { background: var(--bad-soft); color: var(--bad); }
+    [data-tone="warn"] .badge { background: var(--warn-soft); color: var(--warn); }
+    [data-tone="info"] .badge { background: var(--accent-soft); color: var(--accent); }
+    [data-tone="good"] .badge { background: var(--good-soft); color: var(--good); }
+    .hero h3 { margin: 0; font-size: calc(20px * var(--fs)); line-height: 1.3; }
+    .hero .sub { margin: 8px auto 0; max-width: 300px; font-size: calc(13.5px * var(--fs)); line-height: 1.55; color: var(--text-2); }
+    .acts { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .primary, .secondary { min-height: 48px; border-radius: 14px; font-size: calc(15px * var(--fs)); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; text-align: center; }
+    .primary { border: 0; background: var(--accent); color: var(--on-accent); }
+    .secondary { border: 1px solid var(--line-2); background: var(--surface); color: var(--accent); }
+    .primary[disabled], .secondary[disabled] { opacity: .55; cursor: default; }
+    .spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: r .8s linear infinite; }
+    @keyframes r { to { transform: rotate(360deg); } }
+    .label { font-size: calc(12px * var(--fs)); font-weight: 700; color: var(--text-2); letter-spacing: .03em; margin: 22px 4px 8px; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+
+    /* 当前状态表：每一层一行，圆点 + 层名 + 实际状态 */
+    .srow { display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px; }
+    .srow + .srow { border-top: 1px solid var(--line); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; margin-top: calc(6px * var(--fs)); background: var(--idle); }
+    .dot.good { background: var(--good); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+    .dot.run { background: var(--accent); box-shadow: 0 0 0 0 var(--accent); animation: pulse 1.6s infinite; }
+    @keyframes pulse { 70% { box-shadow: 0 0 0 6px transparent; } }
+    .sk { width: calc(68px * var(--fs)); flex: none; font-size: calc(13px * var(--fs)); color: var(--muted); line-height: 1.45; }
+    .sv { flex: 1; min-width: 0; font-size: calc(13.5px * var(--fs)); line-height: 1.45; }
+    .sv small { display: block; color: var(--muted); font-size: calc(12px * var(--fs)); margin-top: 1px; }
+
+    .row { width: 100%; min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 12px; background: transparent; border: 0; text-align: left; cursor: pointer; }
+    .row + .row, .detail + .row { border-top: 1px solid var(--line); }
+    .row:hover:not([aria-disabled="true"]) { background: var(--raised); }
+    .row[aria-disabled="true"] { cursor: default; }
+    .row[aria-disabled="true"] .t, .row[aria-disabled="true"] .ri { opacity: .45; }
+    .ri { width: 30px; height: 30px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; }
+    .ri svg { width: 17px; height: 17px; }
+    .tx { flex: 1; min-width: 0; }
+    .t { display: block; font-size: calc(14px * var(--fs)); }
+    .s { display: block; font-size: calc(12px * var(--fs)); color: var(--muted); margin-top: 2px; line-height: 1.45; }
+    .chev { color: var(--muted); flex: none; transition: transform .2s var(--ease); }
+    .row[aria-expanded="true"] .chev { transform: rotate(90deg); }
+    .detail { padding: 0 12px 12px; }
+    .detail pre { margin: 0; font-family: var(--mono); font-size: calc(11.5px * var(--fs)); line-height: 1.55; white-space: pre-wrap; word-break: break-all; color: var(--text-2);
+      background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; user-select: text; }
+    .detail .copy { margin-top: 8px; border: 0; background: transparent; color: var(--accent); font-weight: 600; font-size: calc(13px * var(--fs)); cursor: pointer; padding: 6px 2px; }
+
+    /* ---------- 现状 / 不显示面板时的示意 ---------- */
+    .old { position: absolute; inset: 30px 0 0; background: var(--bg); padding: 24px; overflow: auto; display: flex; flex-direction: column; justify-content: center; }
+    .old h3 { margin: 0; font-size: calc(20px * var(--fs)); }
+    .old p { margin: 16px 0 0; font-size: calc(14px * var(--fs)); line-height: 1.5; white-space: pre-wrap; }
+    .old .b1 { margin-top: 24px; min-height: 48px; border: 0; border-radius: 12px; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: calc(14px * var(--fs)); }
+    .old .b2 { min-height: 44px; border: 0; background: transparent; color: var(--accent); font-size: calc(14px * var(--fs)); }
+    .old .b2[disabled] { opacity: .45; }
+    .ghost { position: absolute; inset: 30px 0 0; display: grid; place-items: center; padding: 28px; background: var(--bg); }
+    .ghost div { border: 2px dashed var(--line-2); border-radius: 18px; padding: 22px 20px; text-align: center; color: var(--text-2); font-size: calc(14px * var(--fs)); line-height: 1.6; max-width: 340px; }
+    .ghost b { display: block; color: var(--text); font-size: calc(16px * var(--fs)); margin-bottom: 6px; }
+
+    .toast { position: absolute; left: 50%; bottom: 28px; transform: translate(-50%, 12px); background: #1f2633; color: #fff; font-size: 13px;
+      padding: 9px 14px; border-radius: 12px; opacity: 0; pointer-events: none; transition: .25s var(--ease); max-width: 300px; text-align: center; z-index: 5; }
+    .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+    /* ---------- 平板（容器宽 ≥ 700px，对应 sw600dp 以上实际窗口） ---------- */
+    @container screen (min-width: 700px) {
+      .web { display: grid; grid-template-columns: 260px 1fr; padding: 0; }
+      .web .side { display: block; border-right: 1px solid var(--line); padding: 16px; }
+      .web .side i { display: block; height: 34px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); margin-bottom: 8px; }
+      .web .main { padding: 24px 40px; }
+      .web .bar { left: 40px; right: 40px; bottom: 24px; }
+      .top { padding: 8px 18px; }
+      .body { padding: 8px 40px 32px; }
+      .center { width: 100%; max-width: 520px; margin: auto; }
+      .hero .sub { max-width: 420px; }
+      .badge { width: 76px; height: 76px; border-radius: 24px; }
+      .badge svg { width: 36px; height: 36px; }
+      .hero h3 { font-size: calc(24px * var(--fs)); }
+      .acts { flex-direction: row; justify-content: center; }
+      .acts .primary, .acts .secondary { flex: 1 1 0; max-width: 240px; }
+      .sk { width: calc(84px * var(--fs)); }
+    }
+    /* 横屏：左「结论 + 主操作 + 当前状态」，右「更多操作」 */
+    @container screen (min-width: 1000px) {
+      .center { max-width: 1040px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); column-gap: 48px; align-items: center; }
+      .hero { text-align: left; padding: 0; }
+      .badge { margin: 0 0 18px; }
+      .hero .sub { margin-left: 0; max-width: 540px; }
+      .acts { justify-content: flex-start; }
+      .side-col > .label:first-child { margin-top: 0; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="panel" aria-label="预览控制">
+    <h1>崩溃后对话页 · 重绘方案 v2</h1>
+    <div class="exp"><b>实验性变更声明</b>实验性 UI 绘制。崩溃现场依赖真实进程退出、渲染器崩溃与网络错误，无法快速稳定复现，验收不能一次完成；本预览为静态模拟。「现状」一栏是按代码推断，未在真机逐项复现。</div>
+    <p>新增「当前状态」表：把后台服务、自动恢复、网页内核、对话页面、连接逐层写明，不再只有一句结论。下方可以直接选情景，也可以逐项组合。</p>
+
+    <fieldset><legend>常见情景</legend><div class="seg" data-ctl="preset" id="presetSeg"></div></fieldset>
+
+    <fieldset><legend>逐项组合（七个维度）</legend>
+      <div class="dims">
+        <label for="dSvc">后台服务</label>
+        <select id="dSvc">
+          <option value="running">运行中</option>
+          <option value="starting">正在启动 / 重启</option>
+          <option value="afterAuth">已退出（鉴权后）</option>
+          <option value="beforeAuth">已退出（鉴权前）</option>
+          <option value="hung">无响应（进程在，端口不通）</option>
+          <option value="unknown">身份未确认</option>
+          <option value="stopped">用户已停止</option>
+        </select>
+        <label for="dCode">退出码</label>
+        <select id="dCode">
+          <option value="137">137 · 被强制结束</option>
+          <option value="139">139 · 段错误</option>
+          <option value="143">143 · 收到终止信号</option>
+          <option value="1">1 · 程序报错退出</option>
+        </select>
+        <label for="dFail">重启预算</label>
+        <select id="dFail">
+          <option value="1">已失败 1 次</option>
+          <option value="2">已失败 2 次</option>
+          <option value="3">已失败 3 次（上限）</option>
+        </select>
+        <label for="dProbe">健康检查</label>
+        <select id="dProbe">
+          <option value="1">无响应 1–2 次</option>
+          <option value="3">连续 3 次无响应</option>
+        </select>
+        <label for="dSrc">页面来源</label>
+        <select id="dSrc">
+          <option value="fresh">本次打开</option>
+          <option value="recovered">App 重开后接回</option>
+        </select>
+        <label for="dWeb">网页内核</label>
+        <select id="dWeb">
+          <option value="ok">正常</option>
+          <option value="crash">渲染进程崩溃</option>
+          <option value="oom">被系统回收</option>
+          <option value="old">版本过旧</option>
+          <option value="init">无法启动</option>
+        </select>
+        <label for="dNet">连接</label>
+        <select id="dNet">
+          <option value="ok">正常</option>
+          <option value="refused">连接被拒绝</option>
+          <option value="timeout">连接超时</option>
+          <option value="auth">认证失效</option>
+          <option value="http">HTTP 5xx</option>
+          <option value="authRefresh">凭据刷新失败</option>
+        </select>
+      </div>
+      <dl class="verdict" id="verdict"></dl>
+    </fieldset>
+
+    <fieldset><legend>设备 / 版本</legend><div class="seg" data-ctl="device">
+      <button data-v="phone" aria-pressed="true">手机</button><button data-v="tp" aria-pressed="false">平板竖屏</button><button data-v="tl" aria-pressed="false">平板横屏</button></div>
+      <div class="seg" data-ctl="view"><button data-v="new" aria-pressed="true">新方案</button><button data-v="old" aria-pressed="false">现状</button></div></fieldset>
+    <fieldset><legend>主题 / 语言 / 验收条件</legend><div class="seg" data-ctl="theme">
+      <button data-v="light" aria-pressed="true">日间</button><button data-v="dark" aria-pressed="false">夜间</button></div>
+      <div class="seg" data-ctl="lang"><button data-v="zh" aria-pressed="true">中文</button><button data-v="en" aria-pressed="false">English</button></div>
+      <div class="seg"><button data-toggle="scale" aria-pressed="false">1.3 倍字体</button><button data-toggle="short" aria-pressed="false">短屏（手机）</button></div></fieldset>
+
+    <details class="fold"><summary>判定顺序与代码依据</summary>
+<pre class="chain">判定按层级从上到下，命中即停：
+1 用户已停止          → 不是崩溃，窗口照常关闭
+2 鉴权前退出          → failedWebPage → 启动恢复页
+3 重启预算用尽        → RestartBudget.LIMIT=3，停止自动重启
+4 无响应              → 保活每轮探测，UNAVAILABLE 连续 3 次（健康检查）
+                        才 restartWebAutomatically（冷却 120 s）
+5 鉴权后退出          → exited() 记失败；不会自动重启
+                        （探测得到 UNCONFIGURED，不是重启候选）
+   ├ App 重开接回     → suspendRuntimePage(exited=true)
+   └ 本次打开         → 代次未变，retireEmptyHost 不收尾，
+                        WebView 已销毁 → 现状推断为空白页
+6 身份未确认          → suspendRuntimePage(exited=false)
+7 正在启动            → loadSession：Web 尚未就绪
+8 网页内核问题        → onRenderProcessGone / 能力检查 / 初始化
+9 连接问题            → onReceivedError / HttpError / 凭据刷新
+服务层结论优先：服务不在时，内核与连接只在状态表里列出。</pre></details>
+    <details class="fold"><summary>v2 改了什么</summary>
+      <ol class="notes">
+        <li><b>结论从 8 种补到 17 种</b>（19 个常见情景）：按服务 × 退出码 × 重启预算 × 健康检查 × 来源 × 内核 × 连接组合判定，每种都标明对应的代码入口。</li>
+        <li><b>新增「当前状态」表</b>：一层一行，圆点颜色表示该层是否正常。退出码附一句通俗解释。</li>
+        <li><b>标出三类改动</b>：<span class="tag paint">仅重绘</span> 只换样式；<span class="tag behave">需改行为</span> 现在不显示面板，要补入口；<span class="tag keep">沿用</span> 走启动恢复页或正常关闭。</li>
+        <li>平板竖屏 / 横屏版式保持 v1，状态表随左栏排布。</li>
+      </ol></details>
+  </aside>
+
+  <div class="stage" id="stage"><div class="phone"><div class="screen" id="screen">
+    <div class="statusbar"><span>19:08</span><span>87%</span></div>
+
+    <div class="web" id="web">
+      <div class="side" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="main">
+        <div class="msg me">帮我检查一下构建脚本</div>
+        <div class="msg">好的，正在读取 build.sh……</div>
+        <div class="msg me">顺便跑一下单测</div>
+        <div class="bar"></div>
+      </div>
+    </div>
+    <div class="ok-tip hide" id="okTip"></div>
+
+    <!-- 新方案 -->
+    <div class="over" id="vNew" role="alertdialog" aria-labelledby="hTitle" aria-describedby="hSub">
+      <div class="top">
+        <button class="icon-btn" id="back" aria-label="返回"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <span class="ttl" id="topTitle">对话</span>
+      </div>
+      <div class="body"><div class="center">
+        <div class="main-col">
+          <section class="hero" id="hero" data-tone="bad" aria-live="polite">
+            <div class="badge" id="hIcon" aria-hidden="true"></div>
+            <h3 id="hTitle"></h3>
+            <div class="sub" id="hSub"></div>
+            <div class="acts">
+              <button class="primary" id="pri"></button>
+              <button class="secondary" id="sec"></button>
+            </div>
+          </section>
+          <div class="label" id="lblState"></div>
+          <section class="card" id="stateCard" aria-labelledby="lblState"></section>
+        </div>
+
+        <div class="side-col">
+          <div class="label" id="lblMore"></div>
+          <section class="card">
+            <button class="row" id="detailRow" aria-expanded="false" aria-controls="detailBox">
+              <span class="ri" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 9l-3 3 3 3M16 9l3 3-3 3M13.5 6l-3 12"/></svg></span>
+              <span class="tx"><span class="t" id="tDetail"></span><span class="s" id="sDetail"></span></span>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+            <div class="detail hide" id="detailBox"><pre id="detailText"></pre><button class="copy" id="copy"></button></div>
+            <button class="row" id="logs">
+              <span class="ri" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></span>
+              <span class="tx"><span class="t" id="tLogs"></span><span class="s" id="sLogs"></span></span>
+            </button>
+            <button class="row" id="browser">
+              <span class="ri" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.6 2.5 13.4 0 16M12 4c-2.5 2.6-2.5 13.4 0 16"/></svg></span>
+              <span class="tx"><span class="t" id="tBrowser"></span><span class="s" id="sBrowser"></span></span>
+            </button>
+            <button class="row" id="recovery">
+              <span class="ri" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></svg></span>
+              <span class="tx"><span class="t" id="tRecovery"></span><span class="s" id="sRecovery"></span></span>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+          </section>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- 现状复刻：activity_web_preview.xml web_error_panel -->
+    <div class="old hide" id="vOld">
+      <h3 id="oTitle"></h3>
+      <p id="oDetail"></p>
+      <button class="b1">重试</button>
+      <button class="b2">返回启动页处理插件 / 安全启动</button>
+      <button class="b2">下载错误记录</button>
+      <button class="b2" id="oBrowser">在系统浏览器中打开</button>
+    </div>
+    <!-- 不显示错误面板的情景：用示意框说明实际会发生什么 -->
+    <div class="ghost hide" id="vGhost"><div><b id="gTitle"></b><span id="gText"></span></div></div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div></div></div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const root = document.documentElement;
+  const ICON = {
+    exit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.4 6.6a8 8 0 1 0 11.2 0"/></svg>',
+    wait: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M12 8v4l2.5 1.5"/></svg>',
+    loop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v4h-4"/></svg>',
+    stopLoop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9v6M14.5 9v6"/></svg>',
+    hung: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>',
+    start: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 3v3M12 18v3M4.2 7.5l2.6 1.5M17.2 15l2.6 1.5M4.2 16.5l2.6-1.5M17.2 9l2.6-1.5"/></svg>',
+    render: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="4" width="18" height="14" rx="2.5"/><path d="M3 8h18M10 12l4 4M14 12l-4 4"/></svg>',
+    memory: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3M9.5 12h5"/></svg>',
+    net: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M2.5 9a14 14 0 0 1 19 0M6 12.5a9 9 0 0 1 12 0M9.5 16a4 4 0 0 1 5 0"/><circle cx="12" cy="19.2" r="1"/><path d="M4 4l16 16"/></svg>',
+    lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="5" y="10" width="14" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+    page: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9.5 13.5h5"/></svg>',
+    update: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 4v10M8 10l4 4 4-4"/><rect x="4" y="16" width="16" height="4" rx="1.5"/></svg>',
+    engine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="4" width="18" height="14" rx="2.5"/><path d="M12 8v4M12 15h.01"/></svg>'
+  };
+  const BROWSER_INFO = 'WebView: com.google.android.webview 142.0.7444.62\nAndroid 14 · arm64-v8a';
+
+  /* 退出码的通俗解释（只做提示，不推断根因）。 */
+  const CODE = {
+    137: { zh: '被强制结束，常见于内存不足', en: 'killed, often low memory' },
+    139: { zh: '段错误，原生模块异常', en: 'segfault in a native module' },
+    143: { zh: '收到终止信号', en: 'received a stop signal' },
+    1: { zh: '程序报错退出', en: 'exited with an error' }
+  };
+
+  /* 每种结论：样式、按钮、标题；paint=仅重绘，behave=需改行为，keep=沿用其它页面。 */
+  const K = {
+    stopped: { kind: 'keep', ghost: true, entry: 'WebLifecycleController.stopWeb（用户停止）',
+      now: '窗口按停止流程关闭，回到启动页。不是崩溃。', plan: '不变，不显示错误面板。',
+      ghostT: '窗口关闭，回到启动页', ghostS: '用户主动停止服务，不属于崩溃。' },
+    startFail: { kind: 'keep', ghost: true, entry: 'failedWebPage → StartupRecoveryActivity',
+      now: '对话页关闭，进入原生「启动恢复」页。', plan: '沿用；启动恢复页由另一会话重做（design/startup-recovery-20261102）。',
+      ghostT: '跳转「启动恢复」页', ghostS: '鉴权前就退出属于启动失败，由启动恢复页处理。' },
+    blocked: { tone: 'bad', icon: 'stopLoop', kind: 'behave', pri: 'recovery', sec: 'home', suspended: true,
+      entry: 'recordWebFailure → RestartBudget.blocked() → requestStartupRecovery',
+      now: '对话页按停止流程关闭；主界面轮询发现恢复请求后打开启动恢复页。用户看不到为什么被带走。',
+      plan: '先在对话页说明「已连续失败 3 次、已暂停自动重启」，再由用户点进启动恢复页。',
+      zh: { t: 'DSH 反复崩溃，已暂停自动重启', s: '连续 3 次启动后都没能稳定运行。先查看原因，再选择安全启动或修复。' },
+      en: { t: 'DSH keeps crashing; auto-restart paused', s: 'It failed to stay up after 3 starts. Review the cause, then start safely or repair.' } },
+    restarting: { tone: 'info', icon: 'loop', kind: 'behave', pri: 'wait', sec: 'home', suspended: true, recover: true,
+      entry: 'HarnessService 保活：UNAVAILABLE ×3 → restartWebAutomatically',
+      now: '旧代次结束，新代次启动；旧对话页被收尾或空白，就绪后需重新进入。',
+      plan: '显示「正在自动重启」，就绪后自动接回当前对话。',
+      zh: { t: '服务没有响应，正在自动重启', s: '后台进程连续 3 次健康检查无响应。重启完成后自动回到对话。' },
+      en: { t: 'Service not responding; restarting', s: 'Three health checks failed. The conversation reopens when the restart finishes.' } },
+    hungWait: { tone: 'warn', icon: 'hung', kind: 'behave', pri: 'recheck', sec: 'home', recover: true,
+      entry: 'HarnessService 保活：UNAVAILABLE 未满 3 次 / 冷却中',
+      now: '页面保持原样，可能停在加载中或请求失败，不提示。',
+      plan: '页面请求失败时显示「暂时无响应」，并告诉用户保活会自动处理。',
+      zh: { t: '服务暂时没有响应', s: '后台进程还在，但端口暂时不通。连续 3 次无响应会自动重启。' },
+      en: { t: 'Service is not responding', s: 'The process is alive but its port is closed. Three failed checks trigger a restart.' } },
+    exitedFresh: { tone: 'bad', icon: 'exit', kind: 'behave', pri: 'home', sec: 'logs', suspended: true,
+      entry: 'exited() → recordWebFailure → synchronizeWebSession → destroyWebView',
+      now: '按代码推断：WebView 被销毁，但代次没变，retireEmptyHost 不收尾，对话页留成空白，没有任何说明（待真机核对）。',
+      plan: '补入口：销毁后改为显示本面板，写明退出码；自动重启不会发生，引导回启动页重新启动。',
+      zh: { t: 'DSH 服务意外退出', s: '进程已经结束，不会自动重启。回到启动页查看日志并重新启动；对话记录保存在服务端。' },
+      en: { t: 'DSH service exited unexpectedly', s: 'The process ended and will not restart on its own. Check logs and restart from the start page.' } },
+    exitedKept: { tone: 'bad', icon: 'exit', kind: 'paint', pri: 'home', sec: 'recheck', suspended: true,
+      entry: 'suspendRuntimePage(exited=true)',
+      now: '「Web 服务已退出」，主按钮是「重试」。', plan: '重绘；主按钮改为回启动页。',
+      old: ['Web 服务已退出', '本次服务进程已确认退出，对话记录已保留。请返回启动页查看日志并手动启动。'],
+      zh: { t: 'DSH 服务已停止', s: '接回时确认后台进程已经退出。当前页面已保留，回到启动页重新启动即可。' },
+      en: { t: 'DSH service stopped', s: 'The background process had exited. This page is kept; restart from the start page.' } },
+    verify: { tone: 'warn', icon: 'wait', kind: 'paint', pri: 'recheck', sec: 'home', suspended: true, recoverAfter: 2,
+      entry: 'suspendRuntimePage(exited=false)',
+      now: '「正在验证 Web 状态」，长段说明。', plan: '重绘；状态表列出身份未确认。',
+      old: ['正在验证 Web 状态', '暂时无法确认后台服务身份，当前页面已保留。验证通过后恢复，不会重新发送对话。可点重试验证，或返回启动页查看状态。'],
+      zh: { t: '正在确认服务状态', s: '暂时联系不上后台服务。确认身份后自动恢复当前页面，不会重新发送消息。' },
+      en: { t: 'Checking the service', s: 'The service is not responding yet. This page resumes once verified; nothing is resent.' } },
+    starting: { tone: 'info', icon: 'start', kind: 'paint', pri: 'home', sec: 'reload', recover: true,
+      entry: 'loadSession：currentWebIdentity() == null',
+      now: '「暂时无法进入对话 / Web 尚未就绪」。', plan: '重绘；改为说明正在启动，可查看启动进度。',
+      old: ['暂时无法进入对话', 'Web 尚未就绪，请返回启动页查看服务状态'],
+      zh: { t: 'DSH 正在启动', s: '服务就绪后即可进入对话。可以回启动页查看进度。' },
+      en: { t: 'DSH is starting', s: 'The conversation opens once the service is ready. Check progress on the start page.' } },
+    crash: { tone: 'bad', icon: 'render', kind: 'paint', pri: 'reload', sec: 'home', recover: true,
+      entry: 'onRenderProcessGone(didCrash=true)',
+      now: '「网页渲染进程已退出」。', plan: '重绘；状态表写明后台服务仍在运行。',
+      old: ['网页渲染进程已退出', '系统 WebView 发生异常，点击重试可重新打开；持续出现时请更新内核。'],
+      zh: { t: '网页渲染进程崩溃了', s: '系统 WebView 出现异常，后台服务不受影响。重新打开通常就能恢复。' },
+      en: { t: 'The page renderer crashed', s: 'System WebView hit an error; the service is unaffected. Reopening usually fixes it.' } },
+    oom: { tone: 'warn', icon: 'memory', kind: 'paint', pri: 'reload', sec: 'home', recover: true,
+      entry: 'onRenderProcessGone(didCrash=false)',
+      now: '「网页渲染进程已退出」，与崩溃同标题。', plan: '重绘；与崩溃区分标题。',
+      old: ['网页渲染进程已退出', '系统可能因内存不足回收了网页，点击重试可重新打开。'],
+      zh: { t: '网页被系统回收了', s: '手机内存紧张时，系统会关闭后台网页。重新打开即可继续。' },
+      en: { t: 'The system closed the page', s: 'Android frees background pages when memory is low. Reopen to continue.' } },
+    old: { tone: 'info', icon: 'update', kind: 'paint', pri: 'store', sec: 'browser',
+      entry: '网页能力检查（缺少能力 / 未返回有效结果）',
+      now: '「系统 WebView 需要更新」。', plan: '重绘；主按钮直接打开商店页。',
+      old: ['系统 WebView 需要更新', '当前内核缺少：structuredClone, Array.prototype.at。\n更新 Android System WebView / Chrome 后重试，或在浏览器中打开。'],
+      zh: { t: '需要更新系统 WebView', s: '当前内核缺少对话页需要的能力。更新后重试，或先用系统浏览器打开。' },
+      en: { t: 'System WebView needs an update', s: 'The engine lacks features this page needs. Update it, or open in a browser for now.' } },
+    init: { tone: 'bad', icon: 'engine', kind: 'paint', pri: 'store', sec: 'browser',
+      entry: 'createWebView 抛出异常',
+      now: '「系统 WebView 无法启动」。', plan: '重绘。',
+      old: ['系统 WebView 无法启动', '请更新或启用 Android System WebView / Chrome，也可以使用系统浏览器进入对话。'],
+      zh: { t: '系统 WebView 无法启动', s: '请更新或启用 Android System WebView / Chrome，也可以先用系统浏览器进入对话。' },
+      en: { t: 'System WebView cannot start', s: 'Update or enable Android System WebView / Chrome, or use a browser for now.' } },
+    net: { tone: 'warn', icon: 'net', kind: 'paint', pri: 'reload', sec: 'home', recover: true,
+      entry: 'onReceivedError（主框架）',
+      now: '「暂时无法连接对话服务」+ 错误代码。', plan: '重绘；错误码进状态表。',
+      old: ['暂时无法连接对话服务', '服务可能仍在启动或已退出。请稍后重试，持续失败时返回启动页查看日志。\n错误代码：-6'],
+      zh: { t: '连不上对话服务', s: '后台进程显示在运行，但这次请求没有连上。稍后重试；持续失败请回启动页看日志。' },
+      en: { t: 'Cannot reach the service', s: 'The process looks alive, but this request failed. Retry shortly, or check logs.' } },
+    auth: { tone: 'info', icon: 'lock', kind: 'paint', pri: 'home', sec: 'reload',
+      entry: 'onReceivedHttpError 401/403（已自动重新鉴权 1 次）',
+      now: '「对话认证已失效」。', plan: '重绘；写明已自动重试过一次。',
+      old: ['对话认证已失效', 'HTTP 401。请返回启动页重新进入对话，或稍后重试。'],
+      zh: { t: '对话登录已过期', s: '已自动重新登录一次仍未通过。回到启动页重新进入对话即可。' },
+      en: { t: 'Session sign-in expired', s: 'One automatic sign-in retry failed. Re-enter from the start page.' } },
+    http: { tone: 'bad', icon: 'page', kind: 'paint', pri: 'reload', sec: 'home', recover: true,
+      entry: 'onReceivedHttpError（非 401/403）',
+      now: '「对话页面加载失败」。', plan: '重绘。',
+      old: ['对话页面加载失败', 'HTTP 502。请返回启动页重新进入对话，或稍后重试。'],
+      zh: { t: '对话页面没能打开', s: '服务返回了错误。可以重试，或回启动页查看服务状态。' },
+      en: { t: 'The page did not load', s: 'The service returned an error. Retry, or check its status on the start page.' } },
+    authRefresh: { tone: 'warn', icon: 'lock', kind: 'paint', pri: 'reload', sec: 'home', recover: true,
+      entry: 'previewAuth.refresh 回调 error',
+      now: '「暂时无法进入对话」+ 原始错误。', plan: '重绘。',
+      old: ['暂时无法进入对话', 'AUTH_EXCHANGE_TIMEOUT'],
+      zh: { t: '暂时无法进入对话', s: '获取对话凭据失败。重试一次；持续失败请回启动页重新进入。' },
+      en: { t: 'Cannot open the conversation', s: 'Getting the session credential failed. Retry, or re-enter from the start page.' } }
+  };
+
+  /* 判定：服务层优先，命中即停（与面板「判定顺序」一致）。 */
+  function classify(d) {
+    if (d.svc === 'stopped') return 'stopped';
+    if (d.svc === 'beforeAuth') return 'startFail';
+    if ((d.svc === 'afterAuth' || d.svc === 'hung') && d.fail === '3') return 'blocked';
+    if (d.svc === 'hung') return d.probe === '3' ? 'restarting' : 'hungWait';
+    if (d.svc === 'afterAuth') return d.src === 'recovered' ? 'exitedKept' : 'exitedFresh';
+    if (d.svc === 'unknown') return 'verify';
+    if (d.svc === 'starting') return 'starting';
+    if (d.web !== 'ok') return d.web;
+    if (d.net === 'refused' || d.net === 'timeout') return 'net';
+    if (d.net !== 'ok') return d.net;
+    return null;
+  }
+
+  /* 当前状态表：每层一行。dot: good/warn/bad/run/idle。 */
+  function stateRows(d, lang) {
+    const zh = lang === 'zh', rows = [];
+    const T = (a, b) => (zh ? a : b);
+    const code = CODE[d.code][lang];
+    const svc = {
+      running: ['good', T('运行中', 'Running')],
+      starting: ['run', T('正在启动', 'Starting')],
+      afterAuth: ['bad', T('已退出 · 退出码 ' + d.code, 'Exited · code ' + d.code), code],
+      beforeAuth: ['bad', T('启动时退出 · 退出码 ' + d.code, 'Exited while starting · code ' + d.code), code],
+      hung: ['warn', T('进程在，但端口不通', 'Alive, port closed')],
+      unknown: ['warn', T('身份未确认', 'Identity unconfirmed'), T('App 重开后正在核对是否仍是原进程', 'Checking it is the same process after reopen')],
+      stopped: ['idle', T('已停止（用户操作）', 'Stopped by user')]
+    }[d.svc];
+    rows.push([T('后台服务', 'Service'), ...svc]);
+
+    let auto;
+    if (d.svc === 'stopped') auto = ['idle', T('不适用', 'Not applicable')];
+    else if (d.fail === '3' && (d.svc === 'afterAuth' || d.svc === 'hung')) auto = ['bad', T('已暂停 · 连续失败 3 次', 'Paused · 3 failures in a row')];
+    else if (d.svc === 'hung') auto = d.probe === '3' ? ['run', T('正在自动重启', 'Restarting now'), T('重启预算已用 ' + d.fail + ' / 3', 'Restart budget ' + d.fail + ' / 3')] : ['warn', T('等待下一次健康检查', 'Waiting for next check'), T('连续 3 次无响应才会重启', 'Restarts after 3 failed checks')];
+    else if (d.svc === 'afterAuth') auto = ['warn', T('不会自动重启', 'No automatic restart'), T('进程已退出，需要手动启动', 'The process ended; start it manually')];
+    else if (d.svc === 'starting') auto = ['run', T('启动中', 'In progress')];
+    else auto = ['good', T('保活中', 'Watching')];
+    rows.push([T('自动恢复', 'Auto-recovery'), ...auto]);
+
+    const web = {
+      ok: ['good', T('正常', 'OK')], crash: ['bad', T('渲染进程崩溃', 'Renderer crashed')],
+      oom: ['warn', T('被系统回收', 'Closed by system')], old: ['warn', T('版本过旧', 'Outdated')], init: ['bad', T('无法启动', 'Cannot start')]
+    }[d.web];
+    rows.push([T('网页内核', 'WebView'), ...web, 'WebView 142.0.7444.62']);
+
+    let page;
+    if (d.svc === 'unknown' || (d.svc === 'afterAuth' && d.src === 'recovered')) page = ['good', T('已保留，可接回', 'Kept, can resume')];
+    else if (d.web !== 'ok' || d.svc === 'afterAuth' || d.svc === 'beforeAuth') page = ['warn', T('已关闭，需重新打开', 'Closed; reopen needed'), T('对话记录保存在服务端', 'Conversations are stored by the service')];
+    else if (d.svc === 'starting') page = ['idle', T('尚未打开', 'Not opened yet')];
+    else page = ['good', T('已打开', 'Open')];
+    rows.push([T('对话页面', 'Page'), ...page]);
+
+    const svcDown = !['running', 'hung'].includes(d.svc);
+    let net;
+    if (svcDown) net = ['idle', T('不适用（服务不在）', 'N/A (service down)')];
+    else if (d.svc === 'hung') net = ['bad', T('连接被拒绝', 'Connection refused')];
+    else net = {
+      ok: ['good', T('正常', 'OK')], refused: ['bad', T('连接被拒绝', 'Connection refused'), 'ERROR_CONNECT (-6)'],
+      timeout: ['bad', T('连接超时', 'Timed out'), 'ERROR_TIMEOUT (-8)'], auth: ['warn', T('认证失效', 'Sign-in expired'), T('HTTP 401 · 已自动重试 1 次', 'HTTP 401 · retried once')],
+      http: ['bad', 'HTTP 502'], authRefresh: ['warn', T('凭据刷新失败', 'Credential refresh failed'), 'AUTH_EXCHANGE_TIMEOUT']
+    }[d.net];
+    rows.push([T('连接', 'Connection'), ...net]);
+    return rows;
+  }
+
+  const L = {
+    zh: { top: '对话', back: '返回', state: '当前状态', more: '更多操作', detail: '技术详情', detailS: '入口、退出码、发生时间与内核版本', copy: '复制详情',
+      logs: '下载错误记录', logsS: '打开诊断页导出日志', browser: '在系统浏览器中打开', browserS: '用外部浏览器继续这次对话',
+      browserOff: '服务未就绪，暂不可用', recovery: '插件与安全启动', recoveryS: '回启动页卸载插件或以安全模式启动',
+      act: { home: '返回启动页', recheck: '重新验证', reload: '重新打开', store: '更新 WebView', browser: '在系统浏览器中打开', recovery: '查看原因与修复', logs: '下载错误记录', wait: '正在重启…' },
+      busy: { recheck: '正在验证…', reload: '正在打开…' },
+      toast: { copied: '已复制技术详情', logs: '（模拟）打开诊断页导出日志', home: '（模拟）回到启动页', store: '（模拟）打开应用商店 WebView 页面',
+        browser: '（模拟）已在系统浏览器打开', off: '服务未就绪，浏览器打开不可用', recovery: '（模拟）打开启动恢复页', still: '仍未恢复，页面继续保留', fail: '仍然无法打开，请回启动页查看日志' },
+      ok: '已恢复，对话继续', healthy: ['一切正常', '当前组合不会触发错误面板，对话页照常显示。'] },
+    en: { top: 'Conversation', back: 'Back', state: 'Current state', more: 'More actions', detail: 'Technical details', detailS: 'Source, exit code, time, engine version', copy: 'Copy details',
+      logs: 'Download error logs', logsS: 'Export logs from Diagnostics', browser: 'Open in system browser', browserS: 'Continue in an external browser',
+      browserOff: 'Unavailable until the service is ready', recovery: 'Plugins and safe mode', recoveryS: 'Remove plugins or start safely from the start page',
+      act: { home: 'Back to start page', recheck: 'Check again', reload: 'Reopen', store: 'Update WebView', browser: 'Open in system browser', recovery: 'Review and repair', logs: 'Download error logs', wait: 'Restarting…' },
+      busy: { recheck: 'Checking…', reload: 'Opening…' },
+      toast: { copied: 'Details copied', logs: '(Mock) Opened Diagnostics', home: '(Mock) Returned to start page', store: '(Mock) Opened WebView store page',
+        browser: '(Mock) Opened in browser', off: 'Not available until the service is ready', recovery: '(Mock) Opened startup recovery', still: 'Not recovered yet. The page stays kept.', fail: 'Still cannot open. Check logs on the start page.' },
+      ok: 'Recovered. Conversation continues.', healthy: ['All good', 'This combination shows no error panel.'] }
+  };
+
+  /* 常见情景预设：标签 + 六维取值。 */
+  const P = [
+    ['对话中途崩溃', { svc: 'afterAuth', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'ok', net: 'ok' }, '服务'],
+    ['反复崩溃 3 次', { svc: 'afterAuth', code: '139', fail: '3', probe: '1', src: 'fresh', web: 'ok', net: 'ok' }],
+    ['卡死无响应', { svc: 'hung', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'ok', net: 'ok' }],
+    ['卡死 → 自动重启', { svc: 'hung', code: '137', fail: '1', probe: '3', src: 'fresh', web: 'ok', net: 'ok' }],
+    ['重开 App · 已退出', { svc: 'afterAuth', code: '143', fail: '1', probe: '1', src: 'recovered', web: 'ok', net: 'ok' }],
+    ['重开 App · 待确认', { svc: 'unknown', code: '137', fail: '1', probe: '1', src: 'recovered', web: 'ok', net: 'ok' }],
+    ['正在启动', { svc: 'starting', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'ok', net: 'ok' }],
+    ['启动时就退出', { svc: 'beforeAuth', code: '1', fail: '1', probe: '1', src: 'fresh', web: 'ok', net: 'ok' }],
+    ['手动停止', { svc: 'stopped', code: '143', fail: '1', probe: '1', src: 'fresh', web: 'ok', net: 'ok' }],
+    ['渲染器崩溃', { svc: 'running', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'crash', net: 'ok' }, '网页内核'],
+    ['内存回收', { svc: 'running', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'oom', net: 'ok' }],
+    ['内核过旧', { svc: 'running', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'old', net: 'ok' }],
+    ['内核无法启动', { svc: 'running', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'init', net: 'ok' }],
+    ['崩溃 + 服务也退出', { svc: 'afterAuth', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'crash', net: 'ok' }],
+    ['连接被拒绝', { svc: 'running', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'ok', net: 'refused' }, '连接'],
+    ['连接超时', { svc: 'running', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'ok', net: 'timeout' }],
+    ['认证失效', { svc: 'running', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'ok', net: 'auth' }],
+    ['HTTP 5xx', { svc: 'running', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'ok', net: 'http' }],
+    ['凭据刷新失败', { svc: 'running', code: '137', fail: '1', probe: '1', src: 'fresh', web: 'ok', net: 'authRefresh' }]
+  ];
+
+  const sel = { svc: $('dSvc'), code: $('dCode'), fail: $('dFail'), probe: $('dProbe'), src: $('dSrc'), web: $('dWeb'), net: $('dNet') };
+  let d = Object.assign({}, P[0][1]), lang = 'zh', view = 'new', busy = false, attempts = 0, toastTimer;
+
+  function toast(msg) {
+    const el = $('toast'); el.textContent = msg; el.classList.add('on');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), 2200);
+  }
+
+  function setBtn(btn, kind) {
+    const l = L[lang];
+    btn.dataset.kind = kind;
+    btn.disabled = busy || kind === 'wait';
+    const spinning = (busy && btn.id === 'pri' && l.busy[kind]) || kind === 'wait';
+    btn.innerHTML = spinning ? '<span class="spin" aria-hidden="true"></span>' + (l.busy[kind] || l.act[kind]) : l.act[kind];
+  }
+
+  function syncDims() {
+    Object.keys(sel).forEach((k) => { sel[k].value = d[k]; });
+    // 只在相关时启用：退出码只对已退出；失败次数只对退出 / 卡死；来源只对鉴权后退出 / 未确认。
+    sel.code.disabled = !['afterAuth', 'beforeAuth'].includes(d.svc);
+    sel.fail.disabled = !['afterAuth', 'hung'].includes(d.svc);
+    sel.probe.disabled = d.svc !== 'hung';
+    sel.src.disabled = d.svc !== 'afterAuth';
+    sel.net.disabled = !['running'].includes(d.svc);
+    document.querySelectorAll('#presetSeg button[data-i]').forEach((b) => {
+      const p = P[+b.dataset.i][1];
+      b.setAttribute('aria-pressed', String(Object.keys(p).every((k) => p[k] === d[k])));
+    });
+  }
+
+  function render() {
+    const key = classify(d), k = key && K[key], l = L[lang];
+    root.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    syncDims();
+    $('okTip').classList.add('hide');
+
+    // 判定框
+    const tagName = { paint: '仅重绘', behave: '需改行为', keep: '沿用' };
+    $('verdict').innerHTML = k
+      ? `<dt>结论</dt><dd>${key}<span class="tag ${k.kind}">${tagName[k.kind]}</span></dd>` +
+        `<dt>代码入口</dt><dd><code>${k.entry}</code></dd>` +
+        `<dt>现状（按代码推断）</dt><dd>${k.now}</dd>` +
+        `<dt>新方案</dt><dd>${k.plan}</dd>` +
+        (d.svc !== 'running' && (d.web !== 'ok' || d.net !== 'ok') ? '<dt>组合说明</dt><dd>服务层结论优先；内核 / 连接问题只在状态表中列出。</dd>' : '')
+      : '<dt>结论</dt><dd>无错误：对话页正常显示。</dd>';
+
+    const ghost = !k || k.ghost || (view === 'old' && !k.old);
+    $('web').style.filter = k && !k.ghost ? 'blur(2px)' : 'none';
+    $('vNew').classList.toggle('hide', ghost || view !== 'new');
+    $('vOld').classList.toggle('hide', ghost || view !== 'old');
+    $('vGhost').classList.toggle('hide', !ghost || !k);
+    if (ghost && k) {
+      if (k.ghost) { $('gTitle').textContent = k.ghostT; $('gText').textContent = k.ghostS; }
+      else { $('gTitle').textContent = '现状：不显示错误面板'; $('gText').textContent = k.now; }
+    }
+    if (!k || ghost) return;
+
+    // 新方案
+    const c = k[lang];
+    $('vNew').classList.toggle('dim', !!k.suspended);
+    $('topTitle').textContent = l.top; $('back').setAttribute('aria-label', l.back);
+    $('hero').dataset.tone = k.tone; $('hIcon').innerHTML = ICON[k.icon];
+    $('hTitle').textContent = c.t; $('hSub').textContent = c.s;
+    setBtn($('pri'), k.pri); setBtn($('sec'), k.sec);
+    $('lblState').textContent = l.state;
+    $('stateCard').innerHTML = stateRows(d, lang).map(([name, dot, value, note]) =>
+      `<div class="srow"><span class="dot ${dot}" aria-hidden="true"></span><span class="sk">${name}</span>` +
+      `<span class="sv">${value}${note ? '<small>' + note + '</small>' : ''}</span></div>`).join('');
+    $('lblMore').textContent = l.more;
+    $('tDetail').textContent = l.detail; $('sDetail').textContent = l.detailS;
+    $('detailText').textContent = `${k.entry}\n${d.svc === 'afterAuth' || d.svc === 'beforeAuth' ? 'exit=' + d.code + '  ' : ''}failures=${d.fail}/3  ${d.svc === 'hung' ? 'probe=' + d.probe + '/3  ' : ''}source=${d.src}\n2026-11-02 19:08:41\n\n${BROWSER_INFO}`;
+    $('copy').textContent = l.copy;
+    $('tLogs').textContent = l.logs; $('sLogs').textContent = l.logsS;
+    $('logs').classList.toggle('hide', k.sec === 'logs');
+    $('tBrowser').textContent = l.browser;
+    $('sBrowser').textContent = k.suspended ? l.browserOff : l.browserS;
+    $('browser').setAttribute('aria-disabled', k.suspended ? 'true' : 'false');
+    $('browser').classList.toggle('hide', k.sec === 'browser');
+    $('tRecovery').textContent = l.recovery; $('sRecovery').textContent = l.recoveryS;
+    $('recovery').classList.toggle('hide', k.pri === 'recovery');
+
+    // 现状
+    if (k.old) {
+      $('oTitle').textContent = k.old[0];
+      $('oDetail').textContent = k.old[1] + '\n\n' + BROWSER_INFO;
+      $('oBrowser').disabled = !!k.suspended;
+    }
+  }
+
+  function recovered() {
+    $('vNew').classList.add('hide'); $('vOld').classList.add('hide');
+    $('web').style.filter = 'none';
+    const tip = $('okTip'); tip.textContent = L[lang].ok; tip.classList.remove('hide');
+    setTimeout(() => render(), 2400);
+  }
+
+  function act(kind) {
+    const k = K[classify(d)], t = L[lang].toast;
+    if (!k) return;
+    if (['home', 'store', 'recovery', 'logs'].includes(kind)) return toast(t[kind]);
+    if (kind === 'browser') return toast(k.suspended ? t.off : t.browser);
+    if (kind === 'wait') return;
+    busy = true; render();
+    setTimeout(() => {
+      busy = false; attempts++;
+      const ok = k.recoverAfter ? attempts >= k.recoverAfter : !!k.recover;
+      if (ok) { attempts = 0; recovered(); }
+      else { render(); toast(k.suspended ? t.still : t.fail); }
+    }, 1300);
+  }
+
+  $('pri').onclick = () => act($('pri').dataset.kind);
+  $('sec').onclick = () => act($('sec').dataset.kind);
+  $('back').onclick = () => act('home');
+  $('recovery').onclick = () => act('home');
+  $('browser').onclick = () => act('browser');
+  $('logs').onclick = () => act('logs');
+  $('copy').onclick = () => { try { navigator.clipboard && navigator.clipboard.writeText($('detailText').textContent); } catch (e) {} toast(L[lang].toast.copied); };
+  $('detailRow').onclick = () => {
+    const open = $('detailRow').getAttribute('aria-expanded') !== 'true';
+    $('detailRow').setAttribute('aria-expanded', String(open));
+    $('detailBox').classList.toggle('hide', !open);
+  };
+
+  // 情景按钮（分组标题 + 按钮）
+  const seg = $('presetSeg');
+  P.forEach(([name, , group], i) => {
+    if (group) { const g = document.createElement('span'); g.className = 'grp'; g.textContent = group; seg.appendChild(g); }
+    const b = document.createElement('button'); b.dataset.i = i; b.textContent = name; seg.appendChild(b);
+  });
+  seg.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-i]'); if (!b) return;
+    d = Object.assign({}, P[+b.dataset.i][1]); attempts = 0; busy = false; render();
+  });
+  Object.keys(sel).forEach((k) => sel[k].addEventListener('change', () => { d[k] = sel[k].value; attempts = 0; busy = false; render(); }));
+
+  document.querySelectorAll('[data-ctl]:not([data-ctl="preset"])').forEach((g) => g.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    g.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    const ctl = g.dataset.ctl, v = b.dataset.v;
+    if (ctl === 'theme') root.dataset.theme = v;
+    if (ctl === 'lang') lang = v;
+    if (ctl === 'view') view = v;
+    if (ctl === 'device') { root.dataset.device = v; requestAnimationFrame(fit); }
+    render();
+  }));
+  document.querySelectorAll('[data-toggle]').forEach((b) => b.addEventListener('click', () => {
+    const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(on));
+    if (b.dataset.toggle === 'scale') root.dataset.scale = on ? '1.3' : '1';
+    if (b.dataset.toggle === 'short') root.dataset.short = String(on);
+    fit();
+  }));
+
+  /* 平板外框按窗口等比缩小，坐标仍按 dp 布局。 */
+  function fit() {
+    const phone = document.querySelector('.phone'), stage = $('stage');
+    phone.style.transform = 'none';
+    const w = phone.offsetWidth, h = phone.offsetHeight;
+    const side = window.innerWidth > 760 ? 380 + 32 : 0;
+    const k = Math.min(1, (window.innerWidth - side - 48) / w, root.dataset.device === 'phone' ? 1 : (window.innerHeight - 56) / h);
+    phone.style.transform = `scale(${k})`;
+    stage.style.width = `${w * k}px`; stage.style.height = `${h * k}px`;
+  }
+  window.addEventListener('resize', fit);
+
+  /* 预设：preview.html#preset=0&device=tl&theme=dark&lang=en&view=old，或直接写维度 svc=hung&fail=2 */
+  const q = new URLSearchParams(location.hash.slice(1));
+  if (q.has('preset')) d = Object.assign({}, P[+q.get('preset')][1]);
+  Object.keys(sel).forEach((k) => { if (q.has(k)) d[k] = q.get(k); });
+  ['device', 'view', 'theme', 'lang'].forEach((k) => {
+    if (!q.has(k)) return;
+    const b = document.querySelector(`[data-ctl="${k}"] button[data-v="${q.get(k)}"]`); if (b) b.click();
+  });
+  fit();
+  render();
+})();
+</script>
+</body>
+</html>

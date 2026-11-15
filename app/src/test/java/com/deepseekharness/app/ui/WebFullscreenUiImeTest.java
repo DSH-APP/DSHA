@@ -77,6 +77,7 @@ public final class WebFullscreenUiImeTest {
   private static final class Content extends FrameLayout {
     boolean focused = true;
     final List<Integer> bottoms = new ArrayList<>();
+    int layoutRequests;
 
     Content(Context context) {
       super(context);
@@ -91,6 +92,12 @@ public final class WebFullscreenUiImeTest {
     public void setPadding(int left, int top, int right, int bottom) {
       super.setPadding(left, top, right, bottom);
       if (bottoms != null) bottoms.add(bottom);
+    }
+
+    @Override
+    public void requestLayout() {
+      layoutRequests++;
+      super.requestLayout();
     }
   }
 
@@ -128,6 +135,61 @@ public final class WebFullscreenUiImeTest {
 
   private void apply(int keyboard) {
     assertTrue(ViewCompat.dispatchApplyWindowInsets(content, insets(keyboard)).isConsumed());
+  }
+
+  @Test
+  public void browserContentStartsAfterOneMaximumStatusCutoutCaptionInset() {
+    View browser = new View(host.get());
+    content.addView(browser, new FrameLayout.LayoutParams(-1, -1));
+    WindowInsetsCompat top =
+        new WindowInsetsCompat.Builder(insets(0))
+            .setInsets(WindowInsetsCompat.Type.statusBars(), Insets.of(0, 38, 0, 0))
+            .setInsetsIgnoringVisibility(
+                WindowInsetsCompat.Type.statusBars(), Insets.of(0, 38, 0, 0))
+            .setInsets(WindowInsetsCompat.Type.displayCutout(), Insets.of(3, 44, 5, 0))
+            .setInsetsIgnoringVisibility(
+                WindowInsetsCompat.Type.displayCutout(), Insets.of(3, 44, 5, 0))
+            .build();
+    assertTrue(ViewCompat.dispatchApplyWindowInsets(content, top).isConsumed());
+    // Repeated dispatch does not add bar+cutout+caption or preserve old padding.
+    assertTrue(ViewCompat.dispatchApplyWindowInsets(content, top).isConsumed());
+    content.measure(
+        View.MeasureSpec.makeMeasureSpec(400, View.MeasureSpec.EXACTLY),
+        View.MeasureSpec.makeMeasureSpec(800, View.MeasureSpec.EXACTLY));
+    content.layout(0, 0, 400, 800);
+    assertEquals(44, browser.getTop());
+    assertEquals(3, browser.getLeft());
+    assertEquals(786, browser.getBottom());
+    assertEquals(44, content.getPaddingTop());
+  }
+
+  @Test
+  public void rotationMovesCutoutToSideWithoutRetainingPortraitTopSpace() {
+    apply(0);
+    View browser = new View(host.get());
+    content.addView(browser, new FrameLayout.LayoutParams(-1, -1));
+    WindowInsetsCompat landscape =
+        new WindowInsetsCompat.Builder()
+            .setInsets(WindowInsetsCompat.Type.statusBars(), Insets.of(0, 24, 0, 0))
+            .setInsetsIgnoringVisibility(
+                WindowInsetsCompat.Type.statusBars(), Insets.of(0, 24, 0, 0))
+            .setInsets(WindowInsetsCompat.Type.displayCutout(), Insets.of(44, 0, 0, 0))
+            .setInsetsIgnoringVisibility(
+                WindowInsetsCompat.Type.displayCutout(), Insets.of(44, 0, 0, 0))
+            .setInsets(WindowInsetsCompat.Type.navigationBars(), Insets.of(0, 0, 0, 14))
+            .setInsets(WindowInsetsCompat.Type.ime(), Insets.NONE)
+            .build();
+    content.layout(0, 0, 800, 400);
+    assertTrue(ViewCompat.dispatchApplyWindowInsets(content, landscape).isConsumed());
+    content.measure(
+        View.MeasureSpec.makeMeasureSpec(800, View.MeasureSpec.EXACTLY),
+        View.MeasureSpec.makeMeasureSpec(400, View.MeasureSpec.EXACTLY));
+    content.layout(0, 0, 800, 400);
+    assertEquals(24, browser.getTop());
+    assertEquals(44, browser.getLeft());
+    assertEquals(800, browser.getRight());
+    assertEquals(386, browser.getBottom());
+    assertEquals(24, content.getPaddingTop());
   }
 
   private WindowInsetsAnimationCompat prepare() {
@@ -431,6 +493,58 @@ public final class WebFullscreenUiImeTest {
   }
 
   @Test
+  public void duplicateInsetsBeforeAckDoNotSendAnIdenticalTailFrame() {
+    host.get().autoAck = false;
+    apply(180);
+    long first = host.get().frames.get(0).optLong("frameId");
+    for (int frame = 0; frame < 120; frame++) apply(180);
+    assertEquals(1, host.get().frames.size());
+    WebFullscreenUi.acknowledgeIme(host.get(), host.get().identity, first, true);
+    assertEquals("no duplicate IPC after the renderer becomes ready", 1, host.get().frames.size());
+    // The page can cancel its composer independently on focus/session changes. The next
+    // real native dispatch must still be delivered after acknowledgment, even at this size.
+    apply(180);
+    assertEquals(2, host.get().frames.size());
+  }
+
+  @Test
+  public void repeatedPendingGeometryKeepsLatestAndEndPhaseIsNeverSuppressed() {
+    host.get().autoAck = false;
+    apply(0);
+    long first = host.get().frames.get(0).optLong("frameId");
+    WindowInsetsAnimationCompat animation = prepare();
+    progress(animation, 100);
+    for (int frame = 0; frame < 120; frame++) progress(animation, 100);
+    WebFullscreenUi.acknowledgeIme(host.get(), host.get().identity, first, true);
+    assertEquals(2, host.get().frames.size());
+    var current = host.get().frames.get(1);
+    assertEquals("frame", current.optString("phase"));
+    assertEquals(668, current.optInt("height"));
+    callback.onEnd(animation);
+    for (int frame = 0; frame < 120; frame++) apply(100);
+    WebFullscreenUi.acknowledgeIme(
+        host.get(), host.get().identity, current.optLong("frameId"), true);
+    assertEquals(3, host.get().frames.size());
+    var end = host.get().frames.get(2);
+    assertEquals("end", end.optString("phase"));
+    assertEquals(668, end.optInt("height"));
+    WebFullscreenUi.acknowledgeIme(host.get(), host.get().identity, end.optLong("frameId"), true);
+    assertEquals(3, host.get().frames.size());
+  }
+
+  @Test
+  public void latestGeometryCanReturnToInFlightSizeBeforeItsAcknowledgment() {
+    host.get().autoAck = false;
+    apply(100);
+    long first = host.get().frames.get(0).optLong("frameId");
+    apply(200);
+    apply(100);
+    WebFullscreenUi.acknowledgeIme(host.get(), host.get().identity, first, true);
+    assertEquals(2, host.get().frames.size());
+    assertEquals(668, host.get().frames.get(1).optInt("height"));
+  }
+
+  @Test
   public void manyActualFramesDoNotChangeNativeSizeOrTransformTheWholePage() {
     apply(0);
     WindowInsetsAnimationCompat animation = prepare();
@@ -471,5 +585,26 @@ public final class WebFullscreenUiImeTest {
     assertEquals(count, content.bottoms.size());
     callback.onEnd(animation);
     assertEquals(300, content.getPaddingBottom());
+  }
+
+  /**
+   * #190 回归：回前台且 root insets 报告 IME 不可见时，必须清掉键盘边距并强制
+   * 一次布局（等价于 workaround 里那次真实的 IME 高度变化），让 WebView 的
+   * 布局视口从键盘占位的矮视口收敛。Robolectric 的 getRootWindowInsets 不跟随
+   * dispatch、恒报告不可见，因此本用例锁定的是 reset 分支本身及其 requestLayout。
+   */
+  @Test
+  public void refocusWithHiddenImeReleasesKeyboardAndForcesRelayout() {
+    apply(300);
+    assertEquals(300, content.getPaddingBottom());
+    focus(false);
+    assertEquals(14, content.getPaddingBottom());
+    // Robolectric 环境 root insets 恒不可见：focus(true) 应走 reset 分支。
+    int layoutsBefore = content.layoutRequests;
+    focus(true);
+    assertEquals(14, content.getPaddingBottom());
+    assertTrue(
+        "回前台且 IME 不可见时必须强制一次布局（等价于 workaround 里的真实 resize）",
+        content.layoutRequests > layoutsBefore);
   }
 }

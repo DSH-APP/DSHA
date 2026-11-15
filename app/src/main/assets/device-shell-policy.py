@@ -333,7 +333,7 @@ def valid_vscreen_identity(value):
 
 
 def execute(plan, shell, result_class):
-    if not isinstance(plan, dict) or plan.get('version') != 1 or plan.get('kind') not in ('READ', 'FILE', 'STOP', 'VIRTUAL_SCREEN'):
+    if not isinstance(plan, dict) or plan.get('version') != 1 or plan.get('kind') not in ('READ', 'FILE', 'STOP', 'VIRTUAL_SCREEN', 'SHELL'):
         raise Blocked('原生设备策略没有授权此操作')
     if plan['kind'] == 'VIRTUAL_SCREEN':
         argv = plan.get('argv')
@@ -356,6 +356,22 @@ def execute(plan, shell, result_class):
                 or plan.get('su', False)):
             raise Blocked('虚拟屏启动参数无法核验')
         return shell(argv_command(argv))
+    if plan['kind'] == 'SHELL':
+        # 用户显式选择放宽/完全放宽后的 root 原始命令。guest 只核对协议形态与 root 身份，
+        # 档位与不可逆操作判定由 App 进程负责；SMS 原生闸门在 guest 侧再守一道。
+        command = plan.get('command')
+        if (not isinstance(command, str) or not command
+                or len(command.encode('utf-8')) > 16384 or '\0' in command
+                or plan.get('mode') not in ('relaxed', 'full')
+                or plan.get('rootOnly') is not True
+                or plan.get('su') is not True):
+            raise Blocked('ROOT_SHELL_PLAN_UNVERIFIED')
+        lowered = command.lower()
+        if ('content://sms' in lowered or 'content://mms' in lowered
+                or 'com.android.providers.telephony' in lowered
+                or ('content query' in lowered and 'sms' in lowered)):
+            raise Blocked('短信读取只允许单条 content query')
+        return shell(command)
     # ADB may itself be privileged; SMS file paths never bypass native query authorization.
     validate_root_reads(plan, shell)
     if plan['kind'] == 'STOP':

@@ -30,6 +30,7 @@ public final class WebDownloadModel extends AndroidViewModel {
   private String shareMime = "application/octet-stream";
   private Uri shareUri;
   private java.util.function.BiConsumer<Boolean, String> completion;
+  private String queuedTaskId;
 
   public WebDownloadModel(Application application) {
     super(application);
@@ -103,6 +104,20 @@ public final class WebDownloadModel extends AndroidViewModel {
       boolean share,
       String mime,
       java.util.function.BiConsumer<Boolean, String> complete) {
+    return download(base, url, cookie, filename, expected, supplied, share, mime, complete, false);
+  }
+
+  public synchronized boolean download(
+      String base,
+      String url,
+      String cookie,
+      String filename,
+      long expected,
+      InputStream supplied,
+      boolean share,
+      String mime,
+      java.util.function.BiConsumer<Boolean, String> complete,
+      boolean gallery) {
     if (busy || staged != null || pickerOpen) {
       close(supplied);
       return false;
@@ -115,18 +130,19 @@ public final class WebDownloadModel extends AndroidViewModel {
           new State("error", com.deepseekharness.app.util.UiText.text("此下载不是当前本机服务提供的文件"), 0, -1));
       return false;
     }
+    String checkedMime = WebTransferPolicy.mimeType(mime);
+    if (gallery && !checkedMime.startsWith("image/")) {
+      close(supplied);
+      return false;
+    }
     busy = true;
     cancelled = false;
     shareRequested = share;
-    shareMime = WebTransferPolicy.mimeType(mime);
+    shareMime = checkedMime;
+    queuedTaskId = null;
     completion = complete;
     name = WebTransferPolicy.fileName(filename);
-    state.setValue(
-        new State(
-            "downloading",
-            com.deepseekharness.app.util.UiText.format("正在下载 %s", name),
-            0,
-            expected));
+    state.setValue(new State("downloading", downloadMessage(supplied != null), 0, expected));
     new Thread(
             () -> {
               File file = null;
@@ -192,27 +208,43 @@ public final class WebDownloadModel extends AndroidViewModel {
                       last = android.os.SystemClock.elapsedRealtime();
                       state.postValue(
                           new State(
-                              "downloading",
-                              com.deepseekharness.app.util.UiText.format("正在下载 %s", name),
-                              bytes,
-                              total));
+                              "downloading", downloadMessage(supplied != null), bytes, total));
                     }
                   }
                   out.getFD().sync();
                 }
                 checkCancelled();
                 WebTransferPolicy.checkSize(bytes, total, WebTransferPolicy.DOWNLOAD_LIMIT, true);
-                synchronized (this) {
-                  checkCancelled();
-                  staged = file;
+                if (gallery) {
+                  // The page-backed stream is now complete and fsynced. Only this
+                  // worker may copy it into the persistent engine; no Blob/path
+                  // originating from JS is accepted as a native source path.
+                  queuedTaskId =
+                      com.deepseekharness.app.transfer.DownloadEngine.get(getApplication())
+                          .enqueueLocal(file, name, shareMime, "gallery");
+                  file.delete();
                   file = null;
+                  result =
+                      new State(
+                          "queued",
+                          com.deepseekharness.app.util.UiText.choose(
+                              "已加入下载任务，完成后保存至相册",
+                              "Queued; the image will be saved to Gallery when complete"),
+                          bytes,
+                          bytes);
+                } else {
+                  synchronized (this) {
+                    checkCancelled();
+                    staged = file;
+                    file = null;
+                  }
+                  result =
+                      new State(
+                          "ready",
+                          com.deepseekharness.app.util.UiText.text("下载完成，选择保存位置"),
+                          bytes,
+                          bytes);
                 }
-                result =
-                    new State(
-                        "ready",
-                        com.deepseekharness.app.util.UiText.text("下载完成，选择保存位置"),
-                        bytes,
-                        bytes);
               } catch (Exception error) {
                 result = failure(error);
               } finally {
@@ -359,6 +391,15 @@ public final class WebDownloadModel extends AndroidViewModel {
     if (cancelled) throw new IOException(com.deepseekharness.app.util.UiText.text("已取消"));
   }
 
+  private String downloadMessage(boolean temporaryPageFile) {
+    return com.deepseekharness.app.util.UiText.format("正在下载 %s", name)
+        + (temporaryPageFile
+            ? com.deepseekharness.app.util.UiText.choose(
+                "\n网页临时文件：暂存完成前请保持网页；中断后需重新导出。",
+                "\nTemporary page file: keep this page open until staging completes; interrupted transfers must be exported again.")
+            : "");
+  }
+
   private State failure(Exception error) {
     return new State(
         "error",
@@ -381,6 +422,7 @@ public final class WebDownloadModel extends AndroidViewModel {
                       : value;
               state.setValue(result);
               if (result.phase().equals("done")) complete(true, "saved");
+              else if (result.phase().equals("queued")) complete(true, "queued:" + queuedTaskId);
               else if (result.phase().equals("error"))
                 complete(false, cancelled ? "AbortError" : result.message());
             });

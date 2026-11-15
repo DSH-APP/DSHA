@@ -1,6 +1,6 @@
 # Installing, updating, and sharing plugins
 
-> Translation verified: 2026-10-21. Source baseline: released F10 `087724c` and the current Chinese build190/F13 maintenance page and production call chain. F11 is an unpublished local checkpoint, not another released version. This page describes the DSHA entry points for DSH `0.2.1-rc.2`; it adds no new version, final test total, or device validation. See the [English README](../../README.en.md) and [release introduction](release-introduction.md) for the delivery owner's final identity and executed scope. The [F12 record](releases/v0.2.1-rc.2-build190-fix12-20261021.md) retains its published historical identity. An older device report is not an acceptance receipt for a new APK. The [F13 record](releases/v0.2.1-rc.2-build190-fix13-20261021.md) is the delivery owner's final software/artifact entry; this page does not prefill the final version or formal totals.
+> Baseline reviewed on 2026-10-21 against the build190/F13 source. Current publication identity is build356 / DSH `0.2.2-rc.1` / single Standard; F10–F13 and build190 records are historical and not this build's evidence. This page describes DSHA entry points for DSH 0.2.2-rc.1; final identity, software and APK results are in the [English README](../../README.en.md) and this CI / Release receipt. It does not prefill test totals or device acceptance.
 
 Paste a link into plugin management, import a local package through the system file picker, or open a DSHA installation link supplied by a website. The app resolves the actual package and checks its format, paths, name/version, actual dependencies, and digests before the plugin transaction commits and enables it. The current production plugin flow does not require a native review confirmation. Browsing a website does not install a plugin: installation continues only after the user opens its installation entry point. Restart Web normally when the app requests it after an update or a toggle.
 
@@ -39,6 +39,10 @@ A plugin export includes the selected user plugin's real source, existing depend
 
 Removing a third-party plugin from a managed location removes that plugin's installation and registration while retaining chats, configuration, other plugins, shared dependencies, and the external import source. Export first if you need to retain it. Optional built-ins use toggles. Official core bundles can also be explicitly disabled, which may prevent Web from starting; re-enable them in the native plugin page or use the recovery workbench. Do not attempt to repair a core bundle by deleting it or replacing it with a third-party package.
 
+The temporary built-in fix plugin `dsh-fs-read-hint` (read hint) appends the same-named path this session did read (for example the main checkout instead of a worktree copy) when DSH refuses a change with `file has not been read`. It changes only the error text and never allows a change; it can be disabled or removed on its own, after which errors match upstream. Upstream tracking and removal criteria: [its page](fs-read-hint-plugin.md).
+
+The temporary built-in fix plugin `dsh-fs-search-scope` (search scope) makes glob skip nested git worktrees (`.agents/worktrees` and linked worktrees inside the search root) unless `path` points into one. Hidden and ignored files are still listed and DSHA required policy checks still run. It can be disabled or removed on its own, after which glob matches upstream. Removal criteria are on [its page](fs-search-scope-plugin.md).
+
 The package-proof implementation distinguishes DSHA-signed components, DSH-managed packages, and user plugins using proof supplied by the APK and the actual complete package contents. An npm scope, a `dsh-` prefix, a location inside the DSH installation tree, or writable `installation.dependencies` cannot elevate provenance. A package in that tree without managed proof is shown as user/unverified. Native management permits inspection, toggles, and export, but does not automatically update or remove it in that location. User plugins in a normal profile continue through the normal install/toggle/remove flow. See [plugin runtime and permissions](plugin-runtime-and-permissions.md) for the layers and backup rechecks.
 
 Discovery filters small manifests and actual patch bundles first, authenticates proof once per command/request, and deduplicates canonical directories without a cross-request stat cache. Actual Node Host complete FILE/mode/LINK, directory-member, and race proof uses asynchronous APIs with at most two content scans and 64 KiB read blocks. Removal fully rechecks the actual target before commit. Existing desktop fixture observations were about 0.65 seconds for two list calls and about 14 ms for an independent Worker HTTP ping while scans were pending. They apply only to those desktop inputs, not phone measurements or final performance guarantees; this page did not rerun that test.
@@ -52,6 +56,77 @@ dsha-plugin install @author/plugin@1.0.0
 ```
 
 An ordinary `npm install` does not automatically edit the DSH enabled-plugin list. `dsha-plugin` handles the actual candidate through the current plugin entry point. Do not modify a transaction scene with a bare shell to bypass the maintenance barrier.
+
+## The built-in portrait-adaptation plugin `dsh-web-mobile`: default-enabled again from build336 (device acceptance pending)
+
+> Decision: on 2026-11-06 the user confirmed the upstream portrait fixes and asked to restore the
+> built-in mobile plugin under the original "restore default-enabled" gate. From build336 the plugin
+> is synced to 3.3.1 (host 0.2.2 adaptation) and default-enabled again. The build327 default-disable,
+> the incident cause and the over-the-top migration stay in the
+> [build327 record](releases/v0.2.1-rc.5-build327-web-mobile-default-disabled-20261105.md); the sync,
+> patch selection and verification are recorded in the
+> [build336 record](releases/v0.2.1-rc.5-build336-web-mobile-3.3.1-20261106.md).
+> On 2026-11-09 it was synced again to upstream 3.3.5 (main `646fe837`, tag v3.3.5 = `14ecfccf`) with
+> the same patch policy; the delta, retired members and acceptance boundary are recorded in the
+> [build351 record](releases/v0.2.1-rc.5-build351-web-mobile-3.3.5-20261109.md).
+
+### Why it can be restored
+
+- Upstream 3.3.1 (2026-11-06, commit `4e71eb67de7dac9d8b2572757c81e47aa32a32fb`) explicitly says
+  "adapted to host 0.2.2: fixed the full-page blank screen, clipped header toggle, missing file
+  button, overlapping tabs, and the file-panel tab strip covered by the header"; its minimum host is
+  exactly the locked 0.2.2-rc.1.
+- Its peers match the locked runtime item by item (`@deepseek-ai/dsh-client-* >=0.2.2-rc.1 <0.3.0-0`,
+  `@deepseek-ai/cordis ^4.0.1`; the runtime ships 0.2.2-rc.1 and 4.1.0); `react` is an optional peer
+  — it is absent from the host runtime install tree and a required peer would make the host's
+  dependency gate report it missing.
+- The build325 gear contract (`DSHA_GEAR_FIT_V1`) and the build324 blank-screen path regressions stay
+  green; after restoring the default,
+  `tools/generate-builtin-plugins.py`, `tools/prepare-runtime-descriptor.py --write` and the
+  pre-release gates were rerun.
+- The build324 blank-screen root cause (the plugin depending on the mere existence of a host node) is
+  still covered by DSHA_GEAR_FIT_V1; the 3.3.1 host-0.2.2 adaptation does not restore any withdrawn
+  viewport experiment, and the local patch set does not replay the upstream-absorbed wide-touch rules.
+
+### Upstream 3.3.5 sync (2026-11-09, build351 candidate)
+
+- Synced from 3.3.1 (`4e71eb67`) to upstream main `646fe837440f9939228bdba0024d407eaac01128`
+  (2026-11-08; tag v3.3.5 = `14ecfccf5a6acb69e3a84229dee328d31801306f` plus three post-tag fixes),
+  37 commits. User-visible changes: plugin-page icon and localized title/description, the phone
+  "more views" entry, subagent-chip yielding, the drawer dim layer now painted by a frame
+  pseudo-element, full-screen gestures classified by direction (the 45% edge zones are gone), the
+  hero worktree row, plugin-page host layout restored, and hardened test gates.
+- The patch minimum is unchanged: server auth / safe area / `DSHA_GEAR_FIT_V1` gear geometry /
+  native file transfer / locales. The removed build336 patches (session-input V4, phone search,
+  shortcuts visible band, font-family row, backdrop press tint) are **not** replayed. Upstream
+  renamed `overlay-backdrop-fab` to `drawer-layer` (3 members); the old names are in the lock's
+  `retiredFiles`.
+- New `assets/icon.png` and `locale/{en,zh}.json` are installed through the managed table so the host
+  plugin card can read `package.json#icon` and `meta.title` / `meta.description` from
+  `locale/<lang>.json`; `lib/file-transfer.js` is still generated from
+  `tools/file-transfer/file-transfer.js` as a local-only additional member.
+- `runtime-descriptor` was recomputed to **`6f31f111`** on the merge tree with T130 (`4e8c80e0e`), 205 inputs.
+
+### Restore scope
+
+- [`builtin-plugins.json`](../../app/src/main/assets/builtin-plugins.json) no longer declares
+  `defaultDisabled` for `dsh-web-mobile`: clean installs and over-the-top updates are default-enabled;
+  plugin bytes are still rebuilt from the current APK's managed proof.
+- An explicit user disable always wins: while `node_modules/<name>.disabled` exists the registrar only
+  clears a stale enable record and never re-enables the plugin; the native Plugins page remains the
+  only enable/disable entry.
+- The default-disabled mechanism itself stays (`apply_default_disabled`, `apk-generation` and the
+  `<name>.enabled` generation record); the current registry has no `defaultDisabled: true` entry.
+
+### Device acceptance still required before release
+
+The old gate item 3 requires a real over-the-top install with no blank screen, no duplicated sidebar,
+no duplicated footer settings entry, and "default enabled after upgrade" itself verified. This
+repository change records only software-side results and the criteria reference; it does **not**
+pre-write device success. The user / main session must verify the build336 items on the device and
+append the receipt before release. If acceptance fails, reverting the one-line change in
+`builtin-plugins.json` restores the default-disabled state (plugin bytes may stay); the upstream sync
+does not need to be reverted.
 
 ## Workspace directory picker and service registration
 

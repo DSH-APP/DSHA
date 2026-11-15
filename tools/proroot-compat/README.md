@@ -96,3 +96,47 @@ leaf symlinks and an entry outside the framework directory must be rejected.
 Android vendor path hooks, Node, Python, Web authentication,
 normal stopping and both cold-loader modes still require authorized formal-package
 device checks. A successful proot fallback is not evidence that proroot works.
+
+## fcntl errno (2026-11-01)
+
+Disassembly of the locked v1.2.8 `libproroot-runtime.so` shows its exported
+`fcntl` calling `proroot_raw_syscall6`, which already returns `-1` with `errno`
+set, and then storing the negated result into `errno`. Every failure therefore
+becomes `1` (EPERM): lock contention (EAGAIN/EACCES), EBADF and EINVAL are lost.
+JDK `libnio` binds this legacy `fcntl@GLIBC_2.17` symbol, so
+`FileChannel.tryLock` throws "Operation not permitted" while another process
+holds the lock and Gradle's cross-process cache locks fail. glibc `fcntl64`
+does not pass through the vendor and is unaffected.
+
+The proxy now also exports `fcntl`. `F_DUPFD` / `F_DUPFD_CLOEXEC` still go to
+the vendor through `RTLD_NEXT`, keeping its drm/seat/netlink dup tracking;
+every other command is the plain kernel syscall with glibc errno semantics
+(success leaves `errno` unchanged). If the vendor symbol cannot be found the
+dup commands also use the kernel syscall instead of exiting. Vendor dup
+failures keep the vendor's EPERM. `tools/test-proroot-fcntl.py` reproduces the
+defect with a fake vendor and checks the proxy-first order (native LD_PRELOAD
+on GNU/Linux, dynamic `qemu-aarch64` inside a proroot guest).
+
+## renameat2 directory descriptors (2026-11-05, T56)
+
+The locked v1.2.8 runtime also exports `renameat2`. It passes both names through
+`do_translate` and, observably, ignores both directory descriptors: a relative
+name is resolved against the current directory. Measured in a proroot guest,
+descriptor-relative `renameat2(dirA, "f", dirB, "g", flags)` returns ENOENT, or
+renames `<cwd>/f` to `<cwd>/g` and reports success. `AT_FDCWD` names (absolute
+or cwd-relative) work. `renameat`, `linkat`, `unlinkat`, `mkdirat`, `symlinkat`, `openat` and
+`fstatat` resolve descriptors correctly. With `PROROOT_NO_SECCOMP=1` a raw
+`syscall(SYS_renameat2)` reaches the kernel unchanged, so descriptor-relative
+single-component names are correct (EEXIST under `RENAME_NOREPLACE` included).
+
+`plugin-transactions.py` therefore calls the raw syscall for its NOREPLACE
+retained moves, with no non-atomic fallback. `runtime-fs` publishes with
+`AT_FDCWD` and absolute paths and is unaffected. This shim does **not** override
+`renameat2` yet: a correct override needs guest path translation for mixed
+descriptor/absolute cases and a locked NDK 26.3 rebuild plus device checks.
+
+Build note: a Linux-host NDK 26.3.11579264 differs from the Windows-host build
+only in the `.comment` toolchain banner (`+pgo, +bolt, +lto, -mlgo`). The locked
+output was reproduced byte-for-byte from the previous source by compiling,
+linking and stripping with the same flags and replacing `.comment` with the
+Windows banner; the new output was produced the same way.

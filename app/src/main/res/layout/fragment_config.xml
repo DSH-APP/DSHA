@@ -1,70 +1,141 @@
 <?xml version='1.0' encoding='utf-8'?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/surface">
-    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
-        <ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/surface">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingLeft="18dp" android:paddingRight="18dp" android:paddingTop="14dp" android:paddingBottom="22dp">
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_runtime_config" android:textSize="24sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_config_sub" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="7dp" android:layout_marginBottom="18dp" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_network_runtime" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="16dp">
-                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_proroot" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="@dimen/touch_min" android:paddingStart="@dimen/gap_tight" android:text="@string/ui_m0054" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" android:visibility="gone" />
-                    <com.deepseekharness.app.ui.DshaSelectView android:id="@+id/config_runtime_choice" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_input" android:paddingStart="12dp" android:paddingEnd="12dp" />
-                    <com.deepseekharness.app.ui.DshaSelectView android:id="@+id/config_permission_choice" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_input" android:paddingStart="12dp" android:paddingEnd="12dp" />
-                    <TextView style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/permission_mode_scope" android:layout_marginBottom="8dp" />
-                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_automatic_port" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="@dimen/touch_min" android:text="@string/build190_auto_port" />
-                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:labelFor="@id/config_port" android:text="@string/ui2_port_preferred" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="12dp" />
-                    <EditText android:id="@+id/config_port" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="@dimen/gap_tight" android:background="@drawable/bg_input" android:importantForAutofill="no" android:inputType="number" android:paddingStart="@dimen/gap_control" android:paddingEnd="@dimen/gap_control" />
-                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_port_hint" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:layout_marginTop="6dp" />
-                    <com.google.android.material.button.MaterialButton android:id="@+id/config_restore_port_drafts" style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/build190_restore_port_drafts" />
-                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_dns" android:textSize="12sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="14dp" />
-                    <RadioGroup android:id="@+id/config_dns_mode" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="vertical" android:visibility="gone">
-                        <RadioButton android:id="@+id/dns_auto" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:paddingTop="8dp" android:paddingBottom="8dp" android:text="@string/dns_auto" />
-                        <RadioButton android:id="@+id/dns_ipv4" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:paddingTop="8dp" android:paddingBottom="8dp" android:text="@string/dns_ipv4" />
-                        <RadioButton android:id="@+id/dns_native" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:paddingTop="8dp" android:paddingBottom="8dp" android:text="@string/dns_native" />
-                    </RadioGroup>
-                    <com.deepseekharness.app.ui.DshaSelectView android:id="@+id/config_dns_choice" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_input" android:paddingStart="12dp" android:paddingEnd="12dp" />
-                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_lan_mode" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="@dimen/touch_min" android:paddingStart="@dimen/gap_tight" android:text="@string/ui_m0063" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
-                    <TextView style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_lan_unencrypted" android:textColor="@color/text_secondary" android:textSize="12sp" />
-                </LinearLayout>
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_display" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="14dp">
-                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_desktop_mode" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="@dimen/touch_min" android:paddingStart="@dimen/gap_tight" android:text="@string/ui_m0057" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
-                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_gecko_core" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:visibility="gone" android:text="@string/ui_m0055" android:textColor="@color/text_secondary" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
-                    <com.deepseekharness.app.ui.DshaSelectView android:id="@+id/config_core_choice" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp" android:background="@drawable/bg_input" android:paddingStart="12dp" android:paddingEnd="12dp" />
-                    <TextView android:id="@+id/config_gecko_hint" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_marginBottom="8dp" android:text="@string/ui_m0118" />
-                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_picture_in_picture" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="@dimen/touch_min" android:paddingStart="@dimen/gap_tight" android:text="@string/picture_in_picture_enable" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
-                    <LinearLayout android:id="@+id/config_picture_in_picture_settings" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:minHeight="58dp" android:paddingStart="8dp" android:paddingEnd="8dp" android:paddingTop="7dp" android:paddingBottom="7dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1">
-                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/picture_in_picture_title" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-                            <TextView android:id="@+id/config_picture_in_picture_status" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/picture_in_picture_disabled" />
-                        </LinearLayout>
-                        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:layout_marginStart="8dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
-                    </LinearLayout>
-                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_check_update" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="@dimen/touch_min" android:paddingStart="@dimen/gap_tight" android:text="@string/ui_m0089" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
-                </LinearLayout>
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_floating" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="14dp">
-                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_overlay_stream" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="@dimen/touch_min" android:paddingStart="@dimen/gap_tight" android:text="@string/ui_m0121" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/config_overlay_style" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">
-                        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui_chat" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />
-                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">
-                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_floating_settings" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />
-                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_floating_settings_sub" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />
-                        </LinearLayout>
-                        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />
+<!--
+  运行配置（压缩版 v2，见 docs/design/config-compact-20261101）：
+  - 两张卡：运行与网络（含折叠的运行时兼容选项）、显示与启动（含悬浮条），卡片下方一行链接按钮；
+  - 行高 48dp；带副文案或行尾按钮的开关行由“标题列 + 按钮 + 无文字开关”组成，标题列点按同样切换开关；
+  - 详情窗格宽度 ≥ config_two_column_dp 时 ConfigFragment 把 config_columns 切成两列；
+  - 既有 id、MaterialSwitch / EditText / DshaSelectView 类型与 ConfigStore 读写保持不变；
+    DNS 改为可见的 RadioGroup 分段（原 config_dns_mode），网页内核只有一项，改为副文案。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools" android:id="@+id/config_root" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/shell_bg">
+    <ScrollView android:id="@+id/config_scroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false" android:fillViewport="true" android:background="@color/shell_bg">
+        <LinearLayout android:id="@+id/config_columns" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="@dimen/config_page_pad_h" android:paddingEnd="@dimen/config_page_pad_h" android:paddingTop="@dimen/config_page_top" android:paddingBottom="16dp">
+
+            <!-- ========== 第一列：运行与网络 ========== -->
+            <LinearLayout android:id="@+id/config_column_start" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/config_label_top" android:layout_marginBottom="@dimen/config_label_bottom" android:gravity="center_vertical" android:orientation="horizontal">
+                    <TextView style="@style/ConfigLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="0dp" android:layout_marginBottom="0dp" android:text="@string/ui2_network_runtime" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="end|center_vertical" android:orientation="horizontal">
+                        <TextView android:id="@+id/config_page_hint" style="@style/ShellStatusText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="@string/ui2_config_sub" />
                     </LinearLayout>
                 </LinearLayout>
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_runtime_compat" android:textSize="11sp" android:textColor="@color/text_muted" android:includeFontPadding="false" android:textStyle="bold" android:layout_marginTop="18dp" android:layout_marginBottom="8dp" />
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_card" android:padding="14dp">
-                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_static_loader" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/alpha_static_loader" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
-                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_no_seccomp" style="@style/DshaText.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:text="@string/alpha_no_seccomp" android:textSize="13sp" android:paddingTop="6dp" android:paddingBottom="6dp" />
+                <LinearLayout style="@style/ConfigCard" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <!-- 运行方式：行内显示当前值，点按整行打开既有底部选择面板。 -->
+                    <LinearLayout android:id="@+id/config_runtime_row" style="@style/ConfigRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                        <TextView android:id="@+id/config_runtime_title" style="@style/ConfigRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:importantForAccessibility="no" />
+                        <com.deepseekharness.app.ui.DshaSelectView android:id="@+id/config_runtime_choice" android:layout_width="wrap_content" android:layout_height="wrap_content" android:minHeight="@dimen/config_chip_height" android:importantForAccessibility="no" android:clickable="false" android:focusable="false" />
+                    </LinearLayout>
+                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_proroot" style="@style/ShellSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0054" android:visibility="gone" />
+                    <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                    <!-- 自动端口 -->
+                    <LinearLayout android:id="@+id/config_automatic_port_row" style="@style/ConfigRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <LinearLayout android:id="@+id/config_automatic_port_text" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:importantForAccessibility="noHideDescendants">
+                            <TextView style="@style/ConfigRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/build190_auto_port" />
+                            <TextView android:id="@+id/config_port_hint" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_port_hint" />
+                        </LinearLayout>
+                        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_automatic_port" style="@style/ConfigSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <!-- 固定端口：仅在关闭自动端口时显示 -->
+                    <LinearLayout android:id="@+id/config_port_row" style="@style/ConfigSubRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone">
+                        <TextView style="@style/ConfigRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:labelFor="@id/config_port" android:text="@string/ui2_port_preferred" />
+                        <EditText android:id="@+id/config_port" style="@style/ShellInput" android:layout_width="104dp" android:layout_height="wrap_content" android:minHeight="@dimen/config_chip_height" android:paddingTop="6dp" android:paddingBottom="6dp" android:paddingStart="10dp" android:paddingEnd="10dp" android:gravity="end|center_vertical" android:fontFamily="monospace" android:importantForAutofill="no" android:inputType="number" android:maxLength="5" android:selectAllOnFocus="true" />
+                    </LinearLayout>
+                    <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                    <!-- DNS：三选一分段 -->
+                    <LinearLayout style="@style/ConfigRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <TextView android:id="@+id/config_dns_title" style="@style/ConfigRowTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:labelFor="@id/config_dns_mode" android:text="@string/ui2_dns" />
+                        <RadioGroup android:id="@+id/config_dns_mode" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:background="@drawable/bg_config_segment_track" android:orientation="horizontal" android:padding="2dp">
+                            <RadioButton android:id="@+id/dns_auto" style="@style/ConfigSegment" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="@string/dns_auto" />
+                            <RadioButton android:id="@+id/dns_ipv4" style="@style/ConfigSegment" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/cfg_dns_ipv4" android:contentDescription="@string/dns_ipv4" />
+                            <RadioButton android:id="@+id/dns_native" style="@style/ConfigSegment" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="@string/dns_native" />
+                        </RadioGroup>
+                    </LinearLayout>
+                    <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                    <!-- 局域网：开关 + 密码状态 + 设密码 -->
+                    <LinearLayout android:id="@+id/config_lan_row" style="@style/ConfigRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <LinearLayout android:id="@+id/config_lan_text" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:importantForAccessibility="noHideDescendants">
+                            <TextView style="@style/ConfigRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0063" />
+                            <TextView android:id="@+id/config_lan_password_status" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.AppCompatButton android:id="@+id/config_lan_password" style="@style/ConfigChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:contentDescription="@string/lan_password_button" />
+                        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_lan_mode" style="@style/ConfigSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <TextView android:id="@+id/config_lan_hint" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/bg_config_note" app:drawableStartCompat="@drawable/ic_onb_alert" android:drawablePadding="8dp" app:drawableTint="@color/shell_warn" android:includeFontPadding="false" android:lineSpacingExtra="2dp" android:paddingStart="@dimen/config_row_pad_start" android:paddingEnd="@dimen/config_row_pad_end" android:paddingTop="8dp" android:paddingBottom="9dp" android:text="@string/ui_lan_unencrypted" android:textColor="@color/shell_warn" android:textSize="12sp" android:visibility="gone" />
+                    <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                    <!-- 运行时兼容选项：折叠行 -->
+                    <LinearLayout android:id="@+id/config_adv_header" style="@style/ConfigRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:importantForAccessibility="noHideDescendants">
+                            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+                                <TextView android:id="@+id/config_adv_title" style="@style/ConfigRowTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui2_runtime_compat" />
+                                <TextView android:id="@+id/config_adv_badge" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:background="@drawable/bg_config_badge" android:includeFontPadding="false" android:paddingStart="7dp" android:paddingEnd="7dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textColor="@color/shell_warn" android:textSize="11sp" android:textStyle="bold" android:visibility="gone" />
+                            </LinearLayout>
+                            <TextView android:id="@+id/config_adv_summary" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <ImageView android:id="@+id/config_adv_chevron" android:layout_width="@dimen/shell_row_chevron" android:layout_height="@dimen/shell_row_chevron" android:layout_marginStart="8dp" android:contentDescription="@null" android:src="@drawable/ic_ui2_chevron" app:tint="@color/shell_text_muted" />
+                    </LinearLayout>
+                    <LinearLayout android:id="@+id/config_adv_body" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@color/shell_bg" android:orientation="vertical" android:visibility="gone">
+                        <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_static_loader" style="@style/ConfigSwitchRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="@dimen/config_sub_pad_start" android:paddingEnd="@dimen/config_row_pad_end" android:text="@string/alpha_static_loader" />
+                        <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_no_seccomp" style="@style/ConfigSwitchRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="@dimen/config_sub_pad_start" android:paddingEnd="@dimen/config_row_pad_end" android:text="@string/alpha_no_seccomp" />
+                    </LinearLayout>
                 </LinearLayout>
-                <TextView android:id="@+id/config_workspace_entry" style="@style/Widget.DSHA.TextButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="@dimen/gap_control" android:background="@drawable/bg_action_plain" android:gravity="center" android:text="@string/ui_m0126" />
-                <TextView android:id="@+id/config_repo_link" style="@style/DshaText.Caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/gap_section" android:gravity="center" android:text="@string/app_name" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/config_adv_header" android:text="" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:visibility="gone" />
-                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/config_adv_body" android:orientation="vertical" android:visibility="gone" />
             </LinearLayout>
-        </ScrollView>
-    </FrameLayout>
-    <androidx.appcompat.widget.AppCompatButton android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/config_save" android:text="@string/ui_m0002" android:textSize="13sp" android:textStyle="bold" android:textAllCaps="false" android:gravity="center" android:includeFontPadding="false" android:minHeight="48dp" android:minWidth="0dp" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="10dp" android:paddingBottom="10dp" android:background="@drawable/bg_btn_primary" android:textColor="@color/button_primary_text" android:layout_marginStart="18dp" android:layout_marginEnd="18dp" android:layout_marginTop="8dp" android:layout_marginBottom="12dp" />
+
+            <!-- ========== 第二列：显示与启动（含悬浮条）+ 链接 ========== -->
+            <LinearLayout android:id="@+id/config_column_end" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                <TextView style="@style/ConfigLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui2_display" />
+                <LinearLayout style="@style/ConfigCard" android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <!-- 桌面图标启动目标（dsh-launch-target 同一开关）：文字由代码设置 -->
+                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_entry_web" style="@style/ConfigSwitchRow" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                    <TextView android:id="@+id/config_entry_web_hint" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp" />
+                    <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                    <!-- 桌面版网页布局；网页内核只有一项，作为副文案 -->
+                    <LinearLayout android:id="@+id/config_desktop_row" style="@style/ConfigRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <LinearLayout android:id="@+id/config_desktop_text" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:importantForAccessibility="noHideDescendants">
+                            <TextView style="@style/ConfigRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0057" />
+                            <TextView android:id="@+id/config_core_choice" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_desktop_mode" style="@style/ConfigSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_gecko_core" style="@style/ShellSwitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0055" android:visibility="gone" />
+                    <TextView android:id="@+id/config_gecko_hint" style="@style/ShellStatusText" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0118" android:visibility="gone" />
+                    <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                    <!-- 画中画：开关 + 系统状态 + 系统设置 -->
+                    <LinearLayout android:id="@+id/config_picture_in_picture_row" style="@style/ConfigRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <LinearLayout android:id="@+id/config_picture_in_picture_text" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:importantForAccessibility="noHideDescendants">
+                            <TextView style="@style/ConfigRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/picture_in_picture_enable" />
+                            <TextView android:id="@+id/config_picture_in_picture_status" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.AppCompatButton android:id="@+id/config_picture_in_picture_settings" style="@style/ConfigChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:contentDescription="@string/picture_in_picture_title" />
+                        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_picture_in_picture" style="@style/ConfigSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_check_update" style="@style/ConfigSwitchRow" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0089" />
+                    <View style="@style/ShellDivider" android:layout_marginStart="0dp" />
+                    <!-- 悬浮条：开关 + 外观与行为 -->
+                    <LinearLayout android:id="@+id/config_overlay_row" style="@style/ConfigRow" android:layout_width="match_parent" android:layout_height="wrap_content">
+                        <LinearLayout android:id="@+id/config_overlay_text" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:importantForAccessibility="noHideDescendants">
+                            <TextView style="@style/ConfigRowTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_m0121" />
+                            <TextView android:id="@+id/config_overlay_status" style="@style/ConfigRowSub" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/shell_warn" android:visibility="gone" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.AppCompatButton android:id="@+id/config_overlay_style" style="@style/ConfigChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:contentDescription="@string/ui2_floating_settings" />
+                        <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/config_overlay_stream" style="@style/ConfigSwitch" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+                <com.google.android.material.chip.ChipGroup android:id="@+id/config_links" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" app:chipSpacingHorizontal="8dp" app:chipSpacingVertical="8dp">
+                    <androidx.appcompat.widget.AppCompatButton android:id="@+id/config_workspace_entry" style="@style/ConfigLinkChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="@string/ui_m0126" />
+                    <androidx.appcompat.widget.AppCompatButton android:id="@+id/config_restore_port_drafts" style="@style/ConfigLinkChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/build190_restore_port_drafts" />
+                    <androidx.appcompat.widget.AppCompatButton android:id="@+id/config_repo_link" style="@style/ConfigGhostChip" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                </com.google.android.material.chip.ChipGroup>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- 保存条：单行状态 + 撤销 + 保存；固定页底不随滚动，手机上用 shell_nav_clearance 让出悬浮导航胶囊 -->
+    <LinearLayout android:id="@+id/config_save_bar" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/shell_nav_clearance" android:background="@drawable/bg_config_save_bar" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="@dimen/config_page_pad_h" android:paddingEnd="@dimen/config_page_pad_h" android:paddingTop="8dp" android:paddingBottom="10dp">
+        <TextView android:id="@+id/config_save_status" style="@style/ShellStatusText" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:accessibilityLiveRegion="polite" android:ellipsize="end" android:maxLines="1" />
+        <androidx.appcompat.widget.AppCompatButton android:id="@+id/config_undo" style="@style/ShellTextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:minWidth="0dp" android:paddingStart="10dp" android:paddingEnd="10dp" android:textAllCaps="false" android:visibility="gone" />
+        <androidx.appcompat.widget.AppCompatButton android:id="@+id/config_save" style="@style/ConfigSaveButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="@string/ui_m0002" />
+    </LinearLayout>
 </LinearLayout>

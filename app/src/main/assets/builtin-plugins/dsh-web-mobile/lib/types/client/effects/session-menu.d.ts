@@ -9,11 +9,10 @@
  * The host menu is React-owned (ui-workspace) with no extension slot, so the
  * item is injected into the portaled `[role="menu"]` list by cloning the
  * host's own item markup (reusing the hashed classes keeps the styling
- * identical), and re-injected whenever React recreates the menu. Two menu
- * shapes are supported: rc.2 nests icon/label spans in the item, while 0.1.5
- * renders the label directly in the item button (shared `_item_1nxmc_92`
- * menu component, no child elements) — label reads and the injected text
- * fall back across both.
+ * identical), and re-injected whenever React recreates the menu. The item
+ * shape is the primitives Menu's: `_itemIcon` + `_itemLabel` spans inside the
+ * `role="menuitem"` button (dsh-client-ui-primitives 0.2.2 lib/index.js
+ * MenuItem). The 0.1.5 bare-text item shape was dropped with the host floor.
  *
  * Row → session id: session rows carry no id in the DOM, so the id is read
  * off the host's own stable anchors (see `rowSessionId`).

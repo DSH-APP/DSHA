@@ -1,4 +1,4 @@
-// Real pinned rc2 browser Controllers, snapshot stores, React and controls.
+// Real pinned rc3 browser Controllers, snapshot stores, React and controls.
 // Only the asynchronous remote transport is controlled. No APK or device data.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -132,8 +132,10 @@ await page.evaluate(()=>document.fonts.ready);
     await page.waitForFunction(()=>mutations.length===1);
     assert.equal(await toggle.getAttribute('aria-checked'),'false','no optimistic enabled');
     assert.equal(await toggle.isDisabled(),true);
-    assert.match(await page.locator('#root').innerText(),/Working/,'visible mutation feedback');
-    assert.equal(await page.locator('[role=status]').getAttribute('aria-label'),'Applying change and checking status…');
+    // 0.2.2-rc.1: upstream EnableSwitch owns the bundle pending view (StateDot + applyingChange status);
+    // DSHA's pluginPendingSwitch remains only on component RowSwitch.
+    assert.equal(await page.locator('[data-dsha-plugin-pending]').count(),0,'bundle switch is not double-wrapped');
+    assert.match(await page.locator('[role=status]').textContent(),/Applying changes to A long plugin title/,'visible mutation feedback');
     const bounds=await toggle.boundingBox();assert(bounds.x>=0 && bounds.x+bounds.width<=360,'pending control fits a mobile viewport');
     assert.deepEqual(bounds,initialBox,'pending text cannot move the switch');
     assert.deepEqual(await page.locator('[data-plugin-package]').boundingBox(),initialCard,'pending text cannot change the row height');
@@ -209,7 +211,7 @@ await page.evaluate(()=>document.fonts.ready);
     results.push('plugin: synchronous throw and disconnected unary release the mutation-only fence');
     await page.setViewportSize({width:280,height:800});await page.evaluate(()=>setupPlugin());await toggle.waitFor();
     const narrowBefore=await toggle.boundingBox(),narrowCard=await page.locator('[data-plugin-package]').boundingBox();
-    await toggle.tap();await page.getByText('Working…',{exact:true}).waitFor();
+    await toggle.tap();await page.waitForFunction(()=>/Applying changes to/.test(document.querySelector('[role=status]')?.textContent||''));
     assert.deepEqual(await toggle.boundingBox(),narrowBefore);assert.deepEqual(await page.locator('[data-plugin-package]').boundingBox(),narrowCard);
     const note=await page.locator('[role=status]').boundingBox();assert(note.x>=0&&note.x+note.width<=280&&note.y>=narrowCard.y,'short status stays inside the narrow card');
     await page.evaluate(()=>finishMutation());await page.waitForFunction(()=>reads.length===1);await page.evaluate(()=>releaseRead());await page.waitForFunction(()=>manager.getSnapshot().busy.length===0);
@@ -235,7 +237,9 @@ await page.evaluate(()=>document.fonts.ready);
     await page.waitForFunction(()=>manager.getSnapshot().packages[0].enabled===true);
     results.push('plugin: rejected verification is unconfirmed, releases busy, explicit retry can recover');
     await page.evaluate(()=>setupPlugin({readOnly:true}));await toggle.waitFor();assert.equal(await toggle.isDisabled(),true);
-    assert.equal(await page.locator('[role=status]').count(),0);
+    // 0.2.2: upstream keeps an empty live region beside the switch; readonly must not announce pending.
+    assert.equal(await page.locator('[data-dsha-plugin-pending="true"]').count(),0);
+    assert.equal((await page.locator('[role=status]').allTextContents()).join(''),'');
     await page.evaluate(()=>setupPlugin());await toggle.waitFor();await toggle.click();
     await page.evaluate(async()=>{window.changedRead=manager.load();manager.dispose();finishMutation();await changedRead;});
     assert.equal(await page.evaluate(()=>reads.length),0,'disposed owner does not start confirmation');
@@ -379,8 +383,8 @@ await page.evaluate(()=>document.fonts.ready);
       document.addEventListener('dsha-session-open',()=>++openFacts);
       testRoot=auditModules['react-dom/client'].createRoot(document.getElementById('root'));
       testRoot.render(React.createElement(React.Fragment,null,
-        React.createElement(api.SearchResultItem,{result:{id:'new',title:'New task',workspace:'fixture',archived:false,statuses:[]},currentId:'old',onOpen:id=>opened.push(id),onUnarchive:()=>++unarchived,t:key=>key}),
-        React.createElement(api.SearchResultItem,{result:{id:'archived',title:'Archived task',workspace:'fixture',archived:true,statuses:[]},currentId:'old',onOpen:id=>opened.push(id),onUnarchive:()=>++unarchived,t:key=>key})));
+        React.createElement(api.SearchResultItem,{result:{id:'new',title:'New task',workspace:'fixture',archived:false,statuses:[]},currentId:'old',onOpen:id=>opened.push(id),onUnarchive:()=>++unarchived,useSessionAccess:()=>true,t:key=>key}),
+        React.createElement(api.SearchResultItem,{result:{id:'archived',title:'Archived task',workspace:'fixture',archived:true,statuses:[]},currentId:'old',onOpen:id=>opened.push(id),onUnarchive:()=>++unarchived,useSessionAccess:()=>true,t:key=>key})));
     });
     const row=page.locator('[data-dsha-session-select=new]');await row.waitFor();await row.tap();
     assert.deepEqual(await page.evaluate(()=>opened),['new'],'one real touch tap opens once');assert.equal(await page.evaluate(()=>openFacts),1);

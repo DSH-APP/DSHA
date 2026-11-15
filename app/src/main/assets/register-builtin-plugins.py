@@ -16,6 +16,7 @@ dsh-web-mobile）的实体随离线 rootfs 烘焙在 /root/dsha-*，但 dsh 只�
   python3 register-builtin-plugins.py                # 注册：把未禁用的内置插件并进 profile
   python3 register-builtin-plugins.py --enable 名字   # 启用：加回 bundles + 建链
   python3 register-builtin-plugins.py --disable 名字  # 禁用：移出 bundles + 摘链 + 写禁用标记
+  python3 register-builtin-plugins.py --clear-stale-profile-lock  # 宿主超时后清理已退出持有者的 profile 锁
 
 注册名单与实体路径由签名 builtin-plugins.json 唯一声明；注册契约为：
   1. profiles/web/package.json 的 dsh.profile.bundles 含插件名；
@@ -23,6 +24,11 @@ dsh-web-mobile）的实体随离线 rootfs 烘焙在 /root/dsha-*，但 dsh 只�
   3. profiles/web/node_modules/<name> 是指向 /root/dsha-* 的符号链接。
 禁用标记：profiles/web/node_modules/<name>.disabled（空文件）—— 存在即表示用户主动
 禁用，注册流程会尊重它而永远跳过（与 selftest.py 的判定一致），只有 --enable 会清掉。
+
+默认启停：builtin-plugins.json 的行可声明 defaultDisabled=true。没有当前 APK 代次的显式
+启用记录时，注册器把该插件收敛为禁用（全新安装与覆盖更新一致，不保留旧版本启用状态）；
+只有用户在当前安装里显式启用（node_modules/<name>.enabled 记录当前代次）才保持启用，
+下一次 APK 覆盖更新会再次收敛。
 
 清单通过临时文件原子替换，不为每次开关累积备份；每次运行写 repair-builtin.log。
 
@@ -64,11 +70,14 @@ def _registry():
     names = [row.get('name') for row in rows + official]
     if len(set(names)) != len(names) or any(not isinstance(name, str) or not re.fullmatch(r'(?:@[a-z0-9._-]+/)?[a-z0-9._-]+', name) for name in names):
         raise ValueError('BUILTIN_REGISTRY_NAME')
+    if any(not isinstance(row.get('defaultDisabled', False), bool) for row in rows):
+        raise ValueError('BUILTIN_REGISTRY_DEFAULT')
     return rows, official
 
 
 _REGISTRY_ROWS, _OFFICIAL_ROWS = _registry()
 DEFAULT_BUILTINS = tuple(row['name'] for row in _REGISTRY_ROWS)
+DEFAULT_DISABLED = tuple(row['name'] for row in _REGISTRY_ROWS if row.get('defaultDisabled') is True)
 OFFICIAL_BUNDLES = tuple(row['name'] for row in _OFFICIAL_ROWS)
 BUILTIN_DIRECTORIES = {row['name']: row['guestDirectory'] for row in _REGISTRY_ROWS}
 
@@ -103,6 +112,11 @@ def local(path):
 # os.path.join(ROOT, ...) 构造，否则会随启动工作目录（通常为 /root）漂移。
 BUILTIN_LIST = local("/root/dsha-builtin.txt")
 MANAGED_ASSET_MARKER = local("/usr/local/share/dsha/managed-assets-v2")
+APK_GENERATION_MARKER = local("/usr/local/share/dsha/apk-generation")
+# 上一次成功注册对应的受管资产身份；宿主只读它来选择注册预算，不参与完成判定。
+REGISTER_ASSET_IDENTITY = local("/usr/local/share/dsha/register-managed-asset-id")
+APK_GENERATION_HEADER = "DSHA_APK_GENERATION_V1"
+DEFAULT_DISABLED_ENABLED_HEADER = "DSHA_DEFAULT_OFF_ENABLED_V1"
 
 
 def valid_name(name):
@@ -116,11 +130,26 @@ def ensure_relative_link(link, target):
         if not os.path.islink(link):
             return False
         current = os.readlink(link)
-        same = os.path.realpath(link) == os.path.realpath(target)
-        if not same and os.path.normpath(current) != os.path.normpath(target):
-            return False
-        if not os.path.isabs(current) and same:
-            return False
+        if os.path.isabs(target):
+            # Runtime targets are absolute. An existing relative link is always
+            # preserved by this helper, whether correct or user-owned: formerly
+            # both realpath outcomes returned False. Do not resolve its target
+            # (and all shared ancestors) again for every bundled dependency.
+            if not os.path.isabs(current):
+                return False
+            # Identical absolute spellings already name the same target. Only
+            # different absolute aliases need canonical resolution before the
+            # legacy absolute -> relative migration may replace a link.
+            if (os.path.normpath(current) != os.path.normpath(target)
+                    and os.path.realpath(link) != os.path.realpath(target)):
+                return False
+        else:
+            # Retain the historical helper contract for non-runtime callers.
+            same = os.path.realpath(link) == os.path.realpath(target)
+            if not same and os.path.normpath(current) != os.path.normpath(target):
+                return False
+            if not os.path.isabs(current) and same:
+                return False
     os.makedirs(os.path.dirname(link), exist_ok=True)
     relative = os.path.relpath(target, os.path.dirname(link))
     # 原子替换，避免中断恰好发生在删旧链接与建新链接之间。
@@ -172,10 +201,48 @@ def managed_asset_identity():
     return value if len(value) == 64 and all(char in '0123456789abcdef' for char in value) else ''
 
 
+def apk_generation():
+    """当前 APK 覆盖安装代次；宿主在插件注册前写标记。
+
+    缺失时退回受管资产身份，让本地测试/手工运行仍有稳定代次；真正缺环境时由
+    注册失败路径拦住，不能用空串让「旧版本显式启用」意外延续。
+    """
+    try:
+        lines = Path(APK_GENERATION_MARKER).read_text(encoding='ascii').splitlines()
+    except (OSError, UnicodeError):
+        lines = []
+    if len(lines) == 2 and lines[0] == APK_GENERATION_HEADER \
+            and re.fullmatch(r'[0-9]{1,12}', lines[1] or ''):
+        return 'apk:' + lines[1]
+    identity = managed_asset_identity()
+    return 'runtime:' + identity if identity else 'unmanaged'
+
+
+def write_register_identity():
+    """记录本次成功注册对应的受管资产身份（只给宿主选择下一次注册预算）。
+
+    覆盖更新会换成新的受管资产身份：宿主读到旧身份就用宽预算；若本次注册被超时
+    结束则这里不会执行，下一次仍按宽预算重试。写失败只影响预算，不影响注册结果。
+    """
+    identity = managed_asset_identity()
+    if not identity:
+        return
+    try:
+        os.makedirs(os.path.dirname(REGISTER_ASSET_IDENTITY), exist_ok=True)
+        temporary = REGISTER_ASSET_IDENTITY + '.tmp'
+        with open(temporary, 'w', encoding='ascii') as stream:
+            stream.write(identity + '\n')
+        os.replace(temporary, REGISTER_ASSET_IDENTITY)
+    except OSError:
+        pass
+
+
 def ensure_runtime_modules(force=False):
     cache = local(os.path.join(DSH_HOME, '.runtime-links-cache.json'))
+    started = time.monotonic()
     stamp = runtime_links_stamp()
     asset_identity = managed_asset_identity()
+    registration_timing('runtime-links-stamp', started, entries=len(stamp))
     if not force:
         try:
             with open(cache, encoding='utf-8') as stream:
@@ -186,7 +253,10 @@ def ensure_runtime_modules(force=False):
         except (OSError, ValueError):
             pass
     print('RUNTIME_LINKS_CHECK: 检查共享依赖链接', flush=True)
+    started = time.monotonic()
     count = repair_runtime_modules()
+    registration_timing('runtime-links-repair', started, changed=count)
+    started = time.monotonic()
     try:
         os.makedirs(os.path.dirname(cache), exist_ok=True)
         temporary = cache + '.tmp'
@@ -196,7 +266,15 @@ def ensure_runtime_modules(force=False):
         os.replace(temporary, cache)
     except OSError:
         pass
+    registration_timing('runtime-links-cache-write', started)
     return count
+
+
+def registration_timing(phase, started, **counts):
+    # Aggregate timings only: no package names, private paths or content.
+    print('REGISTER_TIMING: ' + json.dumps(dict(phase=phase,
+          elapsedMs=round((time.monotonic() - started) * 1000, 3), **counts),
+          separators=(',', ':')), flush=True)
 
 
 def repair_runtime_modules():
@@ -234,83 +312,121 @@ def repair_runtime_modules():
     return count
 
 
+def read_profile_lock_record(lock_path):
+    try:
+        with open(lock_path, encoding='ascii') as stream:
+            return stream.read(128)
+    except (OSError, UnicodeError):
+        return None
+
+
+def profile_lock_state(lock_path):
+    """profile 写入锁的持有者状态：missing / live / stale / unknown。
+
+    只有能证明记录里的 PID 已退出才返回 stale；格式不完整、权限被拒或 Windows
+    句柄无法确认时一律 unknown。宿主超时清理与恢复页提示都只按这个结论行动。
+    """
+    value = read_profile_lock_record(lock_path)
+    if value is None:
+        return 'unknown' if os.path.lexists(lock_path) else 'missing'
+    if not re.fullmatch(r'[0-9]+\n', value):
+        return 'unknown'
+    pid = int(value)
+    if pid <= 0 or pid > 2147483647:
+        return 'unknown'
+    if pid == os.getpid():
+        return 'live'
+    if os.name == 'nt':
+        # Python os.kill(pid, 0) can terminate on Windows. Only observe a
+        # SYNCHRONIZE handle; denied/unknown states never authorize takeover.
+        try:
+            import ctypes
+            from ctypes import wintypes
+            kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+            kernel.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+            kernel.OpenProcess.restype = wintypes.HANDLE
+            kernel.WaitForSingleObject.argtypes = (wintypes.HANDLE, wintypes.DWORD)
+            kernel.WaitForSingleObject.restype = wintypes.DWORD
+            kernel.CloseHandle.argtypes = (wintypes.HANDLE,)
+            kernel.CloseHandle.restype = wintypes.BOOL
+            process_handle = kernel.OpenProcess(0x00100000, False, pid)
+            if not process_handle:
+                return 'stale' if ctypes.get_last_error() == 87 else 'unknown'
+            try:
+                return 'stale' if kernel.WaitForSingleObject(process_handle, 0) == 0 else 'live'
+            finally:
+                kernel.CloseHandle(process_handle)
+        except (OSError, AttributeError):
+            return 'unknown'
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return 'stale'
+    except OSError:
+        return 'unknown'
+    return 'live'
+
+
+def take_over_dead_profile_lock(lock_path, record):
+    """只接管已确认退出持有者的锁；与 Node 的 dsh-atomic-write 使用同一种 claim。"""
+    previous = read_profile_lock_record(lock_path)
+    if previous is None or profile_lock_state(lock_path) != 'stale':
+        return False
+    claim = lock_path + '.takeover-' + hashlib.sha256(previous.encode('ascii')).hexdigest()[:16]
+    try:
+        fd = os.open(claim, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError:
+        return False
+    try:
+        with os.fdopen(fd, 'w', encoding='ascii') as stream:
+            stream.write(record)
+        if read_profile_lock_record(lock_path) != previous or profile_lock_state(lock_path) != 'stale':
+            return False
+        try:
+            os.unlink(lock_path)
+            return True
+        except OSError:
+            return False
+    finally:
+        try:
+            os.unlink(claim)
+        except OSError:
+            pass
+
+
+def clear_stale_profile_lock():
+    """宿主超时后由短命令调用：只清理已退出进程留下的 profile 写入锁。
+
+    该入口不走 operation_lock：要清理的锁正是它要处理的同一路径。记录不完整、
+    持有者仍存活或无法确认时一律保留，绝不为了「看起来干净」删除别人的锁。
+    """
+    lock_path = local(MANIFEST) + '.lock'
+    state = profile_lock_state(lock_path)
+    if state == 'missing':
+        print('PROFILE_LOCK_ABSENT')
+        return 0
+    if state != 'stale':
+        print('PROFILE_LOCK_RETAINED: ' + state)
+        return 0
+    if take_over_dead_profile_lock(lock_path, str(os.getpid()) + '\n'):
+        print('PROFILE_LOCK_CLEARED')
+        return 0
+    print('PROFILE_LOCK_RETAINED: ' + profile_lock_state(lock_path))
+    return 0
+
+
 @contextmanager
-def profile_writer_lock(check_cancel=None, timeout=120):
+def profile_writer_lock(check_cancel=None, timeout=120, timing=None):
     """Match dsh-atomic-write's package.json.lock; always after the data lock.
 
     Web PluginManager.change holds this same lock around manifest and marker
     updates. Incomplete/unknown/live records stay untouched; dead POSIX holders
     use the same takeover claim as Node, so no contender can remove a new lock.
     """
+    started = time.monotonic()
     os.makedirs(local(PROFILE), exist_ok=True)
     lock_path = local(MANIFEST) + '.lock'
     record = str(os.getpid()) + '\n'
-
-    def read_record(path):
-        try:
-            with open(path, encoding='ascii') as stream:
-                return stream.read(128)
-        except (OSError, UnicodeError):
-            return None
-
-    def holder_exited(value):
-        if not isinstance(value, str) or not re.fullmatch(r'[0-9]+\n', value):
-            return False
-        pid = int(value)
-        if pid <= 0 or pid > 2147483647 or pid == os.getpid():
-            return False
-        if os.name == 'nt':
-            # Python os.kill(pid, 0) can terminate on Windows. Only observe a
-            # SYNCHRONIZE handle; denied/unknown states never authorize takeover.
-            try:
-                import ctypes
-                from ctypes import wintypes
-                kernel = ctypes.WinDLL('kernel32', use_last_error=True)
-                kernel.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
-                kernel.OpenProcess.restype = wintypes.HANDLE
-                kernel.WaitForSingleObject.argtypes = (wintypes.HANDLE, wintypes.DWORD)
-                kernel.WaitForSingleObject.restype = wintypes.DWORD
-                kernel.CloseHandle.argtypes = (wintypes.HANDLE,)
-                kernel.CloseHandle.restype = wintypes.BOOL
-                process_handle = kernel.OpenProcess(0x00100000, False, pid)
-                if not process_handle:
-                    return ctypes.get_last_error() == 87  # invalid PID
-                try:
-                    return kernel.WaitForSingleObject(process_handle, 0) == 0
-                finally:
-                    kernel.CloseHandle(process_handle)
-            except (OSError, AttributeError):
-                return False
-        try:
-            os.kill(pid, 0)
-        except ProcessLookupError:
-            return True
-        except OSError:
-            pass
-        return False
-
-    def take_over():
-        previous = read_record(lock_path)
-        if not holder_exited(previous):
-            return False
-        claim = lock_path + '.takeover-' + hashlib.sha256(previous.encode('ascii')).hexdigest()[:16]
-        try:
-            fd = os.open(claim, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        except FileExistsError:
-            return False
-        try:
-            with os.fdopen(fd, 'w', encoding='ascii') as stream:
-                stream.write(record)
-            if read_record(lock_path) != previous or not holder_exited(previous):
-                return False
-            try:
-                os.unlink(lock_path)
-                return True
-            except OSError:
-                return False
-        finally:
-            os.unlink(claim)
-
     deadline = time.monotonic() + max(0, timeout)
     delay = 0.02
     while True:
@@ -322,21 +438,24 @@ def profile_writer_lock(check_cancel=None, timeout=120):
                 stream.write(record)
             break
         except FileExistsError:
-            if take_over():
+            if take_over_dead_profile_lock(lock_path, record):
                 continue
         if time.monotonic() >= deadline:
             raise TimeoutError('PLUGIN_PROFILE_LOCK_TIMEOUT；未更改插件或终止其他进程')
         time.sleep(delay)
         delay = min(delay * 2, 0.2)
     try:
+        if timing:
+            timing('profile-lock-wait', time.monotonic() - started)
         yield
     finally:
         os.unlink(lock_path)
 
 
 @contextmanager
-def operation_lock(check_cancel=None, timeout=120):
+def operation_lock(check_cancel=None, timeout=120, timing=None):
     """所有 DSHA 插件清单写入共用锁；进程退出由系统释放。"""
+    started = time.monotonic()
     os.makedirs(local(DSH_HOME), exist_ok=True)
     # 锁放在 .dsh 外，恢复整个 .dsh 时不会换掉正在使用的锁 inode。
     data_root = os.path.dirname(local(DSH_HOME))
@@ -355,9 +474,11 @@ def operation_lock(check_cancel=None, timeout=120):
                         raise TimeoutError('PLUGIN_LOCK_TIMEOUT；未更改插件或终止其他进程')
                     time.sleep(0.1)
         try:
+            if timing:
+                timing('data-lock-wait', time.monotonic() - started)
             if os.path.isfile(os.path.join(data_root, ".dsha-restore-journal.json")):
                 raise RuntimeError("恢复事务尚未完成，请先启动 DSHA 完成恢复后再操作插件")
-            with profile_writer_lock(check_cancel, timeout):
+            with profile_writer_lock(check_cancel, timeout, timing):
                 yield
         finally:
             if os.name != "nt":
@@ -647,34 +768,49 @@ def is_web_builtin_disabled(name):
         return False
 
 
+def enable_intent_path(name):
+    """默认关闭插件的「本安装代次显式启用」记录；位于 node_modules 但不参与加载。"""
+    return os.path.join(local(NODE_MODULES), name + ".enabled")
+
+
+def current_enable_intent(name):
+    expected = DEFAULT_DISABLED_ENABLED_HEADER + "\n" + apk_generation() + "\n"
+    try:
+        with open(enable_intent_path(name), encoding="utf-8") as stream:
+            return stream.read(len(expected) + 1) == expected
+    except (OSError, UnicodeError):
+        return False
+
+
+def write_enable_intent(name):
+    path = enable_intent_path(name)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = os.open(path, flags, 0o600)
+    try:
+        os.write(descriptor, (DEFAULT_DISABLED_ENABLED_HEADER + "\n" + apk_generation() + "\n").encode("utf-8"))
+    finally:
+        os.close(descriptor)
+
+
+def clear_enable_intent(name):
+    try:
+        os.remove(enable_intent_path(name))
+    except FileNotFoundError:
+        pass
+
+
 def selection_aliases(name):
     return AUTO_REVIEW_ALIASES if name in AUTO_REVIEW_ALIASES else (name,)
 
 
-_builtin_names_cache = None
-
-
 def builtin_names():
-    """当前签名内置清单；固定清单永远是下限，文件只能追加合法名称。"""
-    global _builtin_names_cache
-    try:
-        info = os.stat(BUILTIN_LIST)
-        stamp = (info.st_dev, info.st_ino, info.st_mtime_ns, info.st_ctime_ns, info.st_size)
-    except OSError:
-        stamp = None
-    if _builtin_names_cache is not None and _builtin_names_cache[0] == stamp:
-        return list(_builtin_names_cache[1])
-    names = list(DEFAULT_BUILTINS)
-    try:
-        with open(BUILTIN_LIST, encoding="utf-8") as f:
-            for line in f:
-                name = line.strip()
-                if name in DEFAULT_BUILTINS and name not in names:
-                    names.append(name)
-    except OSError:
-        pass
-    _builtin_names_cache = (stamp, tuple(names))
-    return names
+    """当前签名清单是唯一来源；旧文本既不能减少，也不能追加受管名称。
+
+    DEFAULT_BUILTINS 已包含所有合法签名项，重复 stat/read 旧文本不会改变
+    结果。返回副本，避免调用者修改后影响同进程的注册、删除与导出保护。
+    """
+    return list(DEFAULT_BUILTINS)
 
 
 # ================= profile 读写 =================
@@ -910,6 +1046,11 @@ def enable_plugin(name):
                 if os.path.isfile(marker_path(alias)):
                     os.remove(marker_path(alias))
                     lines.append("已清除禁用标记：" + alias)
+        if name in DEFAULT_DISABLED and d is not None:
+            try:
+                write_enable_intent(name)
+            except OSError as error:
+                raise RuntimeError("无法记录启用代次：" + str(error))
     except RuntimeError as e:
         lines.append(str(e))
         _write_log(lines, ok=False)
@@ -926,6 +1067,11 @@ def disable_plugin(name):
     lines = ["== " + time.strftime("%Y-%m-%d %H:%M:%S") + " 禁用 " + name]
     try:
         d = entity_dir(name)
+        if name in DEFAULT_DISABLED:
+            try:
+                clear_enable_intent(name)
+            except OSError as error:
+                raise RuntimeError("无法清除启用记录：" + str(error))
         if d is not None:
             marker_name = AUTO_REVIEW_ALIASES[0] if name in AUTO_REVIEW_ALIASES else name
             os.makedirs(os.path.dirname(marker_path(marker_name)), exist_ok=True)
@@ -978,6 +1124,34 @@ def disable_plugin(name):
 
 # ================= 注册主流程 =================
 
+def persist_default_disabled(name):
+    """默认关闭：落与原生禁用一致的空标记，注册器下次启动不会再把它补回 bundles。"""
+    marker = marker_path(name)
+    os.makedirs(os.path.dirname(marker), exist_ok=True)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
+    os.close(os.open(marker, flags, 0o600))
+
+
+def apply_default_disabled():
+    """没有「本安装代次显式启用」记录时，把默认关闭项收敛为禁用。
+
+    - 全新安装 / profile 尚不存在：写禁用标记，不进入注册名单；
+    - 覆盖更新（APK 代次变化）：旧版本启用过的也收敛为禁用；
+    - 用户在当前安装代次从原生插件页显式启用：.enabled 记录与代次一致，保持启用；
+    - 显式禁用标记优先，并清掉旧启用记录。
+    """
+    if not DEFAULT_DISABLED:
+        return
+    for name in DEFAULT_DISABLED:
+        if is_disabled(name):
+            clear_enable_intent(name)
+            continue
+        if current_enable_intent(name):
+            continue
+        persist_default_disabled(name)
+        clear_enable_intent(name)
+
+
 def register():
     os.makedirs(local(DSH_HOME), exist_ok=True)
     lines = ["== " + time.strftime("%Y-%m-%d %H:%M:%S")]
@@ -985,6 +1159,14 @@ def register():
         linked = ensure_runtime_modules()
         if linked: lines.append('已补充 %d 个共享运行时模块链接' % linked)
     except (OSError, RuntimeError) as error:
+        print('BUILTIN_REGISTER_FAIL: ' + str(error))
+        return 1
+
+    try:
+        apply_default_disabled()
+    except (OSError, RuntimeError) as error:
+        lines.append(str(error))
+        _write_log(lines, ok=False)
         print('BUILTIN_REGISTER_FAIL: ' + str(error))
         return 1
 
@@ -1078,6 +1260,8 @@ def register():
     if not present:
         lines.append("内置插件均已禁用，无需注册")
         _write_log(lines, ok=not missing)
+        if not missing:
+            write_register_identity()
         print(("BUILTIN_REGISTER_PARTIAL" if missing else "BUILTIN_REGISTER_OK") + ": 无待注册内置插件（已禁用 %s）" % ", ".join(skipped))
         return 1 if missing else 0
 
@@ -1134,6 +1318,8 @@ def register():
         lines.append("内置插件注册均已就绪，无需改动")
 
     _write_log(lines, ok=not missing)
+    if not missing:
+        write_register_identity()
     print(("BUILTIN_REGISTER_PARTIAL" if missing else "BUILTIN_REGISTER_OK") + ": %d 个内置插件注册就绪" % len(present))
     return 1 if missing else 0
 
@@ -1157,5 +1343,8 @@ def main():
 
 
 if __name__ == "__main__":
+    # 宿主超时清理入口不进入 operation_lock：它要处理的就是 profile 写入锁本身。
+    if sys.argv[1:] == ["--clear-stale-profile-lock"]:
+        sys.exit(clear_stale_profile_lock())
     with operation_lock():
         sys.exit(main())

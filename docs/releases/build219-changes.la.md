@@ -1,0 +1,9 @@
+# DSHA 0.2.1-rc.3-20261031.2130-dsh0.2.1-rc.5 / build219
+
+- Perfecta est confectio primi introitus build218: quattuor gradus (salutatio → usus → permissiones → finis), capsula dispositionis in fundo et pagina sustentationis ambitus exsecutionis in toto scheda; prima dispositio et renovatio superposita eundem aditum sustentationis adhibent.
+- Correctiones ex instrumento: dispositio in fundo intra introitum, si a systemate revocatur, ad eundem gradum redit; electio «usus» commendationes revera regit; capsula pilae statum systematis «usum in fundo permittere» sequitur; configurationes imaginis Stellar permissiones administratoris veri ostendunt.
+- Cum administrator Stellar detegitur, pagina permissionum instrumenti et capsula introitus nomen administratoris veri adhibent, non nomen vetus fixum.
+- Aditus optimizationis pilae paginam pilae huius applicationis recte aperit; textus capsulae et bullarum sensum «usum in fundo permittere» accipiunt.
+- Renovatio superposita ad paginam sustentationis in toto scheda redit; si in disco transactio sustentationis vel probatio isolata imperfecta est, applicatio prius processum probationis veterem exisse confirmat et locum claudit, deinde sustentationem/renovationem intrat, nec renovationem necessario defecturam incipit.
+- In schermis tactus latis (tabula transversa / CSS ≥1024px) actiones archivandi et figendi in menu ⋯ reconduntur: corrigitur titulus in fascia laterali 280px ad circiter 55px compressus, et in ordine solum «tempus + ⋯» manet. dsh-web-mobile inclusum plagulam localem praeviam fert; eam post PR #256 superius mergendum remove.
+- versionCode ad 219 sublatus est; revisio DSHA manet 0.2.1-rc.3 et DSH inclusum 0.2.1-rc.5; aedificatio et acceptatio hunc CI cursum et acceptum Release sequuntur, et hoc tempore acceptatio installationis superpositae in instrumento reali non affirmatur.

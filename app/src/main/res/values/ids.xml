@@ -3,4 +3,20 @@
     <item name="overlay_confirm_allow" type="id" />
     <item name="overlay_confirm_deny" type="id" />
     <item name="overlay_preview_button" type="id" />
+    <!-- UI v5 方案 A：AdaptiveColumns 记住子视图原始边距；设置/插件双栏的详情容器。 -->
+    <item name="adaptive_columns_margins" type="id" />
+    <item name="settings_detail" type="id" />
+    <item name="settings_list_scroll" type="id" />
+    <item name="plugin_detail_pane" type="id" />
+    <!-- 下载记录页：重建列表后按语义标签恢复焦点。 -->
+    <item name="transfer_focus_key" type="id" />
+    <item name="plugin_detail_divider" type="id" />
+    <!-- 宿主页内的虚拟屏预览：顶部提示条与完整预览小窗（T96）。 -->
+    <!-- 识屏模式行由 Fragment 在布局后插入；固定 id 供自动化与单测点按（T113）。 -->
+    <item name="screen_mode_row" type="id" />
+    <item name="screen_mode_status" type="id" />
+    <item name="vscreen_preview_strip" type="id" />
+    <item name="vscreen_preview_panel" type="id" />
+    <!-- Wave D（F2）：行尾滑动动作条的读屏「显示操作」自定义动作。 -->
+    <item name="swipe_action_open" type="id" />
 </resources>

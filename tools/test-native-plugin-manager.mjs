@@ -3,29 +3,37 @@ import { testRuntime } from './test-runtime-fixture.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import vm from 'node:vm';
 import { pathToFileURL } from 'node:url';
-import {createHash} from 'node:crypto';
+import {createHash, randomUUID} from 'node:crypto';
 
 // The rc2.1 overlay must remove the old review denial from both Host and UI.
 const managed = testRuntime('managed');
 const raw = testRuntime('raw');
 const hostPath = 'node_modules/@deepseek-ai/dsh-plugin-manager/lib/index.js';
 const uiPath = 'node_modules/@deepseek-ai/dsh-client-ui-plugin-manager/lib/client.js';
+const dshVersion = JSON.parse(fs.readFileSync('app/src/main/assets/runtime-patches.json', 'utf8')).dshVersion;
 const policy = JSON.parse(fs.readFileSync('app/src/main/assets/plugin-manager-policy-patch.json', 'utf8'));
 const upstreamHost = fs.readFileSync(path.join(raw, hostPath), 'utf8').replaceAll('\r\n', '\n');
 const currentHost = fs.readFileSync(path.join(managed, hostPath), 'utf8').replaceAll('\r\n', '\n');
-let expectedHost = upstreamHost;
 assert.equal(policy.patches.length, 15);
 const active = JSON.parse(fs.readFileSync('app/src/main/assets/runtime-patches.json','utf8')).active;
-for (const row of active) {
-  const recipe = JSON.parse(fs.readFileSync(path.join('app/src/main/assets',row.asset),'utf8'));
-  if ((row.module ?? recipe.module) !== policy.module) continue;
-  for (const patch of recipe.patches) {
-    assert.equal(expectedHost.split(patch.before).length - 1, 1,row.asset);
-    const after = patch.prependAsset === undefined ? patch.after : fs.readFileSync(path.join('app/src/main/assets',patch.prependAsset),'utf8')+'\n'+patch.after;
-    expectedHost = expectedHost.replace(patch.before, after);
+function moduleChain(source, module) {
+  const recipes = [];
+  for (const row of active) {
+    const recipe = JSON.parse(fs.readFileSync(path.join('app/src/main/assets',row.asset),'utf8'));
+    if ((row.module ?? recipe.module) !== module) continue;
+    recipes.push(row.asset);
+    for (const patch of recipe.patches) {
+      assert.equal(source.split(patch.before).length - 1, 1,row.asset);
+      const after = patch.prependAsset === undefined ? patch.after : fs.readFileSync(path.join('app/src/main/assets',patch.prependAsset),'utf8')+'\n'+patch.after;
+      source = source.replace(patch.before, after);
+    }
   }
+  assert.ok(recipes.length > 0, 'The tested module must have an active pinned patch chain');
+  return { source, recipes };
 }
+const expectedHost = moduleChain(upstreamHost, policy.module).source;
 assert.ok(currentHost === expectedHost, 'Host overlay differs from the complete pinned source chain');
 assert.doesNotMatch(currentHost, /["']--ignore-scripts(?:["']|=true)/);
 assert.doesNotMatch(currentHost, /--ignore-pnpmfile/);
@@ -35,12 +43,56 @@ assert.match(currentHost, /--config\.ignore-dep-scripts=false/);
 assert.match(currentHost, /DSHA_PLUGIN_SINGLE_INSTALL_V1/);
 assert.match(currentHost, /DSHA_PLUGIN_HTTPS_GITHUB_V1/);
 assert.doesNotMatch(currentHost, /DSHA_NATIVE_REVIEW_REQUIRED|DSHA_NATIVE_PLUGIN_POLICY_V1/);
-const uiPatch = JSON.parse(fs.readFileSync('app/src/main/assets/plugin-manager-auto-enable-patch.json', 'utf8')).patches[0];
 const upstreamUi = fs.readFileSync(path.join(raw, uiPath), 'utf8').replaceAll('\r\n', '\n');
 const currentUi = fs.readFileSync(path.join(managed, uiPath), 'utf8').replaceAll('\r\n', '\n');
-assert.equal(upstreamUi.split(uiPatch.before).length - 1, 1);
-assert.ok(currentUi === upstreamUi.replace(uiPatch.before, uiPatch.after),
-  'Web plugin installation must enable the installed bundle by default');
+const expectedUi = moduleChain(upstreamUi, uiPath.slice('node_modules/'.length));
+assert.ok(expectedUi.recipes.includes('plugin-manager-auto-enable-patch.json'));
+assert.equal(currentUi, expectedUi.source, 'Web overlay differs from the complete pinned source chain');
+
+// Execute the actual managed Controller method with only its transport and
+// publication seams controlled. Do not infer default selection from a marker
+// or the whole module having only one patch: later active recipes share it.
+function controller(source) {
+  const start = 'var PluginManagerController = class {';
+  const end = '\n\t\t};\n\t\t//#endregion';
+  assert.equal(source.split(start).length, 2, 'one real PluginManagerController');
+  const from = source.indexOf(start), to = source.indexOf(end, from);
+  assert.ok(to > from, 'the complete real Controller class must be selected');
+  return vm.runInNewContext(source.slice(from, to + '\n\t\t};'.length) + '\nPluginManagerController;', { randomUUID });
+}
+async function installSelection(Controller, subject, approvedBuilds) {
+  const calls = [], published = [], settled = [];
+  const value = { application: 'applied', changed: true };
+  const client = Object.create(Controller.prototype);
+  client.ctx = { remote: { pluginManager: { async installBundle(spec, options) {
+    calls.push({ spec, options }); return { ok: true, value };
+  } } } };
+  client.patchInstall = update => published.push(update);
+  client.settleInstall = result => settled.push(result);
+  await client.startInstall(subject, approvedBuilds);
+  assert.equal(calls.length, 1, 'one explicit install must issue exactly one Host mutation');
+  assert.equal(published.length, 1);
+  assert.equal(published[0].phase, 'starting');
+  assert.equal(settled.length, 1);
+  assert.equal(settled[0], value, 'only the actual Host response settles the install');
+  assert.equal(calls[0].spec, subject.spec);
+  assert.match(calls[0].options.requestId, /^[a-f0-9-]{36}$/);
+  assert.equal(calls[0].options.requestId, published[0].requestId);
+  assert.equal(calls[0].options.registry, subject.registry);
+  return calls[0].options;
+}
+const ManagedController = controller(currentUi), UpstreamController = controller(upstreamUi);
+const input = { spec: 'community-plugin@1.0.0', registry: 'https://registry.npmjs.org' };
+assert.equal((await installSelection(UpstreamController, input)).enabled, false,
+  'negative control: the exact raw Controller still has the old disabled default');
+for (const selection of [undefined, null, true, false]) {
+  const options = await installSelection(ManagedController, { ...input, selection, saveExact: true }, ['fixture-build']);
+  assert.equal(options.enabled, selection ?? true,
+    'managed install enables an unspecified selection and preserves an explicit false');
+  assert.equal(options.saveExact, true);
+  assert.deepEqual(Array.from(options.approvedBuilds), ['fixture-build']);
+}
+console.log('PASS: complete pinned Web patch chain; real managed Controller installs default enabled=true, preserves explicit false and dispatches once; raw negative control remains disabled.');
 
 const { PluginManager } = await import(pathToFileURL(path.join(managed, hostPath)));
 const manager = Object.create(PluginManager.prototype);
@@ -101,7 +153,7 @@ Object.assign(failureManager, {
     packageManager:{command:process.execPath,args:[child],env:{DSHA_FIXTURE_COUNTER:counter,DSHA_FIXTURE_ARGUMENTS:argumentsFile,DSHA_FIXTURE_GIT_ENV:gitEnvironment,GIT_CONFIG_COUNT:'0'}}},
   pnpmCommand:process.execPath,outputBytes:16384,lockWaitMs:1000,inspectTimeoutMs:1000,githubConnectionTimeoutMs:1000,idleTimeoutMs:2000,
   configuredRegistries:{registry:'https://registry.npmjs.org/',fallbackRegistries:['https://registry.npmmirror.com/']},
-  ownerContext:{get:()=>undefined,emit:()=>{},logger:{warn:()=>{}}},
+  ownerContext:{get:()=>undefined,emit:()=>{},parallel:async()=>{},logger:{warn:()=>{}}},
   managementBundles:new Set(),installedFrom:new Map(),packageOperations:new Set(),installs:new Map(),abort:new AbortController()
 });
 const priorUnlocked = process.env.DSHA_PLUGIN_UNLOCKED;
@@ -167,10 +219,10 @@ try {
   for(const name of custom)writePlugin(profile,name);
   const runtimeName='@deepseek-ai/dsh-experimental-voice-input-bundle';
   const runtime=writePlugin(sdk,runtimeName);
-  fs.writeFileSync(path.join(sdk,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh',version:'0.2.1-rc.2',dependencies:{[runtimeName]:'1.0.0'}}));
+  fs.writeFileSync(path.join(sdk,'package.json'),JSON.stringify({name:'@deepseek-ai/dsh',version:dshVersion,dependencies:{[runtimeName]:'1.0.0'}}));
   fs.writeFileSync(path.join(profile,'package.json'),JSON.stringify({name:'isolated-provenance-profile',private:true,dependencies:Object.fromEntries([...custom,runtimeName].map(name=>[name,'1.0.0'])),dsh:{profile:{bundles:[...custom,runtimeName]}}}));
   fs.writeFileSync(path.join(profile,'cordis.patch.yml'),'[]\n');
-  const ctx={get:()=>undefined,emit:()=>{},loader:{entries:()=>[]},logger:{warn:()=>{}}},manager=Object.create(PluginManager.prototype);
+  const ctx={get:()=>undefined,emit:()=>{},parallel:async()=>{},loader:{entries:()=>[]},logger:{warn:()=>{}}},manager=Object.create(PluginManager.prototype);
   Object.defineProperty(manager,'ctx',{value:ctx});
   Object.assign(manager,{profile:{name:'web',dir:profile,home,patchPath:path.join(profile,'cordis.patch.yml'),overlays:[],startedBundles:[],installAnchor:path.join(sdk,'package.json')},ownerContext:ctx,managementBundles:new Set(),installedFrom:new Map(),packageOperations:new Set(),installs:new Map(),abort:new AbortController(),lockWaitMs:1000});
   const rows=async()=>new Map((await manager.listBundles()).map(row=>[row.name,row]));
@@ -201,7 +253,7 @@ try {
   fs.mkdirSync(path.dirname(copy),{recursive:true});fs.cpSync(path.join(managed,'node_modules',actualName),copy,{recursive:true});
   authenticate(actualName,proofOf(copy));
   const profileDoc=JSON.parse(fs.readFileSync(path.join(profile,'package.json'),'utf8'));
-  profileDoc.dependencies[actualName]='0.2.1-rc.2';profileDoc.dsh.profile.bundles.push(actualName);
+  profileDoc.dependencies[actualName]=dshVersion;profileDoc.dsh.profile.bundles.push(actualName);
   fs.writeFileSync(path.join(profile,'package.json'),JSON.stringify(profileDoc));
   assert.equal((await rows()).get(actualName).origin,'user','a component without bundle metadata is not an installation bundle');
   const componentManifest=JSON.parse(fs.readFileSync(path.join(copy,'package.json'),'utf8'));

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 平板左栏底：与页面同底色，右侧分隔由布局里的 1dp 竖线负责。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/shell_bg" />
+</shape>

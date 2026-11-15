@@ -22,7 +22,8 @@ function forms(home) {
   function add(ns, value = { model:'initial', temperature:1 }) {
     const Config = z.object({ model:z.string().volatile(), temperature:z.number().min(0).volatile(), fixed:z.string().default('untouched') });
     const runtime = { Config };
-    const entry = { id:ns, options:{id:ns,config:clone(value)}, fiber:{uid:ns,state:2,runtime,ctx:{},config:resolveConfig(runtime,value)} };
+    const fiber = {uid:ns,state:2,runtime,rawConfig:clone(value),effectiveConfig:resolveConfig(runtime,value)}; fiber.ctx={fiber};
+    const entry = { id:ns, options:{id:ns,config:clone(value)}, fiber };
     entries.set(ns, entry); return entry;
   }
   const settings=Object.create(SettingsForms.prototype);
@@ -30,9 +31,9 @@ function forms(home) {
   settings.ownerContext={profileContext:{home,name:'web'},emit(){},logger:{info(){}},configEditor:{
     entries:()=>[...entries.values()],
     configuration:()=>[...entries.values()].map(entry=>({entry,inherited:{},override:entry.options.config})),
-    async edit(entry,change){const next=change(clone(entry.options.config),{});const config=resolveConfig(entry.fiber.runtime,next);entry.options.config=next;entry.fiber.config=config;writes++;}
+    async edit(entry,change){const next=change(clone(entry.options.config),{});const config=resolveConfig(entry.fiber.runtime,next);entry.options.config=next;entry.fiber.rawConfig=next;entry.fiber.effectiveConfig=config;writes++;}
   }};
-  return {settings,add,entries,get writes(){return writes;},change(ns,value){const entry=entries.get(ns);entry.options.config={...entry.options.config,...value};entry.fiber.config=resolveConfig(entry.fiber.runtime,entry.options.config);}};
+  return {settings,add,entries,get writes(){return writes;},change(ns,value){const entry=entries.get(ns);entry.options.config={...entry.options.config,...value};entry.fiber.rawConfig=entry.options.config;entry.fiber.effectiveConfig=resolveConfig(entry.fiber.runtime,entry.options.config);}};
 }
 async function fixture(document, run, version=expectedVersion) {
   const root=await mkdtemp(join(tmpdir(),'dsha-real-settings-'));const home=join(root,'.dsh'),state=join(root,'state');await mkdir(home);await writeFile(join(home,'runtime-patches.json'),JSON.stringify({schema:1,dshVersion:version}));await writeFile(join(home,'settings.yaml'),document);

@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "standardEdition": {
+    "zh": "标准版 · Android 11+ · 系统 WebView",
+    "zh-Hant": "標準版 · Android 11+ · 系統 WebView",
+    "en": "Standard · Android 11+ · System WebView",
+    "ru": "Стандартная версия · Android 11+ · Системный WebView",
+    "ja": "標準版 · Android 11+ · システム WebView",
+    "ko": "표준 버전 · Android 11+ · 시스템 WebView",
+    "ar": "الإصدار القياسي · Android 11+ · WebView النظام",
+    "pt": "Versão padrão · Android 11+ · WebView do sistema",
+    "la": "Editio ordinaria · Android 11+ · WebView systematis",
+    "fr": "Version standard · Android 11+ · WebView système"
+  },
+  "pluginCount": {
+    "zh": {"one": "共 %d 个插件", "other": "共 %d 个插件"},
+    "zh-Hant": {"other": "共 %d 個外掛"},
+    "en": {"one": "%d plugin", "other": "%d plugins"},
+    "ru": {"one": "%d плагин", "few": "%d плагина", "many": "%d плагинов", "other": "%d плагина"},
+    "ja": {"other": "プラグイン %d 件"},
+    "ko": {"other": "플러그인 %d개"},
+    "ar": {"zero": "لا توجد إضافات (%d)", "one": "إضافة واحدة (%d)", "two": "إضافتان (%d)", "few": "%d إضافات", "many": "%d إضافةً", "other": "%d إضافة"},
+    "pt": {"one": "%d plugin", "many": "%d plugins", "other": "%d plugins"},
+    "la": {"one": "%d additamentum", "other": "%d additamenta"},
+    "fr": {"one": "%d plugin", "many": "%d plugins", "other": "%d plugins"}
+  }
+}
