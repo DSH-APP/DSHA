@@ -84,6 +84,12 @@ public final class MaintenanceFooterPolicy {
     return (int) Math.round(Math.min(1.0, done / total) * 10_000);
   }
 
+  /** 只有已识别的运行阶段才能增加半步填充，未知阶段不能伪造进度。 */
+  public static int progressLevel(DeployStages.View view) {
+    return progressLevel(view.completed(), view.total(),
+        view.phase == DeployStages.Phase.RUNNING && view.current >= 0);
+  }
+
   /** 主操作并排：宽度达到 600dp，或高度不足 480dp（手机横屏）。 */
   public static boolean sideBySide(int screenWidthDp, int screenHeightDp) {
     return screenWidthDp >= 600 || (screenHeightDp > 0 && screenHeightDp <= 480);

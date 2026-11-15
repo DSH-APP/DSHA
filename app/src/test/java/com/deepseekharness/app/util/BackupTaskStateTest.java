@@ -4,6 +4,92 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class BackupTaskStateTest {
+  @org.junit.After
+  public void restoreLanguage() {
+    UiText.setLanguage("zh");
+  }
+
+  @Test
+  public void genericMaintenanceProgressKeepsTheLastRecognizedStageOnFailure() {
+    for (String language : new String[] {"zh", "en"}) {
+      UiText.setLanguage(language);
+      BackupTaskState state = new BackupTaskState();
+      long id = state.start(BackupTaskKinds.REBUILD);
+      String protecting = UiText.choose(
+          "正在由 Android 保护应用数据与个人目录；不执行旧环境…",
+          "Android is protecting application data and personal folders without executing the old environment…");
+      state.update(id, BackupTaskState.Status.RUNNING, protecting);
+      state.update(id, BackupTaskState.Status.RUNNING, "正在核验受管文件… 3 MB");
+      state.update(id, BackupTaskState.Status.FAILED, "PERMISSION_DENIED");
+      var snapshot = state.snapshot();
+      assertEquals(protecting, snapshot.lastStage);
+      assertEquals("PERMISSION_DENIED", snapshot.detail);
+      var view = DeployStages.view(DeployStages.Mode.REBUILD, DeployStages.Phase.FAILED,
+          -1, snapshot.detail, snapshot.lastStage, id);
+      assertEquals(1, view.current);
+      assertEquals(DeployStages.Step.DONE, view.steps[0]);
+      assertEquals(DeployStages.Step.FAILED, view.steps[1]);
+      assertEquals(DeployStages.Step.TODO, view.steps[2]);
+    }
+  }
+
+  @Test
+  public void restoredInterruptedTaskRetainsItsRecognizedSnapshotStage() {
+    UiText.setLanguage("zh");
+    BackupTaskState state = new BackupTaskState();
+    long id = state.start(BackupTaskKinds.REBUILD);
+    String protecting = "正在由 Android 保护应用数据与个人目录；不执行旧环境…";
+    state.update(id, BackupTaskState.Status.RUNNING, protecting);
+    state.update(id, BackupTaskState.Status.RUNNING, "正在核验受管文件…");
+    var saved = state.snapshot();
+    BackupTaskState restored = new BackupTaskState();
+    restored.restore(saved.id, saved.kind, saved.status, saved.detail);
+    restored.restoreStage(saved.lastStage);
+    var snapshot = restored.snapshot();
+    assertEquals(BackupTaskState.Status.INTERRUPTED, snapshot.status);
+    var view = DeployStages.view(DeployStages.Mode.REBUILD, DeployStages.Phase.FAILED,
+        -1, snapshot.detail, snapshot.lastStage, snapshot.id);
+    assertEquals(1, view.current);
+    assertFalse(restored.busy());
+  }
+
+  @Test
+  public void lateEarlierMaintenanceProgressCannotReplaceALaterStage() {
+    UiText.setLanguage("zh");
+    BackupTaskState state = new BackupTaskState();
+    long id = state.start(BackupTaskKinds.REBUILD);
+    String restoring = "正在恢复本机数据并逐文件校验…";
+    state.update(id, BackupTaskState.Status.RUNNING, restoring);
+    state.update(id, BackupTaskState.Status.RUNNING, "正在停止 Web，等待运行队列完成…");
+    assertEquals(restoring, state.snapshot().lastStage);
+  }
+
+  @Test
+  public void updateTaskRetainsColdInstallStageAcrossUnrecognizedProgress() {
+    UiText.setLanguage("zh");
+    BackupTaskState state = new BackupTaskState();
+    long id = state.start(BackupTaskKinds.UPDATE);
+    state.update(id, BackupTaskState.Status.RUNNING, "解压 Ubuntu 与 Node");
+    state.update(id, BackupTaskState.Status.RUNNING, "未知的细粒度进度");
+    var snapshot = state.snapshot();
+    var view = DeployStages.view(DeployStages.Mode.UPDATE, DeployStages.Phase.FAILED,
+        -1, "FAILED", snapshot.lastStage, id);
+    assertEquals(DeployStages.Mode.INSTALL, view.mode);
+    assertEquals(1, view.current);
+  }
+
+  @Test
+  public void ordinaryBackupStillRecordsEveryProgressMessage() {
+    for (String kind : new String[] {BackupTaskKinds.BACKUP, BackupTaskKinds.RECOVER, BackupTaskKinds.ROLLBACK}) {
+      BackupTaskState state = new BackupTaskState();
+      long id = state.start(kind);
+      state.update(id, BackupTaskState.Status.RUNNING, "first");
+      state.update(id, BackupTaskState.Status.RUNNING, "second");
+      assertEquals("second", state.snapshot().lastStage);
+      assertEquals("second", state.snapshot().detail);
+    }
+  }
+
   @Test
   public void previewKeepsGlobalSlotAndOldPageCannotConfirmAnotherTask() {
     BackupTaskState state = new BackupTaskState();

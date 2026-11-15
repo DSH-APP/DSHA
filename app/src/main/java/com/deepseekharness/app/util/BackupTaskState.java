@@ -35,7 +35,16 @@ public final class BackupTaskState {
     if (expected != id || !busy()) return;
     status = next;
     detail = SensitiveData.redact(message == null ? "" : message);
-    if (next == Status.RUNNING) lastStage = detail;
+    if (next == Status.RUNNING && shouldRememberStage(detail)) lastStage = detail;
+  }
+
+  /** 环境阶段单调保留；细粒度文案仍更新 detail，无阶段表的任务沿用原始进度。 */
+  private boolean shouldRememberStage(String progress) {
+    if (!DeployStages.environmentKind(kind)) return true;
+    DeployStages.Mode mode = DeployStages.infer(
+        DeployStages.infer(DeployStages.modeFor(kind, true), lastStage), progress);
+    int previous = DeployStages.match(mode, lastStage);
+    return previous < 0 || DeployStages.match(mode, progress) >= previous;
   }
 
   public synchronized boolean confirm(long expected) {
