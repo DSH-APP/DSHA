@@ -163,7 +163,7 @@ public class IslandFragment extends Fragment {
         dot = R.color.shell_text_muted;
       }
       default -> {
-        title = UiText.choose("实时活动支持未确认", "Live activity support unconfirmed");
+        title = UiText.choose("支持未确认", "Unconfirmed");
         sub = UiText.choose("仍会尝试显示，实际效果由系统决定", "Will try; display depends on the system");
         dot = R.color.shell_warn;
       }
