@@ -1978,5 +1978,12 @@
   "x2100201": "Permitir entrada?",
   "x2100202": "Permitir entrada",
   "x2100203": "O assistente de tela física pode ignorar a acessibilidade, capturar a tela e injetar toques, gestos e teclas durante a tarefa de telefone atual — para jogos e outras interfaces desenhadas pelo app.\n\nDesativado por padrão e revogável a qualquer momento. As ações ainda exigem permissão de controle de tela para o app alvo; telas de senha, pagamento e segurança do sistema são sempre recusadas. A fase experimental garante apenas o canal root.",
-  "x2100204": "Falha ao salvar a configuração"
+  "x2100204": "Falha ao salvar a configuração",
+  "ru20261125_answer_01": "Answer too long, not submitted",
+  "ru20261125_answer_02": "Too many selections, not submitted",
+  "ru20261125_answer_03": "Options expired; open the chat to answer",
+  "ru20261125_answer_04": "Nothing selected yet",
+  "ru20261125_answer_05": "Answer link expired; open the chat to answer",
+  "ru20261125_answer_06": "Answer not accepted (%s); tap the notification to answer in the chat",
+  "ru20261125_answer_07": "Answer failed; tap the notification to answer in the chat"
 }
