@@ -24,7 +24,7 @@
 
 ## ❤️ 赞助商
 
-[API-Zeno](https://api-zeno.com) · [绿萝中转站](https://zdxjl.com/register?aff=WDYTNDJ5LT4X) · [Axis AI](https://ai.onyxaxis.org/)
+[API-Zeno](https://api-zeno.com) 提供可接入 DSHA 的 AI 模型；[绿萝中转站](https://zdxjl.com/register?aff=WDYTNDJ5LT4X) 支持编程和图片生成；[Axis AI](https://ai.onyxaxis.org/) 是免费的公益 AI 平台。
 
 <details>
 <summary>查看赞助商详情</summary>

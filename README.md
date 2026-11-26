@@ -26,7 +26,7 @@
 
 ## ❤️ Sponsor
 
-[API-Zeno](https://api-zeno.com) · [Lvluo Relay](https://zdxjl.com/register?aff=WDYTNDJ5LT4X) · [Axis AI](https://ai.onyxaxis.org/)
+[API-Zeno](https://api-zeno.com) offers AI models for use with DSHA; [Lvluo Relay](https://zdxjl.com/register?aff=WDYTNDJ5LT4X) supports coding and image generation; [Axis AI](https://ai.onyxaxis.org/) is a free, public-interest AI platform.
 
 <details>
 <summary>View sponsor details</summary>
