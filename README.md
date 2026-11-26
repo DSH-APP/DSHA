@@ -26,44 +26,53 @@
 
 ## ❤️ Sponsor
 
-[API-Zeno](https://api-zeno.com) offers AI models for use with DSHA; [Lvluo Relay](https://zdxjl.com/register?aff=WDYTNDJ5LT4X) supports coding and image generation; [Axis AI](https://ai.onyxaxis.org/) is a free, public-interest AI platform.
+Thanks to our sponsors for keeping this project maintained (in no particular order).
 
-🐼 **Partner Pick · 合作推荐：买 AI 前先查【模真真 Mozhenzhen】/ Stop overpaying for AI — compare prices & verify models free**<br>
-2000+ 模型 · 35 万+ 渠道同台比价，5000+ 中转站 · 10 万+ 份报告查假模型与降智 / Compare 2,000+ models across 350K+ listings & audit 5,000+ relays with 100K+ verification reports. 全部免费 · 不卖任何 AI 服务，排名只看数据 / Always Free & Data-Driven 👉 [mozhenzhen.com](https://mozhenzhen.com/go/dsha)
-
+<table>
+<tr>
+<td width="56" align="center" valign="top"><a href="https://api-zeno.com"><img src="docs/sponsors/api-zeno.jpg" alt="API-Zeno" width="56"></a></td>
+<td>
+<strong><a href="https://api-zeno.com">API-Zeno</a></strong> offers AI models for use with DSHA.
 <details>
-<summary>View sponsor and partner details</summary>
-
-Thanks to our sponsors for keeping this project maintained (in no particular order):
-
-<table>
+<summary>API-Zeno details</summary>
+<p>Thanks to <a href="https://api-zeno.com">API-Zeno</a> for sponsoring this project! API-Zeno brings together mainstream AI models from China and abroad for learning, content creation, coding and more. The platform focuses on real-world experience, offering user guides, Q&amp;A and technical support, and can be integrated into DSHA. New users get a ¥5 free credit on sign-up — come and try it!</p>
+</details>
+</td>
+</tr>
 <tr>
-<td width="180"><a href="https://api-zeno.com"><img src="docs/sponsors/api-zeno.jpg" alt="API Zeno" width="150"></a></td>
-<td>Thanks to <a href="https://api-zeno.com">API-Zeno</a> for sponsoring this project! API-Zeno brings together mainstream AI models from China and abroad for learning, content creation, coding and more. The platform focuses on real-world experience, offering user guides, Q&amp;A and technical support, and can be integrated into DSHA. New users get a ¥5 free credit on sign-up — come and try it!</td>
+<td width="56" align="center" valign="top"><a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X"><img src="docs/sponsors/lvluo.jpg" alt="Lvluo Relay" width="56"></a></td>
+<td>
+<strong><a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X">Lvluo Relay</a></strong> supports coding and image generation.
+<details>
+<summary>Lvluo Relay details</summary>
+<p>Thanks to <a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X">绿萝中转站 (Lvluo Relay)</a> for sponsoring this project! Lvluo Relay is an AI platform covering models from many vendors: mainstream large models are ready to use on demand, and coding, image generation and more can all be called from one platform. Models from China and abroad are available, new releases land promptly, the service is attentive and the pricing is attractive. Registering through this link gives a 105% top-up bonus.</p>
+</details>
+</td>
+</tr>
+<tr>
+<td width="56" align="center" valign="top"><a href="https://ai.onyxaxis.org/"><img src="docs/sponsors/axis-ai.jpg" alt="Axis AI" width="56"></a></td>
+<td>
+<strong><a href="https://ai.onyxaxis.org/">Axis AI</a></strong> is a free, public-interest AI platform.
+<details>
+<summary>Axis AI details</summary>
+<p>Thanks to <a href="https://ai.onyxaxis.org/">Axis AI</a> for sponsoring this project! Axis AI is a free public-interest AI platform where multiple mainstream models are ready to use. Chat, write code, and generate images from one unified platform.</p>
+</details>
+</td>
+</tr>
+<tr>
+<td width="56" align="center" valign="top"><a href="https://mozhenzhen.com/go/dsha"><img src="docs/sponsors/mozhenzhen-icon.png" alt="Mozhenzhen" width="56"></a></td>
+<td>
+🐼 <strong>Partner Pick · 合作推荐：买 AI 前先查【模真真 Mozhenzhen】/ Stop overpaying for AI — compare prices &amp; verify models free</strong><br>
+2000+ 模型 · 35 万+ 渠道同台比价，5000+ 中转站 · 10 万+ 份报告查假模型与降智 / Compare 2,000+ models across 350K+ listings &amp; audit 5,000+ relays with 100K+ verification reports. 全部免费 · 不卖任何 AI 服务，排名只看数据 / Always Free &amp; Data-Driven 👉 <a href="https://mozhenzhen.com/go/dsha">mozhenzhen.com</a>
+<details>
+<summary>View Mozhenzhen banner</summary>
+<a href="https://mozhenzhen.com/go/dsha"><img src="docs/sponsors/mozhenzhen-banner-en.png" alt="DSHA × Mozhenzhen: compare AI prices and verify models for free"></a>
+</details>
+</td>
 </tr>
 </table>
-
-<table>
-<tr>
-<td width="180"><a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X"><img src="docs/sponsors/lvluo.jpg" alt="Lvluo Relay" width="150"></a></td>
-<td>Thanks to <a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X">绿萝中转站 (Lvluo Relay)</a> for sponsoring this project! Lvluo Relay is an AI platform covering models from many vendors: mainstream large models are ready to use on demand, and coding, image generation and more can all be called from one platform. Models from China and abroad are available, new releases land promptly, the service is attentive and the pricing is attractive. Registering through this link gives a 105% top-up bonus.</td>
-</tr>
-</table>
-
-<table>
-<tr>
-<td width="180"><a href="https://ai.onyxaxis.org/"><img src="docs/sponsors/axis-ai.jpg" alt="Axis AI" width="150"></a></td>
-<td>Thanks to <a href="https://ai.onyxaxis.org/">Axis AI</a> for sponsoring this project! Axis AI is a free public-interest AI platform where multiple mainstream models are ready to use. Chat, write code, and generate images from one unified platform.</td>
-</tr>
-</table>
-
-<p><img src="docs/sponsors/mozhenzhen-icon.png" width="28" height="28" alt=""> <strong>Partner Pick: Mozhenzhen</strong></p>
-
-[![DSHA × Mozhenzhen: compare AI prices and verify models for free](docs/sponsors/mozhenzhen-banner-en.png)](https://mozhenzhen.com/go/dsha)
 
 If this project helps you, you can also support the maintainer on [Afdian](https://afdian.com/a/dsha_apk).
-
-</details>
 
 ## Current status
 

@@ -24,44 +24,53 @@
 
 ## ❤️ 赞助商
 
-[API-Zeno](https://api-zeno.com) 提供可接入 DSHA 的 AI 模型；[绿萝中转站](https://zdxjl.com/register?aff=WDYTNDJ5LT4X) 支持编程和图片生成；[Axis AI](https://ai.onyxaxis.org/) 是免费的公益 AI 平台。
+感谢赞助商让这个项目能持续维护下去（排名不分先后）。
 
-🐼 **合作推荐：买 AI 前先查【模真真】——免费比价、验真、查降智，不花冤枉钱**<br>
-2000+ 模型 · 35 万+ 渠道同台比价，5000+ 中转站 · 10 万+ 份验真报告查假模型与降智，每天更新免费额度与公益站合集。全部免费、不卖任何 AI 服务、排名只看数据 👉 [mozhenzhen.com](https://mozhenzhen.com/go/dsha)
-
+<table>
+<tr>
+<td width="56" align="center" valign="top"><a href="https://api-zeno.com"><img src="docs/sponsors/api-zeno.jpg" alt="API-Zeno" width="56"></a></td>
+<td>
+<strong><a href="https://api-zeno.com">API-Zeno</a></strong> 提供可接入 DSHA 的 AI 模型。
 <details>
-<summary>查看赞助商与合作推荐详情</summary>
-
-感谢赞助商让这个项目能持续维护下去（排名不分先后）：
-
-<table>
+<summary>查看 API-Zeno 详情</summary>
+<p>感谢 <a href="https://api-zeno.com">API-Zeno</a> 赞助本项目！API-Zeno 汇集国内外主流 AI 模型，满足学习、创作、编程等需求。平台注重实际使用体验，提供操作指南、问题答疑与技术支持，支持在 DSHA 中接入使用。新用户注册即赠 5 元体验额度，欢迎体验！</p>
+</details>
+</td>
+</tr>
 <tr>
-<td width="180"><a href="https://api-zeno.com"><img src="docs/sponsors/api-zeno.jpg" alt="API Zeno" width="150"></a></td>
-<td>感谢 <a href="https://api-zeno.com">API-Zeno</a> 赞助本项目！API-Zeno 汇集国内外主流 AI 模型，满足学习、创作、编程等需求。平台注重实际使用体验，提供操作指南、问题答疑与技术支持，支持在 DSHA 中接入使用。新用户注册即赠 5 元体验额度，欢迎体验！</td>
+<td width="56" align="center" valign="top"><a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X"><img src="docs/sponsors/lvluo.jpg" alt="绿萝中转站" width="56"></a></td>
+<td>
+<strong><a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X">绿萝中转站</a></strong> 支持编程和图片生成。
+<details>
+<summary>查看绿萝中转站详情</summary>
+<p>感谢 <a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X">绿萝中转站</a> 赞助本项目！绿萝中转站是一个包含多种厂家模型的 AI 平台，多款主流大模型随开随用，写代码、生成图片等等都能在同一平台调用。国内外模型应有尽有，上新及时，服务周到，价格美丽。使用本链接注册可享受充值 105% 优惠。</p>
+</details>
+</td>
+</tr>
+<tr>
+<td width="56" align="center" valign="top"><a href="https://ai.onyxaxis.org/"><img src="docs/sponsors/axis-ai.jpg" alt="Axis AI" width="56"></a></td>
+<td>
+<strong><a href="https://ai.onyxaxis.org/">Axis AI</a></strong> 是免费的公益 AI 平台。
+<details>
+<summary>查看 Axis AI 详情</summary>
+<p>感谢 <a href="https://ai.onyxaxis.org/">Axis AI</a> 赞助本项目！Axis AI 是一个免费的公益 AI 平台，多款主流大模型随开随用，聊天、写代码、生成图片都能在同一平台内实现。</p>
+</details>
+</td>
+</tr>
+<tr>
+<td width="56" align="center" valign="top"><a href="https://mozhenzhen.com/go/dsha"><img src="docs/sponsors/mozhenzhen-icon.png" alt="模真真" width="56"></a></td>
+<td>
+🐼 <strong>合作推荐：买 AI 前先查【模真真】——免费比价、验真、查降智，不花冤枉钱</strong><br>
+2000+ 模型 · 35 万+ 渠道同台比价，5000+ 中转站 · 10 万+ 份验真报告查假模型与降智，每天更新免费额度与公益站合集。全部免费、不卖任何 AI 服务、排名只看数据 👉 <a href="https://mozhenzhen.com/go/dsha">mozhenzhen.com</a>
+<details>
+<summary>查看模真真横幅</summary>
+<a href="https://mozhenzhen.com/go/dsha"><img src="docs/sponsors/mozhenzhen-banner-zh.png" alt="DSHA × 模真真：免费比较 AI 价格和查验模型"></a>
+</details>
+</td>
 </tr>
 </table>
-
-<table>
-<tr>
-<td width="180"><a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X"><img src="docs/sponsors/lvluo.jpg" alt="绿萝中转站" width="150"></a></td>
-<td>感谢 <a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X">绿萝中转站</a> 赞助本项目！绿萝中转站是一个包含多种厂家模型的 AI 平台，多款主流大模型随开随用，写代码、生成图片等等都能在同一平台调用。国内外模型应有尽有，上新及时，服务周到，价格美丽。使用本链接注册可享受充值 105% 优惠。</td>
-</tr>
-</table>
-
-<table>
-<tr>
-<td width="180"><a href="https://ai.onyxaxis.org/"><img src="docs/sponsors/axis-ai.jpg" alt="Axis AI" width="150"></a></td>
-<td>感谢 <a href="https://ai.onyxaxis.org/">Axis AI</a> 赞助本项目！Axis AI 是一个免费的公益 AI 平台，多款主流大模型随开随用，聊天、写代码、生成图片都能在同一平台内实现。</td>
-</tr>
-</table>
-
-<p><img src="docs/sponsors/mozhenzhen-icon.png" width="28" height="28" alt=""> <strong>合作推荐：模真真</strong></p>
-
-[![DSHA × 模真真：免费比较 AI 价格和查验模型](docs/sponsors/mozhenzhen-banner-zh.png)](https://mozhenzhen.com/go/dsha)
 
 如果本项目对你有帮助，也欢迎在 [爱发电](https://afdian.com/a/dsha_apk) 支持维护者。
-
-</details>
 
 ## 当前状态
 
