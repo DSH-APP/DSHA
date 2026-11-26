@@ -24,6 +24,11 @@
 
 ## ❤️ 赞助商
 
+[API-Zeno](https://api-zeno.com) · [绿萝中转站](https://zdxjl.com/register?aff=WDYTNDJ5LT4X) · [Axis AI](https://ai.onyxaxis.org/)
+
+<details>
+<summary>查看赞助商详情</summary>
+
 感谢赞助商让这个项目能持续维护下去（排名不分先后）：
 
 <table>
@@ -48,6 +53,8 @@
 </table>
 
 如果本项目对你有帮助，也欢迎在 [爱发电](https://afdian.com/a/dsha_apk) 支持维护者。
+
+</details>
 
 ## 当前状态
 

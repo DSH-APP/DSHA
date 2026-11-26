@@ -26,6 +26,11 @@
 
 ## ❤️ Sponsor
 
+[API-Zeno](https://api-zeno.com) · [Lvluo Relay](https://zdxjl.com/register?aff=WDYTNDJ5LT4X) · [Axis AI](https://ai.onyxaxis.org/)
+
+<details>
+<summary>View sponsor details</summary>
+
 Thanks to our sponsors for keeping this project maintained (in no particular order):
 
 <table>
@@ -50,6 +55,8 @@ Thanks to our sponsors for keeping this project maintained (in no particular ord
 </table>
 
 If this project helps you, you can also support the maintainer on [Afdian](https://afdian.com/a/dsha_apk).
+
+</details>
 
 ## Current status
 
