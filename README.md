@@ -28,8 +28,11 @@
 
 [API-Zeno](https://api-zeno.com) offers AI models for use with DSHA; [Lvluo Relay](https://zdxjl.com/register?aff=WDYTNDJ5LT4X) supports coding and image generation; [Axis AI](https://ai.onyxaxis.org/) is a free, public-interest AI platform.
 
+🐼 **Partner Pick · 合作推荐：买 AI 前先查【模真真 Mozhenzhen】/ Stop overpaying for AI — compare prices & verify models free**<br>
+2000+ 模型 · 35 万+ 渠道同台比价，5000+ 中转站 · 10 万+ 份报告查假模型与降智 / Compare 2,000+ models across 350K+ listings & audit 5,000+ relays with 100K+ verification reports. 全部免费 · 不卖任何 AI 服务，排名只看数据 / Always Free & Data-Driven 👉 [mozhenzhen.com](https://mozhenzhen.com/go/dsha)
+
 <details>
-<summary>View sponsor details</summary>
+<summary>View sponsor and partner details</summary>
 
 Thanks to our sponsors for keeping this project maintained (in no particular order):
 
@@ -53,6 +56,10 @@ Thanks to our sponsors for keeping this project maintained (in no particular ord
 <td>Thanks to <a href="https://ai.onyxaxis.org/">Axis AI</a> for sponsoring this project! Axis AI is a free public-interest AI platform where multiple mainstream models are ready to use. Chat, write code, and generate images from one unified platform.</td>
 </tr>
 </table>
+
+<p><img src="docs/sponsors/mozhenzhen-icon.png" width="28" height="28" alt=""> <strong>Partner Pick: Mozhenzhen</strong></p>
+
+[![DSHA × Mozhenzhen: compare AI prices and verify models for free](docs/sponsors/mozhenzhen-banner-en.png)](https://mozhenzhen.com/go/dsha)
 
 If this project helps you, you can also support the maintainer on [Afdian](https://afdian.com/a/dsha_apk).
 

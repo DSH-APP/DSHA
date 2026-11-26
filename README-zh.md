@@ -26,8 +26,11 @@
 
 [API-Zeno](https://api-zeno.com) 提供可接入 DSHA 的 AI 模型；[绿萝中转站](https://zdxjl.com/register?aff=WDYTNDJ5LT4X) 支持编程和图片生成；[Axis AI](https://ai.onyxaxis.org/) 是免费的公益 AI 平台。
 
+🐼 **合作推荐：买 AI 前先查【模真真】——免费比价、验真、查降智，不花冤枉钱**<br>
+2000+ 模型 · 35 万+ 渠道同台比价，5000+ 中转站 · 10 万+ 份验真报告查假模型与降智，每天更新免费额度与公益站合集。全部免费、不卖任何 AI 服务、排名只看数据 👉 [mozhenzhen.com](https://mozhenzhen.com/go/dsha)
+
 <details>
-<summary>查看赞助商详情</summary>
+<summary>查看赞助商与合作推荐详情</summary>
 
 感谢赞助商让这个项目能持续维护下去（排名不分先后）：
 
@@ -51,6 +54,10 @@
 <td>感谢 <a href="https://ai.onyxaxis.org/">Axis AI</a> 赞助本项目！Axis AI 是一个免费的公益 AI 平台，多款主流大模型随开随用，聊天、写代码、生成图片都能在同一平台内实现。</td>
 </tr>
 </table>
+
+<p><img src="docs/sponsors/mozhenzhen-icon.png" width="28" height="28" alt=""> <strong>合作推荐：模真真</strong></p>
+
+[![DSHA × 模真真：免费比较 AI 价格和查验模型](docs/sponsors/mozhenzhen-banner-zh.png)](https://mozhenzhen.com/go/dsha)
 
 如果本项目对你有帮助，也欢迎在 [爱发电](https://afdian.com/a/dsha_apk) 支持维护者。
 
