@@ -6,7 +6,7 @@
 > Fixed build inputs: published as a public pre-release Release asset and pinned by SHA-256; see [docs/fixed-build-inputs.md](docs/fixed-build-inputs.md).
 > Historical build receipts and old identity numbers remain in [CHANGELOG.md](CHANGELOG.md) and [docs/releases/](docs/releases/); they are not inputs for the current build or signing identity.
 
-Read [README](README.en.md), [AGENTS](AGENTS.en.md) and [CONTRIBUTING](CONTRIBUTING.en.md) first. `app/build.gradle`, `ci/release-identity.json` and `ci/sunset-inputs.lock.json` are the three authoritative sources for the current build identity.
+Read [README](README.md), [AGENTS](AGENTS.en.md) and [CONTRIBUTING](CONTRIBUTING.en.md) first. `app/build.gradle`, `ci/release-identity.json` and `ci/sunset-inputs.lock.json` are the three authoritative sources for the current build identity.
 
 ## Environment and variants
 

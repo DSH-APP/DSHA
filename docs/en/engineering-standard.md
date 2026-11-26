@@ -1,6 +1,6 @@
 # Current engineering standard
 
-This standard adopts the parts of the external build150 audit that were checked against the current source and the user's requirements. The original material and its first review belong to the local build154 audit history; distribution boundaries are described in the [documentation index](index.md#reading-historical-material). Use the current item-by-item ledger linked by [README](../../README.en.md) for current dispositions. Decisions from another conversation attached to an audit do not directly become repository rules.
+This standard adopts the parts of the external build150 audit that were checked against the current source and the user's requirements. The original material and its first review belong to the local build154 audit history; distribution boundaries are described in the [documentation index](index.md#reading-historical-material). Use the current item-by-item ledger linked by [README](../../README.md) for current dispositions. Decisions from another conversation attached to an audit do not directly become repository rules.
 
 Start with the [current handoff guide](handoff.md), use the [module map](module-map.md) for ownership, consult [historical ADR 0001](adr/0001-build154-boundaries.md) for the origin of constraints, and follow [CONTRIBUTING](../../CONTRIBUTING.en.md) for builds and submissions. The [historical document inventory](../audits/build154/history-document-sources.json) records the original bytes of old guides and acceptance reports; their old commands must not be reintroduced into deployment.
 

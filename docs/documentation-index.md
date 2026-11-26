@@ -42,7 +42,7 @@
 
 ## 用户操作与开发入口
 
-- [README](../README.md)、[开发约束](../AGENTS.md)、[构建](../BUILD.md)、[贡献流程](../CONTRIBUTING.md)、[接手指南](接手指南.md)。
+- [README](../README-zh.md)、[开发约束](../AGENTS.md)、[构建](../BUILD.md)、[贡献流程](../CONTRIBUTING.md)、[接手指南](接手指南.md)。
 - [Standard](android-standard.md)、[Low](android-low.md)、[插件](plugins.md)、[虚拟屏开启](virtual-screen-guide.md)、[网页文件交互](web-file-sharing.md)、[v5备份格式](backup-format-v5.md)、[配置恢复](configuration-recovery-host.md)。
 - [工程规范](engineering-standard.md)、[模块地图](module-map.md)、[安全模型](security-model.md)、[源码来源](source-provenance.md)、[下载校验](download-verification.md)。
 

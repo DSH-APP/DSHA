@@ -1,6 +1,6 @@
 # Current modules and state ownership
 
-This map describes actual responsibilities and state ownership in the maintained source. A package-import graph is not the complete runtime architecture. Use the current report linked by [README](../../README.en.md) for delivered identity and executed scope.
+This map describes actual responsibilities and state ownership in the maintained source. A package-import graph is not the complete runtime architecture. Use the current report linked by [README](../../README.md) for delivered identity and executed scope.
 
 Read the [handoff guide](handoff.md), then the [engineering standard](engineering-standard.md) / [historical ADR 0001](adr/0001-build154-boundaries.md), then [CONTRIBUTING](../../CONTRIBUTING.en.md). Historical audit copies are retained through their [preservation inventory](../audits/build154/history-document-sources.json); their old “current” headings do not override the production ownership described here.
 

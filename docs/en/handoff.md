@@ -2,7 +2,7 @@
 
 Use the [project handbook](project-architecture-handbook.md) and [documentation index](index.md) for the complete feature, permission, and change map, and [runtime engines](runtime-engines.md) for lower-level details.
 
-First read [README](../../README.en.md), [AGENTS](../../AGENTS.en.md), [CONTRIBUTING](../../CONTRIBUTING.en.md), and the [engineering standard](engineering-standard.md). This page describes the maintained source entry points. Complete delivery status comes from the current audit and release records linked by README; source configuration cannot prove phone upgrade installation or publication.
+First read [README](../../README.md), [AGENTS](../../AGENTS.en.md), [CONTRIBUTING](../../CONTRIBUTING.en.md), and the [engineering standard](engineering-standard.md). This page describes the maintained source entry points. Complete delivery status comes from the current audit and release records linked by README; source configuration cannot prove phone upgrade installation or publication.
 
 The old handoff guide's exact bytes are preserved in the [historical original](../../tools/history/documents/docs/接手指南.md), with its digest in the [preservation inventory](../audits/build154/history-document-sources.json). Its old task names, test counts, audit APKs, and “push a tag to publish automatically” steps are not the current workflow.
 

@@ -6,7 +6,7 @@ Verification date: 2026-10-21. Source: the corresponding Chinese issue-workflow 
 
 Confirm the repository, branch, open items, and objective specified by the user. Then read each issue/PR's current content, commits, and discussion. Current maintenance handles only still-open items within the authorized scope. Closed items are not pursued again, and plugin-directory submissions are skipped. Do not turn historical item states, another repository's requests, or an old conversation into a new task.
 
-[README](../../../README.en.md) distinguishes the current private prerelease from the historical original repository. A repository name is not write authorization. Use an existing GitHub connector or `gh` for reading when available. Read-only inspection, code changes, posting comments, opening PRs, and publishing are different actions. Sending an external message requires the appropriate authorization. If access is unavailable, retain locally reviewable materials; do not upload credentials or raw device logs to fill an evidence gap.
+[README](../../../README.md) distinguishes the current private prerelease from the historical original repository. A repository name is not write authorization. Use an existing GitHub connector or `gh` for reading when available. Read-only inspection, code changes, posting comments, opening PRs, and publishing are different actions. Sending an external message requires the appropriate authorization. If access is unavailable, retain locally reviewable materials; do not upload credentials or raw device logs to fill an evidence gap.
 
 ## What an issue needs to retain
 

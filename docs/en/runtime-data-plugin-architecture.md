@@ -1,12 +1,12 @@
 # Runtime environment, data, and plugin mechanisms
 
-> Translation baseline: 2026-11-05 (S1 runtime switch and fixed-input review). The S1 runtime identity is single Standard with Ubuntu base10, official DSH `0.2.2-rc.1`, Node 24, and bundled pnpm `10.34.5`; the APK release version/versionCode remain owned by the release commit and [English README](../../README.en.md). F10–F13 and build190 records are historical, not this build's evidence. This is source navigation, not a new build, device acceptance, real-account test, or proof for every historical dataset.
+> Translation baseline: 2026-11-05 (S1 runtime switch and fixed-input review). The S1 runtime identity is single Standard with Ubuntu base10, official DSH `0.2.2-rc.1`, Node 24, and bundled pnpm `10.34.5`; the APK release version/versionCode remain owned by the release commit and [English README](../../README.md). F10–F13 and build190 records are historical, not this build's evidence. This is source navigation, not a new build, device acceptance, real-account test, or proof for every historical dataset.
 
 This guide is for developers preparing to modify DSHA. It explains where the environment comes from, who owns data, and how plugins enter the actual startup flow. The current S1 runtime identity is single Standard: Ubuntu base10, official DSH `0.2.2-rc.1`, Node 24, and bundled pnpm `10.34.5`. The default engine is `proot`; users may explicitly choose `proroot`. The production design does not use bxroot. F10–F13/build190 and Low sections are historical. These flows and constraints belong to DSHA and do not imply an Android guarantee from Ubuntu, Node, pnpm, or upstream DSH.
 
 ## Reading order and evidence layers
 
-- Project entry: [README](../../README.en.md), [AGENTS](../../AGENTS.en.md), and [BUILD](../../BUILD.en.md).
+- Project entry: [README](../../README.md), [AGENTS](../../AGENTS.en.md), and [BUILD](../../BUILD.en.md).
 - General navigation: [project architecture handbook](project-architecture-handbook.md) and [module map](module-map.md).
 - Device capabilities: [permissions architecture](device-permissions-architecture.md) and [virtual-screen architecture](virtual-screen-architecture.md).
 - Security boundaries: [security model](security-model.md) and [ADR 0002](adr/0002-current-threat-model.md).

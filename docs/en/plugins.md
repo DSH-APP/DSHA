@@ -1,6 +1,6 @@
 # Installing, updating, and sharing plugins
 
-> Baseline reviewed on 2026-10-21 against the build190/F13 source. Current publication identity is build356 / DSH `0.2.2-rc.1` / single Standard; F10–F13 and build190 records are historical and not this build's evidence. This page describes DSHA entry points for DSH 0.2.2-rc.1; final identity, software and APK results are in the [English README](../../README.en.md) and this CI / Release receipt. It does not prefill test totals or device acceptance.
+> Baseline reviewed on 2026-10-21 against the build190/F13 source. Current publication identity is build356 / DSH `0.2.2-rc.1` / single Standard; F10–F13 and build190 records are historical and not this build's evidence. This page describes DSHA entry points for DSH 0.2.2-rc.1; final identity, software and APK results are in the [English README](../../README.md) and this CI / Release receipt. It does not prefill test totals or device acceptance.
 
 Paste a link into plugin management, import a local package through the system file picker, or open a DSHA installation link supplied by a website. The app resolves the actual package and checks its format, paths, name/version, actual dependencies, and digests before the plugin transaction commits and enables it. The current production plugin flow does not require a native review confirmation. Browsing a website does not install a plugin: installation continues only after the user opens its installation entry point. Restart Web normally when the app requests it after an update or a toggle.
 

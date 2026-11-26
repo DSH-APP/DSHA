@@ -5,7 +5,7 @@
 > 主线分支 `main`；Android 11+（API 30）/ arm64；proot 默认、proroot 可选；内置 DSH 0.2.2-rc.1。
 > 上岛能力已并入正式包；旧 low/GeckoView 兼容线与独立上岛包已删除；签名使用历史 E7E3 发布证书（见 BUILD.md）。
 
-DSHA 的 AI / 新贡献者入口。本文让你不扫全库就能上手 —— 读它之前先读 [README.md](README.md)。
+DSHA 的 AI / 新贡献者入口。本文让你不扫全库就能上手 —— 读它之前先读 [README-zh.md](README-zh.md)。
 
 **仓库事实**：Java 17 / `:app` / arm64；移动 UI 3.3.5；proot 默认 + proroot 可选；固定离线输入由
 `tools/ci-assets.py` 还原。构建、签名与门禁见 [BUILD.md](BUILD.md) 与 [CONTRIBUTING.md](CONTRIBUTING.md)。

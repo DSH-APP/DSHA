@@ -1,6 +1,6 @@
 # Host configuration checkpoints and recovery
 
-> Translation verified: 2026-10-21. Source baseline: the current Chinese host-configuration recovery note, read against the F10 `087724c` maintenance baseline. Historical test statements below retain their original scope; translation adds no execution or device evidence. See the [English README](../../README.en.md) and [release introduction](release-introduction.md) for the final identity and current validation scope.
+> Translation verified: 2026-10-21. Source baseline: the current Chinese host-configuration recovery note, read against the F10 `087724c` maintenance baseline. Historical test statements below retain their original scope; translation adds no execution or device evidence. See the [English README](../../README.md) and [release introduction](release-introduction.md) for the final identity and current validation scope.
 
 The separate “Reset configuration” entry uses `NativeConfigurationReset` to save and switch `settings.yaml` and the current private working directory's `.env` as two transaction roots. Its record is `host-backup-operations/<UUID>/config-reset.json`; interruptions use the common host recovery entry. This does not change the fixed scope of the six-file checkpoints below. Credentials are checked and decrypted first; failure does not produce empty configuration over the originals. External directories, configuration symlinks, and targets across filesystems are not forcibly reset.
 

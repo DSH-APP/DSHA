@@ -1,6 +1,6 @@
 # ADR 0001: Build154 compatibility, permission, and delivery boundaries
 
-> Historical scope: this ADR records the implementation scope authorized for build154. “No publication in this round” below refers to that authorization. Current private publication authorization, version, and acceptance scope belong to [README](../../../README.en.md) and the [current release introduction](../release-introduction.md). Technical and data boundaries remain applicable where later ADRs have not superseded them.
+> Historical scope: this ADR records the implementation scope authorized for build154. “No publication in this round” below refers to that authorization. Current private publication authorization, version, and acceptance scope belong to [README](../../../README.md) and the [current release introduction](../release-introduction.md). Technical and data boundaries remain applicable where later ADRs have not superseded them.
 
 Status: adopted for that round. The basis was the user's requirements and inspection of the source. Decisions from another conversation quoted in an external build150 report were suggestions, not instructions.
 

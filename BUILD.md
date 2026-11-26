@@ -7,7 +7,7 @@
 > 历史构建回执与旧身份数字保留在 [CHANGELOG.md](CHANGELOG.md) 与 [docs/releases/](docs/releases/)，不作为当前构建或签名输入。
 
 
-先读 [README](README.md)、[AGENTS](AGENTS.md)、[贡献流程](CONTRIBUTING.md) 与[接手指南](docs/接手指南.md)。应用版本以 `app/build.gradle` 为准，DSH 依赖以 `tools/dsh-runtime/package.json`/锁文件为准，完整交付和未验证范围以本轮报告为准。
+先读 [README](README-zh.md)、[AGENTS](AGENTS.md)、[贡献流程](CONTRIBUTING.md) 与[接手指南](docs/接手指南.md)。应用版本以 `app/build.gradle` 为准，DSH 依赖以 `tools/dsh-runtime/package.json`/锁文件为准，完整交付和未验证范围以本轮报告为准。
 
 > 更早的 F13/1500/1640 等回执只描述各自当时的源码、APK 与设备状态，属于历史记录；不要用旧包名 `dsh.android.client`、历史 E7E3 证书或旧版本号来构建当前 Mod。
 

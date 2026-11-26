@@ -13,7 +13,7 @@
 | [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) | DeepSeek 官方 Harness 上游；本项目将其 npm 运行时装入 Android 内的 Linux 环境 | 上游维护或批准了 DSHA 原生壳、授权策略、容器补丁或本地 APK |
 | [mexiaosqwq/dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) | 第三方移动网页插件上游；本地按精确提交引入后再应用维护差异 | DeepSeek 官方移动 UI，或完全未经修改的上游包 |
 
-工程关系以 [README](../README.md)、[AGENTS](../AGENTS.md)、锁和实际差异共同说明。
+工程关系以 [README](../README-zh.md)、[AGENTS](../AGENTS.md)、锁和实际差异共同说明。
 公开项目介绍能证明项目公开声明，不能证明某个本地二进制来自某条源码提交。
 私有仓库匿名访问可能显示 404；这不证明仓库不存在，也不替代登录后的权限和附件核验。
 本文没有检查公开仓库的远端提交或附件状态；实际交付应另核精确 Release 和摘要。

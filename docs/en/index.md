@@ -22,7 +22,7 @@ Build and acceptance records for earlier versions stay in [releases/](releases/)
 
 ## User and developer entry points
 
-- [README](../../README.en.md), [development constraints](../../AGENTS.en.md), [build instructions](../../BUILD.en.md), [contribution workflow](../../CONTRIBUTING.en.md), and [handoff](handoff.md).
+- [README](../../README.md), [development constraints](../../AGENTS.en.md), [build instructions](../../BUILD.en.md), [contribution workflow](../../CONTRIBUTING.en.md), and [handoff](handoff.md).
 - [Browser/flavor behavior](browser-engines.md), [plugins](plugins.md), [virtual-screen setup](virtual-screen-guide.md), [Web files](web-file-sharing.md), [v5 backup format](backup-format-v5.md), and [configuration recovery](configuration-recovery-host.md).
 - [Engineering standard](engineering-standard.md), [module map](module-map.md), [security model](security-model.md), [source provenance](source-provenance.md), [third-party notices](third-party-notices.md), and [download verification](download-verification.md).
 - [Historical Standard notes](../android-standard.md) and [historical Low notes](../android-low.md) remain original records; use the current English browser/engine pages for present behavior.

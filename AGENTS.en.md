@@ -5,7 +5,7 @@
 > Main branch `main`; Android 11+ (API 30) / arm64; proot by default, proroot optional; bundled DSH 0.2.2-rc.1.
 > The island feature is folded into the regular package; the old low/GeckoView line and the separate island package are removed; signing uses the Mod-owned certificate (see BUILD.en.md).
 
-DSHA's entry point for AI agents and new contributors — read [README](README.en.md) first, then this file, so you do not need to scan the whole repository.
+DSHA's entry point for AI agents and new contributors — read [README](README.md) first, then this file, so you do not need to scan the whole repository.
 
 **Repository facts**: Java 17 / `:app` / arm64; mobile UI 3.3.5; proot by default with optional proroot; pinned offline inputs are restored by `tools/ci-assets.py`. Build, signing and gates are documented in [BUILD.md](BUILD.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
 

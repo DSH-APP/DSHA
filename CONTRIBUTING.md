@@ -1,8 +1,8 @@
 # 构建、验证与提交
 
-> 当前发布身份：`DSH-A-Su` / `io.github.sunsetrne.dsha` / `0.2.1-rc.5-20261110.1700-dsh0.2.2-rc.1` / versionCode 356 / 单一 Standard；使用 Mod 自有发布证书。完整身份与签名入口见 [README](README.md)、[AGENTS](AGENTS.md) 与 [ci/release-identity.json](ci/release-identity.json)。
+> 当前发布身份：`DSH-A-Su` / `io.github.sunsetrne.dsha` / `0.2.1-rc.5-20261110.1700-dsh0.2.2-rc.1` / versionCode 356 / 单一 Standard；使用 Mod 自有发布证书。完整身份与签名入口见 [README](README-zh.md)、[AGENTS](AGENTS.md) 与 [ci/release-identity.json](ci/release-identity.json)。
 
-先读 [README](README.md)、[AGENTS](AGENTS.md)、[BUILD](BUILD.md) 与[文档总索引](docs/documentation-index.md)。F10–F13、build190 等记录只描述各自当时的源码、APK、测试与设备状态，不能覆盖当前要求，也不能当作本版证据。
+先读 [README](README-zh.md)、[AGENTS](AGENTS.md)、[BUILD](BUILD.md) 与[文档总索引](docs/documentation-index.md)。F10–F13、build190 等记录只描述各自当时的源码、APK、测试与设备状态，不能覆盖当前要求，也不能当作本版证据。
 
 当前固定输入由 [ci/sunset-inputs.lock.json](ci/sunset-inputs.lock.json) 锁定：公开预发布资产 `fixed-inputs-20261105e`，716,787,167 B，SHA-256 `be97d9f0a45f408d3a7de83ae55a00a85a5154343589571c6d159a0fe58f08f5`，由 `tools/ci-assets.py` 还原。大归档与离线 rootfs 不入 Git；只有源码的检出不能构建完整 APK。
 

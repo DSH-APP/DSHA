@@ -343,7 +343,7 @@ def main():
         with zipfile.ZipFile(snapshot,'x',zipfile.ZIP_DEFLATED) as archive:
             for name in sorted(changed):
                 path=ROOT/name
-                if path.is_file() and public_source_path(name) and (name in final_source or name.startswith('docs/') or name in ('README.md','README.en.md','BUILD.md','AGENTS.md','CHANGELOG.md','THIRD_PARTY_NOTICES.md')):
+                if path.is_file() and public_source_path(name) and (name in final_source or name.startswith('docs/') or name in ('README.md','README-zh.md','BUILD.md','AGENTS.md','CHANGELOG.md','THIRD_PARTY_NOTICES.md')):
                     archive.write(path,name)
         report['sourceChanges']={'path':str(snapshot),'sha256':digest(snapshot),'scope':'Changed public source and redacted current documentation; private device audits and historical originals are excluded; offline binary assets remain in the workspace and are identified by hashes'}
         if args.deliver:

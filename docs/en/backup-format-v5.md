@@ -1,6 +1,6 @@
 # Host data archive v5
 
-> Translation verified: 2026-10-21. Source baseline: the current Chinese v5 format document and the F10 `087724c` maintenance baseline. This is a format and implementation reference, not a new build or device acceptance result. Final build identity and executed scope are in the [English README](../../README.en.md) and [release introduction](release-introduction.md).
+> Translation verified: 2026-10-21. Source baseline: the current Chinese v5 format document and the F10 `087724c` maintenance baseline. This is a format and implementation reference, not a new build or device acceptance result. Final build identity and executed scope are in the [English README](../../README.md) and [release introduction](release-introduction.md).
 
 Build 131 added backward-compatible `dataCompatibility` metadata recording the model schema and observed runtime/read-write implementation digests. Without a reliable format declaration, `formatId` and `formatEpoch` are empty and state is `unknown`. APK version, runtime version, and data format are different generations. A sender's declaration is not local verification: preflight continues to show an unconfirmed format and does not use it for blind downgrades or automatic deletion of originals. Host restore with an established scope still applies. Retained-copy and old-tree entry points are described in the [historical stability acceptance record](../stability-acceptance.md).
 

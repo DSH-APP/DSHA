@@ -1,6 +1,6 @@
 # Agent 接手时的领域与事实来源
 
-核验日期：2026-10-21。参考基线：已发布 F10 `087724c`；本页为F11新建维护说明，不是找回的旧 `docs/agents/domain.md` 原件，也不重建旧会话决定。先读[README](../../README.md)、[AGENTS](../../AGENTS.md)和[总手册](../project-architecture-handbook.md)。
+核验日期：2026-10-21。参考基线：已发布 F10 `087724c`；本页为F11新建维护说明，不是找回的旧 `docs/agents/domain.md` 原件，也不重建旧会话决定。先读[README](../../README-zh.md)、[AGENTS](../../AGENTS.md)和[总手册](../project-architecture-handbook.md)。
 
 ## 先认清状态归属
 

@@ -1,6 +1,6 @@
 # Domains and sources of truth for agent handoff
 
-Verification date: 2026-10-21. Source: the corresponding Chinese agent-domain guide, published F10 `087724c` as a reference baseline, and the current working tree. This maintenance workflow was first written in F11. It is not a recovered historical `docs/agents/domain.md` original and does not reconstruct decisions from an old conversation. Start with [README](../../../README.en.md), [AGENTS](../../../AGENTS.en.md), and the [architecture handbook](../project-architecture-handbook.md).
+Verification date: 2026-10-21. Source: the corresponding Chinese agent-domain guide, published F10 `087724c` as a reference baseline, and the current working tree. This maintenance workflow was first written in F11. It is not a recovered historical `docs/agents/domain.md` original and does not reconstruct decisions from an old conversation. Start with [README](../../../README.md), [AGENTS](../../../AGENTS.en.md), and the [architecture handbook](../project-architecture-handbook.md).
 
 ## Identify state ownership first
 

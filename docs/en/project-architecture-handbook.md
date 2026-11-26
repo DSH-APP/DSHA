@@ -1,10 +1,10 @@
 # DSHA project architecture and feature-maintenance handbook
 
-> Translation baseline: build356. This English handbook mirrors the current Chinese maintenance handbook, production call chain and current package identity; F10/F11/build190 records remain historical and cannot serve as evidence for this build. It is a feature/code map, not an acceptance report. Final identity and software/APK/asset scope are in the [English README](../../README.en.md), [release introduction](release-introduction.md), [app/build.gradle](../../app/build.gradle), and this build's CI/Release receipt; no final test total is prefilled here. Device, ADB, real-account/model-conversation and long-duration work require their own records; host tests are not phone-performance measurements.
+> Translation baseline: build356. This English handbook mirrors the current Chinese maintenance handbook, production call chain and current package identity; F10/F11/build190 records remain historical and cannot serve as evidence for this build. It is a feature/code map, not an acceptance report. Final identity and software/APK/asset scope are in the [English README](../../README.md), [release introduction](release-introduction.md), [app/build.gradle](../../app/build.gradle), and this build's CI/Release receipt; no final test total is prefilled here. Device, ADB, real-account/model-conversation and long-duration work require their own records; host tests are not phone-performance measurements.
 
 ## 1. Reading order, project provenance, and current boundaries
 
-Read the [README](../../README.en.md) first, then choose references for the area you will change.
+Read the [README](../../README.md) first, then choose references for the area you will change.
 
 | Reference | Questions it answers |
 |---|---|

@@ -1,6 +1,6 @@
 # Configuration snapshots, reset, and settings migration
 
-> Translation verified: 2026-10-21. Source baseline: released F10 `087724c` and the current Chinese build190 host-configuration guide. This is documentation work, not new device or interrupted-recovery testing. The [host configuration recovery note](configuration-recovery-host.md) retains the original scope of its historical validation statements. Final build identity and executed scope are in the [English README](../../README.en.md) and [release introduction](release-introduction.md).
+> Translation verified: 2026-10-21. Source baseline: released F10 `087724c` and the current Chinese build190 host-configuration guide. This is documentation work, not new device or interrupted-recovery testing. The [host configuration recovery note](configuration-recovery-host.md) retains the original scope of its historical validation statements. Final build identity and executed scope are in the [English README](../../README.md) and [release introduction](release-introduction.md).
 
 DSHA protects configuration in three separate ways: six-file startup snapshots protect DSH startup configuration; “Reset configuration” handles shared settings and the current private workspace's `.env`; host-settings migration imports a typed whitelist. Their scopes differ, and none is a complete data backup. Use [backup and restore](backup-and-restore.md) for conversations, attachments, or original plugin content.
 

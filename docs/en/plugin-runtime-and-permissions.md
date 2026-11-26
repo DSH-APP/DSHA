@@ -1,6 +1,6 @@
 # Built-in plugins, protocols, permissions, and when changes take effect
 
-> Translation baseline: 2026-10-21, originally reviewed against the build190/F12 registry, generators, plugin entry points and host readers. Current publication identity is build356 / DSH 0.2.2-rc.1 / single Standard; F10–F13 records are historical, not this build's evidence. Final identity, software and APK results are in the [English README](../../README.en.md) and this CI / Release receipt. This page adds no device-acceptance result. Runtime hot-reload conclusions require matching bundled inputs and actual execution evidence; this page and older audits do not prove Android validation.
+> Translation baseline: 2026-10-21, originally reviewed against the build190/F12 registry, generators, plugin entry points and host readers. Current publication identity is build356 / DSH 0.2.2-rc.1 / single Standard; F10–F13 records are historical, not this build's evidence. Final identity, software and APK results are in the [English README](../../README.md) and this CI / Release receipt. This page adds no device-acceptance result. Runtime hot-reload conclusions require matching bundled inputs and actual execution evidence; this page and older audits do not prove Android validation.
 
 ## Seven optional entries, eight signed entries, and a policy source
 

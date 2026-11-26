@@ -1,14 +1,14 @@
 # 运行环境、数据与插件机制
 
 本文面向准备修改 DSHA 的开发者，说明环境从哪里来、数据归谁、插件如何进入真实启动链。
-> 核验基线：2026-11-05（S1 运行时切换前后的源码与固定输入核对）。当前 S1 运行时身份为单一 Standard：Ubuntu base10、官方 DSH `0.2.2-rc.1`、Node 24、随包 pnpm `10.34.5`；APK 发布版本/版本码仍以发布提交和 [README](../README.md) 为准。F10–F13、build190 与 Low 相关段落属于历史记录，不代表当前构建；本文不预填测试总数或设备验收结论。
+> 核验基线：2026-11-05（S1 运行时切换前后的源码与固定输入核对）。当前 S1 运行时身份为单一 Standard：Ubuntu base10、官方 DSH `0.2.2-rc.1`、Node 24、随包 pnpm `10.34.5`；APK 发布版本/版本码仍以发布提交和 [README](../README-zh.md) 为准。F10–F13、build190 与 Low 相关段落属于历史记录，不代表当前构建；本文不预填测试总数或设备验收结论。
 默认引擎是 `proot`，用户可显式选择 `proroot`；当前生产方案不使用 bxroot。
 这里的流程和约束属于 DSHA 实现，不代表 Ubuntu、Node、pnpm 或 DSH 上游对 Android 的保证。
 本文是源码导航，不是一次新的构建、设备验收或所有旧数据兼容性证明。
 
 ## 阅读顺序与证据层次
 
-- 项目入口：[README](../README.md)、[AGENTS](../AGENTS.md)、[BUILD](../BUILD.md)。
+- 项目入口：[README](../README-zh.md)、[AGENTS](../AGENTS.md)、[BUILD](../BUILD.md)。
 - 全局导航：[项目架构总手册](project-architecture-handbook.md)、[模块索引](module-map.md)。
 - 设备能力：[权限架构](device-permissions-architecture.md)、[虚拟屏架构](virtual-screen-architecture.md)。
 - 安全边界：[安全模型](security-model.md)、[ADR 0002](adr/0002-current-threat-model.md)。

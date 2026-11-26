@@ -1,6 +1,6 @@
 # Independent emergency DSH
 
-> Translation verified: 2026-10-21. Source baseline: released F10 `087724c` and the current Chinese build190 emergency-runtime, tool, and native-confirmation guide. Translation adds no device, model-conversation, start/stop, or regular-data repair validation. See the [English README](../../README.en.md) and [release introduction](release-introduction.md) for final identity and executed scope.
+> Translation verified: 2026-10-21. Source baseline: released F10 `087724c` and the current Chinese build190 emergency-runtime, tool, and native-confirmation guide. Translation adds no device, model-conversation, start/stop, or regular-data repair validation. See the [English README](../../README.md) and [release introduction](release-introduction.md) for final identity and executed scope.
 
 Emergency DSH provides independent diagnosis when the regular environment cannot install, undergo maintenance, or start normally. It has its own pinned rootfs, HOME, empty profile, workspace, and sessions. It neither boots from the regular rootfs nor first runs regular migration, data binding, or the global startup lock. Regular “safe startup” still uses the regular environment and is a different path. See [runtime, data, and plugins](runtime-data-plugin-architecture.md) for the overall boundaries.
 

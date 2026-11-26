@@ -1,6 +1,6 @@
 # Application updates and managed runtime updates
 
-> Baseline checked on 2026-10-21 against build190 update code. Current publication identity is build356 / `io.github.sunsetrne.dsha` / single Standard; F10–F13/build190 records are historical. This page did not inspect the live remote feed, install an APK, or perform device acceptance. Current identity is documented by [README](../../README.en.md) and the [release introduction](release-introduction.md).
+> Baseline checked on 2026-10-21 against build190 update code. Current publication identity is build356 / `io.github.sunsetrne.dsha` / single Standard; F10–F13/build190 records are historical. This page did not inspect the live remote feed, install an APK, or perform device acceptance. Current identity is documented by [README](../../README.md) and the [release introduction](release-introduction.md).
 
 APK updates and managed-component updates inside Ubuntu are different chains. An APK passes download and package-identity checks before the system installer opens. Managed components require plan review, normal task shutdown, candidate preparation/trial, and transactional switching. Both retain specific failures; version text does not replace actual outcomes.
 
@@ -26,7 +26,7 @@ The page has a single main button that is itself the progress bar and never chan
 
 [UpdatePolicy](../../app/src/main/java/com/deepseekharness/app/util/UpdatePolicy.java) also validates flavor, minSdk, `arm64-v8a`, versionCode, allowed HTTPS source, 64-character hexadecimal SHA-256, and size up to 1 GiB. A saved candidate's checked channel is separate from the release's own channel; current preference cannot establish its origin.
 
-F10/F11 revisions sharing code190 are not selected as a newer version even with a later version name: candidates require `versionCode > BuildConfig.VERSION_CODE`. Use [README](../../README.en.md), the [release introduction](release-introduction.md) and the actual Release for public prerelease assets, attachment digests, and manual downloads. Attachment status requires the actual Release and independent external receipts. “No update” does not prove there are no remote prerelease attachments.
+F10/F11 revisions sharing code190 are not selected as a newer version even with a later version name: candidates require `versionCode > BuildConfig.VERSION_CODE`. Use [README](../../README.md), the [release introduction](release-introduction.md) and the actual Release for public prerelease assets, attachment digests, and manual downloads. Attachment status requires the actual Release and independent external receipts. “No update” does not prove there are no remote prerelease attachments.
 
 ## Download, verification, and system installation
 

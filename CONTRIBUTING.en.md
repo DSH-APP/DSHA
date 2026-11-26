@@ -1,8 +1,8 @@
 # Build, validate, and submit
 
-> Current publication identity: `DSH-A-Su` / `io.github.sunsetrne.dsha` / `0.2.1-rc.5-20261110.1700-dsh0.2.2-rc.1` / versionCode 356 / single Standard; the Mod-owned release certificate. Full identity and signing entry points are in [README](README.en.md), [AGENTS](AGENTS.en.md) and [ci/release-identity.json](ci/release-identity.json).
+> Current publication identity: `DSH-A-Su` / `io.github.sunsetrne.dsha` / `0.2.1-rc.5-20261110.1700-dsh0.2.2-rc.1` / versionCode 356 / single Standard; the Mod-owned release certificate. Full identity and signing entry points are in [README](README.md), [AGENTS](AGENTS.en.md) and [ci/release-identity.json](ci/release-identity.json).
 
-Read [README](README.en.md), [AGENTS](AGENTS.en.md), [BUILD](BUILD.en.md) and the [documentation index](docs/en/index.md) first. F10–F13 and build190 records describe only their own source, APK, tests and device state at that time; they neither override current requirements nor prove this build.
+Read [README](README.md), [AGENTS](AGENTS.en.md), [BUILD](BUILD.en.md) and the [documentation index](docs/en/index.md) first. F10–F13 and build190 records describe only their own source, APK, tests and device state at that time; they neither override current requirements nor prove this build.
 
 Current fixed inputs are pinned by [ci/sunset-inputs.lock.json](ci/sunset-inputs.lock.json): public pre-release asset `fixed-inputs-20261105e`, 716,787,167 B, SHA-256 `be97d9f0a45f408d3a7de83ae55a00a85a5154343589571c6d159a0fe58f08f5`, restored by `tools/ci-assets.py`. Large archives and the offline rootfs are not committed; a source-only checkout cannot build a complete APK.
 

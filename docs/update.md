@@ -26,7 +26,7 @@
 
 [UpdatePolicy](../app/src/main/java/com/deepseekharness/app/util/UpdatePolicy.java)还检查当前 flavor、minSdk、`arm64-v8a`、版本码、有效 HTTPS 来源、64 位十六进制 SHA-256 与大小（至多 1 GiB）。旧候选记录的“查询通道”与发布自身通道分开保存，不能从当前偏好推断来源。
 
-同为 code190 的 F10/F11 修订即使版本名更晚，也不会被当前应用内更新器当作更高版本选中；更新器要求候选 `versionCode > BuildConfig.VERSION_CODE`。当前公开预发布 Release 的附件与摘要请从 [README](../README.md) 和实际 Release 核查；附件状态按实际 Release 及独立外部回执核验，不能由“暂无更新”推断远端没有预发布附件。
+同为 code190 的 F10/F11 修订即使版本名更晚，也不会被当前应用内更新器当作更高版本选中；更新器要求候选 `versionCode > BuildConfig.VERSION_CODE`。当前公开预发布 Release 的附件与摘要请从 [README](../README-zh.md) 和实际 Release 核查；附件状态按实际 Release 及独立外部回执核验，不能由“暂无更新”推断远端没有预发布附件。
 
 ## 下载、校验与系统安装
 

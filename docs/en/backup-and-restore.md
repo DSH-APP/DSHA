@@ -1,6 +1,6 @@
 # Backup, restore, and retained data
 
-> Translation verified: 2026-10-21. Source baseline: released F10 `087724c` and the current Chinese build190 maintenance page. Entry points and boundaries follow that source review. Translation adds no build, device, ADB, hands-on restore, or long-duration validation. See the [English README](../../README.en.md) and [release introduction](release-introduction.md) for final identity and executed scope; a particular artifact's results remain bound to its release record and digest.
+> Translation verified: 2026-10-21. Source baseline: released F10 `087724c` and the current Chinese build190 maintenance page. Entry points and boundaries follow that source review. Translation adds no build, device, ADB, hands-on restore, or long-duration validation. See the [English README](../../README.md) and [release introduction](release-introduction.md) for final identity and executed scope; a particular artifact's results remain bound to its release record and digest.
 
 This page covers user operations and failure boundaries. See the [v5 format](backup-format-v5.md) for binary layout, cryptographic parameters, and resource limits, and [runtime, data, and plugins](runtime-data-plugin-architecture.md) for data ownership. A DSHA host backup is distinct from DSH's own session files and is not a full Ubuntu image.
 
