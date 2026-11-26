@@ -11,6 +11,7 @@
   <a href="https://github.com/DSH-APP/DSHA/stargazers"><img src="https://img.shields.io/github/stars/DSH-APP/DSHA?style=flat" alt="stars"></a>
   <img src="https://img.shields.io/badge/Android-11%2B-3DDC84?logo=android&logoColor=white" alt="android">
   <img src="https://img.shields.io/badge/arch-arm64--v8a-lightgrey" alt="arch">
+  <a href="https://afdian.com/a/dsha_apk"><img src="https://img.shields.io/badge/Afdian-Sponsor-946CE6?logo=afdian&logoColor=white" alt="Afdian"></a>
 </p>
 
 <p align="center">
@@ -19,7 +20,36 @@
 
 > 🤖 The next AI / developer should read **[AGENTS.md](AGENTS.md)** first (project layout, startup contract, known traps) instead of scanning the whole tree.
 
+> 🇨🇳 Chinese readers: the complete Simplified Chinese README is **[README.md](README.md)** — product intro, install steps, device channels and FAQ. This page is the English edition of the same document.
+
 > Stable **[v0.2.2 · build357](https://github.com/DSH-APP/DSHA/releases/tag/v0.2.2)** (`0.2.2-20261111.0200-dsh0.2.2-rc.1`): same content as build356, shipped in the official asset layout (APK + full source). Full changes in [CHANGELOG.md](CHANGELOG.md).
+
+## ❤️ Sponsor
+
+Thanks to our sponsors for keeping this project maintained (in no particular order):
+
+<table>
+<tr>
+<td width="180"><a href="https://api-zeno.com"><img src="docs/sponsors/api-zeno.jpg" alt="API Zeno" width="150"></a></td>
+<td>Thanks to <a href="https://api-zeno.com">API-Zeno</a> for sponsoring this project! API-Zeno brings together mainstream AI models from China and abroad for learning, content creation, coding and more. The platform focuses on real-world experience, offering user guides, Q&amp;A and technical support, and can be integrated into DSHA. New users get a ¥5 free credit on sign-up — come and try it!</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td width="180"><a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X"><img src="docs/sponsors/lvluo.jpg" alt="Lvluo Relay" width="150"></a></td>
+<td>Thanks to <a href="https://zdxjl.com/register?aff=WDYTNDJ5LT4X">绿萝中转站 (Lvluo Relay)</a> for sponsoring this project! Lvluo Relay is an AI platform covering models from many vendors: mainstream large models are ready to use on demand, and coding, image generation and more can all be called from one platform. Models from China and abroad are available, new releases land promptly, the service is attentive and the pricing is attractive. Registering through this link gives a 105% top-up bonus.</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td width="180"><a href="https://ai.onyxaxis.org/"><img src="docs/sponsors/axis-ai.jpg" alt="Axis AI" width="150"></a></td>
+<td>Thanks to <a href="https://ai.onyxaxis.org/">Axis AI</a> for sponsoring this project! Axis AI is a free public-interest AI platform where multiple mainstream models are ready to use. Chat, write code, and generate images from one unified platform.</td>
+</tr>
+</table>
+
+If this project helps you, you can also support the maintainer on [Afdian](https://afdian.com/a/dsha_apk).
 
 ## Current status
 
@@ -78,7 +108,7 @@ Assets: `dsha-0.2.2.apk`, `dsha-0.2.2.apk.sha256`, `DSHA-0.2.2-20261111.0200-sou
 
 ## Why DSHA
 
-| | |
+| | Details |
 |---|---|
 | 🚫 **Zero command line** | A bundled offline Ubuntu rootfs: install the APK and go. No Termux, no `pkg`, no commands |
 | 🐧 **Full glibc environment** | Not a trimmed build: `apt` / PTY / native modules / Python / git are all there. Upstream plugins run unmodified |
