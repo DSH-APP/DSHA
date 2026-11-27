@@ -62,10 +62,11 @@ Thanks to our sponsors for keeping this project maintained (in no particular ord
 <tr>
 <td width="56" align="center" valign="top"><a href="https://mozhenzhen.com/go/dsha"><img src="docs/sponsors/mozhenzhen-icon.png" alt="Mozhenzhen" width="56"></a></td>
 <td>
-🐼 <strong>Partner Pick · 合作推荐：买 AI 前先查【模真真 Mozhenzhen】/ Stop overpaying for AI — compare prices &amp; verify models free</strong><br>
-2000+ 模型 · 35 万+ 渠道同台比价，5000+ 中转站 · 10 万+ 份报告查假模型与降智 / Compare 2,000+ models across 350K+ listings &amp; audit 5,000+ relays with 100K+ verification reports. 全部免费 · 不卖任何 AI 服务，排名只看数据 / Always Free &amp; Data-Driven 👉 <a href="https://mozhenzhen.com/go/dsha">mozhenzhen.com</a>
+<strong><a href="https://mozhenzhen.com/go/dsha">Mozhenzhen</a></strong> (Partner Pick): free AI price comparisons and model authenticity checks.
 <details>
-<summary>View Mozhenzhen banner</summary>
+<summary>Mozhenzhen details</summary>
+<p>🐼 <strong>Partner Pick · 合作推荐：买 AI 前先查【模真真 Mozhenzhen】/ Stop overpaying for AI — compare prices &amp; verify models free</strong><br>
+2000+ 模型 · 35 万+ 渠道同台比价，5000+ 中转站 · 10 万+ 份报告查假模型与降智 / Compare 2,000+ models across 350K+ listings &amp; audit 5,000+ relays with 100K+ verification reports. 全部免费 · 不卖任何 AI 服务，排名只看数据 / Always Free &amp; Data-Driven 👉 <a href="https://mozhenzhen.com/go/dsha">mozhenzhen.com</a></p>
 <a href="https://mozhenzhen.com/go/dsha"><img src="docs/sponsors/mozhenzhen-banner-en.png" alt="DSHA × Mozhenzhen: compare AI prices and verify models for free"></a>
 </details>
 </td>

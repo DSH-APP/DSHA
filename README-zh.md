@@ -60,10 +60,11 @@
 <tr>
 <td width="56" align="center" valign="top"><a href="https://mozhenzhen.com/go/dsha"><img src="docs/sponsors/mozhenzhen-icon.png" alt="模真真" width="56"></a></td>
 <td>
-🐼 <strong>合作推荐：买 AI 前先查【模真真】——免费比价、验真、查降智，不花冤枉钱</strong><br>
-2000+ 模型 · 35 万+ 渠道同台比价，5000+ 中转站 · 10 万+ 份验真报告查假模型与降智，每天更新免费额度与公益站合集。全部免费、不卖任何 AI 服务、排名只看数据 👉 <a href="https://mozhenzhen.com/go/dsha">mozhenzhen.com</a>
+<strong><a href="https://mozhenzhen.com/go/dsha">模真真</a></strong>（合作推荐）：免费比价、验真、查降智。
 <details>
-<summary>查看模真真横幅</summary>
+<summary>查看模真真详情</summary>
+<p>🐼 <strong>合作推荐：买 AI 前先查【模真真】——免费比价、验真、查降智，不花冤枉钱</strong><br>
+2000+ 模型 · 35 万+ 渠道同台比价，5000+ 中转站 · 10 万+ 份验真报告查假模型与降智，每天更新免费额度与公益站合集。全部免费、不卖任何 AI 服务、排名只看数据 👉 <a href="https://mozhenzhen.com/go/dsha">mozhenzhen.com</a></p>
 <a href="https://mozhenzhen.com/go/dsha"><img src="docs/sponsors/mozhenzhen-banner-zh.png" alt="DSHA × 模真真：免费比较 AI 价格和查验模型"></a>
 </details>
 </td>
