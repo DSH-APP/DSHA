@@ -1978,5 +1978,12 @@
   "x2100201": "允許特權執行？",
   "x2100202": "允許特權執行",
   "x2100203": "實體屏助手可以繞過無障礙，直接抓取螢幕並在目前手機任務期間注入點擊、滑動和按鍵，用於遊戲等自繪介面。\n\n預設關閉、可隨時關閉；動作還要求螢幕操作確認已允許目標應用，密碼、支付和系統安全介面一律拒絕。實驗階段只保證 root 通道。",
-  "x2100204": "儲存特權執行設定失敗"
+  "x2100204": "儲存特權執行設定失敗",
+  "ru20261125_answer_01": "Answer too long, not submitted",
+  "ru20261125_answer_02": "Too many selections, not submitted",
+  "ru20261125_answer_03": "Options expired; open the chat to answer",
+  "ru20261125_answer_04": "Nothing selected yet",
+  "ru20261125_answer_05": "Answer link expired; open the chat to answer",
+  "ru20261125_answer_06": "Answer not accepted (%s); tap the notification to answer in the chat",
+  "ru20261125_answer_07": "Answer failed; tap the notification to answer in the chat"
 }

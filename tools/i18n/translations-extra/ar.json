@@ -1978,5 +1978,12 @@
   "x2100201": "السماح بالإدخال المميز؟",
   "x2100202": "السماح بالإدخال",
   "x2100203": "يمكن لمساعد الشاشة الفعلية تجاوز إمكانية الوصول والتقاط الشاشة وحقن اللمس والتمرير والمفاتيح أثناء مهمة الهاتف الحالية — للألعاب والواجهات المرسومة ذاتيًا.\n\nمعطّل افتراضيًا وقابل للإلغاء في أي وقت. تتطلب الإجراءات أيضًا إذن التحكم بالشاشة للتطبيق الهدف؛ وتُرفض دائمًا شاشات كلمات المرور والدفع وأمان النظام. تضمن المرحلة التجريبية قناة root فقط.",
-  "x2100204": "تعذّر حفظ الإعداد"
+  "x2100204": "تعذّر حفظ الإعداد",
+  "ru20261125_answer_01": "Answer too long, not submitted",
+  "ru20261125_answer_02": "Too many selections, not submitted",
+  "ru20261125_answer_03": "Options expired; open the chat to answer",
+  "ru20261125_answer_04": "Nothing selected yet",
+  "ru20261125_answer_05": "Answer link expired; open the chat to answer",
+  "ru20261125_answer_06": "Answer not accepted (%s); tap the notification to answer in the chat",
+  "ru20261125_answer_07": "Answer failed; tap the notification to answer in the chat"
 }

@@ -1978,5 +1978,12 @@
   "x2100201": "Autoriser l'entrée ?",
   "x2100202": "Autoriser l'entrée",
   "x2100203": "L'assistant d'écran physique peut contourner l'accessibilité, capturer l'écran et injecter des appuis, balayages et touches pendant la tâche de téléphone en cours — pour les jeux et autres interfaces dessinées par l'application.\n\nDésactivé par défaut et révocable à tout moment. Les actions exigent aussi l'autorisation de contrôle d'écran pour l'application cible ; les écrans de mot de passe, de paiement et de sécurité système sont toujours refusés. La phase expérimentale ne garantit que le canal root.",
-  "x2100204": "Échec de l'enregistrement"
+  "x2100204": "Échec de l'enregistrement",
+  "ru20261125_answer_01": "Answer too long, not submitted",
+  "ru20261125_answer_02": "Too many selections, not submitted",
+  "ru20261125_answer_03": "Options expired; open the chat to answer",
+  "ru20261125_answer_04": "Nothing selected yet",
+  "ru20261125_answer_05": "Answer link expired; open the chat to answer",
+  "ru20261125_answer_06": "Answer not accepted (%s); tap the notification to answer in the chat",
+  "ru20261125_answer_07": "Answer failed; tap the notification to answer in the chat"
 }

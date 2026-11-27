@@ -16058,5 +16058,62 @@
     "files": [
       "app/src/main/java/com/deepseekharness/app/ui/DeviceGrantsFragment.java"
     ]
+  },
+  {
+    "id": "ru20261125_answer_01",
+    "zh": "回答过长，未提交",
+    "en": "Answer too long, not submitted",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/AgentTaskAnswerReceiver.java"
+    ]
+  },
+  {
+    "id": "ru20261125_answer_02",
+    "zh": "选择过多，未提交",
+    "en": "Too many selections, not submitted",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/AgentTaskAnswerReceiver.java"
+    ]
+  },
+  {
+    "id": "ru20261125_answer_03",
+    "zh": "选项已失效，请点通知进入对话回答",
+    "en": "Options expired; open the chat to answer",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/AgentTaskAnswerReceiver.java"
+    ]
+  },
+  {
+    "id": "ru20261125_answer_04",
+    "zh": "还没有选择，请勾选后点“提交”",
+    "en": "Nothing selected yet",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/AgentTaskAnswerReceiver.java"
+    ]
+  },
+  {
+    "id": "ru20261125_answer_05",
+    "zh": "回答入口已失效，请点通知进入对话回答",
+    "en": "Answer link expired; open the chat to answer",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/AgentTaskAnswerReceiver.java"
+    ]
+  },
+  {
+    "id": "ru20261125_answer_06",
+    "zh": "回答未提交（%s），请点通知进入对话回答",
+    "en": "Answer not accepted (%s); tap the notification to answer in the chat",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/AgentTaskAnswerReceiver.java"
+    ],
+    "uiFormat": true
+  },
+  {
+    "id": "ru20261125_answer_07",
+    "zh": "回答提交失败，请点通知进入对话回答",
+    "en": "Answer failed; tap the notification to answer in the chat",
+    "files": [
+      "app/src/main/java/com/deepseekharness/app/AgentTaskAnswerReceiver.java"
+    ]
   }
 ]

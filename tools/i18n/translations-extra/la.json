@@ -1978,5 +1978,12 @@
   "x2100201": "Permittere inscriptionem?",
   "x2100202": "Inscriptionem permittere",
   "x2100203": "Adiutor screenis physici potest accessibilitatem praeterire, screensum capere et tactus, lapsus clavesque in praesenti munere telephoni inicere — pro ludis et aliis interfaciebus ab applicatione pictis.\n\nEx defectione clausum et quovis tempore revocabile. Actiones etiam licentiam regiminis screenis pro applicatione destinata requirunt; screensus tesserae, solutionis et securitatis systematis semper recusantur. Tempus experimentale solum canalem root praestat.",
-  "x2100204": "Configuratio servari non potuit"
+  "x2100204": "Configuratio servari non potuit",
+  "ru20261125_answer_01": "Answer too long, not submitted",
+  "ru20261125_answer_02": "Too many selections, not submitted",
+  "ru20261125_answer_03": "Options expired; open the chat to answer",
+  "ru20261125_answer_04": "Nothing selected yet",
+  "ru20261125_answer_05": "Answer link expired; open the chat to answer",
+  "ru20261125_answer_06": "Answer not accepted (%s); tap the notification to answer in the chat",
+  "ru20261125_answer_07": "Answer failed; tap the notification to answer in the chat"
 }

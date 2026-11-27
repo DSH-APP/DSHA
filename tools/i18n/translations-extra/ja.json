@@ -1978,5 +1978,12 @@
   "x2100201": "特権実行を許可しますか？",
   "x2100202": "特権実行を許可",
   "x2100203": "実画面アシスタントはアクセシビリティを迂回して画面をキャプチャし、現在のスマホタスク中にタップ・スワイプ・キーを注入できます（ゲームなどの自前描画UI向け）。\n\n既定はオフでいつでもオフにできます。動作には対象アプリの画面操作許可も必要で、パスワード・決済・システムセキュリティ画面は常に拒否します。実験段階では root チャネルのみ保証します。",
-  "x2100204": "特権実行設定を保存できませんでした"
+  "x2100204": "特権実行設定を保存できませんでした",
+  "ru20261125_answer_01": "Answer too long, not submitted",
+  "ru20261125_answer_02": "Too many selections, not submitted",
+  "ru20261125_answer_03": "Options expired; open the chat to answer",
+  "ru20261125_answer_04": "Nothing selected yet",
+  "ru20261125_answer_05": "Answer link expired; open the chat to answer",
+  "ru20261125_answer_06": "Answer not accepted (%s); tap the notification to answer in the chat",
+  "ru20261125_answer_07": "Answer failed; tap the notification to answer in the chat"
 }

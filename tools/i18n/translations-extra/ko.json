@@ -1978,5 +1978,12 @@
   "x2100201": "특권 실행을 허용할까요?",
   "x2100202": "특권 실행 허용",
   "x2100203": "실제 화면 도우미는 접근성을 우회해 화면을 캡처하고 현재 휴대폰 작업 중 탭·스와이프·키 입력을 주입할 수 있습니다(게임 등 직접 그린 UI용).\n\n기본은 꺼짐이며 언제든 끌 수 있습니다. 동작에는 대상 앱의 화면 조작 허용도 필요하며 비밀번호·결제·시스템 보안 화면은 항상 거부합니다. 실험 단계에서는 root 채널만 보장합니다.",
-  "x2100204": "특권 실행 설정을 저장하지 못했습니다"
+  "x2100204": "특권 실행 설정을 저장하지 못했습니다",
+  "ru20261125_answer_01": "Answer too long, not submitted",
+  "ru20261125_answer_02": "Too many selections, not submitted",
+  "ru20261125_answer_03": "Options expired; open the chat to answer",
+  "ru20261125_answer_04": "Nothing selected yet",
+  "ru20261125_answer_05": "Answer link expired; open the chat to answer",
+  "ru20261125_answer_06": "Answer not accepted (%s); tap the notification to answer in the chat",
+  "ru20261125_answer_07": "Answer failed; tap the notification to answer in the chat"
 }
