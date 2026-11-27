@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  <b>English</b> · <a href="README-zh.md">简体中文</a> · <a href="https://dsha.cc">dsha.cc</a> · <a href="CHANGELOG.md">Changelog</a> · <a href="docs/security-model.md">Security model</a> · <a href="AGENTS.md">AGENTS.md (for AI / developers)</a>
+  <b>English</b> · <a href="README-zh.md">简体中文</a> · <a href="README-tr.md">Türkçe</a> · <a href="https://dsha.cc">dsha.cc</a> · <a href="CHANGELOG.md">Changelog</a> · <a href="docs/security-model.md">Security model</a> · <a href="AGENTS.md">AGENTS.md (for AI / developers)</a>
 </p>
 
 > 🤖 The next AI / developer should read **[AGENTS.md](AGENTS.md)** first (project layout, startup contract, known traps) instead of scanning the whole tree.
