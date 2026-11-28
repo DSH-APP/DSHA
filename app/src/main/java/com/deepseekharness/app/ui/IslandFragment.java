@@ -163,8 +163,8 @@ public class IslandFragment extends Fragment {
         dot = R.color.shell_text_muted;
       }
       default -> {
-        title = UiText.text("系统支持，开关状态查不到");
-        sub = UiText.text("系统未提供查询接口，仍会尝试显示");
+        title = UiText.choose("支持未确认", "Unconfirmed");
+        sub = UiText.choose("仍会尝试显示，实际效果由系统决定", "Will try; display depends on the system");
         dot = R.color.shell_warn;
       }
     }
