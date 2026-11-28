@@ -10,6 +10,29 @@ import org.junit.Test;
 
 public class MaintenanceFooterPolicyTest {
   @Test
+  public void unknownRunningStageHasNoInventedHalfStepFill() {
+    var view =
+        DeployStages.view(
+            DeployStages.Mode.REBUILD,
+            DeployStages.Phase.RUNNING,
+            -1,
+            "unrecognized progress",
+            "",
+            42);
+    assertEquals(0, MaintenanceFooterPolicy.progressLevel(view));
+  }
+
+  @Test
+  public void knownRunningAndCompletedStagesKeepTheirExistingFill() {
+    var running =
+        DeployStages.view(DeployStages.Mode.REBUILD, DeployStages.Phase.RUNNING, 1, "", "", 42);
+    assertEquals(3000, MaintenanceFooterPolicy.progressLevel(running));
+    var done =
+        DeployStages.view(DeployStages.Mode.REBUILD, DeployStages.Phase.SUCCEEDED, -1, "", "", 42);
+    assertEquals(10000, MaintenanceFooterPolicy.progressLevel(done));
+  }
+
+  @Test
   public void busyShowsProgressEvenIfOtherFlagsAreStale() {
     Model m = MaintenanceFooterPolicy.decide(true, true, true, true, true);
     assertEquals(Primary.PROGRESS, m.primary);

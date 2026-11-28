@@ -274,7 +274,7 @@ public final class DeployStages {
     public final Mode mode;
     public final Phase phase;
 
-    /** 当前（或失败时最后到达的）阶段序号；没有阶段表时为 -1。 */
+    /** 当前（或失败时最后到达的）阶段序号；没有阶段表或阶段未知时为 -1。 */
     public final int current;
 
     public final List<Stage> stages;
@@ -290,7 +290,7 @@ public final class DeployStages {
       this.mode = mode == null ? Mode.GENERIC : mode;
       this.phase = phase == null ? Phase.IDLE : phase;
       this.stages = stages(this.mode);
-      this.current = stages.isEmpty() ? -1 : Math.max(0, Math.min(current, stages.size() - 1));
+      this.current = stages.isEmpty() || current < 0 ? -1 : Math.min(current, stages.size() - 1);
       this.detail = detail == null ? "" : detail;
       this.lastStage = lastStage == null ? "" : lastStage;
       this.taskId = taskId;
