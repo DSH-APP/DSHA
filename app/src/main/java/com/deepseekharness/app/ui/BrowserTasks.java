@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import com.deepseekharness.app.util.BrowserTaskPolicy;
 import com.deepseekharness.app.util.PreviewPageSession;
@@ -26,6 +27,12 @@ final class BrowserTasks {
   private static Background dispatched;
 
   private BrowserTasks() {}
+
+  /** RecentTaskInfo.id is -1 for retained tasks that are no longer running. */
+  @SuppressWarnings("deprecation")
+  private static int recentTaskId(ActivityManager.RecentTaskInfo info) {
+    return Build.VERSION.SDK_INT >= 29 ? info.taskId : info.persistentId;
+  }
 
   static boolean launcher(Intent intent) {
     return intent != null
@@ -192,7 +199,7 @@ final class BrowserTasks {
           (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
       if (manager != null)
         for (ActivityManager.AppTask task : manager.getAppTasks())
-          if (task.getTaskInfo().id == owner.getTaskId()) {
+          if (recentTaskId(task.getTaskInfo()) == owner.getTaskId()) {
             task.startActivity(context, full, null);
             trace("DISPATCH_TASK");
             return true;
@@ -242,7 +249,7 @@ final class BrowserTasks {
           (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
       if (manager == null) return false;
       for (ActivityManager.AppTask task : manager.getAppTasks())
-        if (task.getTaskInfo().id == taskId) {
+        if (recentTaskId(task.getTaskInfo()) == taskId) {
           task.startActivity(context, intent, null);
           return true;
         }
@@ -330,7 +337,7 @@ final class BrowserTasks {
       List<BrowserTaskPolicy.Task> choices = new ArrayList<>();
       for (ActivityManager.AppTask task : appTasks) {
         var info = task.getTaskInfo();
-        choices.add(new BrowserTaskPolicy.Task(info.id, nativeHost(context, info)));
+        choices.add(new BrowserTaskPolicy.Task(recentTaskId(info), nativeHost(context, info)));
       }
       int selected =
           BrowserTaskPolicy.nativeTask(
@@ -340,7 +347,7 @@ final class BrowserTasks {
         boolean nativeHost = nativeHost(context, info);
         var visibility =
             TaskNavigationPolicy.recents(
-                info.id,
+                recentTaskId(info),
                 nativeHost,
                 !nativeHost && browserRoot(context, info.baseActivity),
                 selected,
@@ -433,7 +440,7 @@ final class BrowserTasks {
   /** 以 Main 为根的任务，或存活 Main 所在的任务（Web 先开、Main 后加入的同一任务）。 */
   private static boolean nativeHost(Context context, ActivityManager.RecentTaskInfo info) {
     int main = liveMainTask();
-    return mainRoot(context, info.baseActivity) || main >= 0 && info.id == main;
+    return mainRoot(context, info.baseActivity) || main >= 0 && recentTaskId(info) == main;
   }
 
   private static boolean browserRoot(Context context, android.content.ComponentName root) {
@@ -458,11 +465,11 @@ final class BrowserTasks {
       List<BrowserTaskPolicy.Task> choices = new ArrayList<>();
       for (ActivityManager.AppTask task : appTasks) {
         var info = task.getTaskInfo();
-        choices.add(new BrowserTaskPolicy.Task(info.id, nativeHost(context, info)));
+        choices.add(new BrowserTaskPolicy.Task(recentTaskId(info), nativeHost(context, info)));
       }
       int selected = BrowserTaskPolicy.nativeTask(choices, browserTask, preferredTask);
       for (ActivityManager.AppTask task : appTasks)
-        if (selected >= 0 && task.getTaskInfo().id == selected) {
+        if (selected >= 0 && recentTaskId(task.getTaskInfo()) == selected) {
           task.startActivity(context, homeIntent(context), null);
           reconcileRecents(context, selected);
           return;
@@ -483,7 +490,7 @@ final class BrowserTasks {
       if (manager != null)
         for (ActivityManager.AppTask task : manager.getAppTasks()) {
           var info = task.getTaskInfo();
-          if (info.id == activity.getTaskId()) {
+          if (recentTaskId(info) == activity.getTaskId()) {
             members = info.numActivities;
             break;
           }
